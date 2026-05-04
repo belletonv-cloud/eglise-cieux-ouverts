@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Prévisualisation détourage — La P'tite Boutik</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: sans-serif; background: #f0f0f0; padding: 20px; }
+  h1 { text-align: center; margin-bottom: 8px; font-size: 1.3em; color: #1BA9A8; }
+  p.subtitle { text-align: center; color: #666; margin-bottom: 20px; font-size: 0.9em; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 20px; }
+
+  .card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    border: 3px solid transparent;
+    transition: border-color 0.2s;
+  }
+  .card.good { border-color: #4CAF50; }
+  .card.bad  { border-color: #E95E5E; }
+
+  .card-header {
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #fafafa;
+    border-bottom: 1px solid #eee;
+  }
+  .card-header span { font-size: 0.8em; color: #444; font-weight: bold; }
+
+  .btn-group { display: flex; gap: 6px; }
+  button {
+    padding: 4px 12px;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.8em;
+    font-weight: bold;
+    transition: opacity 0.2s;
+  }
+  .btn-ok  { background: #4CAF50; color: white; }
+  .btn-ko  { background: #E95E5E; color: white; }
+  button:hover { opacity: 0.8; }
+
+  .images {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+  .img-block {
+    padding: 8px;
+    text-align: center;
+  }
+  .img-block:first-child { border-right: 1px solid #eee; }
+  .img-block label { display: block; font-size: 0.7em; color: #888; margin-bottom: 4px; }
+
+  .img-block img {
+    width: 100%;
+    height: 160px;
+    object-fit: contain;
+    border-radius: 6px;
+  }
+  /* Checkerboard bg for PNG transparency */
+  .bg-check {
+    background-image: linear-gradient(45deg, #ccc 25%, transparent 25%),
+                      linear-gradient(-45deg, #ccc 25%, transparent 25%),
+                      linear-gradient(45deg, transparent 75%, #ccc 75%),
+                      linear-gradient(-45deg, transparent 75%, #ccc 75%);
+    background-size: 14px 14px;
+    background-position: 0 0, 0 7px, 7px -7px, -7px 0px;
+    background-color: white;
+  }
+  .bg-teal { background: #1BA9A8; }
+
+  .toggle-bg {
+    font-size: 0.7em;
+    margin-top: 4px;
+    background: #eee;
+    color: #333;
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+
+  #summary {
+    margin-top: 24px;
+    background: white;
+    border-radius: 10px;
+    padding: 16px 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  #summary h2 { font-size: 1em; margin-bottom: 10px; color: #1BA9A8; }
+  #ok-list, #ko-list { font-size: 0.85em; color: #333; margin-bottom: 8px; }
+  .tag-ok { background: #4CAF50; color: white; padding: 2px 8px; border-radius: 10px; display: inline-block; margin: 2px; }
+  .tag-ko { background: #E95E5E; color: white; padding: 2px 8px; border-radius: 10px; display: inline-block; margin: 2px; }
+</style>
+</head>
+<body>
+<h1>Prévisualisation — Détourage vêtements</h1>
+<p class="subtitle">Colonne gauche : photo originale · Colonne droite : PNG détouré (u2net_cloth_seg)<br>Cliquez <strong>✓ Garder</strong> ou <strong>✗ Retirer</strong> pour chaque photo</p>
+
+<div class="grid" id="grid"></div>
+
+<div id="summary">
+  <h2>Résumé de vos choix</h2>
+  <div id="ok-list"><strong>À garder :</strong> <em>aucun sélectionné</em></div>
+  <div id="ko-list"><strong>À retirer :</strong> <em>aucun sélectionné</em></div>
+</div>
+
+<script>
+const photos = [
+  'PHOTO-2026-05-02-21-17-07',
+  'PHOTO-2026-05-02-21-17-072',
+  'PHOTO-2026-05-02-21-17-12',
+  'PHOTO-2026-05-02-21-17-13',
+  'PHOTO-2026-05-02-21-17-14',
+  'PHOTO-2026-05-02-21-17-17',
+  'PHOTO-2026-05-02-21-17-18',
+  'PHOTO-2026-05-02-21-17-20',
+  'PHOTO-2026-05-02-21-17-212',
+  'PHOTO-2026-05-02-21-17-25',
+  'PHOTO-2026-05-02-21-17-252',
+  'PHOTO-2026-05-02-21-17-26',
+  'PHOTO-2026-05-02-21-17-262',
+]
+
+const state = {}
+const grid = document.getElementById('grid')
+
+photos.forEach(name => {
+  state[name] = null
+  const card = document.createElement('div')
+  card.className = 'card'
+  card.id = 'card-' + name
+
+  card.innerHTML = `
+    <div class="card-header">
+      <span>${name.replace('PHOTO-2026-05-02-21-17-', '#')}</span>
+      <div class="btn-group">
+        <button class="btn-ok" onclick="mark('${name}', 'good')">✓ Garder</button>
+        <button class="btn-ko" onclick="mark('${name}', 'bad')">✗ Retirer</button>
+      </div>
+    </div>
+    <div class="images">
+      <div class="img-block">
+        <label>Original JPG</label>
+        <img src="${name}.jpg" alt="original" />
+      </div>
+      <div class="img-block bg-check" id="pngblock-${name}">
+        <label>Détouré PNG</label>
+        <img src="${name}.png" alt="détouré" />
+        <button class="toggle-bg" onclick="toggleBg('${name}')">Fond teal</button>
+      </div>
+    </div>
+  `
+  grid.appendChild(card)
+})
+
+function mark(name, verdict) {
+  state[name] = verdict
+  const card = document.getElementById('card-' + name)
+  card.className = 'card ' + verdict
+  updateSummary()
+}
+
+function toggleBg(name) {
+  const block = document.getElementById('pngblock-' + name)
+  const btn = block.querySelector('button')
+  if (block.classList.contains('bg-teal')) {
+    block.classList.remove('bg-teal')
+    block.classList.add('bg-check')
+    btn.textContent = 'Fond teal'
+  } else {
+    block.classList.remove('bg-check')
+    block.classList.add('bg-teal')
+    btn.textContent = 'Fond damier'
+  }
+}
+
+function updateSummary() {
+  const ok = photos.filter(n => state[n] === 'good')
+  const ko = photos.filter(n => state[n] === 'bad')
+
+  const okDiv = document.getElementById('ok-list')
+  const koDiv = document.getElementById('ko-list')
+
+  okDiv.innerHTML = '<strong>À garder :</strong> ' + (ok.length ? ok.map(n => `<span class="tag-ok">${n.replace('PHOTO-2026-05-02-21-17-', '#')}</span>`).join('') : '<em>aucun</em>')
+  koDiv.innerHTML = '<strong>À retirer :</strong> ' + (ko.length ? ko.map(n => `<span class="tag-ko">${n.replace('PHOTO-2026-05-02-21-17-', '#')}</span>`).join('') : '<em>aucun</em>')
+}
+</script>
+</body>
+</html>
