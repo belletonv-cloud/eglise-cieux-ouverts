@@ -8,12 +8,9 @@
     <div class="rejoins-inner">
       <p class="rejoins-text" :style="rejoinsTextStyle">
         <span class="rejoins-main">{{ props.title }}</span><br>
-        <span class="rejoins-playfair">{{ props.subtitle }}</span>
+        <span class="rejoins-playfair">{{ props.subtitle }}<br>{{ props.location }}</span>
       </p>
       <div class="rejoins-grid" :style="rejoinsGridStyle">
-        <div class="rejoins-label">
-          <span class="rejoins-playfair">{{ props.location }}</span>
-        </div>
         <div v-for="(h, i) in props.horaires" :key="i" class="rejoins-horaire">
           <strong>{{ h.heure }}</strong>
           <span>{{ h.label }}</span>
@@ -73,56 +70,60 @@ const rejoinsGridStyle = computed(() => {
 .rejoins-inner {
   max-width: 1100px;
   margin: 0 auto;
-  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 40px;
 }
 .rejoins-text {
-  font-size: clamp(2em, 6vw, 4.5em);
+  font-size: clamp(2.5em, 5vw, 4em);
   font-weight: 700;
-  line-height: 1.2;
+  line-height: 1.1;
   text-shadow: 0 2px 20px rgba(0,0,0,0.15);
+  margin: 0;
   will-change: transform;
-  margin-bottom: 48px;
 }
 .rejoins-main {
-  font-family: Helvetica, Arial, sans-serif;
+  font-family: 'Playfair Display', Georgia, serif;
   font-weight: 700;
-  font-style: normal;
+  font-style: italic;
   display: block;
 }
 .rejoins-playfair {
   font-family: 'Playfair Display', Georgia, serif;
   font-style: italic;
+  font-weight: 400;
 }
 .rejoins-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 32px;
-  align-items: center;
-  max-width: 900px;
-  margin: 0 auto;
   will-change: transform, opacity;
-}
-.rejoins-label {
-  font-size: clamp(0.9em, 2vw, 1.1em);
-  opacity: 0.9;
-  font-weight: 500;
+  align-items: flex-start;
 }
 .rejoins-horaire {
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: 4px;
 }
 .rejoins-horaire strong {
-  font-size: clamp(1.8em, 5vw, 3em);
+  font-size: clamp(2.5em, 5vw, 3.5em);
   font-weight: 900;
   line-height: 1;
 }
 .rejoins-horaire span {
-  font-size: 0.9em;
+  font-size: 1.1em;
   opacity: 0.9;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-style: italic;
 }
 @media (max-width: 768px) {
-  .rejoins-grid { grid-template-columns: 1fr; gap: 20px; text-align: center; }
+  .rejoins-inner {
+    flex-direction: column;
+    text-align: center;
+  }
+  .rejoins-grid {
+    align-items: center;
+  }
 }
 </style>

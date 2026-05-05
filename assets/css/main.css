@@ -2,13 +2,13 @@
   color-scheme: light only;
   forced-color-adjust: none;
 
-  /* Palette Cieux Ouverts — dégradé rose/violet/bleu */
-  --primary-purple: #7C3AED;
-  --primary-pink: #EC4899;
-  --primary-blue: #3B82F6;
+  /* Palette Cieux Ouverts — dégradé bleu/rouge */
+  --primary-purple: #064886; /* Fallback from old purple to dark blue */
+  --primary-pink: #d97777;   /* Fallback from old pink to salmon */
+  --primary-blue: #064886;
 
-  --gradient-hero: linear-gradient(135deg, #7C3AED 0%, #EC4899 50%, #3B82F6 100%);
-  --gradient-accent: linear-gradient(135deg, #EC4899 0%, #7C3AED 100%);
+  --gradient-hero: linear-gradient(135deg, #064886 0%, #d97777 100%);
+  --gradient-accent: linear-gradient(135deg, #d97777 0%, #064886 100%);
 
   --text-dark: #1a1a2e;
   --text-gray: #555577;

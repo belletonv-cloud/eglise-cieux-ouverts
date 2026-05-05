@@ -28,6 +28,8 @@ export const BLOCK_TYPES = {
       overlay: false,
       overlayColor: 'rgba(0,0,0,0.3)',
       overlayText: '',
+      textColor: '#064886',
+      showButton: false,
     },
     schema: [
       { key: 'image',        label: 'Image',           type: 'image' },
@@ -35,6 +37,8 @@ export const BLOCK_TYPES = {
       { key: 'overlay',      label: 'Overlay sombre',  type: 'boolean' },
       { key: 'overlayColor', label: 'Couleur overlay', type: 'color' },
       { key: 'overlayText',  label: 'Texte sur image', type: 'text' },
+      { key: 'textColor',    label: 'Couleur texte',   type: 'color' },
+      { key: 'showButton',   label: 'Afficher bouton', type: 'boolean' },
     ]
   },
 
@@ -87,13 +91,13 @@ export const BLOCK_TYPES = {
     icon: '🤝',
     defaults: {
       title: 'Rejoins-nous',
-      subtitle: 'chaque dimanche',
-      location: 'Chaque dimanche à Morlaix',
+      subtitle: 'Chaque dimanche',
+      location: 'à Morlaix',
       horaires: [
         { heure: '9h30',  label: 'Accueil café' },
         { heure: '10h00', label: 'Célébration' },
       ],
-      backgroundGradient: 'linear-gradient(135deg, #3B82F6 0%, #7C3AED 50%, #EC4899 100%)',
+      backgroundGradient: 'linear-gradient(to bottom, #064886 0%, #e58b8b 100%)',
       animation: 'slideLeft',
     },
     schema: [
@@ -116,20 +120,14 @@ export const BLOCK_TYPES = {
         "Accompagner et restaurer les vies",
         "Témoigner et former des disciples",
       ],
-      quoteLabel: 'CE QUI NOUS ANIME',
-      quote: "Voir la gloire, le royaume et la volonté de Dieu\nse manifester sur la terre comme aux Cieux",
-      ctaText: 'Nous rejoindre',
-      ctaLink: '/contact',
       backgroundColor: '#064886',
       textColor: '#ffffff',
       animation: 'zoom',
     },
     schema: [
       { key: 'title',           label: 'Titre',             type: 'text' },
-      { key: 'quote',           label: 'Citation',          type: 'textarea' },
-      { key: 'ctaText',         label: 'Bouton texte',      type: 'text' },
-      { key: 'ctaLink',         label: 'Bouton lien',       type: 'text' },
       { key: 'backgroundColor', label: 'Fond',              type: 'color' },
+      { key: 'textColor',       label: 'Couleur texte',     type: 'color' },
       { key: 'animation',       label: 'Animation citation',type: 'animation' },
     ]
   },
@@ -139,9 +137,10 @@ export const BLOCK_TYPES = {
     icon: '✉️',
     defaults: {
       title: 'Tu veux nous contacter ?',
-      image: '/photos/salle.jpg',
+      image: '',
       backgroundColor: '#064886',
-      backgroundGradient: 'linear-gradient(to bottom, #064886 0%, #a8c4e0 60%, #ffffff 100%)',
+      backgroundGradient: '#064886',
+      textColor: '#ffffff',
       showSocials: true,
       animation: 'fadeIn',
     },
@@ -149,13 +148,28 @@ export const BLOCK_TYPES = {
       { key: 'title',              label: 'Titre',           type: 'text' },
       { key: 'image',              label: 'Image gauche',    type: 'image' },
       { key: 'backgroundGradient', label: 'Fond (CSS)',      type: 'text' },
+      { key: 'textColor',          label: 'Texte couleur',   type: 'color' },
       { key: 'showSocials',        label: 'Réseaux sociaux', type: 'boolean' },
       { key: 'animation',          label: 'Animation',       type: 'animation' },
     ]
   },
 
+  nousRejoindre: {
+    label: 'Nous rejoindre (Cercle)',
+    icon: '⚪',
+    defaults: {
+      title: 'Nous rejoindre',
+      link: '/contact',
+      backgroundGradient: 'linear-gradient(to bottom, #d97777 0%, #064886 100%)',
+    },
+    schema: [
+      { key: 'title',              label: 'Titre',           type: 'text' },
+      { key: 'link',               label: 'Lien',            type: 'text' },
+      { key: 'backgroundGradient', label: 'Fond (CSS)',      type: 'text' },
+    ]
+  },
+
   richText: {
-    label: 'Texte libre',
     icon: '📄',
     defaults: {
       content: 'Écrivez votre texte ici...',
@@ -211,9 +225,10 @@ export const BLOCK_TYPES = {
     defaults: {
       label: 'Ce qui nous anime',
       quote: 'Voir la gloire, le royaume et la volonté de Dieu\\nse manifester sur la terre comme aux Cieux',
-      ctaText: 'Nous rejoindre',
-      ctaLink: '/contact',
-      backgroundGradient: 'linear-gradient(135deg, #7C3AED 0%, #EC4899 50%, #3B82F6 100%)',
+      ctaText: '',
+      ctaLink: '',
+      backgroundGradient: '#f8f9fa',
+      textColor: '#064886',
       animation: 'fadeIn',
     },
     schema: [
@@ -222,6 +237,7 @@ export const BLOCK_TYPES = {
       { key: 'ctaText',            label: 'Bouton texte',    type: 'text' },
       { key: 'ctaLink',            label: 'Bouton lien',     type: 'text' },
       { key: 'backgroundGradient', label: 'Fond (CSS)',      type: 'text' },
+      { key: 'textColor',          label: 'Texte couleur',   type: 'color' },
       { key: 'animation',          label: 'Animation',       type: 'animation' },
     ]
   },
@@ -269,10 +285,11 @@ export function createBlock(type, props = {}) {
 // ─── Structure de page initiale (accueil) ─────────────────────────────────
 export function getDefaultHomePage() {
   return [
-    createBlock('hero', { image: '/foule-croix.png', height: 700 }),
+    createBlock('hero', { image: '/foule-croix.png', height: 700, textColor: '#064886', showButton: false }),
     createBlock('rejoins'),
-    createBlock('aspirations'),
     createBlock('vision'),
-    createBlock('contact', { image: '/smartphone.jpg' }),
+    createBlock('aspirations', { backgroundColor: '#064886', textColor: '#ffffff' }),
+    createBlock('nousRejoindre'),
+    createBlock('contact', { image: '', backgroundGradient: '#064886' }),
   ].filter(Boolean)
 }

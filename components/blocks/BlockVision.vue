@@ -1,69 +1,76 @@
 <template>
   <section
     class="vision-section"
-    :style="{ background: props.backgroundGradient }"
-    :class="animationClass"
-    ref="sectionRef"
+    :style="{ background: props.backgroundGradient, color: props.textColor }"
+    :class="visibilityClasses"
   >
-    <p class="vision-label">{{ props.label }}</p>
-    <p class="vision-quote" v-html="formattedQuote"></p>
-    <a :href="props.ctaLink" class="btn btn-white">{{ props.ctaText }}</a>
+    <p class="vision-label" v-if="props.label">{{ props.label }}</p>
+    <p class="vision-quote" v-if="props.quote" v-html="formattedQuote"></p>
+    <NuxtLink v-if="props.ctaText && props.ctaLink" :to="props.ctaLink" class="btn btn-white">{{ props.ctaText }}</NuxtLink>
   </section>
 </template>
 
 <script setup>
-import { useIntersectionObserver } from '~/composables/useIntersectionObserver.js'
-
-const props = defineProps({
-  props: Object,
-  visibility: Object,
+const p = defineProps({
+  props: { type: Object, required: true },
+  visibility: { type: Object, default: () => ({}) },
 })
 
-const formattedQuote = computed(() => props.props.quote.replace(/\\n/g, '<br>'))
+const visibilityClasses = computed(() => ({
+  'hide-mobile': p.visibility.mobile === false,
+  'hide-tablet': p.visibility.tablet === false,
+  'hide-desktop': p.visibility.desktop === false,
+}))
 
-const sectionRef = ref(null)
-const animationClass = ref('')
-
-onMounted(() => {
-  const adminCanvas = document.querySelector('.canvas-wrap')
-  useIntersectionObserver(sectionRef, {
-    root: adminCanvas,
-    onIntersect: () => {
-      animationClass.value = 'visible'
-    },
-    unobserve: true,
-    threshold: 0.2
-  })
+const formattedQuote = computed(() => {
+  if (!p.props.quote) return ''
+  // Bold words gloire, royaume, volonté
+  let text = p.props.quote.replace(/\n/g, '<br>')
+  text = text.replace(/gloire/g, '<strong>gloire</strong>')
+  text = text.replace(/royaume/g, '<strong>royaume</strong>')
+  text = text.replace(/volonté/g, '<strong>volonté</strong>')
+  return text
 })
 </script>
 
 <style scoped>
 .vision-section {
-  padding: 80px 24px;
+  padding: 100px 24px;
   text-align: center;
-  color: white;
-  opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
 }
-.vision-section.visible {
-  opacity: 1;
-  transform: translateY(0);
-}
+
 .vision-label {
-  font-size: 0.9em;
+  font-size: 1.4em;
   font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  opacity: 0.8;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-style: italic;
   margin-bottom: 20px;
 }
+
 .vision-quote {
-  font-size: clamp(1.2em, 3vw, 1.8em);
+  font-size: clamp(1.4em, 3.5vw, 2.2em);
   font-weight: 300;
-  font-style: italic;
   line-height: 1.6;
-  max-width: 700px;
+  max-width: 800px;
   margin: 0 auto 36px;
 }
+
+.vision-quote :deep(strong) {
+  font-style: italic;
+  font-weight: 600;
+  font-family: 'Playfair Display', Georgia, serif;
+}
+
+.btn-white {
+  display: inline-block;
+  background: white;
+  color: #064886;
+  padding: 14px 32px;
+  border-radius: 50px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.2s;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+.btn-white:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.15); }
 </style>

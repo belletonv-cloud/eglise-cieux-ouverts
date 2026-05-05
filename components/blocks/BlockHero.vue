@@ -7,10 +7,10 @@
     <img v-if="props.image" :src="props.image" alt="Hero" class="hero-img" />
     <div class="hero-content">
       <div class="hero-bienvenue" aria-label="BIENVENUE">
-        <span v-for="(letter, i) in 'BIENVENUE'" :key="i" :style="{ animationDelay: `${i * 80}ms` }">{{ letter }}</span>
+        <span v-for="(letter, i) in 'BIENVENUE'" :key="i" :style="{ animationDelay: `${i * 80}ms`, color: props.textColor || '#064886' }">{{ letter }}</span>
       </div>
-      <p class="hero-subtitle">à l'Église Cieux Ouverts à Morlaix</p>
-      <NuxtLink to="/contact" class="btn-hero">Rejoins-nous</NuxtLink>
+      <p class="hero-subtitle" :style="{ color: props.textColor || '#064886' }">à l'Église Cieux Ouverts à Morlaix</p>
+      <NuxtLink v-if="props.showButton" to="/contact" class="btn-hero" :style="{ color: props.textColor || '#064886' }">Rejoins-nous</NuxtLink>
     </div>
   </section>
 </template>
@@ -56,12 +56,13 @@ const visibilityClasses = computed(() => ({
 
 .hero-bienvenue {
   display: flex;
-  font-size: clamp(2.5em, 8vw, 6em);
-  font-weight: 900;
-  letter-spacing: 0.2em;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-style: italic;
+  font-size: clamp(3em, 9vw, 7em);
+  font-weight: 700;
+  letter-spacing: 0.15em;
   line-height: 1.1;
   margin-bottom: 20px;
-  text-shadow: 0 2px 30px rgba(0,0,0,0.2);
   flex-wrap: wrap;
   justify-content: center;
 }
