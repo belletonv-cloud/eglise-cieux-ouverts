@@ -1,10 +1,9 @@
 <template>
   <section
     class="block-hero"
-    :style="{ backgroundImage: `url(${props.image})`, minHeight: props.height + 'px' }"
+    :style="{ minHeight: props.height + 'px' }"
     :class="visibilityClasses"
   >
-    <div class="hero-overlay"></div>
     <div class="hero-content">
       <div class="hero-bienvenue" aria-label="BIENVENUE">
         <span v-for="(letter, i) in 'BIENVENUE'" :key="i" :style="{ animationDelay: `${i * 80}ms` }">{{ letter }}</span>
@@ -41,8 +40,7 @@ const visibilityClasses = computed(() => ({
   display: flex;
   align-items: center;
   justify-content: center;
-  background-size: cover;
-  background-position: center;
+  background: linear-gradient(135deg, #3B82F6 0%, #7C3AED 50%, #EC4899 100%);
   overflow: hidden;
   width: 100vw;
   margin-left: calc(-50vw + 50%);
@@ -51,8 +49,6 @@ const visibilityClasses = computed(() => ({
 .hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(124,58,237,0.8) 0%, rgba(236,72,153,0.7) 50%, rgba(59,130,246,0.8) 100%);
-  z-index: 0;
 }
 
 .hero-content {
