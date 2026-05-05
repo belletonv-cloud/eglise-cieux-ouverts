@@ -1,0 +1,112 @@
+<template>
+  <section
+    class="block-gallery"
+    :style="{ background: props.backgroundColor }"
+    :class="visibilityClasses"
+  >
+    <div class="gallery-inner">
+      <h2 v-if="props.title" class="gallery-title" :style="{ color: props.textColor }">{{ props.title }}</h2>
+      <div class="gallery-grid" :style="{ gridTemplateColumns: `repeat(${props.columns ?? 3}, 1fr)` }">
+        <div
+          v-for="(img, i) in props.images"
+          :key="i"
+          class="gallery-item"
+          @click="openLightbox(i)"
+        >
+          <img :src="img.src" :alt="img.alt ?? ''" class="gallery-img" />
+          <div v-if="img.caption" class="gallery-caption">{{ img.caption }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lightbox -->
+    <Teleport to="body">
+      <div v-if="lightboxIndex !== null" class="lightbox" @click.self="closeLightbox">
+        <button class="lightbox-close" @click="closeLightbox">✕</button>
+        <button class="lightbox-prev" @click="prevImage">‹</button>
+        <img :src="props.images[lightboxIndex]?.src" class="lightbox-img" />
+        <button class="lightbox-next" @click="nextImage">›</button>
+      </div>
+    </Teleport>
+  </section>
+</template>
+
+<script setup>
+const p = defineProps({
+  props: { type: Object, required: true },
+  visibility: { type: Object, default: () => ({}) },
+})
+const lightboxIndex = ref(null)
+
+const visibilityClasses = computed(() => ({
+  'hide-mobile': p.visibility.mobile === false,
+  'hide-tablet': p.visibility.tablet === false,
+  'hide-desktop': p.visibility.desktop === false,
+}))
+
+function openLightbox(i) { lightboxIndex.value = i }
+function closeLightbox() { lightboxIndex.value = null }
+function prevImage() {
+  const len = p.props.images?.length ?? 0
+  lightboxIndex.value = (lightboxIndex.value - 1 + len) % len
+}
+function nextImage() {
+  const len = p.props.images?.length ?? 0
+  lightboxIndex.value = (lightboxIndex.value + 1) % len
+}
+</script>
+
+<style scoped>
+.block-gallery { padding: 60px 24px; }
+.gallery-inner { max-width: 1100px; margin: 0 auto; }
+.gallery-title {
+  font-family: Georgia, serif;
+  font-size: clamp(1.6em, 4vw, 2.4em);
+  font-style: italic;
+  text-align: center;
+  margin-bottom: 40px;
+}
+.gallery-grid { display: grid; gap: 16px; }
+.gallery-item {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  cursor: pointer;
+  aspect-ratio: 4/3;
+}
+.gallery-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.35s ease; display: block; }
+.gallery-item:hover .gallery-img { transform: scale(1.06); }
+.gallery-caption {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: linear-gradient(transparent, rgba(0,0,0,0.6));
+  color: white;
+  padding: 20px 12px 10px;
+  font-size: 0.85em;
+}
+
+/* Lightbox */
+.lightbox {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.92);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9999;
+}
+.lightbox-img { max-width: 90vw; max-height: 85vh; border-radius: 8px; object-fit: contain; }
+.lightbox-close {
+  position: absolute; top: 20px; right: 24px;
+  background: none; border: none; color: white; font-size: 2em; cursor: pointer;
+}
+.lightbox-prev, .lightbox-next {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  background: rgba(255,255,255,0.1); border: none; color: white;
+  font-size: 2.5em; padding: 10px 18px; cursor: pointer; border-radius: 8px;
+}
+.lightbox-prev { left: 16px; }
+.lightbox-next { right: 16px; }
+.lightbox-prev:hover, .lightbox-next:hover { background: rgba(255,255,255,0.25); }
+
+@media (max-width: 768px) {
+  .gallery-grid { grid-template-columns: repeat(2, 1fr) !important; }
+}
+</style>

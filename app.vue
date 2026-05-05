@@ -1,17 +1,5 @@
 <template>
-  <div id="app-root">
-    <SiteHeader />
+  <NuxtLayout>
     <NuxtPage />
-    <SiteFooter />
-  </div>
+  </NuxtLayout>
 </template>
-
-<style>
-#app-root {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background-color: var(--bg-light);
-  color: var(--text-dark);
-}
-</style>

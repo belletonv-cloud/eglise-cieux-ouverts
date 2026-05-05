@@ -6,44 +6,63 @@
     </div>
 
     <section class="section">
+      <!-- Chargement -->
       <div v-if="loading" class="loading">Chargement des messages...</div>
 
+      <!-- Aucun message -->
       <div v-else-if="messages.length === 0" class="empty">
         <p>Aucun message pour l'instant. Revenez bientôt !</p>
       </div>
 
-      <div v-else class="messages-grid">
-        <article v-for="msg in messages" :key="msg.id" class="message-card card">
-          <div class="message-meta">
-            <span class="message-date">{{ formatDate(msg.date) }}</span>
-            <span v-if="msg.serie" class="message-serie">{{ msg.serie }}</span>
+      <!-- Liste des messages -->
+      <TransitionGroup v-else tag="div" name="fade-list" class="messages-list">
+        <article
+          v-for="(msg, index) in messages"
+          :key="msg.id"
+          class="message-card card"
+          :style="{ 'transition-delay': `${index * 50}ms` }"
+        >
+          <div class="message-content">
+            <div class="message-meta">
+              <span class="message-date">{{ formatDate(msg.date) }}</span>
+              <span v-if="msg.serie" class="message-serie">{{ msg.serie }}</span>
+            </div>
+            <h2 class="message-title">{{ msg.titre }}</h2>
+            <p v-if="msg.predicateur" class="message-preacher">{{ msg.predicateur }}</p>
+            <p v-if="msg.description" class="message-desc">{{ msg.description }}</p>
           </div>
-          <h2 class="message-title">{{ msg.titre }}</h2>
-          <p v-if="msg.predicateur" class="message-preacher">{{ msg.predicateur }}</p>
-          <p v-if="msg.description" class="message-desc">{{ msg.description }}</p>
           <div class="message-links">
-            <a v-if="msg.youtube" :href="msg.youtube" target="_blank" rel="noopener" class="btn btn-primary">
+            <a
+              v-if="msg.youtube"
+              :href="msg.youtube"
+              target="_blank"
+              rel="noopener"
+              class="btn btn-primary"
+            >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:-3px;margin-right:6px"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
               Voir sur YouTube
             </a>
-            <a v-if="msg.audio" :href="msg.audio" target="_blank" rel="noopener" class="btn btn-outline-purple">
+            <a
+              v-if="msg.audio"
+              :href="msg.audio"
+              target="_blank"
+              rel="noopener"
+              class="btn btn-outline-primary"
+            >
               🎧 Écouter
             </a>
           </div>
         </article>
-      </div>
+      </TransitionGroup>
     </section>
   </div>
 </template>
 
 <script setup>
-useSeoMeta({
-  title: 'Messages — Église Cieux Ouverts Morlaix',
-  description: 'Prédications et enseignements de l\'Église Cieux Ouverts à Morlaix.',
-})
-
+import { ref, onMounted } from 'vue'
+import { collection, getDocs, orderBy, query } from 'firebase/firestore'
 const { $db } = useNuxtApp()
-const { collection, getDocs, orderBy, query } = await import('firebase/firestore')
+const db = $db
 
 const messages = ref([])
 const loading = ref(true)
@@ -56,7 +75,7 @@ function formatDate(ts) {
 
 onMounted(async () => {
   try {
-    const q = query(collection($db, 'messages'), orderBy('date', 'desc'))
+    const q = query(collection(db, 'messages'), orderBy('date', 'desc'))
     const snap = await getDocs(q)
     messages.value = snap.docs.map(d => ({ id: d.id, ...d.data() }))
   } catch (e) {
@@ -74,22 +93,74 @@ onMounted(async () => {
   text-align: center;
   padding: 80px 24px 60px;
 }
-.page-hero h1 { font-size: 2.8em; font-weight: 900; letter-spacing: 0.05em; margin-bottom: 12px; }
-.page-hero p { font-size: 1.1em; opacity: 0.9; }
 
-.loading, .empty { text-align: center; padding: 60px 0; color: var(--text-gray); font-size: 1.1em; }
+.page-hero h1 {
+  font-size: 2.8em;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+}
 
-.messages-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+.page-hero p {
+  font-size: 1.1em;
+  opacity: 0.9;
+}
+
+.loading, .empty {
+  text-align: center;
+  padding: 60px 0;
+  color: var(--text-gray);
+  font-size: 1.1em;
+}
+
+.messages-list {
+  display: flex;
+  flex-direction: column;
   gap: 24px;
 }
 
-.message-card { display: flex; flex-direction: column; gap: 10px; }
+.message-card {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+}
 
-.message-meta { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.message-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
 
-.message-date { font-size: 0.82em; color: var(--text-light); font-weight: 500; }
+.message-links {
+  margin-top: 0;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .message-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+
+.message-meta {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.message-date {
+  font-size: 0.82em;
+  color: var(--text-light);
+  font-weight: 500;
+}
 
 .message-serie {
   font-size: 0.8em;
@@ -100,22 +171,32 @@ onMounted(async () => {
   font-weight: 600;
 }
 
-.message-title { font-size: 1.2em; font-weight: 700; color: var(--text-dark); }
-.message-preacher { font-size: 0.9em; color: var(--primary-pink); font-weight: 600; }
-.message-desc { font-size: 0.9em; color: var(--text-gray); line-height: 1.6; }
-
-.message-links { margin-top: auto; display: flex; gap: 10px; flex-wrap: wrap; }
-
-.btn-outline-purple {
-  display: inline-block;
-  padding: 10px 22px;
-  border-radius: 50px;
-  border: 2px solid var(--primary-purple);
-  color: var(--primary-purple);
-  font-weight: 600;
-  font-size: 0.9em;
-  text-decoration: none;
-  transition: background 0.2s;
+.message-title {
+  font-size: 1.2em;
+  font-weight: 700;
+  color: var(--text-dark);
 }
-.btn-outline-purple:hover { background: rgba(124,58,237,0.08); text-decoration: none; }
+
+.message-preacher {
+  font-size: 0.9em;
+  color: var(--primary-pink);
+  font-weight: 600;
+}
+
+.message-desc {
+  font-size: 0.9em;
+  color: var(--text-gray);
+  line-height: 1.6;
+}
+
+/* Animations de la liste */
+.fade-list-enter-active,
+.fade-list-leave-active {
+  transition: all 0.5s ease;
+}
+.fade-list-enter-from,
+.fade-list-leave-to {
+  opacity: 0;
+  transform: translateY(20px);
+}
 </style>
