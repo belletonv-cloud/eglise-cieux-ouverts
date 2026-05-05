@@ -25,7 +25,9 @@ const sectionRef = ref(null)
 const animationClass = ref('')
 
 onMounted(() => {
+  const adminCanvas = document.querySelector('.canvas-wrap')
   useIntersectionObserver(sectionRef, {
+    root: adminCanvas,
     onIntersect: () => {
       animationClass.value = 'visible'
     },

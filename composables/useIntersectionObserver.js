@@ -9,11 +9,15 @@ export function useIntersectionObserver(elementRef, options = {}) {
       if (options.addClass) {
         entry.target.classList.add('visible')
       }
+      if (options.onIntersect) {
+        options.onIntersect()
+      }
       if (options.unobserve) {
         observer.unobserve(entry.target)
       }
     }
   }, {
+    root: options.root || null,
     threshold: options.threshold || 0.1,
     ...options
   })

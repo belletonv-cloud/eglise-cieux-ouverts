@@ -273,7 +273,9 @@ function selectBlock(id) {
 
 function onBlockUpdate(updatedBlock) {
   const idx = blocks.value.findIndex(b => b.id === updatedBlock.id)
-  if (idx !== -1) blocks.value[idx] = updatedBlock
+  if (idx !== -1) {
+    blocks.value.splice(idx, 1, updatedBlock)
+  }
 }
 
 function onDragEnd() {
