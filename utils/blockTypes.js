@@ -269,11 +269,8 @@ export function createBlock(type, props = {}) {
 // ─── Structure de page initiale (accueil) ─────────────────────────────────
 export function getDefaultHomePage() {
   return [
-    createBlock('hero', { image: '/photos/salle.jpg', height: 700 }),
-    createBlock('fullWidthImage', { src: '/hero.jpg' }),
+    createBlock('hero', { height: 700 }),
     createBlock('aspirations'),
-    createBlock('fullWidthImage', { src: '/hero-foule.png' }),
     createBlock('vision'),
-    createBlock('fullWidthImage', { src: '/calendar.png' }),
   ].filter(Boolean)
 }
