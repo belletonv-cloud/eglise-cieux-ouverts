@@ -2,7 +2,7 @@
   <section
     class="block-contact"
     :style="{ background: props.backgroundGradient, color: props.textColor || '#ffffff' }"
-    :class="visibilityClasses"
+    :class="[visibilityClasses, { 'is-triggered': isTriggered }]"
   >
     <div class="contact-inner">
       <h2 class="contact-title" :style="{ color: props.textColor || '#ffffff' }">{{ props.title }}</h2>
@@ -48,9 +48,12 @@
 </template>
 
 <script setup>
+import { ref, computed } from 'vue'
+
 const p = defineProps({
   props: { type: Object, required: true },
   visibility: { type: Object, default: () => ({}) },
+  isTriggered: { type: Boolean, default: false },
 })
 
 const visibilityClasses = computed(() => ({

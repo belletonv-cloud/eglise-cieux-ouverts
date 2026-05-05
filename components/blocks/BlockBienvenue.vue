@@ -1,52 +1,27 @@
 <template>
   <section
     class="block-bienvenue"
-    :style="{ background: props.backgroundColor }"
     :class="visibilityClasses"
-    ref="sectionRef"
   >
-    <div class="bienvenue-letters" :class="animClass">
-      <template v-for="(group, gi) in letterGroups" :key="gi">
-        <div class="letter-group" :class="{ triggered: triggered }" :style="{ '--group-delay': (gi * 0.12) + 's' }">
-          <span
-            v-for="(letter, li) in group"
-            :key="li"
-            :style="{
-              color: props.textColor,
-              fontSize: `clamp(3em, ${props.fontSize}vw, ${props.fontSize * 1.1}em)`,
-              '--letter-delay': (li * 0.07) + 's'
-            }"
-          >{{ letter }}</span>
-        </div>
-      </template>
+    <img src="https://static.wixstatic.com/media/d65230_c609095100164117aabdd3b55d9cdf56~mv2.png/v1/fill/w_1920,h_515,al_c,q_90,usm_0.66_1.00_0.01,enc_avif,quality_auto/d65230_c609095100164117aabdd3b55d9cdf56~mv2.png" alt="Foule Croix" class="bienvenue-img" />
+    
+    <div class="bienvenue-content">
+      <div class="hero-bienvenue-wrapper" aria-label="BIENVENUE">
+        <div class="hero-bienvenue-line line-1" :style="{ color: props.textColor || '#054886' }">B I E&nbsp;</div>
+        <div class="hero-bienvenue-line line-2" :style="{ color: props.textColor || '#054886' }">N V E&nbsp;</div>
+        <div class="hero-bienvenue-line line-3" :style="{ color: props.textColor || '#054886' }">N U E</div>
+      </div>
+      <p class="hero-subtitle">à l'Église Cieux Ouverts à Morlaix</p>
     </div>
-    <p class="bienvenue-subtitle" :style="{ color: props.textColor + 'aa' }">{{ props.subtitle }}</p>
   </section>
 </template>
 
 <script setup>
+import { computed } from 'vue'
+
 const p = defineProps({
   props: { type: Object, required: true },
   visibility: { type: Object, default: () => ({}) },
-})
-
-const sectionRef = ref(null)
-const triggered = ref(false)
-
-// Split title into 3 groups of ~3 letters each
-const letterGroups = computed(() => {
-  const title = p.props.title || 'BIENVENUE'
-  const size = Math.ceil(title.length / 3)
-  const groups = []
-  for (let i = 0; i < title.length; i += size) {
-    groups.push(title.slice(i, i + size).split(''))
-  }
-  return groups
-})
-
-const animClass = computed(() => {
-  const anim = p.props.animation || 'portal'
-  return `anim-container-${anim}`
 })
 
 const visibilityClasses = computed(() => ({
@@ -54,138 +29,87 @@ const visibilityClasses = computed(() => ({
   'hide-tablet': p.visibility.tablet === false,
   'hide-desktop': p.visibility.desktop === false,
 }))
-
-onMounted(() => {
-  const observer = new IntersectionObserver(
-    ([entry]) => {
-      if (entry.isIntersecting) {
-        triggered.value = true
-        observer.disconnect()
-      }
-    },
-    { threshold: 0.2 }
-  )
-  if (sectionRef.value) observer.observe(sectionRef.value)
-})
 </script>
 
 <style scoped>
 .block-bienvenue {
-  text-align: center;
-  padding: 60px 20px 40px;
+  position: relative;
   overflow: hidden;
-  perspective: 1000px;
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 500px;
 }
 
-.bienvenue-letters {
+.bienvenue-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  z-index: 0;
+}
+
+.bienvenue-content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  width: 100%;
+  max-width: 1200px;
+  padding: 0 24px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0;
 }
 
-.letter-group {
+.hero-bienvenue-wrapper {
   display: flex;
-  justify-content: center;
-  gap: 0.12em;
+  flex-direction: column;
+  align-items: flex-start;
+  font-family: 'Playfair Display', serif;
+  font-size: 80px;
+  line-height: 1.3;
+  margin-bottom: 20px;
+  position: relative;
+  left: -50px;
 }
 
-/* === PORTAL animation === */
-.anim-container-portal .letter-group span {
-  display: inline-block;
-  font-family: 'Playfair Display', Georgia, serif;
-  font-style: italic;
-  font-weight: 700;
-  line-height: 1.1;
-  transform: rotateY(90deg);
-  opacity: 0;
-  transition:
-    transform 0.65s cubic-bezier(0.34, 1.56, 0.64, 1),
-    opacity 0.4s ease;
-  transition-delay: calc(var(--group-delay, 0s) + var(--letter-delay, 0s));
-}
-.anim-container-portal .letter-group.triggered span {
-  transform: rotateY(0deg);
-  opacity: 1;
+.hero-bienvenue-line {
+  white-space: pre;
+  letter-spacing: 0.1em;
 }
 
-/* === SLIDE UP animation === */
-.anim-container-slideUp .letter-group span {
-  display: inline-block;
-  font-family: 'Playfair Display', Georgia, serif;
-  font-style: italic;
-  font-weight: 700;
-  line-height: 1.1;
-  transform: translateY(40px);
-  opacity: 0;
-  transition:
-    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 0.5s ease;
-  transition-delay: calc(var(--group-delay, 0s) + var(--letter-delay, 0s));
-}
-.anim-container-slideUp .letter-group.triggered span {
-  transform: translateY(0);
-  opacity: 1;
-}
+.line-1 { transform: translateX(-40px); }
+.line-2 { transform: translateX(20px); }
+.line-3 { transform: translateX(120px); }
 
-/* === FADE IN animation === */
-.anim-container-fadeIn .letter-group span,
-.anim-container-none .letter-group span {
-  display: inline-block;
-  font-family: 'Playfair Display', Georgia, serif;
-  font-style: italic;
-  font-weight: 700;
-  line-height: 1.1;
-  opacity: 0;
-  transition: opacity 0.7s ease;
-  transition-delay: calc(var(--group-delay, 0s) + var(--letter-delay, 0s));
-}
-.anim-container-fadeIn .letter-group.triggered span,
-.anim-container-none .letter-group.triggered span {
-  opacity: 1;
-}
-
-/* === BOUNCE animation === */
-.anim-container-bounce .letter-group span {
-  display: inline-block;
-  font-family: 'Playfair Display', Georgia, serif;
-  font-style: italic;
-  font-weight: 700;
-  line-height: 1.1;
-  transform: scale(0) translateY(-30px);
-  opacity: 0;
-  transition:
-    transform 0.7s cubic-bezier(0.34, 1.8, 0.64, 1),
-    opacity 0.4s ease;
-  transition-delay: calc(var(--group-delay, 0s) + var(--letter-delay, 0s));
-}
-.anim-container-bounce .letter-group.triggered span {
-  transform: scale(1) translateY(0);
-  opacity: 1;
-}
-
-/* === FLIP animation === */
-.anim-container-flip .letter-group span {
-  display: inline-block;
-  font-family: 'Playfair Display', Georgia, serif;
-  font-style: italic;
-  font-weight: 700;
-  line-height: 1.1;
-  transform: rotateX(90deg);
-  opacity: 0;
-  transition:
-    transform 0.65s cubic-bezier(0.34, 1.56, 0.64, 1),
-    opacity 0.4s ease;
-  transition-delay: calc(var(--group-delay, 0s) + var(--letter-delay, 0s));
-}
-.anim-container-flip .letter-group.triggered span {
-  transform: rotateX(0deg);
-  opacity: 1;
-}
-
-.bienvenue-subtitle {
-  font-size: clamp(0.9em, 2.5vw, 1.15em);
+.hero-subtitle {
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 17.5px;
+  color: rgb(67, 139, 176);
   font-weight: 400;
   margin-top: 20px;
+  transform: translateX(120px);
+}
+
+@media (max-width: 768px) {
+  .hero-bienvenue-wrapper {
+    font-size: clamp(40px, 10vw, 60px);
+    left: 0;
+    align-items: center;
+  }
+  .line-1, .line-2, .line-3 {
+    transform: none;
+    text-align: center;
+  }
+  .hero-subtitle {
+    transform: none;
+    text-align: center;
+    font-size: 16px;
+  }
 }
 </style>

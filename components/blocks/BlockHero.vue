@@ -1,17 +1,13 @@
 <template>
   <section
-    class="block-hero"
-    :style="{ minHeight: props.height + 'px' }"
+    class="block-main-hero"
     :class="visibilityClasses"
   >
-    <img v-if="props.image" :src="props.image" alt="Hero" class="hero-img" />
+    <img src="https://static.wixstatic.com/media/d65230_b70cb082138448849de83ccab78d3ed7~mv2.png/v1/fill/w_1920,h_1141,al_c,q_95,usm_0.66_1.00_0.01,enc_avif,quality_auto/d65230_b70cb082138448849de83ccab78d3ed7~mv2.png" alt="Sky background" class="hero-bg" />
+    
     <div class="hero-content">
-      <div class="hero-bienvenue-wrapper" aria-label="BIENVENUE">
-        <div class="hero-bienvenue-line line-1" :style="{ color: props.textColor || '#054886' }">B I E&nbsp;</div>
-        <div class="hero-bienvenue-line line-2" :style="{ color: props.textColor || '#054886' }">N V E&nbsp;</div>
-        <div class="hero-bienvenue-line line-3" :style="{ color: props.textColor || '#054886' }">N U E</div>
-      </div>
-      <p class="hero-subtitle">à l'Église Cieux Ouverts à Morlaix</p>
+      <img src="https://static.wixstatic.com/media/d65230_556da516fccc4add9424fa0586c62330~mv2.png/v1/crop/x_154,y_2,w_411,h_85/fill/w_575,h_88,fp_0.50_0.50,lg_1,q_85,enc_avif,quality_auto/(NEW)%20Cieux%20Ouverts-01-NL.png" alt="Cieux Ouverts" class="hero-name" />
+      <img src="https://static.wixstatic.com/media/d65230_e393fcbc29d74d8694d53aa88bba03c5~mv2.png/v1/crop/x_0,y_0,w_232,h_132/fill/w_150,h_85,fp_0.50_0.50,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/g149-8.png" alt="Logo" class="hero-logo" />
     </div>
   </section>
 </template>
@@ -22,7 +18,7 @@ const p = defineProps({
   props: { type: Object, required: true },
   visibility: { type: Object, default: () => ({}) },
 })
-const props = computed(() => p.props)
+
 const visibilityClasses = computed(() => ({
   'hide-mobile': p.visibility.mobile === false,
   'hide-tablet': p.visibility.tablet === false,
@@ -31,90 +27,59 @@ const visibilityClasses = computed(() => ({
 </script>
 
 <style scoped>
-.block-hero {
+.block-main-hero {
   position: relative;
-  overflow: hidden;
   width: 100vw;
   margin-left: calc(-50vw + 50%);
+  height: 100vh;
+  min-height: 600px;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+  margin-top: -70px; /* Offset the SiteHeader spacer if needed */
 }
 
-.hero-img {
+.hero-bg {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  display: block;
   z-index: 0;
 }
 
 .hero-content {
   position: relative;
   z-index: 1;
-  text-align: center;
-  width: 100%;
-  max-width: 1200px;
-  padding: 0 24px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 40px;
+  transform: translateY(-50px);
 }
 
-.hero-bienvenue-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  font-family: 'Playfair Display', serif;
-  font-size: 80px;
-  line-height: 1.3; /* 104px */
-  margin-bottom: 20px;
-  position: relative;
-  /* Adjusting to match the staggering */
-  left: -50px;
+.hero-name {
+  width: 100%;
+  max-width: 575px;
+  height: auto;
+  object-fit: contain;
 }
 
-.hero-bienvenue-line {
-  white-space: pre;
-  letter-spacing: 0.1em;
-}
-
-.line-1 {
-  transform: translateX(-40px);
-}
-.line-2 {
-  transform: translateX(20px);
-}
-.line-3 {
-  transform: translateX(120px);
-}
-
-.hero-subtitle {
-  font-family: Helvetica, Arial, sans-serif;
-  font-size: 17.5px;
-  color: rgb(67, 139, 176); /* exact extracted color */
-  font-weight: 400;
-  margin-top: 20px;
-  transform: translateX(120px);
+.hero-logo {
+  width: 100%;
+  max-width: 150px;
+  height: auto;
+  object-fit: contain;
 }
 
 @media (max-width: 768px) {
-  .hero-bienvenue-wrapper {
-    font-size: clamp(40px, 10vw, 60px);
-    left: 0;
-    align-items: center;
+  .hero-name {
+    max-width: 80vw;
   }
-  .line-1, .line-2, .line-3 {
-    transform: none;
-    text-align: center;
-  }
-  .hero-subtitle {
-    transform: none;
-    text-align: center;
-    font-size: 16px;
+  .hero-logo {
+    max-width: 100px;
   }
 }
 </style>

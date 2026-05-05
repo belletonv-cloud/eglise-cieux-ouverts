@@ -2,12 +2,17 @@
   <section
     class="block-aspirations"
     :style="{ background: props.backgroundColor, color: props.textColor }"
-    :class="visibilityClasses"
+    :class="[visibilityClasses, { 'is-triggered': isTriggered }]"
   >
     <div class="aspirations-inner">
       <h2 class="aspirations-title" :style="{ color: props.textColor }">{{ props.title }}</h2>
       <ul class="aspirations-list">
-        <li v-for="(item, i) in props.items" :key="i" class="aspiration-item" :style="{ color: props.textColor }">
+        <li 
+          v-for="(item, i) in props.items" 
+          :key="i" 
+          class="aspiration-item" 
+          :style="{ color: props.textColor, transitionDelay: `${i * 0.2 + 0.3}s` }"
+        >
           {{ item }}
         </li>
       </ul>
@@ -21,6 +26,7 @@ import { computed } from 'vue'
 const p = defineProps({
   props: { type: Object, required: true },
   visibility: { type: Object, default: () => ({}) },
+  isTriggered: { type: Boolean, default: false },
 })
 
 const visibilityClasses = computed(() => ({
@@ -51,6 +57,14 @@ const visibilityClasses = computed(() => ({
   font-weight: 400;
   line-height: 1.3;
   margin: 0;
+  opacity: 0;
+  transform: translateX(-30px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.block-aspirations.is-triggered .aspirations-title {
+  opacity: 1;
+  transform: translateX(0);
 }
 
 .aspirations-list {
@@ -72,6 +86,14 @@ const visibilityClasses = computed(() => ({
   align-items: center;
   position: relative;
   padding-left: 50px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.block-aspirations.is-triggered .aspiration-item {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .aspiration-item::before {

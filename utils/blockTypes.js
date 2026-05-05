@@ -285,11 +285,15 @@ export function createBlock(type, props = {}) {
 // ─── Structure de page initiale (accueil) ─────────────────────────────────
 export function getDefaultHomePage() {
   return [
-    createBlock('hero', { image: '/foule-croix.png', height: 700, textColor: '#064886', showButton: false }),
+    createBlock('hero'),
+    createBlock('bienvenue'),
     createBlock('rejoins'),
     createBlock('vision'),
-    createBlock('aspirations', { backgroundColor: '#064886', textColor: '#ffffff' }),
+    createBlock('aspirations'),
     createBlock('nousRejoindre'),
-    createBlock('contact', { image: '', backgroundGradient: '#064886' }),
+    createBlock('contact', { 
+      image: 'https://static.wixstatic.com/media/11062b_c518f30e29fa44f0b424cabfdd0b5a6a~mv2.jpg/v1/fill/w_147,h_246,al_c,q_80,usm_0.66_1.00_0.01,blur_2,enc_avif,quality_auto/Smartphone%20en%20main.jpg', 
+      backgroundGradient: 'linear-gradient(to bottom, #064886 0%, #064886 70%, #ffffff 100%)' 
+    }),
   ].filter(Boolean)
 }
