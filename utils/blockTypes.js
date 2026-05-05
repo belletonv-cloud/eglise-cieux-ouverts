@@ -272,5 +272,6 @@ export function getDefaultHomePage() {
     createBlock('hero', { height: 700 }),
     createBlock('aspirations'),
     createBlock('vision'),
+    createBlock('contact'),
   ].filter(Boolean)
 }
