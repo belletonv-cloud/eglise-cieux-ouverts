@@ -1,202 +1,106 @@
 <template>
   <div class="page-messages">
-    <div class="page-hero">
-      <h1>Messages</h1>
-      <p>Retrouvez les prédications et enseignements de l'église</p>
-    </div>
-
-    <section class="section">
-      <!-- Chargement -->
-      <div v-if="loading" class="loading">Chargement des messages...</div>
-
-      <!-- Aucun message -->
-      <div v-else-if="messages.length === 0" class="empty">
-        <p>Aucun message pour l'instant. Revenez bientôt !</p>
+    <!-- Hero / En-tête -->
+    <section class="messages-hero">
+      <div class="messages-hero-content">
+        <h1 class="hero-title">Nos messages</h1>
+        <h2 class="hero-subtitle">Cieux Ouverts est aussi en ligne !</h2>
+        <div class="hero-text">
+          <p>📢 Besoin d'un boost spirituel dans la semaine ?</p>
+          <p>📺 Replonge dans la parole sur notre chaîne YouTube :</p>
+          <p>(Re)découvre les messages qui t'ont touché.</p>
+          <p>Laisse Dieu te parler à nouveau ou même d'une nouvelle manière.</p>
+          <p>Abonne-toi dès maintenant pour ne rien manquer et garde la flamme allumée ! 🔥</p>
+        </div>
+        <a href="https://www.youtube.com/@cieuxouverts" target="_blank" rel="noopener" class="youtube-btn">
+          Accéder à la chaîne YouTube
+        </a>
       </div>
-
-      <!-- Liste des messages -->
-      <TransitionGroup v-else tag="div" name="fade-list" class="messages-list">
-        <article
-          v-for="(msg, index) in messages"
-          :key="msg.id"
-          class="message-card card"
-          :style="{ 'transition-delay': `${index * 50}ms` }"
-        >
-          <div class="message-content">
-            <div class="message-meta">
-              <span class="message-date">{{ formatDate(msg.date) }}</span>
-              <span v-if="msg.serie" class="message-serie">{{ msg.serie }}</span>
-            </div>
-            <h2 class="message-title">{{ msg.titre }}</h2>
-            <p v-if="msg.predicateur" class="message-preacher">{{ msg.predicateur }}</p>
-            <p v-if="msg.description" class="message-desc">{{ msg.description }}</p>
-          </div>
-          <div class="message-links">
-            <a
-              v-if="msg.youtube"
-              :href="msg.youtube"
-              target="_blank"
-              rel="noopener"
-              class="btn btn-primary"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:-3px;margin-right:6px"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-              Voir sur YouTube
-            </a>
-            <a
-              v-if="msg.audio"
-              :href="msg.audio"
-              target="_blank"
-              rel="noopener"
-              class="btn btn-outline-primary"
-            >
-              🎧 Écouter
-            </a>
-          </div>
-        </article>
-      </TransitionGroup>
     </section>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { collection, getDocs, orderBy, query } from 'firebase/firestore'
-const { $db } = useNuxtApp()
-const db = $db
-
-const messages = ref([])
-const loading = ref(true)
-
-function formatDate(ts) {
-  if (!ts) return ''
-  const d = ts.toDate ? ts.toDate() : new Date(ts)
-  return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
-}
-
-onMounted(async () => {
-  try {
-    const q = query(collection(db, 'messages'), orderBy('date', 'desc'))
-    const snap = await getDocs(q)
-    messages.value = snap.docs.map(d => ({ id: d.id, ...d.data() }))
-  } catch (e) {
-    console.error(e)
-  } finally {
-    loading.value = false
-  }
-})
+// Plus besoin de fetch Firebase, la page devient purement un point d'entrée (statique).
 </script>
 
 <style scoped>
-.page-hero {
-  background: var(--gradient-hero);
-  color: white;
-  text-align: center;
-  padding: 80px 24px 60px;
-}
-
-.page-hero h1 {
-  font-size: 2.8em;
-  font-weight: 900;
-  letter-spacing: 0.05em;
-  margin-bottom: 12px;
-}
-
-.page-hero p {
-  font-size: 1.1em;
-  opacity: 0.9;
-}
-
-.loading, .empty {
-  text-align: center;
-  padding: 60px 0;
-  color: var(--text-gray);
-  font-size: 1.1em;
-}
-
-.messages-list {
+.page-messages {
+  min-height: calc(100vh - 250px);
+  background-color: white;
   display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.message-card {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
   align-items: center;
-  gap: 24px;
+  justify-content: center;
+  padding: 60px 24px;
 }
 
-.message-content {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+.messages-hero {
+  max-width: 800px;
+  width: 100%;
+  background: #f4f4f4;
+  border-radius: 12px;
+  padding: 60px 40px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.05);
 }
 
-.message-links {
-  margin-top: 0;
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  flex-shrink: 0;
+.hero-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 48px;
+  color: #064886;
+  margin-bottom: 10px;
+  font-style: italic;
+}
+
+.hero-subtitle {
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 24px;
+  color: #333;
+  margin-bottom: 30px;
+  font-weight: 700;
+}
+
+.hero-text {
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 18px;
+  line-height: 1.8;
+  color: #555;
+  margin-bottom: 40px;
+}
+
+.hero-text p {
+  margin: 10px 0;
+}
+
+.youtube-btn {
+  display: inline-block;
+  background-color: #064886;
+  color: white;
+  padding: 16px 32px;
+  font-size: 18px;
+  font-weight: 600;
+  border-radius: 30px;
+  text-decoration: none;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+.youtube-btn:hover {
+  background-color: #043360;
+  transform: translateY(-2px);
 }
 
 @media (max-width: 768px) {
-  .message-card {
-    flex-direction: column;
-    align-items: stretch;
+  .messages-hero {
+    padding: 40px 20px;
   }
-}
-
-
-.message-meta {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.message-date {
-  font-size: 0.82em;
-  color: var(--text-light);
-  font-weight: 500;
-}
-
-.message-serie {
-  font-size: 0.8em;
-  background: rgba(124,58,237,0.1);
-  color: var(--primary-purple);
-  padding: 3px 10px;
-  border-radius: 50px;
-  font-weight: 600;
-}
-
-.message-title {
-  font-size: 1.2em;
-  font-weight: 700;
-  color: var(--text-dark);
-}
-
-.message-preacher {
-  font-size: 0.9em;
-  color: var(--primary-pink);
-  font-weight: 600;
-}
-
-.message-desc {
-  font-size: 0.9em;
-  color: var(--text-gray);
-  line-height: 1.6;
-}
-
-/* Animations de la liste */
-.fade-list-enter-active,
-.fade-list-leave-active {
-  transition: all 0.5s ease;
-}
-.fade-list-enter-from,
-.fade-list-leave-to {
-  opacity: 0;
-  transform: translateY(20px);
+  .hero-title {
+    font-size: 36px;
+  }
+  .hero-subtitle {
+    font-size: 20px;
+  }
+  .hero-text {
+    font-size: 16px;
+  }
 }
 </style>
