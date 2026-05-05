@@ -1,11 +1,18 @@
 <template>
   <footer class="site-footer" ref="footerRef">
     <div class="footer-inner">
-      <!-- Partie gauche : Titre avec effet rideau -->
+      <!-- Partie gauche : Titre avec effet stores (chaque lettre tourne sur elle-même) -->
       <div class="footer-left">
-        <div class="shutter-wrapper" :class="{ 'is-open': shutterOpen }">
-          <h2 class="footer-title">Il y a une place pour <em>toi !</em></h2>
-        </div>
+        <h2 class="footer-title">
+          <span 
+            v-for="(char, i) in titleChars" 
+            :key="i" 
+            class="shutter-char" 
+            :style="getCharStyle(i)"
+          >
+            {{ char === ' ' ? '&nbsp;' : char }}
+          </span>
+        </h2>
       </div>
       
       <!-- Partie droite : Infos -->
@@ -21,19 +28,28 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 
 const footerRef = ref(null)
-const shutterOpen = ref(false)
+const scrollProgress = ref(0)
+
+const titleChars = "Il y a une place pour toi !".split('')
 
 const onScroll = () => {
   if (!footerRef.value) return
   const rect = footerRef.value.getBoundingClientRect()
   const vh = window.innerHeight
-  if (rect.top < vh * 0.9) {
-    shutterOpen.value = true
-  } else if (rect.top > vh) {
-    shutterOpen.value = false
+  // Commence à s'animer quand le footer rentre dans l'écran
+  const start = vh
+  // Finit l'animation quand le footer est bien visible (ex: 75% de l'écran)
+  const end = vh * 0.75
+  
+  if (rect.top > start) {
+    scrollProgress.value = 0
+  } else if (rect.top < end) {
+    scrollProgress.value = 1
+  } else {
+    scrollProgress.value = 1 - ((rect.top - end) / (start - end))
   }
 }
 
@@ -45,18 +61,37 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('scroll', onScroll)
 })
+
+function getCharStyle(i) {
+  const p = scrollProgress.value
+  const total = titleChars.length
+  
+  // Effet de vague (wave delay)
+  // Chaque lettre a un petit délai basé sur son index
+  const delay = (i / total) * 0.4
+  const progress = Math.max(0, Math.min(1, (p - delay) / (1 - 0.4)))
+  
+  // Rotation de 90deg (invisible) à 0deg (visible)
+  const rotX = 90 * (1 - progress)
+  
+  return {
+    transform: `rotateX(${rotX}deg)`,
+    opacity: progress === 0 ? 0 : 1
+  }
+}
 </script>
 
 <style scoped>
 .site-footer {
-  background: linear-gradient(to bottom, #ffffff 0%, #064886 100%);
-  color: white;
+  /* Le footer commence bleu #064886 et va progressivement vers du blanc #ffffff */
+  background: linear-gradient(to bottom, #064886 0%, #064886 40%, #ffffff 100%);
   position: relative;
   overflow: hidden;
+  min-height: 350px;
 }
 
 .footer-inner {
-  max-width: 1100px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 80px 24px 60px;
   display: flex;
@@ -69,30 +104,20 @@ onUnmounted(() => {
   flex: 1;
 }
 
-.shutter-wrapper {
-  overflow: hidden;
-  display: inline-block;
-}
-
 .footer-title {
   font-family: 'Playfair Display', serif;
-  font-size: clamp(36px, 5vw, 65px);
+  font-size: clamp(24px, 4vw, 45px); /* Tient sur une ligne */
   font-weight: 700;
-  color: #064886;
+  color: #ffffff; /* Texte blanc sur le fond bleu du haut du footer */
   margin: 0;
-  transform: translateY(100%);
-  opacity: 0;
-  transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.8s ease;
+  white-space: nowrap;
+  perspective: 1000px; /* Pour la profondeur 3D de la rotation X */
+}
+
+.shutter-char {
+  display: inline-block;
+  transform-origin: center center;
   will-change: transform, opacity;
-}
-
-.shutter-wrapper.is-open .footer-title {
-  transform: translateY(0);
-  opacity: 1;
-}
-
-.footer-title em {
-  font-style: italic;
 }
 
 .footer-right {
@@ -147,6 +172,10 @@ onUnmounted(() => {
   }
   .footer-info {
     text-align: left;
+  }
+  .footer-title {
+    white-space: nowrap;
+    font-size: clamp(18px, 6vw, 30px); /* Plus petit sur mobile pour forcer 1 ligne */
   }
 }
 </style>

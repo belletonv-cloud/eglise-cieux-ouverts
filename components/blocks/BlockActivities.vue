@@ -1,17 +1,31 @@
 <template>
   <section class="block-activities" :class="visibilityClasses">
-    <div class="activities-grid">
-      <div 
-        v-for="(item, i) in props.items" 
-        :key="i" 
-        class="activity-card"
-        @mouseenter="hovered = i"
-        @mouseleave="hovered = null"
-      >
-        <img :src="item.image" :alt="item.title" class="activity-img" />
-        <div class="activity-overlay" :class="{ 'is-hovered': hovered === i }">
-          <h3 class="activity-title">{{ item.title }}</h3>
-          <p class="activity-desc" v-html="item.description.replace(/\n/g, '<br>')"></p>
+    <div class="activities-container">
+      <!-- Main active slide -->
+      <div class="activity-main">
+        <div class="activity-main-inner" @mouseenter="hovered = true" @mouseleave="hovered = false">
+          <img :src="activeItem.image" :alt="activeItem.title" class="activity-main-img" />
+          <div class="activity-overlay" :class="{ 'is-hovered': hovered }">
+            <h3 class="activity-title">{{ activeItem.title }}</h3>
+            <p class="activity-desc" v-html="activeItem.description.replace(/\n/g, '<br>')"></p>
+          </div>
+        </div>
+        
+        <!-- Navigation Arrows (optional, but good for sliders) -->
+        <button class="nav-arrow prev" @click="prevSlide">‹</button>
+        <button class="nav-arrow next" @click="nextSlide">›</button>
+      </div>
+
+      <!-- Thumbnails -->
+      <div class="activity-thumbnails">
+        <div 
+          v-for="(item, i) in props.items" 
+          :key="i"
+          class="thumbnail-wrap"
+          :class="{ 'is-active': activeIndex === i }"
+          @click="activeIndex = i"
+        >
+          <img :src="item.image" :alt="item.title" class="thumbnail-img" />
         </div>
       </div>
     </div>
@@ -26,48 +40,71 @@ const p = defineProps({
   visibility: { type: Object, default: () => ({}) },
 })
 
-const hovered = ref(null)
+const activeIndex = ref(0)
+const hovered = ref(false)
+
+const activeItem = computed(() => {
+  if (!p.props.items || !p.props.items.length) return {}
+  return p.props.items[activeIndex.value]
+})
 
 const visibilityClasses = computed(() => ({
   'hide-mobile': p.visibility.mobile === false,
   'hide-tablet': p.visibility.tablet === false,
   'hide-desktop': p.visibility.desktop === false,
 }))
+
+function prevSlide() {
+  if (!p.props.items) return
+  activeIndex.value = activeIndex.value === 0 ? p.props.items.length - 1 : activeIndex.value - 1
+}
+
+function nextSlide() {
+  if (!p.props.items) return
+  activeIndex.value = activeIndex.value === p.props.items.length - 1 ? 0 : activeIndex.value + 1
+}
 </script>
 
 <style scoped>
 .block-activities {
   padding: 100px 24px;
-  background-color: white; /* Ou gradient si nécessaire */
+  background-color: white;
 }
 
-.activities-grid {
-  max-width: 1200px;
+.activities-container {
+  max-width: 1000px;
   margin: 0 auto;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: 20px;
 }
 
-.activity-card {
+.activity-main {
   position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
   border-radius: 12px;
   overflow: hidden;
-  aspect-ratio: 1 / 1;
-  cursor: pointer;
   background-color: #f4f4f4;
-  flex: 0 0 auto;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
 }
 
-.activity-img {
+.activity-main-inner {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  cursor: pointer;
+}
+
+.activity-main-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.4s ease;
+  transition: transform 0.6s ease;
 }
 
-.activity-card:hover .activity-img {
-  transform: scale(1.05);
+.activity-main-inner:hover .activity-main-img {
+  transform: scale(1.03);
 }
 
 .activity-overlay {
@@ -76,9 +113,9 @@ const visibilityClasses = computed(() => ({
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(6, 72, 134, 0.9); /* Primary purple/blue */
+  background: rgba(6, 72, 134, 0.9);
   color: white;
-  padding: 30px;
+  padding: 40px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -93,46 +130,111 @@ const visibilityClasses = computed(() => ({
 
 .activity-title {
   font-family: 'Playfair Display', serif;
-  font-size: 28px;
-  margin-bottom: 15px;
+  font-size: 40px;
+  margin-bottom: 20px;
   font-style: italic;
   font-weight: 700;
 }
 
 .activity-desc {
   font-family: Helvetica, Arial, sans-serif;
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: 16px;
+  line-height: 1.6;
   font-weight: 400;
+  max-width: 800px;
+}
+
+.nav-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255,255,255,0.8);
+  border: none;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  font-size: 30px;
+  color: #064886;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+  z-index: 10;
+}
+
+.nav-arrow:hover {
+  background: white;
+}
+
+.nav-arrow.prev {
+  left: 20px;
+}
+
+.nav-arrow.next {
+  right: 20px;
+}
+
+.activity-thumbnails {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+  scrollbar-width: thin;
+}
+
+.thumbnail-wrap {
+  flex: 0 0 120px;
+  height: 80px;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 0.2s, transform 0.2s;
+  border: 2px solid transparent;
+}
+
+.thumbnail-wrap:hover {
+  opacity: 0.8;
+}
+
+.thumbnail-wrap.is-active {
+  opacity: 1;
+  border-color: #064886;
+  transform: translateY(-2px);
+}
+
+.thumbnail-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 @media (max-width: 768px) {
-  .block-activities {
-    padding: 60px 0; /* remove horizontal padding to let slider touch edges */
+  .activity-main {
+    aspect-ratio: 4 / 3;
   }
-  .activities-grid {
-    display: flex;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    gap: 16px;
-    padding: 0 24px;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none; /* Firefox */
+  .activity-title {
+    font-size: 28px;
   }
-  .activities-grid::-webkit-scrollbar {
-    display: none; /* Safari and Chrome */
+  .activity-desc {
+    font-size: 14px;
   }
-  .activity-card {
-    width: 80vw;
-    scroll-snap-align: center;
-  }
-  /* Show text naturally or tap on mobile */
   .activity-overlay {
-    opacity: 0; 
+    padding: 20px;
+    opacity: 0;
   }
-  .activity-overlay.is-hovered, .activity-card:active .activity-overlay {
+  .activity-main-inner:active .activity-overlay {
     opacity: 1;
+  }
+  .nav-arrow {
+    width: 40px;
+    height: 40px;
+    font-size: 24px;
+  }
+  .thumbnail-wrap {
+    flex: 0 0 80px;
+    height: 60px;
   }
 }
 </style>

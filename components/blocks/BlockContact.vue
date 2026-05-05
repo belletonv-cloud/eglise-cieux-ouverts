@@ -70,7 +70,6 @@ const visibilityClasses = computed(() => ({
 const sectionRef = ref(null)
 const questionsRef = ref(null)
 const scrollProgress = ref(0)
-const qOpacity = ref(0)
 
 const onScroll = () => {
   if (!sectionRef.value) return
@@ -85,26 +84,6 @@ const onScroll = () => {
     scrollProgress.value = 1
   } else {
     scrollProgress.value = 1 - ((rect.top - end) / (start - end))
-  }
-
-  // Handle specific appear/disappear logic for the questions based on its exact screen position
-  if (questionsRef.value) {
-    const qRect = questionsRef.value.getBoundingClientRect()
-    const qTop = qRect.top
-    let op = 0
-    // Fade in between 80% to 60% of viewport, fully visible 60% to 30%, fade out 30% to 10%
-    if (qTop > vh * 0.8) {
-      op = 0
-    } else if (qTop > vh * 0.6) {
-      op = (vh * 0.8 - qTop) / (vh * 0.2) // goes 0 to 1
-    } else if (qTop > vh * 0.3) {
-      op = 1
-    } else if (qTop > vh * 0.1) {
-      op = (qTop - vh * 0.1) / (vh * 0.2) // goes 1 to 0
-    } else {
-      op = 0
-    }
-    qOpacity.value = Math.max(0, Math.min(1, op))
   }
 }
 
@@ -143,11 +122,12 @@ const fadeStyle = computed(() => {
 })
 
 const questionsFadeStyle = computed(() => {
-  const op = qOpacity.value
+  const p = scrollProgress.value
+  // Apparaît dès qu'on arrive dessus et reste visible
+  const op = Math.min(1, p * 2.5)
   return {
     opacity: op,
-    // Add a slight scale to match the 'arrive on it' feel
-    transform: `scale(${0.9 + (op * 0.1)})`,
+    transform: `translateY(${20 * (1 - op)}px)`,
     transition: 'opacity 0.1s linear, transform 0.1s linear'
   }
 })
