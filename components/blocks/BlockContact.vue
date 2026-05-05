@@ -20,7 +20,7 @@
         </div>
 
         <div class="contact-right" :style="fadeStyle">
-          <div class="contact-questions" :style="questionsFadeStyle">
+          <div class="contact-questions" ref="questionsRef" :style="questionsFadeStyle">
             <p>Tu as une question ?</p>
             <p>Tu désires parler à un pasteur ?</p>
             <p>Tu souhaites recevoir notre newsletter ?</p>
@@ -68,7 +68,9 @@ const visibilityClasses = computed(() => ({
 }))
 
 const sectionRef = ref(null)
+const questionsRef = ref(null)
 const scrollProgress = ref(0)
+const qOpacity = ref(0)
 
 const onScroll = () => {
   if (!sectionRef.value) return
@@ -83,6 +85,26 @@ const onScroll = () => {
     scrollProgress.value = 1
   } else {
     scrollProgress.value = 1 - ((rect.top - end) / (start - end))
+  }
+
+  // Handle specific appear/disappear logic for the questions based on its exact screen position
+  if (questionsRef.value) {
+    const qRect = questionsRef.value.getBoundingClientRect()
+    const qTop = qRect.top
+    let op = 0
+    // Fade in between 80% to 60% of viewport, fully visible 60% to 30%, fade out 30% to 10%
+    if (qTop > vh * 0.8) {
+      op = 0
+    } else if (qTop > vh * 0.6) {
+      op = (vh * 0.8 - qTop) / (vh * 0.2) // goes 0 to 1
+    } else if (qTop > vh * 0.3) {
+      op = 1
+    } else if (qTop > vh * 0.1) {
+      op = (qTop - vh * 0.1) / (vh * 0.2) // goes 1 to 0
+    } else {
+      op = 0
+    }
+    qOpacity.value = Math.max(0, Math.min(1, op))
   }
 }
 
@@ -121,12 +143,11 @@ const fadeStyle = computed(() => {
 })
 
 const questionsFadeStyle = computed(() => {
-  const p = scrollProgress.value
-  // Fade in at 0.3, stay, fade out at 0.9, but maybe we just use a sin wave
-  const opacity = Math.sin(p * Math.PI)
+  const op = qOpacity.value
   return {
-    opacity: opacity,
-    transform: `scale(${0.9 + (opacity * 0.1)})`,
+    opacity: op,
+    // Add a slight scale to match the 'arrive on it' feel
+    transform: `scale(${0.9 + (op * 0.1)})`,
     transition: 'opacity 0.1s linear, transform 0.1s linear'
   }
 })
@@ -193,6 +214,7 @@ async function submitForm() {
   font-size: 1.1em;
   font-weight: 600;
   line-height: 1.5;
+  will-change: transform, opacity;
 }
 .contact-questions p { margin: 0 0 5px 0; }
 
