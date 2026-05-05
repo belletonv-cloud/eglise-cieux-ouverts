@@ -23,7 +23,7 @@ export const BLOCK_TYPES = {
     label: 'Hero (bannière)',
     icon: '🖼️',
     defaults: {
-      image: '/foule-croix.png',
+      image: '/hero.jpg',
       height: 500,
       overlay: false,
       overlayColor: 'rgba(0,0,0,0.3)',
@@ -65,7 +65,7 @@ export const BLOCK_TYPES = {
     defaults: {
       title: 'Titre de la section',
       content: 'Contenu de la section.',
-      image: '',
+      image: '/photos/salle.jpg',
       imagePosition: 'right',
       backgroundColor: '#ffffff',
       textColor: '#1a1a2e',
@@ -139,7 +139,7 @@ export const BLOCK_TYPES = {
     icon: '✉️',
     defaults: {
       title: 'Tu veux nous contacter ?',
-      image: '/smartphone.jpg',
+      image: '/photos/salle.jpg',
       backgroundColor: '#064886',
       backgroundGradient: 'linear-gradient(to bottom, #064886 0%, #a8c4e0 60%, #ffffff 100%)',
       showSocials: true,
@@ -225,6 +225,21 @@ export const BLOCK_TYPES = {
       { key: 'animation',          label: 'Animation',       type: 'animation' },
     ]
   },
+
+  fullWidthImage: {
+    label: 'Image pleine largeur',
+    icon: '🌆',
+    defaults: {
+      src: '',
+      alt: 'Image pleine largeur',
+      height: 400,
+    },
+    schema: [
+      { key: 'src',    label: 'Image',         type: 'image' },
+      { key: 'alt',    label: 'Texte alternatif', type: 'text' },
+      { key: 'height', label: 'Hauteur (px)',  type: 'number', min: 100, max: 800 },
+    ]
+  },
 }
 
 // ─── Visibilité responsive ──────────────────────────────────────────────────
@@ -235,11 +250,18 @@ export const VISIBILITY_DEFAULTS = {
 }
 
 // ─── Créer un nouveau bloc avec ID unique ───────────────────────────────────
-export function createBlock(type) {
+export function createBlock(type, props = {}) {
+  if (!BLOCK_TYPES[type]) {
+    console.warn(`createBlock: type inconnu "${type}"`)
+    return null
+  }
+  const id = typeof crypto !== 'undefined' && crypto.randomUUID
+    ? crypto.randomUUID()
+    : Math.random().toString(36).slice(2)
   return {
-    id: crypto.randomUUID(),
+    id,
     type,
-    props: { ...BLOCK_TYPES[type].defaults },
+    props: { ...BLOCK_TYPES[type].defaults, ...props },
     visibility: { ...VISIBILITY_DEFAULTS },
   }
 }
@@ -247,11 +269,10 @@ export function createBlock(type) {
 // ─── Structure de page initiale (accueil) ─────────────────────────────────
 export function getDefaultHomePage() {
   return [
-    createBlock('hero', { image: '/photos/salle.jpg' }),
-    createBlock('fullWidthImage', { src: '/hero.jpg' }),
-    createBlock('aspirations'),
+    createBlock('hero', { image: '/hero.jpg' }),
     createBlock('fullWidthImage', { src: '/hero-foule.png' }),
+    createBlock('aspirations'),
     createBlock('vision'),
     createBlock('fullWidthImage', { src: '/calendar.png' }),
-  ]
+  ].filter(Boolean)
 }

@@ -18,6 +18,10 @@ import BlockAspirations from '~/components/blocks/BlockAspirations.vue'
 import BlockContact from '~/components/blocks/BlockContact.vue'
 import BlockRichText from '~/components/blocks/BlockRichText.vue'
 import BlockFullWidthImage from '~/components/blocks/BlockFullWidthImage.vue'
+import BlockVision from '~/components/blocks/BlockVision.vue'
+import BlockTextImage from '~/components/blocks/BlockTextImage.vue'
+import BlockGallery from '~/components/blocks/BlockGallery.vue'
+import BlockSpacer from '~/components/blocks/BlockSpacer.vue'
 
 const COMPONENTS = {
   hero: BlockHero,
@@ -27,6 +31,10 @@ const COMPONENTS = {
   contact: BlockContact,
   richText: BlockRichText,
   fullWidthImage: BlockFullWidthImage,
+  vision: BlockVision,
+  textImage: BlockTextImage,
+  gallery: BlockGallery,
+  spacer: BlockSpacer,
 }
 
 const props = defineProps({
