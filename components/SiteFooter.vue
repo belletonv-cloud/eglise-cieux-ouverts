@@ -87,13 +87,13 @@ function getCharStyle(i) {
   background: linear-gradient(to bottom, #064886 0%, #064886 40%, #ffffff 100%);
   position: relative;
   overflow: hidden;
-  min-height: 350px;
+  min-height: 250px;
 }
 
 .footer-inner {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 80px 24px 60px;
+  padding: 40px 24px 30px;
   display: flex;
   justify-content: space-between;
   align-items: center;

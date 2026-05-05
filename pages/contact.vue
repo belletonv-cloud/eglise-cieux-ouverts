@@ -156,7 +156,8 @@ async function submitForm() {
 .contact-main {
   background: #064886;
   padding: 40px 48px 60px;
-  margin: 0 48px 0;
+  margin: 0 48px 80px; /* Ajout d'un espace en bas avant le footer */
+  border-radius: 12px;
 }
 
 .contact-inner {
@@ -280,7 +281,7 @@ async function submitForm() {
 @media (max-width: 900px) {
   .contact-header { padding: 40px 20px 20px; }
   .contact-header-inner { flex-direction: column; gap: 16px; }
-  .contact-main { margin: 0 16px 40px; padding: 24px 20px 40px; }
+  .contact-main { margin: 0 16px 60px; padding: 24px 20px 40px; }
   .contact-inner { grid-template-columns: 1fr; }
   .form-row { grid-template-columns: 1fr; }
   .contact-map-col iframe { min-height: 280px !important; }

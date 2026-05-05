@@ -113,7 +113,7 @@ function nextSlide() {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(6, 72, 134, 0.9);
+  background: rgba(0, 0, 0, 0.55);
   color: white;
   padding: 40px;
   display: flex;
@@ -138,7 +138,7 @@ function nextSlide() {
 
 .activity-desc {
   font-family: Helvetica, Arial, sans-serif;
-  font-size: 16px;
+  font-size: 14.5px;
   line-height: 1.6;
   font-weight: 400;
   max-width: 800px;
@@ -218,7 +218,7 @@ function nextSlide() {
     font-size: 28px;
   }
   .activity-desc {
-    font-size: 14px;
+    font-size: 13px;
   }
   .activity-overlay {
     padding: 20px;
