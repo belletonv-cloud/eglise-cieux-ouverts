@@ -6,16 +6,18 @@
   >
     <img v-if="props.image" :src="props.image" alt="Hero" class="hero-img" />
     <div class="hero-content">
-      <div class="hero-bienvenue" aria-label="BIENVENUE">
-        <span v-for="(letter, i) in 'BIENVENUE'" :key="i" :style="{ animationDelay: `${i * 80}ms`, color: props.textColor || '#064886' }">{{ letter }}</span>
+      <div class="hero-bienvenue-wrapper" aria-label="BIENVENUE">
+        <div class="hero-bienvenue-line line-1" :style="{ color: props.textColor || '#054886' }">B I E&nbsp;</div>
+        <div class="hero-bienvenue-line line-2" :style="{ color: props.textColor || '#054886' }">N V E&nbsp;</div>
+        <div class="hero-bienvenue-line line-3" :style="{ color: props.textColor || '#054886' }">N U E</div>
       </div>
-      <p class="hero-subtitle" :style="{ color: props.textColor || '#064886' }">à l'Église Cieux Ouverts à Morlaix</p>
-      <NuxtLink v-if="props.showButton" to="/contact" class="btn-hero" :style="{ color: props.textColor || '#064886' }">Rejoins-nous</NuxtLink>
+      <p class="hero-subtitle">à l'Église Cieux Ouverts à Morlaix</p>
     </div>
   </section>
 </template>
 
 <script setup>
+import { computed } from 'vue'
 const p = defineProps({
   props: { type: Object, required: true },
   visibility: { type: Object, default: () => ({}) },
@@ -34,110 +36,85 @@ const visibilityClasses = computed(() => ({
   overflow: hidden;
   width: 100vw;
   margin-left: calc(-50vw + 50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .hero-img {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
+  z-index: 0;
 }
 
 .hero-content {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  position: relative;
   z-index: 1;
   text-align: center;
-  color: white;
-  padding: 80px 24px;
-}
-
-.hero-bienvenue {
+  width: 100%;
+  max-width: 1200px;
+  padding: 0 24px;
   display: flex;
-  font-family: 'Playfair Display', Georgia, serif;
-  font-style: italic;
-  font-size: clamp(3em, 9vw, 7em);
-  font-weight: 700;
-  letter-spacing: 0.15em;
-  line-height: 1.1;
+  flex-direction: column;
+  align-items: center;
+}
+
+.hero-bienvenue-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  font-family: 'Playfair Display', serif;
+  font-size: 80px;
+  line-height: 1.3; /* 104px */
   margin-bottom: 20px;
-  flex-wrap: wrap;
-  justify-content: center;
+  position: relative;
+  /* Adjusting to match the staggering */
+  left: -50px;
 }
 
-.hero-bienvenue span {
-  display: inline-block;
-  opacity: 0;
-  transform: translateY(30px);
-  animation: letter-fade-in 0.8s forwards;
+.hero-bienvenue-line {
+  white-space: pre;
+  letter-spacing: 0.1em;
 }
 
-@keyframes letter-fade-in {
-  to { opacity: 1; transform: translateY(0); }
+.line-1 {
+  transform: translateX(-40px);
+}
+.line-2 {
+  transform: translateX(20px);
+}
+.line-3 {
+  transform: translateX(120px);
 }
 
 .hero-subtitle {
-  font-size: 1.2em;
-  opacity: 0.92;
-  margin-bottom: 30px;
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 17.5px;
+  color: rgb(67, 139, 176); /* exact extracted color */
   font-weight: 400;
-}
-
-.btn-hero {
-  display: inline-block;
-  background: white;
-  color: #7C3AED;
-  font-weight: 700;
-  padding: 14px 36px;
-  border-radius: 50px;
-  text-decoration: none;
-  margin-bottom: 40px;
-  transition: transform 0.2s, box-shadow 0.2s;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-}
-.btn-hero:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.2); }
-
-.hero-horaires {
-  display: inline-flex;
-  flex-direction: column;
-  gap: 12px;
-  background: rgba(255,255,255,0.15);
-  backdrop-filter: blur(10px);
-  padding: 20px 36px;
-  border-radius: 16px;
-}
-
-.horaire-label {
-  font-size: 0.9em;
-  opacity: 0.85;
-  font-weight: 500;
-}
-
-.horaire-grid {
-  display: flex;
-  gap: 32px;
-  justify-content: center;
-}
-
-.horaire-grid div {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.horaire-grid strong {
-  font-size: 1.4em;
-  font-weight: 900;
-}
-
-.horaire-grid span {
-  font-size: 0.82em;
-  opacity: 0.85;
+  margin-top: 20px;
+  transform: translateX(120px);
 }
 
 @media (max-width: 768px) {
-  .hero-bienvenue { font-size: clamp(2em, 10vw, 4em); }
+  .hero-bienvenue-wrapper {
+    font-size: clamp(40px, 10vw, 60px);
+    left: 0;
+    align-items: center;
+  }
+  .line-1, .line-2, .line-3 {
+    transform: none;
+    text-align: center;
+  }
+  .hero-subtitle {
+    transform: none;
+    text-align: center;
+    font-size: 16px;
+  }
 }
 </style>

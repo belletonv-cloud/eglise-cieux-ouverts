@@ -1,19 +1,20 @@
 <template>
   <section
     class="block-rejoins"
-    :style="{ background: props.backgroundGradient }"
     :class="visibilityClasses"
     ref="sectionRef"
   >
     <div class="rejoins-inner">
-      <p class="rejoins-text" :style="rejoinsTextStyle">
-        <span class="rejoins-main">{{ props.title }}</span><br>
-        <span class="rejoins-playfair">{{ props.subtitle }}<br>{{ props.location }}</span>
-      </p>
+      <div class="rejoins-text-container" :style="rejoinsTextStyle">
+        <p class="rejoins-title">{{ props.title }}</p>
+        <p class="rejoins-subtitle">{{ props.subtitle }}</p>
+        <p class="rejoins-location">{{ props.location }}</p>
+      </div>
+      
       <div class="rejoins-grid" :style="rejoinsGridStyle">
         <div v-for="(h, i) in props.horaires" :key="i" class="rejoins-horaire">
-          <strong>{{ h.heure }}</strong>
-          <span>{{ h.label }}</span>
+          <span class="horaire-time">{{ h.heure }}</span>
+          <span class="horaire-label">{{ h.label }}</span>
         </div>
       </div>
     </div>
@@ -21,6 +22,8 @@
 </template>
 
 <script setup>
+import { ref, computed, onMounted } from 'vue'
+
 const p = defineProps({
   props: { type: Object, required: true },
   visibility: { type: Object, default: () => ({}) },
@@ -47,12 +50,13 @@ onMounted(() => {
 })
 
 const rejoinsTextStyle = computed(() => {
-  const tx = Math.min(0, -25 + scrollProgress.value * 50)
+  // Simple parallax/fade or just translate
+  const tx = Math.min(0, -10 + scrollProgress.value * 20)
   return { transform: `translateX(${tx}%)`, transition: 'transform 0.1s linear' }
 })
 
 const rejoinsGridStyle = computed(() => {
-  const tx = 5 - scrollProgress.value * 5
+  const tx = 10 - scrollProgress.value * 10
   return {
     transform: `translateX(${tx}%)`,
     opacity: Math.min(1, scrollProgress.value * 2),
@@ -64,66 +68,95 @@ const rejoinsGridStyle = computed(() => {
 <style scoped>
 .block-rejoins {
   padding: 100px 24px;
+  background-color: transparent; /* Assuming the gradient is from a background image or wrapper */
   color: white;
   overflow: hidden;
+  position: relative;
+  min-height: 600px;
 }
+
 .rejoins-inner {
-  max-width: 1100px;
+  max-width: 1200px;
   margin: 0 auto;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 40px;
+  justify-content: center;
+  gap: 120px;
 }
-.rejoins-text {
-  font-size: clamp(2.5em, 5vw, 4em);
-  font-weight: 700;
-  line-height: 1.1;
-  text-shadow: 0 2px 20px rgba(0,0,0,0.15);
-  margin: 0;
+
+.rejoins-text-container {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
   will-change: transform;
 }
-.rejoins-main {
-  font-family: 'Playfair Display', Georgia, serif;
+
+.rejoins-title {
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 75px;
+  font-weight: 700;
+  letter-spacing: -0.75px;
+  line-height: 1.1;
+  margin: 0;
+  color: white;
+}
+
+.rejoins-subtitle, .rejoins-location {
+  font-family: 'Playfair Display', serif;
+  font-size: 75px;
   font-weight: 700;
   font-style: italic;
-  display: block;
+  line-height: 1.1;
+  margin: 0;
+  color: white;
 }
-.rejoins-playfair {
-  font-family: 'Playfair Display', Georgia, serif;
-  font-style: italic;
-  font-weight: 400;
-}
+
 .rejoins-grid {
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 50px;
   will-change: transform, opacity;
   align-items: flex-start;
 }
+
 .rejoins-horaire {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 0px;
 }
-.rejoins-horaire strong {
-  font-size: clamp(2.5em, 5vw, 3.5em);
-  font-weight: 900;
+
+.horaire-time {
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 75px;
+  font-weight: 700;
   line-height: 1;
+  color: white;
 }
-.rejoins-horaire span {
-  font-size: 1.1em;
-  opacity: 0.9;
-  font-family: 'Playfair Display', Georgia, serif;
-  font-style: italic;
+
+.horaire-label {
+  font-family: 'Playfair Display', serif;
+  font-size: 30px;
+  font-weight: 700;
+  font-style: normal;
+  color: white;
+  letter-spacing: -0.3px;
+  margin-top: 5px;
 }
-@media (max-width: 768px) {
+
+@media (max-width: 900px) {
   .rejoins-inner {
     flex-direction: column;
     text-align: center;
+    gap: 60px;
   }
   .rejoins-grid {
     align-items: center;
+  }
+  .rejoins-title, .rejoins-subtitle, .rejoins-location, .horaire-time {
+    font-size: clamp(40px, 8vw, 75px);
+  }
+  .horaire-label {
+    font-size: 24px;
   }
 }
 </style>
