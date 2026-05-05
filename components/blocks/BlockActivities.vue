@@ -56,6 +56,7 @@ const visibilityClasses = computed(() => ({
   aspect-ratio: 1 / 1;
   cursor: pointer;
   background-color: #f4f4f4;
+  flex: 0 0 auto;
 }
 
 .activity-img {
@@ -106,8 +107,32 @@ const visibilityClasses = computed(() => ({
 }
 
 @media (max-width: 768px) {
+  .block-activities {
+    padding: 60px 0; /* remove horizontal padding to let slider touch edges */
+  }
   .activities-grid {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    gap: 16px;
+    padding: 0 24px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; /* Firefox */
+  }
+  .activities-grid::-webkit-scrollbar {
+    display: none; /* Safari and Chrome */
+  }
+  .activity-card {
+    width: 80vw;
+    scroll-snap-align: center;
+  }
+  /* Show text naturally or tap on mobile */
+  .activity-overlay {
+    opacity: 0; 
+  }
+  .activity-overlay.is-hovered, .activity-card:active .activity-overlay {
+    opacity: 1;
   }
 }
 </style>

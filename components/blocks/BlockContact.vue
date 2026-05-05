@@ -20,7 +20,7 @@
         </div>
 
         <div class="contact-right" :style="fadeStyle">
-          <div class="contact-questions">
+          <div class="contact-questions" :style="questionsFadeStyle">
             <p>Tu as une question ?</p>
             <p>Tu désires parler à un pasteur ?</p>
             <p>Tu souhaites recevoir notre newsletter ?</p>
@@ -116,6 +116,17 @@ const fadeStyle = computed(() => {
   return {
     opacity: p,
     transform: `translateY(${50 * (1 - p)}px)`,
+    transition: 'opacity 0.1s linear, transform 0.1s linear'
+  }
+})
+
+const questionsFadeStyle = computed(() => {
+  const p = scrollProgress.value
+  // Fade in at 0.3, stay, fade out at 0.9, but maybe we just use a sin wave
+  const opacity = Math.sin(p * Math.PI)
+  return {
+    opacity: opacity,
+    transform: `scale(${0.9 + (opacity * 0.1)})`,
     transition: 'opacity 0.1s linear, transform 0.1s linear'
   }
 })

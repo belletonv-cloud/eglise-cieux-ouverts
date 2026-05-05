@@ -1,6 +1,7 @@
 <template>
   <section
     class="block-rejoins"
+    :style="{ background: props.backgroundGradient || '#064886' }"
     :class="visibilityClasses"
     ref="sectionRef"
   >
@@ -96,7 +97,6 @@ function getHoraireStyle(index) {
 <style scoped>
 .block-rejoins {
   padding: 100px 24px;
-  background-color: transparent; 
   color: white;
   overflow: hidden;
   position: relative;

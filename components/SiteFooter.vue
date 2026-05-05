@@ -1,9 +1,7 @@
 <template>
-  <footer class="site-footer" ref="footerRef">
-    <div class="footer-shutter" :class="{ 'is-open': shutterOpen }">
-      <div class="footer-shutter-content">
-        <h2 class="shutter-title">Il y a une place pour toi !</h2>
-      </div>
+  <footer class="site-footer">
+    <div class="footer-hero">
+      <h2 class="footer-title">Il y a une place pour <em>toi !</em></h2>
     </div>
     
     <div class="footer-inner">
@@ -25,35 +23,6 @@
   </footer>
 </template>
 
-<script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
-
-const footerRef = ref(null)
-const shutterOpen = ref(false)
-
-const onScroll = () => {
-  if (!footerRef.value) return
-  const rect = footerRef.value.getBoundingClientRect()
-  const vh = window.innerHeight
-  // Trigger when footer is well visible
-  if (rect.top < vh * 0.8) {
-    shutterOpen.value = true
-  } else if (rect.top > vh) {
-    // Reset when fully scrolled out of view upwards
-    shutterOpen.value = false
-  }
-}
-
-onMounted(() => {
-  window.addEventListener('scroll', onScroll, { passive: true })
-  onScroll()
-})
-
-onUnmounted(() => {
-  window.removeEventListener('scroll', onScroll)
-})
-</script>
-
 <style scoped>
 .site-footer {
   /* Use a gradient that matches the bottom of the contact block */
@@ -63,46 +32,35 @@ onUnmounted(() => {
   overflow: hidden;
 }
 
-.footer-shutter {
+.footer-hero {
   width: 100%;
-  padding: 60px 24px;
+  padding: 80px 24px;
   display: flex;
   justify-content: center;
   align-items: center;
-  overflow: hidden;
-  position: relative;
 }
 
-.footer-shutter-content {
-  transform: translateY(100%);
-  opacity: 0;
-  transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.8s ease;
-}
-
-.footer-shutter.is-open .footer-shutter-content {
-  transform: translateY(0);
-  opacity: 1;
-}
-
-.shutter-title {
+.footer-title {
   font-family: 'Playfair Display', serif;
-  font-size: clamp(32px, 5vw, 60px);
-  font-style: italic;
+  font-size: clamp(40px, 6vw, 75px);
   font-weight: 700;
   color: #064886;
   margin: 0;
   text-align: center;
 }
 
+.footer-title em {
+  font-style: italic;
+}
+
 .footer-inner {
   max-width: 1100px;
   margin: 0 auto;
-  padding: 20px 24px 60px;
+  padding: 0px 24px 60px;
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
   gap: 40px;
-  border-top: 1px solid rgba(255,255,255,0.2);
 }
 
 .footer-nav {
@@ -137,7 +95,7 @@ onUnmounted(() => {
   color: white;
   font-weight: 700;
   text-decoration: none;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
   font-size: 1.2em;
   display: block;
 }
@@ -162,7 +120,7 @@ onUnmounted(() => {
     flex-direction: column;
     align-items: center;
     text-align: center;
-    gap: 30px;
+    gap: 40px;
   }
   .footer-nav {
     text-align: center;
