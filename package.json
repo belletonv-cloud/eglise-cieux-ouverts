@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "nuxt dev",
-    "build": "nuxt build",
+    "build": "nuxt build && cp -r .output/public dist",
     "preview": "nuxt preview",
     "deploy": "nuxt build && wrangler pages deploy .output/public --project-name eglise-cieux-ouverts"
   },
