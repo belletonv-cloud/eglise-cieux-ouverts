@@ -64,11 +64,11 @@ const color = '#054886'
 
 const line1Style = computed(() => {
   const p = scrollProgress.value
-  const tx = -150 * (1 - p) - 40 // base -40
-  const rot = -20 * (1 - p) // BIE inclined
+  const tx = -300 * (1 - p)
+  const rot = -45 * (1 - p)
   return {
     color,
-    transform: `translate(${tx}px, ${(1-p)*50}px) rotate(${rot}deg)`,
+    transform: `translateX(${tx}px) rotate(${rot}deg)`,
     opacity: p === 0 ? 0 : 0.2 + (p * 0.8),
     transition: 'transform 0.1s linear, opacity 0.1s linear'
   }
@@ -76,11 +76,11 @@ const line1Style = computed(() => {
 
 const line2Style = computed(() => {
   const p = scrollProgress.value
-  const tx = -250 * (1 - p) + 20 // base +20
-  const rot = -40 * (1 - p) // NVE plus inclined
+  const ty = 150 * (1 - p)
+  const rot = 15 * (1 - p)
   return {
     color,
-    transform: `translate(${tx}px, ${(1-p)*80}px) rotate(${rot}deg)`,
+    transform: `translateY(${ty}px) rotate(${rot}deg)`,
     opacity: p === 0 ? 0 : 0.2 + (p * 0.8),
     transition: 'transform 0.1s linear, opacity 0.1s linear'
   }
@@ -88,11 +88,11 @@ const line2Style = computed(() => {
 
 const line3Style = computed(() => {
   const p = scrollProgress.value
-  const tx = 150 * (1 - p) + 120 // base +120
-  const rot = 20 * (1 - p) // NUE inclined symmetrically
+  const tx = 300 * (1 - p)
+  const rot = 45 * (1 - p)
   return {
     color,
-    transform: `translate(${tx}px, ${(1-p)*50}px) rotate(${rot}deg)`,
+    transform: `translateX(${tx}px) rotate(${rot}deg)`,
     opacity: p === 0 ? 0 : 0.2 + (p * 0.8),
     transition: 'transform 0.1s linear, opacity 0.1s linear'
   }
@@ -101,7 +101,7 @@ const line3Style = computed(() => {
 const subtitleStyle = computed(() => {
   const p = scrollProgress.value
   return {
-    transform: `translateX(120px) translateY(${(1-p)*20}px)`,
+    transform: `translateY(${(1-p)*50}px)`,
     opacity: p,
     transition: 'transform 0.1s linear, opacity 0.1s linear'
   }
@@ -145,21 +145,23 @@ const subtitleStyle = computed(() => {
 
 .hero-bienvenue-wrapper {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: nowrap;
   font-family: 'Playfair Display', serif;
   font-size: 80px;
   line-height: 1.3;
   margin-bottom: 20px;
   position: relative;
-  left: -50px;
+  width: 100%;
 }
 
 .hero-bienvenue-line {
   white-space: pre;
   letter-spacing: 0.1em;
   will-change: transform, opacity;
-  transform-origin: center left;
+  transform-origin: center center;
 }
 
 .hero-subtitle {
@@ -173,12 +175,14 @@ const subtitleStyle = computed(() => {
 
 @media (max-width: 768px) {
   .hero-bienvenue-wrapper {
-    font-size: clamp(40px, 10vw, 60px);
-    left: 0;
-    align-items: center;
+    font-size: clamp(30px, 8vw, 50px);
+    flex-wrap: wrap;
+    justify-content: center;
+    line-height: 1.1;
   }
   .hero-subtitle {
     font-size: 16px;
+    margin-top: 15px;
   }
 }
 </style>

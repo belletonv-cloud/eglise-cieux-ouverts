@@ -75,25 +75,23 @@ function getItemStyle(index) {
   const p = scrollProgress.value
   const delay = index * 0.15
   const progress = Math.max(0, Math.min(1, (p - delay) / (1 - delay)))
-  const ty = 50 * (1 - progress)
-  // Shift right slightly per item
-  const tx = index * 20
+  // Starts from 400px below and moves to 0
+  const ty = 400 * (1 - progress)
   return {
     color: p.props?.textColor || '#ffffff',
-    transform: `translate(${tx}px, ${ty}px)`,
+    transform: `translateY(${ty}px)`,
     opacity: progress,
     transition: 'transform 0.1s linear, opacity 0.1s linear'
   }
 }
 
 function getBulletStyle(index) {
-  // same progress as the item, but maybe the bullet animates up specifically
   const p = scrollProgress.value
   const delay = index * 0.15
   const progress = Math.max(0, Math.min(1, (p - delay) / (1 - delay)))
-  const ty = 30 * (1 - progress)
+  const scale = progress
   return {
-    transform: `translateY(${ty}px)`,
+    transform: `scale(${scale})`,
     opacity: progress,
     transition: 'transform 0.1s linear, opacity 0.1s linear'
   }
