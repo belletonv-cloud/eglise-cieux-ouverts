@@ -2,23 +2,29 @@
   <section
     class="block-contact"
     :style="{ background: props.backgroundGradient, color: props.textColor || '#ffffff' }"
-    :class="[visibilityClasses, { 'is-triggered': isTriggered }]"
+    :class="visibilityClasses"
+    ref="sectionRef"
   >
     <div class="contact-inner">
-      <h2 class="contact-title" :style="{ color: props.textColor || '#ffffff' }">{{ props.title }}</h2>
+      <h2 class="contact-title" :style="titleStyle">{{ props.title }}</h2>
 
       <div class="contact-wrap">
         <div class="contact-left">
-          <img v-if="props.image" :src="props.image" alt="" class="contact-phone" />
+          <img v-if="props.image" :src="props.image" alt="" class="contact-phone" :style="phoneStyle" />
           <div v-else class="contact-phone-placeholder"></div>
           
-          <div class="contact-socials" v-if="props.showSocials">
+          <div class="contact-socials" v-if="props.showSocials" :style="fadeStyle">
             <a href="https://instagram.com/eglise_cieux_ouverts" target="_blank" rel="noopener" :style="{ color: props.textColor || '#ffffff' }">Instagram</a>
             <a href="https://facebook.com/eglisecieuxouverts" target="_blank" rel="noopener" :style="{ color: props.textColor || '#ffffff' }">Facebook</a>
           </div>
         </div>
 
-        <div class="contact-right">
+        <div class="contact-right" :style="fadeStyle">
+          <div class="contact-questions">
+            <p>Tu as une question ?</p>
+            <p>Tu désires parler à un pasteur ?</p>
+            <p>Tu souhaites recevoir notre newsletter ?</p>
+          </div>
           <form class="contact-form" @submit.prevent="submitForm">
             <div class="form-row">
               <input v-model="form.prenom" type="text" placeholder="Prénom *" required />
@@ -48,12 +54,11 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 
 const p = defineProps({
   props: { type: Object, required: true },
   visibility: { type: Object, default: () => ({}) },
-  isTriggered: { type: Boolean, default: false },
 })
 
 const visibilityClasses = computed(() => ({
@@ -61,6 +66,59 @@ const visibilityClasses = computed(() => ({
   'hide-tablet': p.visibility.tablet === false,
   'hide-desktop': p.visibility.desktop === false,
 }))
+
+const sectionRef = ref(null)
+const scrollProgress = ref(0)
+
+const onScroll = () => {
+  if (!sectionRef.value) return
+  const rect = sectionRef.value.getBoundingClientRect()
+  const vh = window.innerHeight
+  const start = vh
+  const end = vh * 0.4
+  
+  if (rect.top > start) {
+    scrollProgress.value = 0
+  } else if (rect.top < end) {
+    scrollProgress.value = 1
+  } else {
+    scrollProgress.value = 1 - ((rect.top - end) / (start - end))
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('scroll', onScroll, { passive: true })
+  onScroll()
+})
+onUnmounted(() => window.removeEventListener('scroll', onScroll))
+
+const titleStyle = computed(() => {
+  const p = scrollProgress.value
+  const scale = 0.5 + (p * 0.5) // Scales from 0.5 to 1
+  return {
+    transform: `scale(${scale})`,
+    opacity: p,
+    transition: 'transform 0.1s linear, opacity 0.1s linear'
+  }
+})
+
+const phoneStyle = computed(() => {
+  const p = scrollProgress.value
+  return {
+    transform: `translateY(${100 * (1 - p)}px)`,
+    opacity: p,
+    transition: 'transform 0.1s linear, opacity 0.1s linear'
+  }
+})
+
+const fadeStyle = computed(() => {
+  const p = scrollProgress.value
+  return {
+    opacity: p,
+    transform: `translateY(${50 * (1 - p)}px)`,
+    transition: 'opacity 0.1s linear, transform 0.1s linear'
+  }
+})
 
 const { $db } = useNuxtApp()
 const form = ref({ prenom: '', nom: '', ville: '', email: '', message: '', newsletter: false })
@@ -96,6 +154,7 @@ async function submitForm() {
   margin-bottom: 60px;
   font-weight: 700;
   font-style: italic;
+  will-change: transform, opacity;
 }
 .contact-wrap {
   display: grid;
@@ -104,18 +163,28 @@ async function submitForm() {
   align-items: stretch;
 }
 .contact-left { display: flex; flex-direction: column; gap: 20px; }
-.contact-phone, .contact-phone-placeholder {
+.contact-phone {
   width: 100%;
-  height: 100%;
-  min-height: 400px;
+  height: auto;
   border-radius: 12px;
   object-fit: cover;
+  will-change: transform, opacity;
 }
-.contact-phone-placeholder { background: #000; }
-.contact-socials { display: flex; gap: 20px; justify-content: center; }
+.contact-phone-placeholder { background: #000; width: 100%; min-height: 400px; }
+.contact-socials { display: flex; gap: 20px; justify-content: center; will-change: transform, opacity; }
 .contact-socials a { font-weight: 600; font-size: 1em; text-decoration: none; opacity: 0.9; transition: opacity 0.2s; }
 .contact-socials a:hover { opacity: 1; }
-.contact-right { display: flex; flex-direction: column; justify-content: center; }
+.contact-right { display: flex; flex-direction: column; justify-content: center; will-change: transform, opacity; }
+
+.contact-questions {
+  margin-bottom: 20px;
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 1.1em;
+  font-weight: 600;
+  line-height: 1.5;
+}
+.contact-questions p { margin: 0 0 5px 0; }
+
 .contact-form { display: flex; flex-direction: column; gap: 16px; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .contact-form input,
@@ -138,10 +207,10 @@ async function submitForm() {
 .success-msg { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); border-radius: 8px; padding: 12px; font-size: 0.9em; }
 .error-msg { background: rgba(239,75,84,0.25); border: 1px solid rgba(239,75,84,0.5); border-radius: 8px; padding: 12px; font-size: 0.9em; }
 .btn-submit {
-  align-self: center;
+  align-self: flex-start;
   padding: 14px 40px;
-  background: #3B82F6;
-  color: white;
+  background: white;
+  color: #064886;
   border-radius: 50px;
   font-weight: 600;
   font-size: 1.1em;
@@ -149,11 +218,11 @@ async function submitForm() {
   border: none;
   transition: transform 0.2s, background 0.2s;
 }
-.btn-submit:hover { transform: translateY(-2px); background: #2563EB; }
+.btn-submit:hover { transform: translateY(-2px); background: #f0f0f0; }
 .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
 @media (max-width: 768px) {
   .contact-wrap { grid-template-columns: 1fr; gap: 40px; }
-  .contact-phone, .contact-phone-placeholder { min-height: 250px; }
+  .contact-phone { max-width: 200px; margin: 0 auto; }
   .form-row { grid-template-columns: 1fr; }
 }
 </style>

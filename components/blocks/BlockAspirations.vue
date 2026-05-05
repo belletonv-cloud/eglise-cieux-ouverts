@@ -2,17 +2,19 @@
   <section
     class="block-aspirations"
     :style="{ background: props.backgroundColor, color: props.textColor }"
-    :class="[visibilityClasses, { 'is-triggered': isTriggered }]"
+    :class="visibilityClasses"
+    ref="sectionRef"
   >
     <div class="aspirations-inner">
-      <h2 class="aspirations-title" :style="{ color: props.textColor }">{{ props.title }}</h2>
+      <h2 class="aspirations-title" :style="titleStyle">{{ props.title }}</h2>
       <ul class="aspirations-list">
         <li 
           v-for="(item, i) in props.items" 
           :key="i" 
           class="aspiration-item" 
-          :style="{ color: props.textColor, transitionDelay: `${i * 0.2 + 0.3}s` }"
+          :style="getItemStyle(i)"
         >
+          <span class="aspiration-bullet" :style="getBulletStyle(i)"></span>
           {{ item }}
         </li>
       </ul>
@@ -21,12 +23,11 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 
 const p = defineProps({
   props: { type: Object, required: true },
   visibility: { type: Object, default: () => ({}) },
-  isTriggered: { type: Boolean, default: false },
 })
 
 const visibilityClasses = computed(() => ({
@@ -34,11 +35,75 @@ const visibilityClasses = computed(() => ({
   'hide-tablet': p.visibility.tablet === false,
   'hide-desktop': p.visibility.desktop === false,
 }))
+
+const sectionRef = ref(null)
+const scrollProgress = ref(0)
+
+const onScroll = () => {
+  if (!sectionRef.value) return
+  const rect = sectionRef.value.getBoundingClientRect()
+  const vh = window.innerHeight
+  const start = vh
+  const end = vh * 0.2
+  
+  if (rect.top > start) {
+    scrollProgress.value = 0
+  } else if (rect.top < end) {
+    scrollProgress.value = 1
+  } else {
+    scrollProgress.value = 1 - ((rect.top - end) / (start - end))
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('scroll', onScroll, { passive: true })
+  onScroll()
+})
+onUnmounted(() => window.removeEventListener('scroll', onScroll))
+
+const titleStyle = computed(() => {
+  const p = scrollProgress.value
+  return {
+    color: p.props?.textColor || '#ffffff',
+    transform: `translateY(${100 * (1 - p)}px)`,
+    opacity: p,
+    transition: 'transform 0.1s linear, opacity 0.1s linear'
+  }
+})
+
+function getItemStyle(index) {
+  const p = scrollProgress.value
+  const delay = index * 0.15
+  const progress = Math.max(0, Math.min(1, (p - delay) / (1 - delay)))
+  const ty = 50 * (1 - progress)
+  // Shift right slightly per item
+  const tx = index * 20
+  return {
+    color: p.props?.textColor || '#ffffff',
+    transform: `translate(${tx}px, ${ty}px)`,
+    opacity: progress,
+    transition: 'transform 0.1s linear, opacity 0.1s linear'
+  }
+}
+
+function getBulletStyle(index) {
+  // same progress as the item, but maybe the bullet animates up specifically
+  const p = scrollProgress.value
+  const delay = index * 0.15
+  const progress = Math.max(0, Math.min(1, (p - delay) / (1 - delay)))
+  const ty = 30 * (1 - progress)
+  return {
+    transform: `translateY(${ty}px)`,
+    opacity: progress,
+    transition: 'transform 0.1s linear, opacity 0.1s linear'
+  }
+}
 </script>
 
 <style scoped>
 .block-aspirations {
   padding: 100px 24px;
+  overflow: hidden;
 }
 
 .aspirations-inner {
@@ -57,14 +122,7 @@ const visibilityClasses = computed(() => ({
   font-weight: 400;
   line-height: 1.3;
   margin: 0;
-  opacity: 0;
-  transform: translateX(-30px);
-  transition: opacity 0.6s ease, transform 0.6s ease;
-}
-
-.block-aspirations.is-triggered .aspirations-title {
-  opacity: 1;
-  transform: translateX(0);
+  will-change: transform, opacity;
 }
 
 .aspirations-list {
@@ -86,27 +144,18 @@ const visibilityClasses = computed(() => ({
   align-items: center;
   position: relative;
   padding-left: 50px;
-  opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 0.5s ease, transform 0.5s ease;
+  will-change: transform, opacity;
 }
 
-.block-aspirations.is-triggered .aspiration-item {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.aspiration-item::before {
-  content: "";
+.aspiration-bullet {
   position: absolute;
   left: 0;
-  top: 50%;
-  transform: translateY(-50%);
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  border: 2px solid white; /* Matches the small empty circle vector graphic */
+  border: 2px solid white;
   background: transparent;
+  will-change: transform, opacity;
 }
 
 @media (max-width: 768px) {
@@ -121,8 +170,9 @@ const visibilityClasses = computed(() => ({
     font-size: clamp(20px, 5vw, 36px);
     padding-left: 0;
     justify-content: center;
+    transform: none !important; /* disable horizontal shift on mobile if needed */
   }
-  .aspiration-item::before {
+  .aspiration-bullet {
     display: none;
   }
 }

@@ -29,6 +29,7 @@ import BlockRichText from '~/components/blocks/BlockRichText.vue'
 import BlockFullWidthImage from '~/components/blocks/BlockFullWidthImage.vue'
 import BlockVision from '~/components/blocks/BlockVision.vue'
 import BlockNousRejoindre from '~/components/blocks/BlockNousRejoindre.vue'
+import BlockActivities from '~/components/blocks/BlockActivities.vue'
 import BlockTextImage from '~/components/blocks/BlockTextImage.vue'
 import BlockGallery from '~/components/blocks/BlockGallery.vue'
 import BlockSpacer from '~/components/blocks/BlockSpacer.vue'
@@ -43,6 +44,7 @@ const COMPONENTS = {
   fullWidthImage: BlockFullWidthImage,
   vision: BlockVision,
   nousRejoindre: BlockNousRejoindre,
+  activities: BlockActivities,
   textImage: BlockTextImage,
   gallery: BlockGallery,
   spacer: BlockSpacer,

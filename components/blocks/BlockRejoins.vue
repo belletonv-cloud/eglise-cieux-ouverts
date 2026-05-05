@@ -12,7 +12,7 @@
       </div>
       
       <div class="rejoins-grid" :style="rejoinsGridStyle">
-        <div v-for="(h, i) in props.horaires" :key="i" class="rejoins-horaire">
+        <div v-for="(h, i) in props.horaires" :key="i" class="rejoins-horaire" :style="getHoraireStyle(i)">
           <span class="horaire-time">{{ h.heure }}</span>
           <span class="horaire-label">{{ h.label }}</span>
         </div>
@@ -22,7 +22,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 
 const p = defineProps({
   props: { type: Object, required: true },
@@ -30,7 +30,7 @@ const p = defineProps({
 })
 
 const sectionRef = ref(null)
-const scrollProgress = ref(0)
+const scrollProgress = ref(0) // 0 to 1
 
 const visibilityClasses = computed(() => ({
   'hide-mobile': p.visibility.mobile === false,
@@ -38,37 +38,65 @@ const visibilityClasses = computed(() => ({
   'hide-desktop': p.visibility.desktop === false,
 }))
 
-onMounted(() => {
-  const onScroll = () => {
-    if (!sectionRef.value) return
-    const rect = sectionRef.value.getBoundingClientRect()
-    const vh = window.innerHeight
-    scrollProgress.value = Math.max(0, Math.min(1, (vh - rect.top) / (vh + rect.height)))
+const onScroll = () => {
+  if (!sectionRef.value) return
+  const rect = sectionRef.value.getBoundingClientRect()
+  const vh = window.innerHeight
+  const start = vh
+  const end = vh * 0.4
+  
+  if (rect.top > start) {
+    scrollProgress.value = 0
+  } else if (rect.top < end) {
+    scrollProgress.value = 1
+  } else {
+    scrollProgress.value = 1 - ((rect.top - end) / (start - end))
   }
+}
+
+onMounted(() => {
   window.addEventListener('scroll', onScroll, { passive: true })
   onScroll()
 })
+onUnmounted(() => window.removeEventListener('scroll', onScroll))
 
 const rejoinsTextStyle = computed(() => {
-  // Simple parallax/fade or just translate
-  const tx = Math.min(0, -10 + scrollProgress.value * 20)
-  return { transform: `translateX(${tx}%)`, transition: 'transform 0.1s linear' }
+  const p = scrollProgress.value
+  // starts at right (+300px), goes to left (0px)
+  const tx = 300 * (1 - p)
+  return { 
+    transform: `translateX(${tx}px)`, 
+    opacity: 0.2 + (p * 0.8),
+    transition: 'transform 0.1s linear, opacity 0.1s linear' 
+  }
 })
 
 const rejoinsGridStyle = computed(() => {
-  const tx = 10 - scrollProgress.value * 10
+  const p = scrollProgress.value
   return {
-    transform: `translateX(${tx}%)`,
-    opacity: Math.min(1, scrollProgress.value * 2),
-    transition: 'transform 0.1s linear, opacity 0.3s ease'
+    opacity: p,
+    transition: 'opacity 0.1s linear'
   }
 })
+
+function getHoraireStyle(index) {
+  const p = scrollProgress.value
+  // Delay the animation of each horaire
+  const delay = index * 0.2
+  const progress = Math.max(0, Math.min(1, (p - delay) / (1 - delay)))
+  const ty = 100 * (1 - progress)
+  return {
+    transform: `translateY(${ty}px)`,
+    opacity: progress,
+    transition: 'transform 0.1s linear, opacity 0.1s linear'
+  }
+}
 </script>
 
 <style scoped>
 .block-rejoins {
   padding: 100px 24px;
-  background-color: transparent; /* Assuming the gradient is from a background image or wrapper */
+  background-color: transparent; 
   color: white;
   overflow: hidden;
   position: relative;
@@ -88,7 +116,7 @@ const rejoinsGridStyle = computed(() => {
   display: flex;
   flex-direction: column;
   gap: 5px;
-  will-change: transform;
+  will-change: transform, opacity;
 }
 
 .rejoins-title {
@@ -115,7 +143,7 @@ const rejoinsGridStyle = computed(() => {
   display: flex;
   flex-direction: column;
   gap: 50px;
-  will-change: transform, opacity;
+  will-change: opacity;
   align-items: flex-start;
 }
 
@@ -123,6 +151,7 @@ const rejoinsGridStyle = computed(() => {
   display: flex;
   flex-direction: column;
   gap: 0px;
+  will-change: transform, opacity;
 }
 
 .horaire-time {

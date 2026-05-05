@@ -2,22 +2,23 @@
   <section
     class="block-bienvenue"
     :class="visibilityClasses"
+    ref="sectionRef"
   >
     <img src="https://static.wixstatic.com/media/d65230_c609095100164117aabdd3b55d9cdf56~mv2.png/v1/fill/w_1920,h_515,al_c,q_90,usm_0.66_1.00_0.01,enc_avif,quality_auto/d65230_c609095100164117aabdd3b55d9cdf56~mv2.png" alt="Foule Croix" class="bienvenue-img" />
     
     <div class="bienvenue-content">
       <div class="hero-bienvenue-wrapper" aria-label="BIENVENUE">
-        <div class="hero-bienvenue-line line-1" :style="{ color: props.textColor || '#054886' }">B I E&nbsp;</div>
-        <div class="hero-bienvenue-line line-2" :style="{ color: props.textColor || '#054886' }">N V E&nbsp;</div>
-        <div class="hero-bienvenue-line line-3" :style="{ color: props.textColor || '#054886' }">N U E</div>
+        <div class="hero-bienvenue-line line-1" :style="line1Style">B I E&nbsp;</div>
+        <div class="hero-bienvenue-line line-2" :style="line2Style">N V E&nbsp;</div>
+        <div class="hero-bienvenue-line line-3" :style="line3Style">N U E</div>
       </div>
-      <p class="hero-subtitle">à l'Église Cieux Ouverts à Morlaix</p>
+      <p class="hero-subtitle" :style="subtitleStyle">à l'Église Cieux Ouverts à Morlaix</p>
     </div>
   </section>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 
 const p = defineProps({
   props: { type: Object, required: true },
@@ -29,6 +30,82 @@ const visibilityClasses = computed(() => ({
   'hide-tablet': p.visibility.tablet === false,
   'hide-desktop': p.visibility.desktop === false,
 }))
+
+const sectionRef = ref(null)
+const scrollProgress = ref(0) // 0 (start) to 1 (fully formed)
+
+const onScroll = () => {
+  if (!sectionRef.value) return
+  const rect = sectionRef.value.getBoundingClientRect()
+  const vh = window.innerHeight
+  // Start animation when top of element is near bottom of viewport
+  // End animation when it reaches middle of viewport
+  const start = vh
+  const end = vh * 0.3
+  
+  if (rect.top > start) {
+    scrollProgress.value = 0
+  } else if (rect.top < end) {
+    scrollProgress.value = 1
+  } else {
+    // 0 -> 1 progress
+    scrollProgress.value = 1 - ((rect.top - end) / (start - end))
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('scroll', onScroll, { passive: true })
+  onScroll()
+})
+onUnmounted(() => window.removeEventListener('scroll', onScroll))
+
+// Color is always #054886
+const color = '#054886'
+
+const line1Style = computed(() => {
+  const p = scrollProgress.value
+  const tx = -150 * (1 - p) - 40 // base -40
+  const rot = -20 * (1 - p) // BIE inclined
+  return {
+    color,
+    transform: `translate(${tx}px, ${(1-p)*50}px) rotate(${rot}deg)`,
+    opacity: p === 0 ? 0 : 0.2 + (p * 0.8),
+    transition: 'transform 0.1s linear, opacity 0.1s linear'
+  }
+})
+
+const line2Style = computed(() => {
+  const p = scrollProgress.value
+  const tx = -250 * (1 - p) + 20 // base +20
+  const rot = -40 * (1 - p) // NVE plus inclined
+  return {
+    color,
+    transform: `translate(${tx}px, ${(1-p)*80}px) rotate(${rot}deg)`,
+    opacity: p === 0 ? 0 : 0.2 + (p * 0.8),
+    transition: 'transform 0.1s linear, opacity 0.1s linear'
+  }
+})
+
+const line3Style = computed(() => {
+  const p = scrollProgress.value
+  const tx = 150 * (1 - p) + 120 // base +120
+  const rot = 20 * (1 - p) // NUE inclined symmetrically
+  return {
+    color,
+    transform: `translate(${tx}px, ${(1-p)*50}px) rotate(${rot}deg)`,
+    opacity: p === 0 ? 0 : 0.2 + (p * 0.8),
+    transition: 'transform 0.1s linear, opacity 0.1s linear'
+  }
+})
+
+const subtitleStyle = computed(() => {
+  const p = scrollProgress.value
+  return {
+    transform: `translateX(120px) translateY(${(1-p)*20}px)`,
+    opacity: p,
+    transition: 'transform 0.1s linear, opacity 0.1s linear'
+  }
+})
 </script>
 
 <style scoped>
@@ -40,7 +117,7 @@ const visibilityClasses = computed(() => ({
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 500px;
+  min-height: 600px;
 }
 
 .bienvenue-img {
@@ -81,11 +158,9 @@ const visibilityClasses = computed(() => ({
 .hero-bienvenue-line {
   white-space: pre;
   letter-spacing: 0.1em;
+  will-change: transform, opacity;
+  transform-origin: center left;
 }
-
-.line-1 { transform: translateX(-40px); }
-.line-2 { transform: translateX(20px); }
-.line-3 { transform: translateX(120px); }
 
 .hero-subtitle {
   font-family: Helvetica, Arial, sans-serif;
@@ -93,7 +168,7 @@ const visibilityClasses = computed(() => ({
   color: rgb(67, 139, 176);
   font-weight: 400;
   margin-top: 20px;
-  transform: translateX(120px);
+  will-change: transform, opacity;
 }
 
 @media (max-width: 768px) {
@@ -102,13 +177,7 @@ const visibilityClasses = computed(() => ({
     left: 0;
     align-items: center;
   }
-  .line-1, .line-2, .line-3 {
-    transform: none;
-    text-align: center;
-  }
   .hero-subtitle {
-    transform: none;
-    text-align: center;
     font-size: 16px;
   }
 }

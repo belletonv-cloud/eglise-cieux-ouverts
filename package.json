@@ -9,6 +9,7 @@
     "deploy": "nuxt build && wrangler pages deploy .output/public --project-name eglise-cieux-ouverts"
   },
   "dependencies": {
+    "@vueuse/core": "^14.3.0",
     "firebase": "^12.12.1",
     "nuxt": "^3.17.0",
     "vue": "^3.4.0",
