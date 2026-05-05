@@ -23,10 +23,10 @@ export const BLOCK_TYPES = {
     label: 'Hero (bannière)',
     icon: '🖼️',
     defaults: {
-      image: '/hero.jpg',
-      height: 500,
-      overlay: false,
-      overlayColor: 'rgba(0,0,0,0.3)',
+      image: '/foule-croix.png',
+      height: 700,
+      overlay: true,
+      overlayColor: 'linear-gradient(135deg, rgba(124,58,237,0.8) 0%, rgba(236,72,153,0.7) 50%, rgba(59,130,246,0.8) 100%)',
       overlayText: '',
     },
     schema: [
