@@ -5,20 +5,12 @@
     :class="visibilityClasses"
   >
     <img v-if="props.image" :src="props.image" alt="Hero" class="hero-img" />
-    <div class="hero-overlay"></div>
     <div class="hero-content">
       <div class="hero-bienvenue" aria-label="BIENVENUE">
         <span v-for="(letter, i) in 'BIENVENUE'" :key="i" :style="{ animationDelay: `${i * 80}ms` }">{{ letter }}</span>
       </div>
       <p class="hero-subtitle">à l'Église Cieux Ouverts à Morlaix</p>
       <NuxtLink to="/contact" class="btn-hero">Rejoins-nous</NuxtLink>
-      <div class="hero-horaires">
-        <div class="horaire-label">Chaque dimanche à Morlaix</div>
-        <div class="horaire-grid">
-          <div><strong>9h30</strong><span>Accueil café</span></div>
-          <div><strong>10h00</strong><span>Célébration</span></div>
-        </div>
-      </div>
     </div>
   </section>
 </template>
@@ -51,15 +43,11 @@ const visibilityClasses = computed(() => ({
   display: block;
 }
 
-.hero-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(124,58,237,0.8) 0%, rgba(236,72,153,0.7) 50%, rgba(59,130,246,0.8) 100%);
-  z-index: 0;
-}
-
 .hero-content {
-  position: relative;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   z-index: 1;
   text-align: center;
   color: white;

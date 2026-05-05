@@ -25,8 +25,8 @@ export const BLOCK_TYPES = {
     defaults: {
       image: '/foule-croix.png',
       height: 700,
-      overlay: true,
-      overlayColor: 'linear-gradient(135deg, rgba(124,58,237,0.8) 0%, rgba(236,72,153,0.7) 50%, rgba(59,130,246,0.8) 100%)',
+      overlay: false,
+      overlayColor: 'rgba(0,0,0,0.3)',
       overlayText: '',
     },
     schema: [
@@ -269,9 +269,10 @@ export function createBlock(type, props = {}) {
 // ─── Structure de page initiale (accueil) ─────────────────────────────────
 export function getDefaultHomePage() {
   return [
-    createBlock('hero', { height: 700 }),
+    createBlock('hero', { image: '/foule-croix.png', height: 700 }),
+    createBlock('rejoins'),
     createBlock('aspirations'),
     createBlock('vision'),
-    createBlock('contact'),
+    createBlock('contact', { image: '/smartphone.jpg' }),
   ].filter(Boolean)
 }
