@@ -25,18 +25,12 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 
-import photoSalle from '@/assets/photos/salle.jpg'
-import photoMains from '@/assets/photos/mains.jpg'
-import photoPromenade from '@/assets/photos/promenade.jpg'
-import photoPizza from '@/assets/photos/pizza.jpg'
-import photoBuffet from '@/assets/photos/buffet.jpg'
-
 const photos = [
-  { src: photoSalle, alt: 'Salle de l\'église' },
-  { src: photoMains, alt: 'Mains jointes' },
-  { src: photoPromenade, alt: 'Promenade en groupe' },
-  { src: photoPizza, alt: 'Repas en groupe' },
-  { src: photoBuffet, alt: 'Buffet' },
+  { src: '/photos/salle.jpg', alt: 'Salle de l\'église' },
+  { src: '/photos/mains.jpg', alt: 'Mains jointes' },
+  { src: '/photos/promenade.jpg', alt: 'Promenade en groupe' },
+  { src: '/photos/pizza.jpg', alt: 'Repas en groupe' },
+  { src: '/photos/buffet.jpg', alt: 'Buffet' },
 ]
 
 const allPhotos = computed(() => [photos[photos.length - 1], ...photos, photos[0]])
