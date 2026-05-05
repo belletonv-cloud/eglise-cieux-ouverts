@@ -1,5 +1,0 @@
-[pages]
-main.branch = "main"
-[build]
-command = "npm run build"
-dir = ".output/public"
