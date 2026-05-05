@@ -91,7 +91,7 @@ export const BLOCK_TYPES = {
         {
           title: "Groupes de maison",
           description: "Des groupes de maison près de chez toi !\n\nRejoins l’un de nos groupes de maison dans les communes de :\n📍 Carhaix\n📍 Pleyber-Christ\n📍 Plouénan\n📍 Plouvorn\n📍 Saint-Martin-des-Champs\n📍 Saint-Pol-de-Léon\n... et d'autres à venir !\n\nCes rencontres conviviales sont l’occasion de :\n💬 Échanger et répondre à tes questions.\n🤝 Partager nos expériences et notre foi.\n✨ Grandir ensemble dans la découverte de Christ.\n\nCes groupes sont ouverts à tous, en particulier aux personnes qui explorent leur cheminement spirituel ou souhaitent en savoir plus sur Jésus.\n\nViens comme tu es, une place t’attend !",
-          image: "https://static.wixstatic.com/media/d65230_c2d4e37821764562bf9a976f456fa24c~mv2.jpeg/v1/fill/w_1600,h_624,fp_0.46_0.56,q_90,enc_avif,quality_auto/d65230_c2d4e37821764562bf9a976f456fa24c~mv2.jpeg"
+          image: "https://static.wixstatic.com/media/11062b_d5951c2579bf4eeca8372bc1d7baedb7~mv2.jpeg/v1/fit/w_1920,h_749,q_90,enc_avif,quality_auto/11062b_d5951c2579bf4eeca8372bc1d7baedb7~mv2.jpeg"
         },
         {
           title: "Soirée femmes",
@@ -101,7 +101,7 @@ export const BLOCK_TYPES = {
         {
           title: "Jeunesse",
           description: "Les \"Potentiel\" : un groupe pour les 12-18 ans !\n\nUn espace dédié aux ados pour :\n❓ Partager leurs questionnements et explorer leur foi en toute liberté.\n✨ Vivre des expériences fortes, qui marquent et transforment.\n🌱 Grandir ensemble, en apprenant à s’épanouir dans leur potentiel.\n🎉 Et surtout, s’amuser et créer des souvenirs mémorables !\n\nDes moments uniques pour se connecter, se découvrir et avancer dans un cadre bienveillant.\n\nSi tu as entre 12 et 18 ans, ce groupe est fait pour toi – viens nous rejoindre !",
-          image: "https://static.wixstatic.com/media/11062b_d5951c2579bf4eeca8372bc1d7baedb7~mv2.jpeg/v1/fit/w_1920,h_749,q_90,enc_avif,quality_auto/11062b_d5951c2579bf4eeca8372bc1d7baedb7~mv2.jpeg"
+          image: "https://static.wixstatic.com/media/d65230_c2d4e37821764562bf9a976f456fa24c~mv2.jpeg/v1/fill/w_1600,h_624,fp_0.46_0.56,q_90,enc_avif,quality_auto/d65230_c2d4e37821764562bf9a976f456fa24c~mv2.jpeg"
         },
         {
           title: "Repas partagé",
