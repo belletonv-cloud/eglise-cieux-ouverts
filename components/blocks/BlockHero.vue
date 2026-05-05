@@ -40,7 +40,7 @@ const visibilityClasses = computed(() => ({
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #3B82F6 0%, #7C3AED 50%, #EC4899 100%);
+  background: linear-gradient(to bottom, #87CEEB 0%, #4682B4 100%);
   overflow: hidden;
   width: 100vw;
   margin-left: calc(-50vw + 50%);
