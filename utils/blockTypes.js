@@ -222,6 +222,7 @@ export const BLOCK_TYPES = {
   },
 
   richText: {
+    label: 'Texte riche',
     icon: '📄',
     defaults: {
       content: 'Écrivez votre texte ici...',

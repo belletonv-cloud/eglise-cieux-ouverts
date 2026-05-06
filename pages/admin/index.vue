@@ -150,6 +150,8 @@ import BlockGallery from '~/components/blocks/BlockGallery.vue'
 import BlockSpacer from '~/components/blocks/BlockSpacer.vue'
 import BlockFullWidthImage from '~/components/blocks/BlockFullWidthImage.vue'
 import BlockVision from '~/components/blocks/BlockVision.vue'
+import BlockActivities from '~/components/blocks/BlockActivities.vue'
+import BlockNousRejoindre from '~/components/blocks/BlockNousRejoindre.vue'
 
 definePageMeta({ layout: false })
 
@@ -165,6 +167,8 @@ const BLOCK_COMPONENTS = {
   spacer: BlockSpacer,
   fullWidthImage: BlockFullWidthImage,
   vision: BlockVision,
+  activities: BlockActivities,
+  nousRejoindre: BlockNousRejoindre,
 }
 
 const pages = [

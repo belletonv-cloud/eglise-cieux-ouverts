@@ -124,6 +124,66 @@
               @click="updateProp(field.key, anim.id)"
             >{{ anim.label }}</button>
           </div>
+
+          <!-- Array (ex: activités) -->
+          <div v-else-if="field.type === 'array'" class="field-array">
+            <div
+              v-for="(item, idx) in localBlock.props[field.key]"
+              :key="idx"
+              class="array-item"
+            >
+              <div class="array-item-header">
+                <span class="array-item-num">#{{ idx + 1 }}</span>
+                <button class="array-item-del" @click="removeArrayItem(field.key, idx)" title="Supprimer">✕</button>
+              </div>
+              <input
+                type="text"
+                class="field-input"
+                placeholder="Titre"
+                :value="item.title"
+                @input="updateArrayItemProp(field.key, idx, 'title', $event.target.value)"
+              />
+              <textarea
+                class="field-textarea"
+                rows="3"
+                placeholder="Description"
+                :value="item.description"
+                @input="updateArrayItemProp(field.key, idx, 'description', $event.target.value)"
+              ></textarea>
+              <input
+                type="text"
+                class="field-input"
+                placeholder="URL image"
+                :value="item.image"
+                @input="updateArrayItemProp(field.key, idx, 'image', $event.target.value)"
+              />
+              <img v-if="item.image" :src="item.image" class="field-image-preview" alt="preview" />
+            </div>
+            <button class="array-add-btn" @click="addArrayItem(field.key)">+ Ajouter</button>
+          </div>
+
+          <!-- Images list (ex: galerie) -->
+          <div v-else-if="field.type === 'images'" class="field-array">
+            <div
+              v-for="(url, idx) in localBlock.props[field.key]"
+              :key="idx"
+              class="array-item"
+            >
+              <div class="array-item-header">
+                <span class="array-item-num">#{{ idx + 1 }}</span>
+                <button class="array-item-del" @click="removeImageItem(field.key, idx)" title="Supprimer">✕</button>
+              </div>
+              <input
+                type="text"
+                class="field-input"
+                placeholder="URL image"
+                :value="url"
+                @input="updateImageItem(field.key, idx, $event.target.value)"
+              />
+              <img v-if="url" :src="url" class="field-image-preview" alt="preview" />
+            </div>
+            <button class="array-add-btn" @click="addImageItem(field.key)">+ Ajouter une image</button>
+          </div>
         </div>
       </div>
     </div>
@@ -166,6 +226,34 @@ function toggleVisibility(key) {
 
 function updateProp(key, value) {
   localBlock.value.props[key] = value
+  emit('update', JSON.parse(JSON.stringify(localBlock.value)))
+}
+
+// Array (activités)
+function removeArrayItem(key, idx) {
+  localBlock.value.props[key].splice(idx, 1)
+  emit('update', JSON.parse(JSON.stringify(localBlock.value)))
+}
+function addArrayItem(key) {
+  localBlock.value.props[key].push({ title: '', description: '', image: '' })
+  emit('update', JSON.parse(JSON.stringify(localBlock.value)))
+}
+function updateArrayItemProp(key, idx, prop, value) {
+  localBlock.value.props[key][idx][prop] = value
+  emit('update', JSON.parse(JSON.stringify(localBlock.value)))
+}
+
+// Images (galerie)
+function removeImageItem(key, idx) {
+  localBlock.value.props[key].splice(idx, 1)
+  emit('update', JSON.parse(JSON.stringify(localBlock.value)))
+}
+function addImageItem(key) {
+  localBlock.value.props[key].push('')
+  emit('update', JSON.parse(JSON.stringify(localBlock.value)))
+}
+function updateImageItem(key, idx, value) {
+  localBlock.value.props[key][idx] = value
   emit('update', JSON.parse(JSON.stringify(localBlock.value)))
 }
 </script>
@@ -390,6 +478,56 @@ function updateProp(key, value) {
   padding: 16px;
   margin-top: auto;
 }
+
+/* Array editor */
+.field-array {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.array-item {
+  background: #13131f;
+  border: 1px solid #2d2d3f;
+  border-radius: 8px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.array-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+.array-item-num {
+  font-size: 0.72em;
+  font-weight: 700;
+  color: #7c7c9a;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.array-item-del {
+  background: none;
+  border: none;
+  color: #EF4B54;
+  cursor: pointer;
+  font-size: 0.85em;
+  padding: 2px 5px;
+  border-radius: 4px;
+}
+.array-item-del:hover { background: rgba(239,75,84,0.1); }
+.array-add-btn {
+  background: #2d2d3f;
+  border: 1.5px dashed #3d3d55;
+  border-radius: 8px;
+  color: #9999bb;
+  font-size: 0.82em;
+  padding: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.array-add-btn:hover { border-color: #064886; color: white; }
 .btn-delete {
   width: 100%;
   padding: 10px;
