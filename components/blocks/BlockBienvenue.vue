@@ -184,9 +184,4 @@ const subtitleStyle = computed(() => {
   }
   .hero-subtitle { font-size: 16px; margin-top: 15px; }
 }
-  .hero-subtitle {
-    font-size: 16px;
-    margin-top: 15px;
-  }
-}
 </style>
