@@ -8,7 +8,7 @@
       <h2 v-if="props.title" class="gallery-title" :style="{ color: props.textColor }">{{ props.title }}</h2>
       <div class="gallery-grid" :style="{ gridTemplateColumns: `repeat(${props.columns ?? 3}, 1fr)` }">
         <div
-          v-for="(img, i) in props.images"
+          v-for="(img, i) in normalizedImages"
           :key="i"
           class="gallery-item"
           @click="openLightbox(i)"
@@ -24,7 +24,7 @@
       <div v-if="lightboxIndex !== null" class="lightbox" @click.self="closeLightbox">
         <button class="lightbox-close" @click="closeLightbox">✕</button>
         <button class="lightbox-prev" @click="prevImage">‹</button>
-        <img :src="props.images[lightboxIndex]?.src" class="lightbox-img" />
+        <img :src="normalizedImages[lightboxIndex]?.src" class="lightbox-img" />
         <button class="lightbox-next" @click="nextImage">›</button>
       </div>
     </Teleport>
@@ -38,6 +38,19 @@ const p = defineProps({
 })
 const lightboxIndex = ref(null)
 
+const normalizedImages = computed(() => {
+  return (p.props.images || []).map((img, index) => {
+    if (typeof img === 'string') {
+      return { src: img, alt: `Image ${index + 1}`, caption: '' }
+    }
+    return {
+      src: img?.src || '',
+      alt: img?.alt || `Image ${index + 1}`,
+      caption: img?.caption || '',
+    }
+  }).filter(img => img.src)
+})
+
 const visibilityClasses = computed(() => ({
   'hide-mobile': p.visibility.mobile === false,
   'hide-tablet': p.visibility.tablet === false,
@@ -47,11 +60,11 @@ const visibilityClasses = computed(() => ({
 function openLightbox(i) { lightboxIndex.value = i }
 function closeLightbox() { lightboxIndex.value = null }
 function prevImage() {
-  const len = p.props.images?.length ?? 0
+  const len = normalizedImages.value.length
   lightboxIndex.value = (lightboxIndex.value - 1 + len) % len
 }
 function nextImage() {
-  const len = p.props.images?.length ?? 0
+  const len = normalizedImages.value.length
   lightboxIndex.value = (lightboxIndex.value + 1) % len
 }
 </script>

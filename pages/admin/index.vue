@@ -23,7 +23,7 @@
 
       <div class="sidebar-footer">
         <a href="/" target="_blank" class="preview-site-btn">↗ Voir le site</a>
-        <button class="save-btn" :class="{ saved: saved }" @click="savePage" :disabled="saving">
+        <button class="save-btn" :class="{ saved: saved }" @click="savePage" :disabled="saving || !currentPageIsBuilder">
           {{ saving ? 'Sauvegarde...' : saved ? '✓ Sauvegardé' : 'Sauvegarder' }}
         </button>
         <button class="logout-btn" @click="logout">Déconnexion</button>
@@ -51,7 +51,7 @@
           </div>
         </div>
         <div class="toolbar-right">
-          <button class="btn-add-block" @click="showBlockPicker = true">+ Ajouter un bloc</button>
+          <button class="btn-add-block" @click="showBlockPicker = true" :disabled="!currentPageIsBuilder">+ Ajouter un bloc</button>
         </div>
       </div>
 
@@ -77,7 +77,7 @@
                 { triggered: triggeredBlocks.has(block.id) },
                 { selected: selectedBlockId === block.id }
               ]"
-              @click.stop="selectBlock(block.id)"
+              @click="onBlockWrapperClick($event, block.id)"
             >
               <!-- Block overlay controls -->
               <div class="block-controls">
@@ -99,10 +99,16 @@
             </div>
           </VueDraggable>
 
+          <div v-if="!currentPageIsBuilder" class="canvas-static-note">
+            <p class="canvas-static-title">Cette page reste speciale pour l'instant.</p>
+            <p class="canvas-static-text">Le rendu public vient encore de <code>{{ currentPageMeta?.file }}</code>.</p>
+            <p class="canvas-static-text">Je l'ai laissee hors builder pour l'instant car le calendrier demande un traitement dedie.</p>
+          </div>
+
           <!-- Empty state -->
           <div v-if="blocks.length === 0" class="canvas-empty">
             <p>✨ Cette page est vide.</p>
-            <button class="btn-add-block" @click="showBlockPicker = true">+ Ajouter un premier bloc</button>
+            <button class="btn-add-block" @click="showBlockPicker = true" :disabled="!currentPageIsBuilder">+ Ajouter un premier bloc</button>
           </div>
         </div>
       </div>
@@ -142,7 +148,7 @@
 
 <script setup>
 import { VueDraggable } from 'vue-draggable-plus'
-import { BLOCK_TYPES, ANIMATIONS, createBlock, getDefaultHomePage } from '~/utils/blockTypes.js'
+import { BLOCK_TYPES, ANIMATIONS, createBlock, getDefaultPageBySlug } from '~/utils/blockTypes.js'
 import PropsPanel from '~/components/editor/PropsPanel.vue'
 import PageRenderer from '~/components/PageRenderer.vue'
 
@@ -182,12 +188,12 @@ const BLOCK_COMPONENTS = {
 }
 
 const pages = [
-  { slug: 'accueil',  label: 'Accueil',  icon: '🏠' },
-  { slug: 'agenda',   label: 'Agenda',   icon: '📅' },
-  { slug: 'messages', label: 'Messages', icon: '🎤' },
-  { slug: 'photos', label: 'Photos', icon: '🖼️' },
-  { slug: 'billetterie', label: 'Billetterie', icon: '🎟️' },
-  { slug: 'contact',  label: 'Contact',  icon: '✉️' },
+  { slug: 'accueil', label: 'Accueil', icon: '🏠', builder: true, file: 'pages/index.vue' },
+  { slug: 'agenda', label: 'Agenda', icon: '📅', builder: false, file: 'pages/agenda.vue' },
+  { slug: 'messages', label: 'Messages', icon: '🎤', builder: true, file: 'pages/messages.vue' },
+  { slug: 'photos', label: 'Photos', icon: '🖼️', builder: true, file: 'pages/photos.vue' },
+  { slug: 'billetterie', label: 'Billetterie', icon: '🎟️', builder: true, file: 'pages/billetterie.vue' },
+  { slug: 'contact', label: 'Contact', icon: '✉️', builder: true, file: 'pages/contact.vue' },
 ]
 
 const devices = [
@@ -199,7 +205,7 @@ const devices = [
 const { $db, $auth } = useNuxtApp()
 const router = useRouter()
 const currentPage = ref('accueil')
-const blocks = ref(getDefaultHomePage())
+const blocks = ref(getDefaultPageBySlug('accueil'))
 const selectedBlockId = ref(null)
 const previewDevice = ref('desktop')
 const showBlockPicker = ref(false)
@@ -209,7 +215,9 @@ const saved = ref(false)
 const triggeredBlocks = ref(new Set())
 const previewVersions = ref({})
 
-const currentPageLabel = computed(() => pages.find(p => p.slug === currentPage.value)?.label ?? '')
+const currentPageMeta = computed(() => pages.find(p => p.slug === currentPage.value) ?? null)
+const currentPageIsBuilder = computed(() => currentPageMeta.value?.builder !== false)
+const currentPageLabel = computed(() => currentPageMeta.value?.label ?? '')
 const selectedBlock = computed(() => blocks.value.find(b => b.id === selectedBlockId.value) ?? null)
 
 function getBlockDef(type) { return BLOCK_TYPES[type] }
@@ -225,8 +233,7 @@ function getAnimClass(p) {
 
 // ─── Défauts par page ────────────────────────────────────────────────────────
 function getPageDefaults(slug) {
-  if (slug === 'accueil') return getDefaultHomePage()
-  return []
+  return getDefaultPageBySlug(slug)
 }
 
 // ─── Load page from Firebase ──────────────────────────────────────────────────
@@ -248,11 +255,16 @@ async function loadPage(slug) {
 async function selectPage(slug) {
   currentPage.value = slug
   selectedBlockId.value = null
+  if (!pages.find(page => page.slug === slug)?.builder) {
+    blocks.value = []
+    return
+  }
   await loadPage(slug)
 }
 
 // ─── Save page to Firebase ────────────────────────────────────────────────────
 async function savePage() {
+  if (!currentPageIsBuilder.value) return
   saving.value = true; saved.value = false
   try {
     const { doc, setDoc } = await import('firebase/firestore')
@@ -296,6 +308,11 @@ function duplicateBlock(id) {
 
 function selectBlock(id) {
   selectedBlockId.value = id === selectedBlockId.value ? null : id
+}
+
+function onBlockWrapperClick(event, id) {
+  if (event.target.closest('a, button, input, textarea, select, label, iframe')) return
+  selectBlock(id)
 }
 
 function onBlockUpdate(updatedBlock) {
@@ -558,7 +575,7 @@ html, body { height: 100%; background: #0f0f1a !important; }
 /* Block wrapper */
 .block-wrapper {
   position: relative;
-  cursor: pointer;
+  cursor: default;
   outline: 2px solid transparent;
   transition: outline 0.15s;
 }
@@ -627,6 +644,32 @@ html, body { height: 100%; background: #0f0f1a !important; }
   gap: 20px;
 }
 .canvas-empty p { font-size: 1.1em; }
+
+.canvas-static-note {
+  padding: 28px 20px;
+  margin: 20px;
+  border: 1px solid #2d2d3f;
+  border-radius: 12px;
+  background: #13131f;
+  color: #cbd5e1;
+}
+
+.canvas-static-title {
+  margin: 0 0 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: white;
+}
+
+.canvas-static-text {
+  margin: 0;
+  color: #9999bb;
+  line-height: 1.6;
+}
+
+.canvas-static-text + .canvas-static-text {
+  margin-top: 6px;
+}
 
 /* ─── Block picker modal ─────────────────────────────────────────────────────── */
 .modal-overlay {

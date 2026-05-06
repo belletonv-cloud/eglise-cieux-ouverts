@@ -41,7 +41,7 @@
 
           <!-- Textarea -->
           <textarea
-            v-else-if="field.type === 'textarea'"
+            v-else-if="field.type === 'textarea' || field.type === 'richtext'"
             class="field-textarea"
             rows="3"
             :value="localBlock.props[field.key]"

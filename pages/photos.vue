@@ -1,232 +1,27 @@
 <template>
-  <div class="page-container">
-    <h1 class="page-title">Galerie photos</h1>
-    <p class="page-subtitle">Quelques moments de la vie de l'église.</p>
-    
-    <section class="slideshow">
-      <div class="slides-track" :style="trackStyle">
-        <img v-for="(p, i) in allPhotos" :key="i" :src="p.src" :alt="p.alt" />
-      </div>
-      <button class="slide-btn prev" @click="prev" aria-label="Précédent">&#8592;</button>
-      <button class="slide-btn next" @click="next" aria-label="Suivant">&#8594;</button>
-      <div class="slide-dots">
-        <button
-          v-for="(p, i) in photos"
-          :key="i"
-          :class="{ active: current === i }"
-          @click="goTo(i)"
-          :aria-label="'Photo ' + (i+1)"
-        ></button>
-      </div>
-    </section>
-  </div>
+  <PageRenderer :blocks="blocks" />
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { getDefaultPhotosPage } from '~/utils/blockTypes.js'
 
-const photos = [
-  { src: '/photos/salle.jpg', alt: 'Salle de l\'église' },
-  { src: '/photos/mains.jpg', alt: 'Mains jointes' },
-  { src: '/photos/promenade.jpg', alt: 'Promenade en groupe' },
-  { src: '/photos/pizza.jpg', alt: 'Repas en groupe' },
-  { src: '/photos/buffet.jpg', alt: 'Buffet' },
-]
-
-const allPhotos = computed(() => [photos[photos.length - 1], ...photos, photos[0]])
-const current = ref(0)
-const transitioning = ref(true)
-let timer
-let resetTimer
-
-function restartAutoPlay() {
-  clearInterval(timer)
-  timer = setInterval(next, 5000)
-}
-
-function scheduleLoopReset(targetIndex) {
-  clearTimeout(resetTimer)
-  resetTimer = setTimeout(() => {
-    transitioning.value = false
-    current.value = targetIndex
-
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        transitioning.value = true
-      })
-    })
-  }, 600)
-}
-
-const trackStyle = computed(() => ({
-  transform: `translateX(-${(current.value + 1) * 100}%)`,
-  transition: transitioning.value ? 'transform 0.45s ease' : 'none',
-  willChange: 'transform'
-}))
-
-function next() {
-  transitioning.value = true
-  current.value++
-  if (current.value >= photos.length) {
-    scheduleLoopReset(0)
-  }
-}
-
-function prev() {
-  transitioning.value = true
-  current.value--
-  if (current.value < 0) {
-    scheduleLoopReset(photos.length - 1)
-  }
-}
-
-function goTo(i) { 
-  transitioning.value = true
-  current.value = i
-  restartAutoPlay()
-}
-
-onMounted(() => {
-  timer = setInterval(next, 5000)
+useHead({
+  title: 'Photos — Église Cieux Ouverts'
 })
 
-onUnmounted(() => {
-  clearInterval(timer)
-  clearTimeout(resetTimer)
+const blocks = ref(getDefaultPhotosPage())
+const { $db } = useNuxtApp()
+
+onMounted(async () => {
+  try {
+    if (!$db) return
+    const { doc, getDoc } = await import('firebase/firestore')
+    const snap = await getDoc(doc($db, 'pages', 'photos'))
+    if (snap.exists() && snap.data().blocks?.length) {
+      blocks.value = snap.data().blocks
+    }
+  } catch (e) {
+    console.error('Erreur chargement page photos:', e)
+  }
 })
 </script>
-
-<style scoped>
-.page-container {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 40px 24px;
-  text-align: center;
-}
-
-.page-title {
-  font-size: 2.5em;
-  font-weight: 700;
-  background: var(--gradient-accent);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin-bottom: 8px;
-}
-
-.page-subtitle {
-  font-size: 1.1em;
-  color: var(--text-medium);
-  margin-bottom: 40px;
-}
-
-.slideshow {
-  position: relative;
-  overflow: hidden;
-  height: 600px;
-  background: #111;
-  border-radius: 16px;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.15);
-}
-
-.slides-track {
-  display: flex;
-  height: 100%;
-  width: 100%;
-  transform: translateZ(0);
-}
-
-.slides-track img {
-  flex-shrink: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.slide-btn {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  background: rgba(255,255,255,0.3);
-  backdrop-filter: blur(4px);
-  border: none;
-  color: white;
-  font-size: 1.5em;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: background 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  -webkit-tap-highlight-color: transparent;
-}
-.slide-btn:hover { background: rgba(255,255,255,0.5); }
-.prev { left: 16px; }
-.next { right: 16px; }
-
-.slide-dots {
-  position: absolute;
-  bottom: 14px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 8px;
-}
-
-.slide-dots button {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(255,255,255,0.5);
-  cursor: pointer;
-  padding: 0;
-  transition: background 0.2s, transform 0.2s;
-}
-.slide-dots button.active {
-  background: white;
-  transform: scale(1.3);
-}
-
-@media (max-width: 768px) {
-  .page-container {
-    padding: 18px 4px;
-  }
-  .page-title {
-    font-size: 1.3em;
-    margin-bottom: 3px;
-  }
-  .page-subtitle {
-    font-size: 1em;
-    margin-bottom: 14px;
-  }
-  .slideshow {
-    height: 210px;
-    border-radius: 12px;
-  }
-  .slides-track img {
-    object-position: center;
-  }
-  .slide-btn {
-    width: 38px;
-    height: 38px;
-    font-size: 1.1em;
-  }
-  .prev {
-    left: 8px;
-  }
-  .next {
-    right: 8px;
-  }
-  .slide-dots {
-    bottom: 5px;
-    gap: 6px;
-  }
-  .slide-dots button {
-    width: 7px;
-    height: 7px;
-  }
-}
-</style>

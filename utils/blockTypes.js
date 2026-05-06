@@ -120,18 +120,22 @@ export const BLOCK_TYPES = {
     icon: '📝',
     defaults: {
       title: 'Titre de la section',
-      content: 'Contenu de la section.',
+      body: 'Contenu de la section.',
       image: '/photos/salle.jpg',
-      imagePosition: 'right',
+      reverse: false,
+      ctaText: '',
+      ctaLink: '',
       backgroundColor: '#ffffff',
       textColor: '#1a1a2e',
       animation: 'slideLeft',
     },
     schema: [
       { key: 'title',         label: 'Titre',             type: 'text' },
-      { key: 'content',       label: 'Contenu',           type: 'textarea' },
+      { key: 'body',          label: 'Contenu',           type: 'textarea' },
       { key: 'image',         label: 'Image',             type: 'image' },
-      { key: 'imagePosition', label: 'Image à droite',    type: 'select', options: ['left','right'] },
+      { key: 'reverse',       label: 'Image à gauche',    type: 'boolean' },
+      { key: 'ctaText',       label: 'Texte bouton',      type: 'text' },
+      { key: 'ctaLink',       label: 'Lien bouton',       type: 'text' },
       { key: 'backgroundColor',label: 'Fond',             type: 'color' },
       { key: 'textColor',     label: 'Couleur texte',     type: 'color' },
       { key: 'animation',     label: 'Animation',         type: 'animation' },
@@ -350,4 +354,90 @@ export function getDefaultHomePage() {
       backgroundGradient: '#064886' 
     }),
   ].filter(Boolean)
+}
+
+export function getDefaultMessagesPage() {
+  return [
+    createBlock('textImage', {
+      title: 'Nos messages',
+      body: `<p>Cieux Ouverts est aussi en ligne !</p><p>Les messages partages a l'eglise ne sont pas faits pour s'arreter au dimanche.</p><ul><li>(Re)decouvre les messages qui t'ont touche.</li><li>Laisse Dieu te parler a nouveau.</li><li>Partage-les avec tes proches.</li></ul><p><strong>Abonne-toi des maintenant pour ne rien manquer.</strong></p>`,
+      image: 'https://static.wixstatic.com/media/d65230_4715cdbb28a040dda63d2bcc671903c4~mv2.png/v1/fill/w_890,h_564,al_c,q_90,usm_0.66_1.00_0.01,enc_avif,quality_auto/2.png',
+      backgroundColor: '#f4f4f4',
+      textColor: '#064886',
+      ctaText: 'Notre chaine YouTube',
+      ctaLink: 'https://www.youtube.com/@eglisecieuxouverts',
+    }),
+    createBlock('richText', {
+      content: `<div style="max-width:900px;margin:0 auto;text-align:center;"><h2 style="font-family:'Playfair Display',Georgia,serif;font-style:italic;color:#064886;">Dernier message</h2><div style="position:relative;width:100%;padding-bottom:56.25%;border-radius:16px;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,0.25);"><iframe src="https://www.youtube.com/embed/wZebQj0gR98" title="Dernier message" style="position:absolute;inset:0;width:100%;height:100%;border:none;" allowfullscreen></iframe></div></div>`,
+      backgroundColor: '#ffffff',
+      textColor: '#1a1a2e',
+      textAlign: 'left',
+      padding: 60,
+      animation: 'fadeIn',
+    }),
+  ].filter(Boolean)
+}
+
+export function getDefaultPhotosPage() {
+  return [
+    createBlock('gallery', {
+      title: 'Galerie photos',
+      textColor: '#064886',
+      columns: 3,
+      images: [
+        '/photos/salle.jpg',
+        '/photos/mains.jpg',
+        '/photos/promenade.jpg',
+        '/photos/pizza.jpg',
+        '/photos/buffet.jpg',
+      ],
+    }),
+  ].filter(Boolean)
+}
+
+export function getDefaultBilletteriePage() {
+  return [
+    createBlock('richText', {
+      content: `<div style="max-width:820px;margin:0 auto;text-align:center;"><h1 style="font-family:'Playfair Display',Georgia,serif;font-style:italic;color:#064886;">Billetterie Evenements</h1><p>Decouvrez et reservez vos places pour nos prochains evenements.</p><p><strong>Aucun evenement pour le moment.</strong></p><p>Revenez bientot pour de nouvelles dates.</p></div>`,
+      backgroundColor: '#ffffff',
+      textColor: '#1a1a2e',
+      textAlign: 'left',
+      padding: 70,
+      animation: 'fadeIn',
+    }),
+  ].filter(Boolean)
+}
+
+export function getDefaultContactPage() {
+  return [
+    createBlock('richText', {
+      content: `<div style="max-width:1000px;margin:0 auto;"><h1 style="font-family:'Playfair Display',Georgia,serif;font-style:italic;color:#064886;">Nous contacter</h1><p style="font-family:'Playfair Display',Georgia,serif;color:#064886;">Eglise Cieux Ouverts<br>2 rue Jean Monnet | 29600 Morlaix</p></div>`,
+      backgroundColor: '#ffffff',
+      textColor: '#064886',
+      textAlign: 'left',
+      padding: 50,
+      animation: 'fadeIn',
+    }),
+    createBlock('contact', {
+      image: 'https://static.wixstatic.com/media/11062b_c518f30e29fa44f0b424cabfdd0b5a6a~mv2.jpg/v1/fill/w_147,h_246,al_c,q_80,usm_0.66_1.00_0.01,blur_2,enc_avif,quality_auto/Smartphone%20en%20main.jpg',
+      backgroundGradient: '#064886',
+    }),
+    createBlock('richText', {
+      content: `<div style="max-width:1000px;margin:0 auto;"><iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2688.0!2d-3.8275!3d48.5775!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4816a3c4e3d89c3b%3A0x1!2s2+Rue+Jean+Monnet%2C+29600+Morlaix!5e0!3m2!1sfr!2sfr!4v1700000000000" title="Carte — Eglise Cieux Ouverts Morlaix" width="100%" height="420" style="border:0;border-radius:12px;" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>`,
+      backgroundColor: '#ffffff',
+      textColor: '#1a1a2e',
+      textAlign: 'left',
+      padding: 20,
+      animation: 'fadeIn',
+    }),
+  ].filter(Boolean)
+}
+
+export function getDefaultPageBySlug(slug) {
+  if (slug === 'accueil') return getDefaultHomePage()
+  if (slug === 'messages') return getDefaultMessagesPage()
+  if (slug === 'photos') return getDefaultPhotosPage()
+  if (slug === 'billetterie') return getDefaultBilletteriePage()
+  if (slug === 'contact') return getDefaultContactPage()
+  return []
 }
