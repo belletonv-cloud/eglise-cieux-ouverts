@@ -72,7 +72,11 @@
               v-for="block in blocks"
               :key="block.id"
               class="block-wrapper"
-              :class="{ selected: selectedBlockId === block.id }"
+              :class="[
+                getAnimClass(block.props),
+                'triggered',
+                { selected: selectedBlockId === block.id }
+              ]"
               @click.stop="selectBlock(block.id)"
             >
               <!-- Block overlay controls -->
@@ -89,6 +93,7 @@
                 :is="blockComponent(block.type)"
                 :props="block.props"
                 :visibility="block.visibility"
+                :is-triggered="true"
               />
             </div>
           </VueDraggable>
@@ -136,7 +141,7 @@
 
 <script setup>
 import { VueDraggable } from 'vue-draggable-plus'
-import { BLOCK_TYPES, createBlock, getDefaultHomePage } from '~/utils/blockTypes.js'
+import { BLOCK_TYPES, ANIMATIONS, createBlock, getDefaultHomePage } from '~/utils/blockTypes.js'
 import PropsPanel from '~/components/editor/PropsPanel.vue'
 import PageRenderer from '~/components/PageRenderer.vue'
 
@@ -206,6 +211,11 @@ const selectedBlock = computed(() => blocks.value.find(b => b.id === selectedBlo
 
 function getBlockDef(type) { return BLOCK_TYPES[type] }
 function blockComponent(type) { return BLOCK_COMPONENTS[type] || BlockRichText }
+function getAnimClass(p) {
+  if (!p || !p.animation || p.animation === 'none') return ''
+  const anim = ANIMATIONS.find(a => a.id === p.animation)
+  return anim ? `block-${anim.css}` : ''
+}
 
 // ─── Défauts par page ────────────────────────────────────────────────────────
 function getPageDefaults(slug) {
