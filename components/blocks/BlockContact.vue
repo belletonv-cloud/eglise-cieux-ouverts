@@ -27,19 +27,21 @@
           </div>
           <form class="contact-form" @submit.prevent="submitForm">
             <div class="form-row">
-              <input v-model="form.prenom" type="text" placeholder="Prénom *" required />
-              <input v-model="form.nom" type="text" placeholder="Nom de famille *" required />
+              <input v-model="form.prenom" type="text" placeholder="Prénom *" autocomplete="given-name" maxlength="80" :disabled="isFormDisabled" required />
+              <input v-model="form.nom" type="text" placeholder="Nom de famille *" autocomplete="family-name" maxlength="80" :disabled="isFormDisabled" required />
             </div>
-            <input v-model="form.ville" type="text" placeholder="Ville" />
-            <input v-model="form.email" type="email" placeholder="Email *" required />
-            <textarea v-model="form.message" placeholder="Ton Message *" required rows="5"></textarea>
+            <input v-model="form.ville" type="text" placeholder="Ville" autocomplete="address-level2" maxlength="120" :disabled="isFormDisabled" />
+            <input v-model="form.email" type="email" placeholder="Email *" autocomplete="email" maxlength="180" :disabled="isFormDisabled" required />
+            <textarea v-model="form.message" placeholder="Ton Message *" maxlength="4000" :disabled="isFormDisabled" required rows="5"></textarea>
+            <input v-model="form.website" type="text" class="contact-honeypot" tabindex="-1" autocomplete="off" aria-hidden="true" />
             <label class="checkbox-label">
-              <input type="checkbox" v-model="form.newsletter" />
+              <input type="checkbox" v-model="form.newsletter" :disabled="isFormDisabled" />
               Oui, je souhaite m'abonner à la Newsletter.
             </label>
+            <p class="editor-msg" v-if="isEditor">Le formulaire est désactivé dans l'admin. Teste-le sur le site public.</p>
             <p class="success-msg" v-if="submitted">Message envoyé, à bientôt !</p>
-            <p class="error-msg" v-if="error">Une erreur est survenue.</p>
-            <button type="submit" class="btn-submit" :disabled="sending">
+            <p class="error-msg" v-if="errorMessage">{{ errorMessage }}</p>
+            <button type="submit" class="btn-submit" :disabled="isFormDisabled">
               {{ sending ? 'Envoi...' : "C'est parti !" }}
             </button>
           </form>
@@ -85,21 +87,81 @@ onMounted(() => {
 })
 
 const { $db } = useNuxtApp()
-const form = ref({ prenom: '', nom: '', ville: '', email: '', message: '', newsletter: false })
+const route = useRoute()
+const form = ref({ prenom: '', nom: '', ville: '', email: '', message: '', newsletter: false, website: '' })
 const sending = ref(false)
 const submitted = ref(false)
-const error = ref(false)
+const errorMessage = ref('')
+const mountedAt = Date.now()
+
+const isFormDisabled = computed(() => sending.value || isEditor)
+
+function normalizeForm() {
+  return {
+    prenom: form.value.prenom.trim(),
+    nom: form.value.nom.trim(),
+    ville: form.value.ville.trim(),
+    email: form.value.email.trim().toLowerCase(),
+    message: form.value.message.trim(),
+    newsletter: Boolean(form.value.newsletter),
+    website: form.value.website.trim(),
+  }
+}
+
+function validateForm(data) {
+  if (!data.prenom || !data.nom || !data.email || !data.message) {
+    return 'Merci de renseigner les champs obligatoires.'
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+    return 'Merci de saisir une adresse email valide.'
+  }
+  if (data.message.length < 10) {
+    return 'Ton message est un peu trop court.'
+  }
+  if (data.website) {
+    return 'Envoi bloqué.'
+  }
+  if (Date.now() - mountedAt < 2500) {
+    return 'Merci de patienter une seconde avant d\'envoyer le formulaire.'
+  }
+  return ''
+}
 
 async function submitForm() {
-  sending.value = true; error.value = false
+  if (isEditor === true) return
+  const data = normalizeForm()
+  const validationError = validateForm(data)
+  if (validationError) {
+    errorMessage.value = validationError
+    return
+  }
+
+  sending.value = true
+  errorMessage.value = ''
+  submitted.value = false
   try {
     if (!$db) throw new Error("No DB")
     const { collection, addDoc, serverTimestamp } = await import('firebase/firestore')
-    await addDoc(collection($db, 'contacts'), { ...form.value, createdAt: serverTimestamp() })
+    await addDoc(collection($db, 'contacts'), {
+      prenom: data.prenom,
+      nom: data.nom,
+      ville: data.ville,
+      email: data.email,
+      message: data.message,
+      newsletter: data.newsletter,
+      source: route.fullPath,
+      status: 'new',
+      createdAt: serverTimestamp(),
+      meta: {
+        userAgent: navigator.userAgent,
+        language: navigator.language,
+      },
+    })
     submitted.value = true
-    form.value = { prenom: '', nom: '', ville: '', email: '', message: '', newsletter: false }
+    form.value = { prenom: '', nom: '', ville: '', email: '', message: '', newsletter: false, website: '' }
   } catch (e) {
-    console.error(e); error.value = true
+    console.error(e)
+    errorMessage.value = 'L\'envoi a echoue. Verifie la connexion ou reessaie dans un instant.'
   } finally { sending.value = false }
 }
 </script>
@@ -208,6 +270,15 @@ async function submitForm() {
 .contact-form textarea::placeholder { color: #888; }
 .checkbox-label { display: flex; align-items: center; gap: 10px; font-size: 0.9em; cursor: pointer; opacity: 0.9; margin-top: 10px; margin-bottom: 10px; }
 .checkbox-label input[type="checkbox"] { width: 18px; height: 18px; accent-color: #3B82F6; }
+.contact-honeypot {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+.editor-msg { background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25); border-radius: 8px; padding: 12px; font-size: 0.9em; }
 .success-msg { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); border-radius: 8px; padding: 12px; font-size: 0.9em; }
 .error-msg { background: rgba(239,75,84,0.25); border: 1px solid rgba(239,75,84,0.5); border-radius: 8px; padding: 12px; font-size: 0.9em; }
 .btn-submit {
