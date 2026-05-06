@@ -71,8 +71,12 @@ function assertString(value: unknown, max: number) {
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig(event)
-  const body = await readBody(event)
-
+  
+  // Cloudflare Pages: read from process.env directly (NUXT_ prefix handled by Nitro)
+  const firebaseProjectId = config.firebaseProjectId || process.env.NUXT_FIREBASE_PROJECT_ID || ''
+  const firebaseClientEmail = config.firebaseClientEmail || process.env.NUXT_FIREBASE_CLIENT_EMAIL || ''
+  const firebasePrivateKey = config.firebasePrivateKey || process.env.NUXT_FIREBASE_PRIVATE_KEY || ''
+  
   const prenom = assertString(body?.prenom, 80)
   const nom = assertString(body?.nom, 80)
   const ville = assertString(body?.ville, 120)
@@ -81,7 +85,7 @@ export default defineEventHandler(async (event) => {
   const website = assertString(body?.website, 200)
   const source = assertString(body?.source, 200) || '/contact'
   const newsletter = Boolean(body?.newsletter)
-
+  
   if (!prenom || !nom || !email || !message) {
     throw createError({ statusCode: 400, statusMessage: 'Champs obligatoires manquants.' })
   }
@@ -92,13 +96,13 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'Message trop court.' })
   }
   if (website) {
-    throw createError({ statusCode: 400, statusMessage: 'Envoi bloque.' })
+    throw createError({ statusCode: 400, statusMessage: 'Envoi bloqué.' })
   }
-  if (!config.firebaseClientEmail || !config.firebasePrivateKey || !config.firebaseProjectId) {
-    throw createError({ statusCode: 503, statusMessage: 'Configuration serveur contact incomplete.' })
+  if (!firebaseClientEmail || !firebasePrivateKey || !firebaseProjectId) {
+    throw createError({ statusCode: 503, statusMessage: 'Configuration serveur contact incomplète.' })
   }
-
-  const accessToken = await getAccessToken(config.firebaseClientEmail, config.firebasePrivateKey)
+  
+  const accessToken = await getAccessToken(firebaseClientEmail, firebasePrivateKey)
   const firestoreUrl = `https://firestore.googleapis.com/v1/projects/${config.firebaseProjectId}/databases/(default)/documents/contacts`
 
   const response = await fetch(firestoreUrl, {

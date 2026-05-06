@@ -4,9 +4,9 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   ssr: true,
   runtimeConfig: {
-    firebaseProjectId: '',
-    firebaseClientEmail: '',
-    firebasePrivateKey: '',
+    firebaseProjectId: process.env.NUXT_FIREBASE_PROJECT_ID || '',
+    firebaseClientEmail: process.env.NUXT_FIREBASE_CLIENT_EMAIL || '',
+    firebasePrivateKey: process.env.NUXT_FIREBASE_PRIVATE_KEY || '',
   },
   app: {
     head: {
