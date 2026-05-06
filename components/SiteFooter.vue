@@ -19,7 +19,7 @@
       <div class="footer-right">
         <div class="footer-info">
           <a href="mailto:contact@cieuxouverts.bzh" class="footer-email">contact@cieuxouverts.bzh</a>
-          <p>Rendez-vous chaque dimanche | <strong>10H</strong></p>
+          <p>Rdv chaque dimanche | <strong>10H</strong></p>
           <p>2 rue Jean Monnet | <strong>29600 Morlaix, Bretagne</strong></p>
         </div>
       </div>
