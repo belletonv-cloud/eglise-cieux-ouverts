@@ -221,6 +221,17 @@ onUnmounted(() => {
     backdrop-filter: none;
     background: rgba(255,255,255,0.98);
   }
+  .site-header.menu-open {
+    background: transparent;
+    border-bottom: none;
+    box-shadow: none;
+  }
+  .site-header.menu-open .burger span {
+    background: white;
+  }
+  .site-header.menu-open .logo {
+    filter: brightness(0) invert(1);
+  }
   .header-inner {
     padding: 10px 12px;
     gap: 12px;
@@ -237,18 +248,30 @@ onUnmounted(() => {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(255,255,255,0.98);
+    background: url('/foule-croix.png') center center / cover no-repeat;
     padding: 14px 12px 18px;
     gap: 8px;
     overflow-y: auto;
-    border-top: 1px solid var(--border-light);
-    box-shadow: 0 12px 28px rgba(26, 26, 46, 0.08);
+    border-top: none;
+    box-shadow: none;
   }
   .nav-mobile a {
-    padding: 12px 14px;
-    font-size: 0.95em;
-    background: white;
-    border: 1px solid var(--border-light);
+    padding: 14px 16px;
+    font-size: 1.1em;
+    font-weight: 700;
+    background: transparent;
+    border: none;
+    color: white;
+    text-shadow: 0 1px 6px rgba(0,0,0,0.5);
+  }
+  .nav-mobile a:hover {
+    text-decoration: underline;
+    text-underline-offset: 5px;
+    color: white;
+  }
+  .nav-mobile a.active {
+    color: white;
+    border-bottom: 2px solid white;
   }
   .header-spacer {
     height: 56px;
