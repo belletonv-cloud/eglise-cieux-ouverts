@@ -83,11 +83,11 @@ function getCharStyle(i) {
 
 <style scoped>
 .site-footer {
-  /* Use a subtler background so the footer doesn't read as a separate heavy block on load */
-  background: linear-gradient(to bottom, rgba(6,72,134,0.95) 0%, rgba(6,72,134,0.85) 20%, rgba(6,72,134,0.6) 50%, rgba(255,255,255,0.03) 100%);
+  /* Use a gradient that matches the bottom of the contact block */
+  background: linear-gradient(to bottom, #ffffff 0%, #064886 100%);
+  color: white;
   position: relative;
   overflow: hidden;
-  min-height: 180px;
 }
 
   .footer-inner {

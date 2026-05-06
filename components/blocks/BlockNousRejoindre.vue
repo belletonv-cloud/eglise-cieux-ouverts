@@ -56,7 +56,7 @@ onMounted(() => {
 
   const observer = new IntersectionObserver(
     ([entry]) => {
-      if (entry.isIntersecting) isVisible.value = true
+      isVisible.value = entry.isIntersecting
     },
     { threshold: 0.12 }
   )
@@ -73,45 +73,45 @@ onMounted(() => {
 
 // Left circle (medium, transparent white)
 const circleLeftStyle = computed(() => {
-  const pVal = scrollProgress.value
-  const txPct = -200 * (1 - pVal)
-  const scale = 0.8 + 0.4 * pVal
+  const p = scrollProgress.value
+  const txPct = -200 * (1 - p)
+  const scale = 0.8 + 0.4 * p
   return {
     transform: `translateX(${txPct}%) scale(${scale})`,
-    opacity: Math.min(1, pVal * 1.1),
+    opacity: Math.min(1, p * 1.1),
     transition: 'transform 0.45s cubic-bezier(.22,.9,.35,1)'
   }
 })
 
 // Right circle (large, more transparent)
 const circleRightStyle = computed(() => {
-  const pVal = scrollProgress.value
-  const txPct = 200 * (1 - pVal)
-  const scale = 0.9 + 0.3 * pVal
+  const p = scrollProgress.value
+  const txPct = 200 * (1 - p)
+  const scale = 0.9 + 0.3 * p
   return {
     transform: `translateX(${txPct}%) scale(${scale})`,
-    opacity: Math.min(0.9, pVal * 0.9),
+    opacity: Math.min(0.9, p * 0.9),
     transition: 'transform 0.45s cubic-bezier(.22,.9,.35,1)'
   }
 })
 
 // Small circle (solid white, from bottom or top)
 const circleSmallStyle = computed(() => {
-  const pVal = scrollProgress.value
-  const ty = 120 * (1 - pVal)
-  const scale = 0.6 + 0.5 * pVal
+  const p = scrollProgress.value
+  const ty = 120 * (1 - p)
+  const scale = 0.6 + 0.5 * p
   return {
     transform: `translateY(${ty}px) scale(${scale})`,
-    opacity: pVal,
+    opacity: p,
     transition: 'transform 0.45s cubic-bezier(.22,.9,.35,1)'
   }
 })
 
 const contentStyle = computed(() => {
-  const pVal = scrollProgress.value
+  const p = scrollProgress.value
   return {
-    transform: `scale(${0.8 + (pVal * 0.2)})`,
-    opacity: pVal,
+    transform: `scale(${0.8 + (p * 0.2)})`,
+    opacity: p,
     transition: 'transform 0.2s ease, opacity 0.2s ease'
   }
 })
