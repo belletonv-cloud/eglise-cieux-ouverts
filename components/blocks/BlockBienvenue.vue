@@ -151,10 +151,11 @@ const subtitleStyle = computed(() => {
   flex-wrap: nowrap;
   font-family: 'Playfair Display', serif;
   font-size: 80px;
-  line-height: 1.3;
+  line-height:1.3;
   margin-bottom: 20px;
   position: relative;
   width: 100%;
+  white-space: nowrap;
 }
 
 .hero-bienvenue-line {
@@ -175,11 +176,14 @@ const subtitleStyle = computed(() => {
 
 @media (max-width: 768px) {
   .hero-bienvenue-wrapper {
-    font-size: clamp(30px, 8vw, 50px);
-    flex-wrap: wrap;
+    font-size: clamp(24px, 6vw, 50px);
+    flex-wrap: nowrap;
     justify-content: center;
     line-height: 1.1;
+    white-space: nowrap;
   }
+  .hero-subtitle { font-size: 16px; margin-top: 15px; }
+}
   .hero-subtitle {
     font-size: 16px;
     margin-top: 15px;

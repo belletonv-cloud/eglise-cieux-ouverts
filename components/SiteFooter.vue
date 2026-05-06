@@ -84,7 +84,7 @@ function getCharStyle(i) {
 <style scoped>
 .site-footer {
   /* Use a gradient that matches the bottom of the contact block */
-  background: linear-gradient(to bottom, #ffffff 0%, #064886 100%);
+  background: linear-gradient(to bottom, #064886 0%, #064886 40%, #ffffff 100%);
   color: white;
   position: relative;
   overflow: hidden;
@@ -156,7 +156,7 @@ function getCharStyle(i) {
 
 .footer-info strong {
   font-weight: 700;
-  color: #064886;
+  color: inherit;
 }
 
   @media (max-width: 768px) {
