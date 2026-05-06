@@ -4,9 +4,9 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   ssr: true,
   runtimeConfig: {
-    firebaseProjectId: process.env.FIREBASE_PROJECT_ID || 'eglise-cieux-ouverts',
-    firebaseClientEmail: process.env.FIREBASE_CLIENT_EMAIL || '',
-    firebasePrivateKey: process.env.FIREBASE_PRIVATE_KEY || '',
+    firebaseProjectId: '',
+    firebaseClientEmail: '',
+    firebasePrivateKey: '',
   },
   app: {
     head: {
