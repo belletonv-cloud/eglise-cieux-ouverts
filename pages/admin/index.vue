@@ -74,7 +74,7 @@
               class="block-wrapper"
               :class="[
                 getAnimClass(block.props),
-                'triggered',
+                { triggered: triggeredBlocks.has(block.id) },
                 { selected: selectedBlockId === block.id }
               ]"
               @click.stop="selectBlock(block.id)"
@@ -205,6 +205,7 @@ const showBlockPicker = ref(false)
 const showNewPage = ref(false)
 const saving = ref(false)
 const saved = ref(false)
+const triggeredBlocks = ref(new Set())
 
 const currentPageLabel = computed(() => pages.find(p => p.slug === currentPage.value)?.label ?? '')
 const selectedBlock = computed(() => blocks.value.find(b => b.id === selectedBlockId.value) ?? null)
@@ -225,7 +226,6 @@ function getPageDefaults(slug) {
 
 // ─── Load page from Firebase ──────────────────────────────────────────────────
 async function loadPage(slug) {
-  // Afficher les défauts immédiatement pendant le chargement
   blocks.value = getPageDefaults(slug)
   try {
     const { doc, getDoc } = await import('firebase/firestore')
@@ -233,11 +233,11 @@ async function loadPage(slug) {
     if (snap.exists() && snap.data().blocks?.length) {
       blocks.value = snap.data().blocks
     }
-    // sinon on garde les défauts déjà affichés
   } catch (e) {
     console.error('Load error', e)
-    // on garde les défauts
   }
+  await nextTick()
+  triggerAllBlocks()
 }
 
 async function selectPage(slug) {
@@ -270,6 +270,9 @@ function addBlock(type) {
   blocks.value.push(block)
   selectedBlockId.value = block.id
   showBlockPicker.value = false
+  nextTick(() => {
+    triggeredBlocks.value = new Set([...triggeredBlocks.value, block.id])
+  })
 }
 
 function deleteBlock(id) {
@@ -293,12 +296,30 @@ function selectBlock(id) {
 function onBlockUpdate(updatedBlock) {
   const idx = blocks.value.findIndex(b => b.id === updatedBlock.id)
   if (idx !== -1) {
-    // Muter en place pour ne pas recréer la référence
-    // (évite de déclencher le watch dans PropsPanel et de perdre le focus)
+    const prevAnim = blocks.value[idx].props?.animation
+    const nextAnim = updatedBlock.props?.animation
     Object.assign(blocks.value[idx], updatedBlock)
     blocks.value[idx].props = updatedBlock.props
     blocks.value[idx].visibility = updatedBlock.visibility
+
+    // Rejouer l'animation si elle a changé
+    if (nextAnim && nextAnim !== 'none' && nextAnim !== prevAnim) {
+      triggeredBlocks.value.delete(updatedBlock.id)
+      triggeredBlocks.value = new Set(triggeredBlocks.value)
+      nextTick(() => {
+        setTimeout(() => {
+          triggeredBlocks.value = new Set([...triggeredBlocks.value, updatedBlock.id])
+        }, 50)
+      })
+    } else {
+      // S'assurer que le bloc est bien déclenché
+      triggeredBlocks.value = new Set([...triggeredBlocks.value, updatedBlock.id])
+    }
   }
+}
+
+function triggerAllBlocks() {
+  triggeredBlocks.value = new Set(blocks.value.map(b => b.id))
 }
 
 function onDragEnd() {
