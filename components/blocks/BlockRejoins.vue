@@ -2,18 +2,23 @@
   <section
     class="block-rejoins"
     :style="{ background: props.backgroundGradient || '#064886' }"
-    :class="visibilityClasses"
+    :class="[visibilityClasses, { 'is-visible': isVisible }]"
     ref="sectionRef"
   >
     <div class="rejoins-inner">
-      <div class="rejoins-text-container" :style="rejoinsTextStyle">
+      <div class="rejoins-text-container">
         <p class="rejoins-title">{{ props.title }}</p>
         <p class="rejoins-subtitle">{{ props.subtitle }}</p>
         <p class="rejoins-location">{{ props.location }}</p>
       </div>
-      
-      <div class="rejoins-grid" :style="rejoinsGridStyle">
-        <div v-for="(h, i) in props.horaires" :key="i" class="rejoins-horaire" :style="getHoraireStyle(i)">
+
+      <div class="rejoins-grid">
+        <div
+          v-for="(h, i) in props.horaires"
+          :key="i"
+          class="rejoins-horaire"
+          :style="{ transitionDelay: (0.2 + i * 0.12) + 's' }"
+        >
           <span class="horaire-time">{{ h.heure }}</span>
           <span class="horaire-label">{{ h.label }}</span>
         </div>
@@ -23,15 +28,14 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, inject, onMounted } from 'vue'
 
 const p = defineProps({
   props: { type: Object, required: true },
   visibility: { type: Object, default: () => ({}) },
 })
 
-const sectionRef = ref(null)
-const scrollProgress = ref(0) // 0 to 1
+const isEditor = inject('isEditor', false)
 
 const visibilityClasses = computed(() => ({
   'hide-mobile': p.visibility.mobile === false,
@@ -39,59 +43,17 @@ const visibilityClasses = computed(() => ({
   'hide-desktop': p.visibility.desktop === false,
 }))
 
-const onScroll = () => {
-  if (!sectionRef.value) return
-  const rect = sectionRef.value.getBoundingClientRect()
-  const vh = window.innerHeight
-  const start = vh
-  const end = vh * 0.4
-  
-  if (rect.top > start) {
-    scrollProgress.value = 0
-  } else if (rect.top < end) {
-    scrollProgress.value = 1
-  } else {
-    scrollProgress.value = 1 - ((rect.top - end) / (start - end))
-  }
-}
+const sectionRef = ref(null)
+const isVisible = ref(isEditor)
 
 onMounted(() => {
-  window.addEventListener('scroll', onScroll, { passive: true })
-  onScroll()
+  if (isEditor) return
+  const observer = new IntersectionObserver(
+    ([entry]) => { if (entry.isIntersecting) { isVisible.value = true; observer.disconnect() } },
+    { threshold: 0.05 }
+  )
+  if (sectionRef.value) observer.observe(sectionRef.value)
 })
-onUnmounted(() => window.removeEventListener('scroll', onScroll))
-
-const rejoinsTextStyle = computed(() => {
-  const p = scrollProgress.value
-  // starts at right (+300px), goes to left (0px)
-  const tx = 300 * (1 - p)
-  return { 
-    transform: `translateX(${tx}px)`, 
-    opacity: 0.2 + (p * 0.8),
-    transition: 'transform 0.1s linear, opacity 0.1s linear' 
-  }
-})
-
-const rejoinsGridStyle = computed(() => {
-  const p = scrollProgress.value
-  return {
-    opacity: p,
-    transition: 'opacity 0.1s linear'
-  }
-})
-
-function getHoraireStyle(index) {
-  const p = scrollProgress.value
-  // Delay the animation of each horaire
-  const delay = index * 0.2
-  const progress = Math.max(0, Math.min(1, (p - delay) / (1 - delay)))
-  const ty = 100 * (1 - progress)
-  return {
-    transform: `translateY(${ty}px)`,
-    opacity: progress,
-    transition: 'transform 0.1s linear, opacity 0.1s linear'
-  }
-}
 </script>
 
 <style scoped>
@@ -113,11 +75,43 @@ function getHoraireStyle(index) {
   gap: 120px;
 }
 
+/* ── Text container ── */
 .rejoins-text-container {
   display: flex;
   flex-direction: column;
   gap: 5px;
   will-change: transform, opacity;
+  opacity: 0;
+  transform: translateX(-50px);
+  transition: opacity 0.7s cubic-bezier(0.4,0,0.2,1),
+              transform 0.7s cubic-bezier(0.4,0,0.2,1);
+  transition-delay: 0s;
+}
+
+/* ── Grid ── */
+.rejoins-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 50px;
+  align-items: flex-start;
+}
+
+.rejoins-horaire {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  will-change: transform, opacity;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.6s cubic-bezier(0.4,0,0.2,1),
+              transform 0.6s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* ── Triggered ── */
+.is-visible .rejoins-text-container,
+.is-visible .rejoins-horaire {
+  opacity: 1;
+  transform: none;
 }
 
 .rejoins-title {
@@ -140,21 +134,6 @@ function getHoraireStyle(index) {
   color: white;
 }
 
-.rejoins-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 50px;
-  will-change: opacity;
-  align-items: flex-start;
-}
-
-.rejoins-horaire {
-  display: flex;
-  flex-direction: column;
-  gap: 0px;
-  will-change: transform, opacity;
-}
-
 .horaire-time {
   font-family: Helvetica, Arial, sans-serif;
   font-size: 75px;
@@ -174,20 +153,12 @@ function getHoraireStyle(index) {
 }
 
 @container (max-width: 900px) {
-  .rejoins-inner {
-    flex-direction: column;
-    text-align: center;
-    gap: 60px;
-  }
-  .rejoins-grid {
-    align-items: center;
-  }
+  .rejoins-inner { flex-direction: column; text-align: center; gap: 60px; }
+  .rejoins-grid { align-items: center; }
   .rejoins-title, .rejoins-subtitle, .rejoins-location, .horaire-time {
     font-size: clamp(40px, 8vw, 75px);
   }
-  .horaire-label {
-    font-size: 24px;
-  }
+  .horaire-label { font-size: 24px; }
 }
 
 @container (max-width: 600px) {
