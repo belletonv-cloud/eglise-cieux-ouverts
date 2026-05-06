@@ -86,7 +86,6 @@ onMounted(() => {
   if (sectionRef.value) observer.observe(sectionRef.value)
 })
 
-const { $db } = useNuxtApp()
 const route = useRoute()
 const form = ref({ prenom: '', nom: '', ville: '', email: '', message: '', newsletter: false, website: '' })
 const sending = ref(false)
@@ -140,28 +139,24 @@ async function submitForm() {
   errorMessage.value = ''
   submitted.value = false
   try {
-    if (!$db) throw new Error("No DB")
-    const { collection, addDoc, serverTimestamp } = await import('firebase/firestore')
-    await addDoc(collection($db, 'contacts'), {
-      prenom: data.prenom,
-      nom: data.nom,
-      ville: data.ville,
-      email: data.email,
-      message: data.message,
-      newsletter: data.newsletter,
-      source: route.fullPath,
-      status: 'new',
-      createdAt: serverTimestamp(),
-      meta: {
-        userAgent: navigator.userAgent,
-        language: navigator.language,
+    await $fetch('/api/contact', {
+      method: 'POST',
+      body: {
+        prenom: data.prenom,
+        nom: data.nom,
+        ville: data.ville,
+        email: data.email,
+        message: data.message,
+        newsletter: data.newsletter,
+        website: data.website,
+        source: route.fullPath,
       },
     })
     submitted.value = true
     form.value = { prenom: '', nom: '', ville: '', email: '', message: '', newsletter: false, website: '' }
   } catch (e) {
     console.error(e)
-    errorMessage.value = 'L\'envoi a echoue. Verifie la connexion ou reessaie dans un instant.'
+    errorMessage.value = e?.data?.statusMessage || 'L\'envoi a echoue. Verifie la connexion ou reessaie dans un instant.'
   } finally { sending.value = false }
 }
 </script>

@@ -3,6 +3,11 @@ export default defineNuxtConfig({
   compatibilityDate: '2024-04-03',
   devtools: { enabled: true },
   ssr: true,
+  runtimeConfig: {
+    firebaseProjectId: process.env.FIREBASE_PROJECT_ID || 'eglise-cieux-ouverts',
+    firebaseClientEmail: process.env.FIREBASE_CLIENT_EMAIL || '',
+    firebasePrivateKey: process.env.FIREBASE_PRIVATE_KEY || '',
+  },
   app: {
     head: {
       title: 'Église Cieux Ouverts — Morlaix',
