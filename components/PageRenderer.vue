@@ -93,10 +93,13 @@ onMounted(() => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
         const id = entry.target.dataset.blockId
-        if (id) triggeredBlocks.value.add(id)
+        if (id) {
+          triggeredBlocks.value = new Set([...triggeredBlocks.value, id])
+          observer.unobserve(entry.target)
+        }
       }
     })
-  }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' })
+  }, { threshold: 0.05, rootMargin: '0px 0px 0px 0px' })
 
   observeElements()
 })
@@ -126,7 +129,6 @@ onUnmounted(() => {
   width: 100%;
 }
 .block-wrapper {
-  /* This prevents weird layout shifts when animating wrapper */
-  contain: layout style;
+  /* Pas de contain: layout — ça casse les transitions GPU */
 }
 </style>
