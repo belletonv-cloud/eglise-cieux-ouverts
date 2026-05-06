@@ -1,7 +1,7 @@
 <template>
   <div class="page-container">
-    <h1 class="page-title">Gallerie Photos</h1>
-    <p class="page-subtitle">Quelques moments de vie de l'église.</p>
+    <h1 class="page-title">Galerie photos</h1>
+    <p class="page-subtitle">Quelques moments de la vie de l'église.</p>
     
     <section class="slideshow">
       <div class="slides-track" :style="trackStyle">
@@ -37,20 +37,38 @@ const allPhotos = computed(() => [photos[photos.length - 1], ...photos, photos[0
 const current = ref(0)
 const transitioning = ref(true)
 let timer
+let resetTimer
+
+function restartAutoPlay() {
+  clearInterval(timer)
+  timer = setInterval(next, 5000)
+}
+
+function scheduleLoopReset(targetIndex) {
+  clearTimeout(resetTimer)
+  resetTimer = setTimeout(() => {
+    transitioning.value = false
+    current.value = targetIndex
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        transitioning.value = true
+      })
+    })
+  }, 600)
+}
 
 const trackStyle = computed(() => ({
   transform: `translateX(-${(current.value + 1) * 100}%)`,
-  transition: transitioning.value ? 'transform 0.6s ease' : 'none'
+  transition: transitioning.value ? 'transform 0.45s ease' : 'none',
+  willChange: 'transform'
 }))
 
 function next() {
   transitioning.value = true
   current.value++
   if (current.value >= photos.length) {
-    setTimeout(() => {
-      transitioning.value = false
-      current.value = 0
-    }, 600)
+    scheduleLoopReset(0)
   }
 }
 
@@ -58,20 +76,24 @@ function prev() {
   transitioning.value = true
   current.value--
   if (current.value < 0) {
-    setTimeout(() => {
-      transitioning.value = false
-      current.value = photos.length - 1
-    }, 600)
+    scheduleLoopReset(photos.length - 1)
   }
 }
 
 function goTo(i) { 
-  transitioning.value = true; 
-  current.value = i 
+  transitioning.value = true
+  current.value = i
+  restartAutoPlay()
 }
 
-onMounted(() => { timer = setInterval(next, 5000) })
-onUnmounted(() => clearInterval(timer))
+onMounted(() => {
+  timer = setInterval(next, 5000)
+})
+
+onUnmounted(() => {
+  clearInterval(timer)
+  clearTimeout(resetTimer)
+})
 </script>
 
 <style scoped>
@@ -111,6 +133,7 @@ onUnmounted(() => clearInterval(timer))
   display: flex;
   height: 100%;
   width: 100%;
+  transform: translateZ(0);
 }
 
 .slides-track img {
@@ -137,6 +160,7 @@ onUnmounted(() => clearInterval(timer))
   display: flex;
   align-items: center;
   justify-content: center;
+  -webkit-tap-highlight-color: transparent;
 }
 .slide-btn:hover { background: rgba(255,255,255,0.5); }
 .prev { left: 16px; }
@@ -167,8 +191,42 @@ onUnmounted(() => clearInterval(timer))
 }
 
 @media (max-width: 768px) {
+  .page-container {
+    padding: 18px 4px;
+  }
+  .page-title {
+    font-size: 1.3em;
+    margin-bottom: 3px;
+  }
+  .page-subtitle {
+    font-size: 1em;
+    margin-bottom: 14px;
+  }
   .slideshow {
-    height: 400px;
+    height: 210px;
+    border-radius: 12px;
+  }
+  .slides-track img {
+    object-position: center;
+  }
+  .slide-btn {
+    width: 38px;
+    height: 38px;
+    font-size: 1.1em;
+  }
+  .prev {
+    left: 8px;
+  }
+  .next {
+    right: 8px;
+  }
+  .slide-dots {
+    bottom: 5px;
+    gap: 6px;
+  }
+  .slide-dots button {
+    width: 7px;
+    height: 7px;
   }
 }
 </style>

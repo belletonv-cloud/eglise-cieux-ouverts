@@ -39,13 +39,13 @@
             </div>
 
             <div class="form-group">
-              <label for="message">Ton Message *</label>
+                <label for="message">Ton message *</label>
               <textarea id="message" v-model="form.message" required rows="6"></textarea>
             </div>
 
             <label class="checkbox-label">
               <input type="checkbox" v-model="form.newsletter" />
-              <span>Oui, je souhaite m'abonner à la Newsletter.</span>
+              <span>Oui, je souhaite m'abonner à la newsletter.</span>
             </label>
 
             <div v-if="submitted" class="success-msg">

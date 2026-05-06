@@ -1,11 +1,11 @@
 <template>
   <div class="page-container">
-    <h1 class="page-title">Billetterie Évènements</h1>
-    <p class="page-subtitle">Découvrez et réservez vos places pour nos prochains évènements.</p>
+    <h1 class="page-title">Billetterie Événements</h1>
+    <p class="page-subtitle">Découvrez et réservez vos places pour nos prochains événements.</p>
     
     <div class="events-list">
       <div class="event-card">
-        <h3>Aucun évènement pour le moment</h3>
+        <h3>Aucun événement pour le moment</h3>
         <p>Revenez bientôt pour de nouvelles dates.</p>
       </div>
     </div>
@@ -61,5 +61,33 @@
 .event-card p {
   margin: 0;
   color: var(--text-medium);
+}
+
+@media (max-width: 768px) {
+  .page-container {
+    padding: 18px 4px;
+  }
+  .page-title {
+    font-size: 1.3em;
+    margin-bottom: 3px;
+  }
+  .page-subtitle {
+    font-size: 1em;
+    margin-bottom: 14px;
+  }
+  .events-list {
+    gap: 10px;
+  }
+  .event-card {
+    padding: 14px 10px;
+    border-radius: 10px;
+  }
+  .event-card h3 {
+    font-size: 1.02em;
+    margin-bottom: 4px;
+  }
+  .event-card p {
+    font-size: 0.94em;
+  }
 }
 </style>

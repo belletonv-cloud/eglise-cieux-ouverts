@@ -9,6 +9,8 @@
         <NuxtLink to="/" exact-active-class="active">Accueil</NuxtLink>
         <NuxtLink to="/messages" active-class="active">Messages</NuxtLink>
         <NuxtLink to="/agenda" active-class="active">Agenda</NuxtLink>
+        <NuxtLink to="/billetterie" active-class="active">Billetterie Événements</NuxtLink>
+        <NuxtLink to="/photos" active-class="active">Photos</NuxtLink>
         <NuxtLink to="/contact" active-class="active">Contact</NuxtLink>
       </nav>
 
@@ -25,6 +27,8 @@
       <NuxtLink to="/" exact-active-class="active" @click="menuOpen = false">Accueil</NuxtLink>
       <NuxtLink to="/messages" active-class="active" @click="menuOpen = false">Messages</NuxtLink>
       <NuxtLink to="/agenda" active-class="active" @click="menuOpen = false">Agenda</NuxtLink>
+      <NuxtLink to="/billetterie" active-class="active" @click="menuOpen = false">Billetterie Événements</NuxtLink>
+      <NuxtLink to="/photos" active-class="active" @click="menuOpen = false">Photos</NuxtLink>
       <NuxtLink to="/contact" active-class="active" @click="menuOpen = false">Contact</NuxtLink>
       <a href="https://www.facebook.com/eglisecieuxouverts" target="_blank" rel="noopener" @click="menuOpen = false">Facebook</a>
     </nav>
@@ -35,13 +39,26 @@
 <script setup>
 const menuOpen = ref(false)
 const isScrolled = ref(false)
+const route = useRoute()
 
 function onScroll() {
   isScrolled.value = window.scrollY > 20
 }
 
+watch(() => route.fullPath, () => {
+  menuOpen.value = false
+})
+
+watch(menuOpen, (isOpen) => {
+  document.body.style.overflow = isOpen ? 'hidden' : ''
+})
+
 onMounted(() => window.addEventListener('scroll', onScroll))
-onUnmounted(() => window.removeEventListener('scroll', onScroll))
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', onScroll)
+  document.body.style.overflow = ''
+})
 </script>
 
 <style scoped>
@@ -179,8 +196,47 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
 .header-spacer { height: 70px; }
 
 @media (max-width: 768px) {
-  .nav-desktop, .desktop-only { display: none; }
-  .burger { display: flex; }
-  .header-inner { padding: 14px 16px; }
+  .nav-desktop, .desktop-only {
+    display: none;
+  }
+  .burger {
+    display: flex;
+  }
+  .site-header {
+    backdrop-filter: none;
+    background: rgba(255,255,255,0.98);
+  }
+  .header-inner {
+    padding: 10px 12px;
+    gap: 12px;
+  }
+  .logo {
+    height: 32px;
+  }
+  .brand-name {
+    font-size: 0.98em;
+  }
+  .nav-mobile {
+    position: fixed;
+    top: 56px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255,255,255,0.98);
+    padding: 14px 12px 18px;
+    gap: 8px;
+    overflow-y: auto;
+    border-top: 1px solid var(--border-light);
+    box-shadow: 0 12px 28px rgba(26, 26, 46, 0.08);
+  }
+  .nav-mobile a {
+    padding: 12px 14px;
+    font-size: 0.95em;
+    background: white;
+    border: 1px solid var(--border-light);
+  }
+  .header-spacer {
+    height: 56px;
+  }
 }
 </style>

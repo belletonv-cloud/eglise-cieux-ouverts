@@ -36,6 +36,9 @@ body {
   background-color: var(--bg-light);
   line-height: 1.6;
   min-height: 100vh;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -143,18 +146,25 @@ a:hover {
 
 @media (max-width: 768px) {
   .section {
-    padding: 40px 16px;
+    padding: 16px 7px;
   }
   .section-title {
-    font-size: 1.6em;
+    font-size: 1.12em;
+    margin-bottom: 10px;
+  }
+  .btn {
+    width: 100%;
+    padding: 11px 18px;
+    font-size: 0.96em;
+    text-align: center;
   }
 }
 
 /* Animations */
 .fade-in-on-scroll {
   opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+  transform: translateY(16px);
+  transition: opacity 0.45s ease-out, transform 0.45s ease-out;
 }
 
 .fade-in-on-scroll.visible {

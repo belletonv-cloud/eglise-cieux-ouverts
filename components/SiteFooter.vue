@@ -19,7 +19,7 @@
       <div class="footer-right">
         <div class="footer-info">
           <a href="mailto:contact@cieuxouverts.bzh" class="footer-email">contact@cieuxouverts.bzh</a>
-          <p>Rdv chaque dimanche | <strong>10H</strong></p>
+          <p>Rendez-vous chaque dimanche | <strong>10H</strong></p>
           <p>2 rue Jean Monnet | <strong>29600 Morlaix, Bretagne</strong></p>
         </div>
       </div>
@@ -160,22 +160,32 @@ function getCharStyle(i) {
 }
 
 @media (max-width: 768px) {
+  .site-footer {
+    background: rgb(238, 108, 113);
+    min-height: 0;
+  }
   .footer-inner {
     flex-direction: column;
-    align-items: flex-start;
-    text-align: left;
-    gap: 40px;
-    padding: 60px 24px 40px;
+    align-items: center;
+    text-align: center;
+    gap: 16px;
+    padding: 20px 10px 16px;
   }
   .footer-right {
-    justify-content: flex-start;
+    justify-content: center;
   }
   .footer-info {
-    text-align: left;
+    text-align: center;
+    font-size: 0.92em;
   }
   .footer-title {
-    white-space: nowrap;
-    font-size: clamp(18px, 6vw, 30px); /* Plus petit sur mobile pour forcer 1 ligne */
+    white-space: normal;
+    font-size: clamp(18px, 6vw, 26px);
+    text-align: center;
+  }
+  .footer-email {
+    margin-bottom: 4px;
+    font-size: 1em;
   }
 }
 </style>
