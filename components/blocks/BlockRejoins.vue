@@ -191,6 +191,6 @@ function getHoraireStyle(index) {
 }
 
 @container (max-width: 600px) {
-  .block-rejoins { padding: 40px 16px; }
+  .block-rejoins { padding: 50px 20px; }
 }
 </style>

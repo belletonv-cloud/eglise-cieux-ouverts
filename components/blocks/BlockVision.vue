@@ -2,7 +2,7 @@
   <section
     class="vision-section"
     :style="{ background: props.backgroundGradient, color: props.textColor }"
-    :class="[visibilityClasses, { 'is-triggered': isTriggered }]"
+    :class="[visibilityClasses, { 'is-triggered': isTriggered || isEditor }]"
   >
     <p class="vision-label" v-if="props.label">{{ props.label }}</p>
     <p class="vision-quote" v-if="props.quote" v-html="formattedQuote"></p>
@@ -18,6 +18,8 @@ const p = defineProps({
   visibility: { type: Object, default: () => ({}) },
   isTriggered: { type: Boolean, default: false },
 })
+
+const isEditor = inject('isEditor', false)
 
 const visibilityClasses = computed(() => ({
   'hide-mobile': p.visibility.mobile === false,
@@ -103,6 +105,6 @@ const formattedQuote = computed(() => {
 .btn-white:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.15); }
 
 @container (max-width: 600px) {
-  .vision-section { padding: 40px 16px; }
+  .vision-section { padding: 50px 20px; }
 }
 </style>

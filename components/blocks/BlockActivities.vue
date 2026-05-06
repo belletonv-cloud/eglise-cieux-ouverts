@@ -240,6 +240,6 @@ function nextSlide() {
 }
 
 @container (max-width: 600px) {
-  .block-activities { padding: 40px 16px; }
+  .block-activities { padding: 50px 20px; }
 }
 </style>

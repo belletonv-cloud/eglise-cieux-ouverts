@@ -69,6 +69,6 @@ const visibilityClasses = computed(() => ({
 }
 
 @container (max-width: 600px) {
-  .block-textimage { padding: 40px 16px; }
+  .block-textimage { padding: 50px 20px; }
 }
 </style>

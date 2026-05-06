@@ -2,19 +2,19 @@
   <section
     class="block-aspirations"
     :style="{ background: props.backgroundColor, color: props.textColor }"
-    :class="visibilityClasses"
+    :class="[visibilityClasses, { 'is-visible': isVisible }]"
     ref="sectionRef"
   >
     <div class="aspirations-inner">
-      <h2 class="aspirations-title" :style="titleStyle">{{ props.title }}</h2>
+      <h2 class="aspirations-title">{{ props.title }}</h2>
       <ul class="aspirations-list">
-        <li 
-          v-for="(item, i) in props.items" 
-          :key="i" 
-          class="aspiration-item" 
-          :style="getItemStyle(i)"
+        <li
+          v-for="(item, i) in props.items"
+          :key="i"
+          class="aspiration-item"
+          :style="{ transitionDelay: (0.15 + i * 0.1) + 's' }"
         >
-          <span class="aspiration-bullet" :style="getBulletStyle(i)"></span>
+          <span class="aspiration-bullet"></span>
           {{ item }}
         </li>
       </ul>
@@ -23,7 +23,7 @@
 </template>
 
 <script setup>
-import { computed, ref, inject, onMounted, onUnmounted } from 'vue'
+import { computed, ref, inject, onMounted } from 'vue'
 
 const p = defineProps({
   props: { type: Object, required: true },
@@ -39,65 +39,16 @@ const visibilityClasses = computed(() => ({
 }))
 
 const sectionRef = ref(null)
-const scrollProgress = ref(isEditor ? 1 : 0)
-
-const onScroll = () => {
-  if (isEditor || !sectionRef.value) return
-  const rect = sectionRef.value.getBoundingClientRect()
-  const vh = window.innerHeight
-  const start = vh
-  const end = vh * 0.2
-  if (rect.top > start) {
-    scrollProgress.value = 0
-  } else if (rect.top < end) {
-    scrollProgress.value = 1
-  } else {
-    scrollProgress.value = 1 - ((rect.top - end) / (start - end))
-  }
-}
+const isVisible = ref(isEditor)
 
 onMounted(() => {
   if (isEditor) return
-  window.addEventListener('scroll', onScroll, { passive: true })
-  onScroll()
+  const observer = new IntersectionObserver(
+    ([entry]) => { if (entry.isIntersecting) { isVisible.value = true; observer.disconnect() } },
+    { threshold: 0.05 }
+  )
+  if (sectionRef.value) observer.observe(sectionRef.value)
 })
-onUnmounted(() => { if (!isEditor) window.removeEventListener('scroll', onScroll) })
-
-const titleStyle = computed(() => {
-  const p = scrollProgress.value
-  return {
-    color: p.props?.textColor || '#ffffff',
-    transform: `translateY(${100 * (1 - p)}px)`,
-    opacity: p,
-    transition: 'transform 0.1s linear, opacity 0.1s linear'
-  }
-})
-
-function getItemStyle(index) {
-  const p = scrollProgress.value
-  const delay = index * 0.15
-  const progress = Math.max(0, Math.min(1, (p - delay) / (1 - delay)))
-  // Starts from 400px below and moves to 0
-  const ty = 400 * (1 - progress)
-  return {
-    color: p.props?.textColor || '#ffffff',
-    transform: `translateY(${ty}px)`,
-    opacity: progress,
-    transition: 'transform 0.1s linear, opacity 0.1s linear'
-  }
-}
-
-function getBulletStyle(index) {
-  const p = scrollProgress.value
-  const delay = index * 0.15
-  const progress = Math.max(0, Math.min(1, (p - delay) / (1 - delay)))
-  const scale = progress
-  return {
-    transform: `scale(${scale})`,
-    opacity: progress,
-    transition: 'transform 0.1s linear, opacity 0.1s linear'
-  }
-}
 </script>
 
 <style scoped>
@@ -124,6 +75,10 @@ function getBulletStyle(index) {
   line-height: 1.3;
   margin: 0;
   will-change: transform, opacity;
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.7s cubic-bezier(0.4,0,0.2,1), transform 0.7s cubic-bezier(0.4,0,0.2,1);
+  transition-delay: 0s;
 }
 
 .aspirations-list {
@@ -146,6 +101,9 @@ function getBulletStyle(index) {
   position: relative;
   padding-left: 50px;
   will-change: transform, opacity;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.6s cubic-bezier(0.4,0,0.2,1), transform 0.6s cubic-bezier(0.4,0,0.2,1);
 }
 
 .aspiration-bullet {
@@ -157,28 +115,38 @@ function getBulletStyle(index) {
   border: 2px solid white;
   background: transparent;
   will-change: transform, opacity;
+  opacity: 0;
+  transform: scale(0);
+  transition: opacity 0.4s cubic-bezier(0.4,0,0.2,1), transform 0.4s cubic-bezier(0.34,1.4,0.64,1);
+  transition-delay: inherit;
+}
+
+/* Triggered state */
+.is-visible .aspirations-title {
+  opacity: 1;
+  transform: none;
+}
+.is-visible .aspiration-item {
+  opacity: 1;
+  transform: none;
+}
+.is-visible .aspiration-bullet {
+  opacity: 1;
+  transform: scale(1);
 }
 
 @container (max-width: 768px) {
-  .aspirations-inner {
-    align-items: center;
-    text-align: center;
-  }
-  .aspirations-title {
-    font-size: clamp(40px, 8vw, 75px);
-  }
+  .aspirations-inner { align-items: center; text-align: center; }
+  .aspirations-title { font-size: clamp(40px, 8vw, 75px); }
   .aspiration-item {
     font-size: clamp(20px, 5vw, 36px);
     padding-left: 0;
     justify-content: center;
-    transform: none !important; /* disable horizontal shift on mobile if needed */
   }
-  .aspiration-bullet {
-    display: none;
-  }
+  .aspiration-bullet { display: none; }
 }
 
 @container (max-width: 600px) {
-  .block-aspirations { padding: 40px 16px; }
+  .block-aspirations { padding: 50px 20px; }
 }
 </style>

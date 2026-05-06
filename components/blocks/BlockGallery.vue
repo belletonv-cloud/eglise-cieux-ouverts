@@ -109,4 +109,9 @@ function nextImage() {
 @container (max-width: 768px) {
   .gallery-grid { grid-template-columns: repeat(2, 1fr) !important; }
 }
+
+@container (max-width: 600px) {
+  .block-gallery { padding: 50px 20px; }
+  .gallery-grid { grid-template-columns: 1fr !important; }
+}
 </style>

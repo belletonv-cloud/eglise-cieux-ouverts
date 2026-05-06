@@ -4,7 +4,8 @@
     :style="{
       background: props.backgroundColor,
       color: props.textColor,
-      padding: props.padding + 'px 24px',
+      paddingTop: props.padding + 'px',
+      paddingBottom: props.padding + 'px',
       textAlign: props.textAlign
     }"
     :class="[visibilityClasses, animClass]"

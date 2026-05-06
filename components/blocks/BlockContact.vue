@@ -244,6 +244,6 @@ async function submitForm() {
 }
 
 @container (max-width: 600px) {
-  .block-contact { padding: 40px 16px; }
+  .block-contact { padding: 50px 20px; }
 }
 </style>

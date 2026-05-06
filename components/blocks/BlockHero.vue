@@ -114,4 +114,10 @@ const contentStyle = computed(() => {
   .hero-name { max-width: 80vw; }
   .hero-logo { max-width: 100px; }
 }
+
+@container (max-width: 600px) {
+  .hero-name { max-width: 85vw; }
+  .hero-logo { max-width: 80px; }
+  .hero-content { gap: 24px; }
+}
 </style>

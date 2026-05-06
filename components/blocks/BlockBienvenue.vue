@@ -1,24 +1,24 @@
 <template>
   <section
     class="block-bienvenue"
-    :class="visibilityClasses"
+    :class="[visibilityClasses, { 'is-visible': isVisible }]"
     ref="sectionRef"
   >
     <img src="https://static.wixstatic.com/media/d65230_c609095100164117aabdd3b55d9cdf56~mv2.png/v1/fill/w_1920,h_515,al_c,q_90,usm_0.66_1.00_0.01,enc_avif,quality_auto/d65230_c609095100164117aabdd3b55d9cdf56~mv2.png" alt="Foule Croix" class="bienvenue-img" />
-    
+
     <div class="bienvenue-content">
       <div class="hero-bienvenue-wrapper" aria-label="BIENVENUE">
-        <div class="hero-bienvenue-line line-1" :style="line1Style">B I E&nbsp;</div>
-        <div class="hero-bienvenue-line line-2" :style="line2Style">N V E&nbsp;</div>
-        <div class="hero-bienvenue-line line-3" :style="line3Style">N U E</div>
+        <div class="hero-bienvenue-line line-1">B I E&nbsp;</div>
+        <div class="hero-bienvenue-line line-2">N V E&nbsp;</div>
+        <div class="hero-bienvenue-line line-3">N U E</div>
       </div>
-      <p class="hero-subtitle" :style="subtitleStyle">à l'Église Cieux Ouverts à Morlaix</p>
+      <p class="hero-subtitle">à l'Église Cieux Ouverts à Morlaix</p>
     </div>
   </section>
 </template>
 
 <script setup>
-import { computed, ref, inject, onMounted, onUnmounted } from 'vue'
+import { computed, ref, inject, onMounted } from 'vue'
 
 const p = defineProps({
   props: { type: Object, required: true },
@@ -34,77 +34,15 @@ const visibilityClasses = computed(() => ({
 }))
 
 const sectionRef = ref(null)
-const scrollProgress = ref(isEditor ? 1 : 0)
-
-const onScroll = () => {
-  if (isEditor || !sectionRef.value) return
-  const rect = sectionRef.value.getBoundingClientRect()
-  const vh = window.innerHeight
-  const start = vh
-  const end = vh * 0.3
-  
-  if (rect.top > start) {
-    scrollProgress.value = 0
-  } else if (rect.top < end) {
-    scrollProgress.value = 1
-  } else {
-    scrollProgress.value = 1 - ((rect.top - end) / (start - end))
-  }
-}
+const isVisible = ref(isEditor)
 
 onMounted(() => {
   if (isEditor) return
-  window.addEventListener('scroll', onScroll, { passive: true })
-  onScroll()
-})
-onUnmounted(() => { if (!isEditor) window.removeEventListener('scroll', onScroll) })
-
-// Color is always #054886
-const color = '#054886'
-
-const line1Style = computed(() => {
-  const p = scrollProgress.value
-  const tx = -300 * (1 - p)
-  const rot = -45 * (1 - p)
-  return {
-    color,
-    transform: `translateX(${tx}px) rotate(${rot}deg)`,
-    opacity: p === 0 ? 0 : 0.2 + (p * 0.8),
-    transition: 'transform 0.1s linear, opacity 0.1s linear'
-  }
-})
-
-const line2Style = computed(() => {
-  const p = scrollProgress.value
-  const ty = 150 * (1 - p)
-  const rot = 15 * (1 - p)
-  return {
-    color,
-    transform: `translateY(${ty}px) rotate(${rot}deg)`,
-    opacity: p === 0 ? 0 : 0.2 + (p * 0.8),
-    transition: 'transform 0.1s linear, opacity 0.1s linear'
-  }
-})
-
-const line3Style = computed(() => {
-  const p = scrollProgress.value
-  const tx = 300 * (1 - p)
-  const rot = 45 * (1 - p)
-  return {
-    color,
-    transform: `translateX(${tx}px) rotate(${rot}deg)`,
-    opacity: p === 0 ? 0 : 0.2 + (p * 0.8),
-    transition: 'transform 0.1s linear, opacity 0.1s linear'
-  }
-})
-
-const subtitleStyle = computed(() => {
-  const p = scrollProgress.value
-  return {
-    transform: `translateY(${(1-p)*50}px)`,
-    opacity: p,
-    transition: 'transform 0.1s linear, opacity 0.1s linear'
-  }
+  const observer = new IntersectionObserver(
+    ([entry]) => { if (entry.isIntersecting) { isVisible.value = true; observer.disconnect() } },
+    { threshold: 0.05 }
+  )
+  if (sectionRef.value) observer.observe(sectionRef.value)
 })
 </script>
 
@@ -123,10 +61,8 @@ const subtitleStyle = computed(() => {
 
 .bienvenue-img {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
   object-fit: cover;
   display: block;
   z-index: 0;
@@ -154,16 +90,21 @@ const subtitleStyle = computed(() => {
   font-size: 80px;
   line-height: 1.3;
   margin-bottom: 20px;
-  position: relative;
   width: 100%;
 }
 
 .hero-bienvenue-line {
   white-space: pre;
   letter-spacing: 0.1em;
+  color: #054886;
   will-change: transform, opacity;
   transform-origin: center center;
+  opacity: 0;
 }
+
+.line-1 { transform: translateX(-60px) rotate(-8deg); transition: opacity 0.7s cubic-bezier(0.4,0,0.2,1), transform 0.7s cubic-bezier(0.4,0,0.2,1); transition-delay: 0s; }
+.line-2 { transform: translateY(40px) rotate(4deg);  transition: opacity 0.7s cubic-bezier(0.4,0,0.2,1), transform 0.7s cubic-bezier(0.4,0,0.2,1); transition-delay: 0.1s; }
+.line-3 { transform: translateX(60px) rotate(8deg);  transition: opacity 0.7s cubic-bezier(0.4,0,0.2,1), transform 0.7s cubic-bezier(0.4,0,0.2,1); transition-delay: 0.2s; }
 
 .hero-subtitle {
   font-family: Helvetica, Arial, sans-serif;
@@ -172,6 +113,17 @@ const subtitleStyle = computed(() => {
   font-weight: 400;
   margin-top: 20px;
   will-change: transform, opacity;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.7s cubic-bezier(0.4,0,0.2,1), transform 0.7s cubic-bezier(0.4,0,0.2,1);
+  transition-delay: 0.35s;
+}
+
+/* Triggered state */
+.is-visible .hero-bienvenue-line,
+.is-visible .hero-subtitle {
+  opacity: 1;
+  transform: none;
 }
 
 @container (max-width: 768px) {
@@ -181,9 +133,11 @@ const subtitleStyle = computed(() => {
     justify-content: center;
     line-height: 1.1;
   }
-  .hero-subtitle {
-    font-size: 16px;
-    margin-top: 15px;
-  }
+  .hero-subtitle { font-size: 16px; margin-top: 15px; }
+}
+
+@container (max-width: 600px) {
+  .block-bienvenue { min-height: 400px; }
+  .bienvenue-content { padding: 0 20px; }
 }
 </style>
