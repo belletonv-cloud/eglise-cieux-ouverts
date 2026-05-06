@@ -26,6 +26,7 @@
         <button class="save-btn" :class="{ saved: saved }" @click="savePage" :disabled="saving">
           {{ saving ? 'Sauvegarde...' : saved ? '✓ Sauvegardé' : 'Sauvegarder' }}
         </button>
+        <button class="logout-btn" @click="logout">Déconnexion</button>
       </div>
     </aside>
 
@@ -186,7 +187,8 @@ const devices = [
   { key: 'mobile',  icon: '📲', label: 'Mobile' },
 ]
 
-const { $db } = useNuxtApp()
+const { $db, $auth } = useNuxtApp()
+const router = useRouter()
 const currentPage = ref('accueil')
 const blocks = ref(getDefaultHomePage())
 const selectedBlockId = ref(null)
@@ -287,8 +289,19 @@ function onDragEnd() {
   savePage()
 }
 
+async function logout() {
+  const { signOut } = await import('firebase/auth')
+  await signOut($auth)
+  router.replace('/admin/login')
+}
+
 // ─── Keyboard shortcuts ───────────────────────────────────────────────────────
+// ─── Auth guard ───────────────────────────────────────────────────────────────
 onMounted(async () => {
+  const { onAuthStateChanged } = await import('firebase/auth')
+  onAuthStateChanged($auth, (user) => {
+    if (!user) router.replace('/admin/login')
+  })
   await loadPage('accueil')
   window.addEventListener('keydown', (e) => {
     if ((e.metaKey || e.ctrlKey) && e.key === 's') { e.preventDefault(); savePage() }
@@ -395,6 +408,19 @@ html, body { height: 100%; background: #0f0f1a !important; }
 .save-btn:hover { background: #0a60b8; }
 .save-btn.saved { background: #0a6640; }
 .save-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.logout-btn {
+  width: 100%;
+  padding: 8px;
+  background: transparent;
+  border: 1px solid #3d3d55;
+  border-radius: 8px;
+  color: #7c7c9a;
+  font-size: 0.82em;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.logout-btn:hover { border-color: #EF4B54; color: #EF4B54; }
 
 /* ─── Editor main ────────────────────────────────────────────────────────────── */
 .editor-main {
