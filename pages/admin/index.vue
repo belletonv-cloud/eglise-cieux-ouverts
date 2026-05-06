@@ -283,7 +283,11 @@ function selectBlock(id) {
 function onBlockUpdate(updatedBlock) {
   const idx = blocks.value.findIndex(b => b.id === updatedBlock.id)
   if (idx !== -1) {
-    blocks.value.splice(idx, 1, updatedBlock)
+    // Muter en place pour ne pas recréer la référence
+    // (évite de déclencher le watch dans PropsPanel et de perdre le focus)
+    Object.assign(blocks.value[idx], updatedBlock)
+    blocks.value[idx].props = updatedBlock.props
+    blocks.value[idx].visibility = updatedBlock.visibility
   }
 }
 

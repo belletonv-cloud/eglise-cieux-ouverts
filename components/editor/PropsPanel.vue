@@ -203,12 +203,14 @@ const props = defineProps({
 })
 const emit = defineEmits(['update', 'close', 'delete'])
 
-// Deep copy to edit locally
+// Copie locale uniquement à l'ouverture du bloc — pas de watch pour éviter
+// la boucle : edit → emit → parent splice → watch réécrase localBlock
 const localBlock = ref(JSON.parse(JSON.stringify(props.block)))
 
-watch(() => props.block, (val) => {
-  localBlock.value = JSON.parse(JSON.stringify(val))
-}, { deep: true })
+watch(() => props.block.id, (newId) => {
+  // Recharger seulement si on change de bloc sélectionné
+  localBlock.value = JSON.parse(JSON.stringify(props.block))
+})
 
 const blockDef = computed(() => BLOCK_TYPES[localBlock.value.type])
 
