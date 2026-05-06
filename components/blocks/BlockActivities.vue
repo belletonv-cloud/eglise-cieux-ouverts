@@ -238,4 +238,8 @@ function nextSlide() {
     height: 60px;
   }
 }
+
+@container (max-width: 600px) {
+  .block-activities { padding: 40px 16px; }
+}
 </style>

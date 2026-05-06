@@ -103,6 +103,7 @@ const contentStyle = computed(() => {
 
 <style scoped>
 .block-nous-rejoindre {
+  container-type: inline-size;
   padding: 150px 24px;
   display: flex;
   justify-content: center;
@@ -196,5 +197,9 @@ const contentStyle = computed(() => {
   text-align: center;
   line-height: 1.1;
   padding: 20px;
+}
+
+@container (max-width: 600px) {
+  .block-nous-rejoindre { padding: 60px 16px; min-height: 300px; }
 }
 </style>

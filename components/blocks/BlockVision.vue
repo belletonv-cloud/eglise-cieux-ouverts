@@ -38,6 +38,7 @@ const formattedQuote = computed(() => {
 
 <style scoped>
 .vision-section {
+  container-type: inline-size;
   padding: 100px 24px;
   text-align: center;
 }
@@ -100,4 +101,8 @@ const formattedQuote = computed(() => {
 }
 
 .btn-white:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.15); }
+
+@container (max-width: 600px) {
+  .vision-section { padding: 40px 16px; }
+}
 </style>

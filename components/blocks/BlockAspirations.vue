@@ -177,4 +177,8 @@ function getBulletStyle(index) {
     display: none;
   }
 }
+
+@container (max-width: 600px) {
+  .block-aspirations { padding: 40px 16px; }
+}
 </style>

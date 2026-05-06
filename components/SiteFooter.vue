@@ -156,7 +156,7 @@ function getCharStyle(i) {
 
 .footer-info strong {
   font-weight: 700;
-  color: white;
+  color: #064886;
 }
 
 @media (max-width: 768px) {

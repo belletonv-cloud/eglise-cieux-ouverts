@@ -242,4 +242,8 @@ async function submitForm() {
   .contact-phone { max-width: 200px; margin: 0 auto; }
   .form-row { grid-template-columns: 1fr; }
 }
+
+@container (max-width: 600px) {
+  .block-contact { padding: 40px 16px; }
+}
 </style>
