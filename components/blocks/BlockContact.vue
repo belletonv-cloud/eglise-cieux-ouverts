@@ -72,7 +72,7 @@ onMounted(() => {
   if (isEditor) return
   const observer = new IntersectionObserver(
     ([entry]) => { if (entry.isIntersecting) { isVisible.value = true; observer.disconnect() } },
-    { threshold: 0.05 }
+    { threshold: 0.15 }
   )
   if (sectionRef.value) observer.observe(sectionRef.value)
 })
@@ -114,9 +114,9 @@ async function submitForm() {
   font-style: italic;
   will-change: transform, opacity;
   opacity: 0;
-  transform: scale(0.88);
-  transition: opacity 0.7s cubic-bezier(0.4,0,0.2,1),
-              transform 0.7s cubic-bezier(0.34,1.2,0.64,1);
+  transform: scale(0.6);
+  transition: opacity 0.9s cubic-bezier(0.16,1,0.3,1),
+              transform 0.9s cubic-bezier(0.16,1,0.3,1);
   transition-delay: 0s;
 }
 
@@ -128,18 +128,18 @@ async function submitForm() {
   object-fit: cover;
   will-change: transform, opacity;
   opacity: 0;
-  transform: translateY(40px);
-  transition: opacity 0.7s cubic-bezier(0.4,0,0.2,1),
-              transform 0.7s cubic-bezier(0.4,0,0.2,1);
-  transition-delay: 0.1s;
+  transform: translateY(80px);
+  transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1),
+              transform 0.8s cubic-bezier(0.16,1,0.3,1);
+  transition-delay: 0.15s;
 }
 
 .contact-socials {
   display: flex; gap: 20px; justify-content: center;
   will-change: opacity;
   opacity: 0;
-  transition: opacity 0.6s cubic-bezier(0.4,0,0.2,1);
-  transition-delay: 0.3s;
+  transition: opacity 0.7s cubic-bezier(0.16,1,0.3,1);
+  transition-delay: 0.4s;
 }
 
 /* ── Right col ── */
@@ -147,10 +147,10 @@ async function submitForm() {
   display: flex; flex-direction: column; justify-content: center;
   will-change: transform, opacity;
   opacity: 0;
-  transform: translateY(30px);
-  transition: opacity 0.7s cubic-bezier(0.4,0,0.2,1),
-              transform 0.7s cubic-bezier(0.4,0,0.2,1);
-  transition-delay: 0.15s;
+  transform: translateX(80px);
+  transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1),
+              transform 0.8s cubic-bezier(0.16,1,0.3,1);
+  transition-delay: 0.1s;
 }
 
 /* ── Triggered ── */

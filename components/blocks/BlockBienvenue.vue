@@ -40,7 +40,7 @@ onMounted(() => {
   if (isEditor) return
   const observer = new IntersectionObserver(
     ([entry]) => { if (entry.isIntersecting) { isVisible.value = true; observer.disconnect() } },
-    { threshold: 0.05 }
+    { threshold: 0.15 }
   )
   if (sectionRef.value) observer.observe(sectionRef.value)
 })
@@ -102,9 +102,9 @@ onMounted(() => {
   opacity: 0;
 }
 
-.line-1 { transform: translateX(-60px) rotate(-8deg); transition: opacity 0.7s cubic-bezier(0.4,0,0.2,1), transform 0.7s cubic-bezier(0.4,0,0.2,1); transition-delay: 0s; }
-.line-2 { transform: translateY(40px) rotate(4deg);  transition: opacity 0.7s cubic-bezier(0.4,0,0.2,1), transform 0.7s cubic-bezier(0.4,0,0.2,1); transition-delay: 0.1s; }
-.line-3 { transform: translateX(60px) rotate(8deg);  transition: opacity 0.7s cubic-bezier(0.4,0,0.2,1), transform 0.7s cubic-bezier(0.4,0,0.2,1); transition-delay: 0.2s; }
+.line-1 { transform: translateX(-200px) rotate(-20deg); transition: opacity 1s cubic-bezier(0.16,1,0.3,1), transform 1s cubic-bezier(0.16,1,0.3,1); transition-delay: 0s; }
+.line-2 { transform: translateY(120px) rotate(10deg);   transition: opacity 1s cubic-bezier(0.16,1,0.3,1), transform 1s cubic-bezier(0.16,1,0.3,1); transition-delay: 0.12s; }
+.line-3 { transform: translateX(200px) rotate(20deg);  transition: opacity 1s cubic-bezier(0.16,1,0.3,1), transform 1s cubic-bezier(0.16,1,0.3,1); transition-delay: 0.24s; }
 
 .hero-subtitle {
   font-family: Helvetica, Arial, sans-serif;
@@ -114,9 +114,9 @@ onMounted(() => {
   margin-top: 20px;
   will-change: transform, opacity;
   opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 0.7s cubic-bezier(0.4,0,0.2,1), transform 0.7s cubic-bezier(0.4,0,0.2,1);
-  transition-delay: 0.35s;
+  transform: translateY(30px);
+  transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1), transform 0.8s cubic-bezier(0.16,1,0.3,1);
+  transition-delay: 0.45s;
 }
 
 /* Triggered state */

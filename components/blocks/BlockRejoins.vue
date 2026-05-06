@@ -50,7 +50,7 @@ onMounted(() => {
   if (isEditor) return
   const observer = new IntersectionObserver(
     ([entry]) => { if (entry.isIntersecting) { isVisible.value = true; observer.disconnect() } },
-    { threshold: 0.05 }
+    { threshold: 0.15 }
   )
   if (sectionRef.value) observer.observe(sectionRef.value)
 })
@@ -82,9 +82,9 @@ onMounted(() => {
   gap: 5px;
   will-change: transform, opacity;
   opacity: 0;
-  transform: translateX(-50px);
-  transition: opacity 0.7s cubic-bezier(0.4,0,0.2,1),
-              transform 0.7s cubic-bezier(0.4,0,0.2,1);
+  transform: translateX(-120px);
+  transition: opacity 0.9s cubic-bezier(0.16,1,0.3,1),
+              transform 0.9s cubic-bezier(0.16,1,0.3,1);
   transition-delay: 0s;
 }
 
@@ -102,9 +102,9 @@ onMounted(() => {
   gap: 0;
   will-change: transform, opacity;
   opacity: 0;
-  transform: translateY(30px);
-  transition: opacity 0.6s cubic-bezier(0.4,0,0.2,1),
-              transform 0.6s cubic-bezier(0.4,0,0.2,1);
+  transform: translateY(60px);
+  transition: opacity 0.7s cubic-bezier(0.16,1,0.3,1),
+              transform 0.7s cubic-bezier(0.16,1,0.3,1);
 }
 
 /* ── Triggered ── */

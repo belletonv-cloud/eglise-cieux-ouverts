@@ -40,7 +40,7 @@ onMounted(() => {
   if (isEditor) return
   const observer = new IntersectionObserver(
     ([entry]) => { if (entry.isIntersecting) { isVisible.value = true; observer.disconnect() } },
-    { threshold: 0.05 }
+    { threshold: 0.15 }
   )
   if (sectionRef.value) observer.observe(sectionRef.value)
 })
