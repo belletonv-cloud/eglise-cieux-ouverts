@@ -114,12 +114,13 @@ function nextSlide() {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.55);
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.12) 10%, rgba(0, 0, 0, 0.82) 100%);
   color: white;
-  padding: 40px;
+  padding: 32px 36px 28px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-end;
+  align-items: flex-start;
   opacity: 0;
   transition: opacity 0.3s ease;
   overflow-y: auto;
@@ -142,7 +143,7 @@ function nextSlide() {
   font-size: 14.5px;
   line-height: 1.6;
   font-weight: 400;
-  max-width: 800px;
+  max-width: 680px;
 }
 
 .nav-arrow {
@@ -222,10 +223,7 @@ function nextSlide() {
     font-size: 13px;
   }
   .activity-overlay {
-    padding: 20px;
-    opacity: 0;
-  }
-  .activity-main-inner:active .activity-overlay {
+    padding: 18px 18px 16px;
     opacity: 1;
   }
   .nav-arrow {

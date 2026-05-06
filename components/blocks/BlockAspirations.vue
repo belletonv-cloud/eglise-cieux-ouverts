@@ -39,10 +39,17 @@ const visibilityClasses = computed(() => ({
 }))
 
 const sectionRef = ref(null)
-const isVisible = ref(isEditor)
+const isVisible = ref(false)
 
 onMounted(() => {
-  if (isEditor) return
+  if (isEditor) {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        isVisible.value = true
+      })
+    })
+    return
+  }
   const observer = new IntersectionObserver(
     ([entry]) => { if (entry.isIntersecting) { isVisible.value = true; observer.disconnect() } },
     { threshold: 0.15 }

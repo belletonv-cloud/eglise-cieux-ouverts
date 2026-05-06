@@ -90,6 +90,7 @@
               </div>
               <!-- Rendered block -->
               <component
+                :key="blockRenderKey(block)"
                 :is="blockComponent(block.type)"
                 :props="block.props"
                 :visibility="block.visibility"
@@ -206,12 +207,16 @@ const showNewPage = ref(false)
 const saving = ref(false)
 const saved = ref(false)
 const triggeredBlocks = ref(new Set())
+const previewVersions = ref({})
 
 const currentPageLabel = computed(() => pages.find(p => p.slug === currentPage.value)?.label ?? '')
 const selectedBlock = computed(() => blocks.value.find(b => b.id === selectedBlockId.value) ?? null)
 
 function getBlockDef(type) { return BLOCK_TYPES[type] }
 function blockComponent(type) { return BLOCK_COMPONENTS[type] || BlockRichText }
+function blockRenderKey(block) {
+  return `${block.id}:${previewVersions.value[block.id] || 0}`
+}
 function getAnimClass(p) {
   if (!p || !p.animation || p.animation === 'none') return ''
   const anim = ANIMATIONS.find(a => a.id === p.animation)
@@ -304,6 +309,10 @@ function onBlockUpdate(updatedBlock) {
 
     // Rejouer l'animation si elle a changé
     if (nextAnim && nextAnim !== 'none' && nextAnim !== prevAnim) {
+      previewVersions.value = {
+        ...previewVersions.value,
+        [updatedBlock.id]: (previewVersions.value[updatedBlock.id] || 0) + 1,
+      }
       triggeredBlocks.value.delete(updatedBlock.id)
       triggeredBlocks.value = new Set(triggeredBlocks.value)
       nextTick(() => {
