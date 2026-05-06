@@ -92,10 +92,7 @@ useSeoMeta({
   description: "Tous les événements à venir à l'Église Cieux Ouverts de Morlaix.",
 })
 
-const { $db } = useNuxtApp()
-
-const evenements = ref([])
-const loading = ref(true)
+const { evenements, loading } = useEvenements()
 const currentDate = ref(new Date())
 
 // Calendar computed
@@ -168,23 +165,6 @@ function formatMonth(ts) {
   return toDate(ts).toLocaleDateString('fr-FR', { month: 'short' }).toUpperCase()
 }
 
-onMounted(async () => {
-  try {
-    const { collection, getDocs, orderBy, query, where, Timestamp } = await import('firebase/firestore')
-    const now = Timestamp.now()
-    const q = query(
-      collection($db, 'evenements'),
-      where('date', '>=', now),
-      orderBy('date', 'asc')
-    )
-    const snap = await getDocs(q)
-    evenements.value = snap.docs.map(d => ({ id: d.id, ...d.data() }))
-  } catch (e) {
-    console.error(e)
-  } finally {
-    loading.value = false
-  }
-})
 </script>
 
 <style scoped>

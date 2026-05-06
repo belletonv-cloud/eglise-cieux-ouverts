@@ -62,6 +62,7 @@
           :class="`canvas-${previewDevice}`"
         >
           <VueDraggable
+            v-if="currentPageIsBuilder"
             v-model="blocks"
             handle=".drag-handle"
             animation="200"
@@ -99,14 +100,115 @@
             </div>
           </VueDraggable>
 
-          <div v-if="!currentPageIsBuilder" class="canvas-static-note">
+          <div v-else-if="currentPage === 'agenda'" class="agenda-admin-panel">
+            <div class="canvas-static-note">
+              <p class="canvas-static-title">Agenda</p>
+              <p class="canvas-static-text">Le rendu public vient de <code>{{ currentPageMeta?.file }}</code>.</p>
+              <p class="canvas-static-text">Cette vue permet maintenant de gerer directement les evenements de l'agenda.</p>
+            </div>
+
+            <form class="agenda-form" @submit.prevent="saveAgendaEvent">
+              <div class="agenda-form-header">
+                <h2 class="agenda-form-title">{{ editingAgendaId ? 'Modifier l\'evenement' : 'Nouvel evenement' }}</h2>
+                <div class="agenda-form-actions">
+                  <button v-if="editingAgendaId" type="button" class="agenda-secondary-btn" @click="resetAgendaForm">Annuler</button>
+                  <button type="submit" class="agenda-primary-btn" :disabled="agendaSaving">
+                    {{ agendaSaving ? 'Enregistrement...' : editingAgendaId ? 'Mettre a jour' : 'Ajouter' }}
+                  </button>
+                </div>
+              </div>
+
+              <div v-if="agendaError" class="agenda-form-error">{{ agendaError }}</div>
+
+              <div class="agenda-form-grid">
+                <label class="agenda-field">
+                  <span>Titre</span>
+                  <input v-model.trim="agendaForm.titre" type="text" maxlength="120" required />
+                </label>
+
+                <label class="agenda-field">
+                  <span>Date</span>
+                  <input v-model="agendaForm.date" type="date" required />
+                </label>
+
+                <label class="agenda-field">
+                  <span>Heure</span>
+                  <input v-model="agendaForm.heure" type="time" />
+                </label>
+
+                <label class="agenda-field">
+                  <span>Lieu</span>
+                  <input v-model.trim="agendaForm.lieu" type="text" maxlength="120" />
+                </label>
+
+                <label class="agenda-field">
+                  <span>Emoji</span>
+                  <input v-model.trim="agendaForm.emoji" type="text" maxlength="8" placeholder="🎉" />
+                </label>
+
+                <label class="agenda-field">
+                  <span>Lien externe</span>
+                  <input v-model.trim="agendaForm.lien" type="url" placeholder="https://..." />
+                </label>
+
+                <label class="agenda-field">
+                  <span>Billetterie</span>
+                  <input v-model.trim="agendaForm.billetterie" type="url" placeholder="https://..." />
+                </label>
+
+                <label class="agenda-field agenda-field-full">
+                  <span>Description</span>
+                  <textarea v-model.trim="agendaForm.description" rows="4" maxlength="1500"></textarea>
+                </label>
+              </div>
+            </form>
+
+            <div v-if="!agendaLoading && agendaEvents.length > 0" class="agenda-filter-bar">
+              <button type="button" class="agenda-filter-btn" :class="{ active: agendaFilter === 'upcoming' }" @click="agendaFilter = 'upcoming'">
+                A venir ({{ upcomingAgendaCount }})
+              </button>
+              <button type="button" class="agenda-filter-btn" :class="{ active: agendaFilter === 'past' }" @click="agendaFilter = 'past'">
+                Passes ({{ pastAgendaCount }})
+              </button>
+              <button type="button" class="agenda-filter-btn" :class="{ active: agendaFilter === 'all' }" @click="agendaFilter = 'all'">
+                Tous ({{ agendaEvents.length }})
+              </button>
+            </div>
+
+            <div v-if="agendaLoading" class="agenda-admin-state">Chargement des evenements...</div>
+            <div v-else-if="agendaEvents.length === 0" class="agenda-admin-state">Aucun evenement.</div>
+            <div v-else-if="filteredAgendaEvents.length === 0" class="agenda-admin-state">Aucun evenement dans ce filtre.</div>
+
+            <div v-else class="agenda-admin-list">
+              <article v-for="evt in filteredAgendaEvents" :key="evt.id" class="agenda-admin-card">
+                <div class="agenda-admin-date">{{ formatAgendaAdminDate(evt.date) }}</div>
+                <div class="agenda-admin-body">
+                  <h3 class="agenda-admin-title">{{ evt.titre || 'Evenement sans titre' }}</h3>
+                  <p v-if="evt.description" class="agenda-admin-desc">{{ evt.description }}</p>
+                  <div class="agenda-admin-meta">
+                    <span v-if="evt.heure">Heure: {{ evt.heure }}</span>
+                    <span v-if="evt.lieu">Lieu: {{ evt.lieu }}</span>
+                    <span v-if="evt.billetterie">Billetterie active</span>
+                    <span v-if="evt.lien">Lien externe</span>
+                  </div>
+                  <div class="agenda-admin-actions">
+                    <button type="button" class="agenda-secondary-btn" @click="startAgendaEdit(evt)">Modifier</button>
+                    <button type="button" class="agenda-danger-btn" :disabled="agendaDeletingId === evt.id" @click="removeAgendaEvent(evt)">
+                      {{ agendaDeletingId === evt.id ? 'Suppression...' : 'Supprimer' }}
+                    </button>
+                  </div>
+                </div>
+              </article>
+            </div>
+          </div>
+
+          <div v-else class="canvas-static-note">
             <p class="canvas-static-title">Cette page reste speciale pour l'instant.</p>
             <p class="canvas-static-text">Le rendu public vient encore de <code>{{ currentPageMeta?.file }}</code>.</p>
-            <p class="canvas-static-text">Je l'ai laissee hors builder pour l'instant car le calendrier demande un traitement dedie.</p>
           </div>
 
           <!-- Empty state -->
-          <div v-if="blocks.length === 0" class="canvas-empty">
+          <div v-if="currentPageIsBuilder && blocks.length === 0" class="canvas-empty">
             <p>✨ Cette page est vide.</p>
             <button class="btn-add-block" @click="showBlockPicker = true" :disabled="!currentPageIsBuilder">+ Ajouter un premier bloc</button>
           </div>
@@ -148,9 +250,8 @@
 
 <script setup>
 import { VueDraggable } from 'vue-draggable-plus'
-import { BLOCK_TYPES, ANIMATIONS, createBlock, getDefaultPageBySlug } from '~/utils/blockTypes.js'
+import { BLOCK_TYPES, ANIMATIONS, createBlock, getDefaultPageBySlug, normalizePageBlocks } from '~/utils/blockTypes.js'
 import PropsPanel from '~/components/editor/PropsPanel.vue'
-import PageRenderer from '~/components/PageRenderer.vue'
 
 import BlockHero from '~/components/blocks/BlockHero.vue'
 import BlockBienvenue from '~/components/blocks/BlockBienvenue.vue'
@@ -214,11 +315,188 @@ const saving = ref(false)
 const saved = ref(false)
 const triggeredBlocks = ref(new Set())
 const previewVersions = ref({})
+const agendaSaving = ref(false)
+const agendaDeletingId = ref(null)
+const agendaError = ref('')
+const editingAgendaId = ref('')
+const agendaFilter = ref('upcoming')
+
+const agendaForm = reactive({
+  titre: '',
+  date: '',
+  heure: '',
+  lieu: '',
+  description: '',
+  lien: '',
+  billetterie: '',
+  emoji: '',
+})
 
 const currentPageMeta = computed(() => pages.find(p => p.slug === currentPage.value) ?? null)
 const currentPageIsBuilder = computed(() => currentPageMeta.value?.builder !== false)
 const currentPageLabel = computed(() => currentPageMeta.value?.label ?? '')
 const selectedBlock = computed(() => blocks.value.find(b => b.id === selectedBlockId.value) ?? null)
+const { evenements: agendaEvents, loading: agendaLoading, refresh: refreshAgendaEvents } = useEvenements({ futureOnly: false })
+const sortedAgendaEvents = computed(() => {
+  return [...agendaEvents.value].sort((a, b) => getAgendaDateValue(a.date) - getAgendaDateValue(b.date))
+})
+const upcomingAgendaCount = computed(() => sortedAgendaEvents.value.filter(evt => !isPastAgendaEvent(evt.date)).length)
+const pastAgendaCount = computed(() => sortedAgendaEvents.value.filter(evt => isPastAgendaEvent(evt.date)).length)
+const filteredAgendaEvents = computed(() => {
+  if (agendaFilter.value === 'all') return sortedAgendaEvents.value
+  if (agendaFilter.value === 'past') {
+    return [...sortedAgendaEvents.value].filter(evt => isPastAgendaEvent(evt.date)).reverse()
+  }
+  return sortedAgendaEvents.value.filter(evt => !isPastAgendaEvent(evt.date))
+})
+
+function getAgendaDateValue(ts) {
+  if (!ts) return 0
+  const date = ts.toDate ? ts.toDate() : new Date(ts)
+  return Number.isNaN(date.getTime()) ? 0 : date.getTime()
+}
+
+function isPastAgendaEvent(ts) {
+  const value = getAgendaDateValue(ts)
+  if (!value) return false
+  return value < Date.now()
+}
+
+function resetAgendaForm() {
+  editingAgendaId.value = ''
+  agendaError.value = ''
+  agendaForm.titre = ''
+  agendaForm.date = ''
+  agendaForm.heure = ''
+  agendaForm.lieu = ''
+  agendaForm.description = ''
+  agendaForm.lien = ''
+  agendaForm.billetterie = ''
+  agendaForm.emoji = ''
+}
+
+function toAgendaDateInput(ts) {
+  if (!ts) return ''
+  const date = ts.toDate ? ts.toDate() : new Date(ts)
+  if (Number.isNaN(date.getTime())) return ''
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+function normaliseAgendaTime(value) {
+  if (!value) return ''
+  return value.slice(0, 5)
+}
+
+function toAgendaTimestamp(dateValue, timeValue) {
+  const [year, month, day] = dateValue.split('-').map(Number)
+  const [hours, minutes] = (timeValue || '00:00').split(':').map(Number)
+  return new Date(year, month - 1, day, hours || 0, minutes || 0, 0, 0)
+}
+
+function startAgendaEdit(evt) {
+  editingAgendaId.value = evt.id
+  agendaError.value = ''
+  agendaForm.titre = evt.titre || ''
+  agendaForm.date = toAgendaDateInput(evt.date)
+  agendaForm.heure = normaliseAgendaTime(evt.heure)
+  agendaForm.lieu = evt.lieu || ''
+  agendaForm.description = evt.description || ''
+  agendaForm.lien = evt.lien || ''
+  agendaForm.billetterie = evt.billetterie || ''
+  agendaForm.emoji = evt.emoji || ''
+}
+
+function validateAgendaForm() {
+  if (!agendaForm.titre || !agendaForm.date) {
+    agendaError.value = 'Le titre et la date sont obligatoires.'
+    return false
+  }
+
+  if (agendaForm.lien && !/^https?:\/\//.test(agendaForm.lien)) {
+    agendaError.value = 'Le lien externe doit commencer par http:// ou https://.'
+    return false
+  }
+
+  if (agendaForm.billetterie && !/^https?:\/\//.test(agendaForm.billetterie)) {
+    agendaError.value = 'Le lien de billetterie doit commencer par http:// ou https://.'
+    return false
+  }
+
+  agendaError.value = ''
+  return true
+}
+
+async function saveAgendaEvent() {
+  if (!validateAgendaForm()) return
+
+  agendaSaving.value = true
+
+  try {
+    const { addDoc, collection, doc, Timestamp, updateDoc } = await import('firebase/firestore')
+    const eventDate = toAgendaTimestamp(agendaForm.date, agendaForm.heure)
+    const payload = {
+      titre: agendaForm.titre,
+      date: Timestamp.fromDate(eventDate),
+      heure: normaliseAgendaTime(agendaForm.heure),
+      lieu: agendaForm.lieu,
+      description: agendaForm.description,
+      lien: agendaForm.lien,
+      billetterie: agendaForm.billetterie,
+      emoji: agendaForm.emoji,
+      updatedAt: new Date().toISOString(),
+    }
+
+    if (editingAgendaId.value) {
+      await updateDoc(doc($db, 'evenements', editingAgendaId.value), payload)
+    } else {
+      await addDoc(collection($db, 'evenements'), {
+        ...payload,
+        createdAt: new Date().toISOString(),
+      })
+    }
+
+    await refreshAgendaEvents()
+    resetAgendaForm()
+  } catch (e) {
+    console.error('Agenda save error', e)
+    agendaError.value = e.message || 'Erreur lors de l\'enregistrement.'
+  } finally {
+    agendaSaving.value = false
+  }
+}
+
+async function removeAgendaEvent(evt) {
+  if (!confirm(`Supprimer l'evenement "${evt.titre || 'sans titre'}" ?`)) return
+
+  agendaDeletingId.value = evt.id
+
+  try {
+    const { deleteDoc, doc } = await import('firebase/firestore')
+    await deleteDoc(doc($db, 'evenements', evt.id))
+    if (editingAgendaId.value === evt.id) resetAgendaForm()
+    await refreshAgendaEvents()
+  } catch (e) {
+    console.error('Agenda delete error', e)
+    agendaError.value = e.message || 'Erreur lors de la suppression.'
+  } finally {
+    agendaDeletingId.value = null
+  }
+}
+
+function formatAgendaAdminDate(ts) {
+  if (!ts) return 'Date non renseignee'
+  const date = ts.toDate ? ts.toDate() : new Date(ts)
+  if (Number.isNaN(date.getTime())) return 'Date invalide'
+  return date.toLocaleDateString('fr-FR', {
+    weekday: 'short',
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  })
+}
 
 function getBlockDef(type) { return BLOCK_TYPES[type] }
 function blockComponent(type) { return BLOCK_COMPONENTS[type] || BlockRichText }
@@ -243,7 +521,7 @@ async function loadPage(slug) {
     const { doc, getDoc } = await import('firebase/firestore')
     const snap = await getDoc(doc($db, 'pages', slug))
     if (snap.exists() && snap.data().blocks?.length) {
-      blocks.value = snap.data().blocks
+      blocks.value = normalizePageBlocks(slug, snap.data().blocks)
     }
   } catch (e) {
     console.error('Load error', e)
@@ -669,6 +947,244 @@ html, body { height: 100%; background: #0f0f1a !important; }
 
 .canvas-static-text + .canvas-static-text {
   margin-top: 6px;
+}
+
+.agenda-admin-panel {
+  padding: 20px;
+  background: #f8fafc;
+}
+
+.agenda-form {
+  margin: 20px;
+  padding: 24px;
+  border-radius: 16px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.agenda-form-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.agenda-form-title {
+  margin: 0;
+  font-size: 1.05em;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.agenda-form-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.agenda-form-error {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 0.9em;
+  font-weight: 600;
+}
+
+.agenda-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.agenda-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.agenda-field span {
+  font-size: 0.82em;
+  font-weight: 700;
+  color: #334155;
+}
+
+.agenda-field input,
+.agenda-field textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: white;
+  color: #0f172a;
+  font: inherit;
+}
+
+.agenda-field textarea {
+  resize: vertical;
+}
+
+.agenda-field-full {
+  grid-column: 1 / -1;
+}
+
+.agenda-primary-btn,
+.agenda-secondary-btn,
+.agenda-danger-btn {
+  border: none;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-size: 0.84em;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s, background 0.2s;
+}
+
+.agenda-primary-btn {
+  background: #064886;
+  color: white;
+}
+
+.agenda-secondary-btn {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.agenda-danger-btn {
+  background: #EF4B54;
+  color: white;
+}
+
+.agenda-primary-btn:disabled,
+.agenda-secondary-btn:disabled,
+.agenda-danger-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.agenda-filter-bar {
+  display: flex;
+  gap: 10px;
+  padding: 0 20px 20px;
+  flex-wrap: wrap;
+}
+
+.agenda-filter-btn {
+  border: 1px solid #cbd5e1;
+  background: white;
+  color: #334155;
+  border-radius: 999px;
+  padding: 9px 14px;
+  font-size: 0.82em;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.agenda-filter-btn.active {
+  background: #064886;
+  border-color: #064886;
+  color: white;
+}
+
+.agenda-admin-state {
+  margin: 20px;
+  padding: 24px;
+  border-radius: 12px;
+  background: white;
+  color: #64748b;
+  text-align: center;
+  border: 1px solid #e2e8f0;
+}
+
+.agenda-admin-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 0 20px 20px;
+}
+
+.agenda-admin-card {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+  padding: 20px;
+  border-radius: 14px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.agenda-admin-date {
+  min-width: 150px;
+  font-size: 0.84em;
+  font-weight: 700;
+  line-height: 1.5;
+  color: #064886;
+  text-transform: capitalize;
+}
+
+.agenda-admin-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.agenda-admin-title {
+  margin: 0;
+  font-size: 1.05em;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.agenda-admin-desc {
+  margin: 0;
+  color: #475569;
+  line-height: 1.6;
+}
+
+.agenda-admin-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.agenda-admin-meta span {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #064886;
+  font-size: 0.78em;
+  font-weight: 600;
+}
+
+.agenda-admin-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+@media (max-width: 900px) {
+  .agenda-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .agenda-form-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .agenda-form-actions,
+  .agenda-admin-card {
+    flex-direction: column;
+  }
+
+  .agenda-admin-date {
+    min-width: 0;
+  }
 }
 
 /* ─── Block picker modal ─────────────────────────────────────────────────────── */

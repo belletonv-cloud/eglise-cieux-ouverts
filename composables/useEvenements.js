@@ -1,20 +1,20 @@
-// Composable partagé : charge les événements futurs depuis Firebase
-// Utilisé par SiteHeader (pour masquer le lien billetterie) et pages/billetterie.vue
+// Composable partagé : charge les événements depuis Firebase
+// Utilisé par SiteHeader, agenda public et l'admin
 
-export function useEvenements() {
+export function useEvenements(options = {}) {
   const { $db } = useNuxtApp()
   const evenements = ref([])
   const loading = ref(true)
+  const futureOnly = options.futureOnly !== false
 
-  onMounted(async () => {
+  async function loadEvenements() {
+    loading.value = true
     try {
       const { collection, getDocs, query, where, orderBy, Timestamp } = await import('firebase/firestore')
-      const now = Timestamp.now()
-      const q = query(
-        collection($db, 'evenements'),
-        where('date', '>=', now),
-        orderBy('date', 'asc')
-      )
+      const collectionRef = collection($db, 'evenements')
+      const q = futureOnly
+        ? query(collectionRef, where('date', '>=', Timestamp.now()), orderBy('date', 'asc'))
+        : query(collectionRef, orderBy('date', 'asc'))
       const snap = await getDocs(q)
       evenements.value = snap.docs.map(d => ({ id: d.id, ...d.data() }))
     } catch (e) {
@@ -22,9 +22,13 @@ export function useEvenements() {
     } finally {
       loading.value = false
     }
+  }
+
+  onMounted(() => {
+    loadEvenements()
   })
 
   const hasEvenements = computed(() => evenements.value.length > 0)
 
-  return { evenements, loading, hasEvenements }
+  return { evenements, loading, hasEvenements, refresh: loadEvenements }
 }

@@ -2,10 +2,87 @@
   <section
     class="block-contact"
     :style="{ background: props.backgroundGradient, color: props.textColor || '#ffffff' }"
-    :class="[visibilityClasses, { 'is-visible': isVisible }]"
+    :class="[visibilityClasses, { 'is-visible': isVisible, 'page-mode': isClassicPageContact }]"
     ref="sectionRef"
   >
-    <div class="contact-inner">
+    <div v-if="isClassicPageContact" class="contact-page-shell">
+      <section class="contact-page-header">
+        <div class="contact-page-header-inner">
+          <h2 class="contact-page-title">{{ props.title }}</h2>
+          <div v-if="props.addressTitle || props.addressLine" class="contact-page-address">
+            <p v-if="props.addressTitle">{{ props.addressTitle }}</p>
+            <p v-if="props.addressLine">{{ props.addressLine }}</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="contact-page-main">
+        <div class="contact-page-card">
+          <div class="contact-page-card-inner">
+            <div class="contact-page-form-col">
+              <form class="contact-page-form" @submit.prevent="submitForm">
+                <div class="contact-page-row">
+                  <label class="contact-page-field">
+                    <span>Prénom *</span>
+                    <input v-model="form.prenom" type="text" autocomplete="given-name" maxlength="80" :disabled="isFormDisabled" required />
+                  </label>
+                  <label class="contact-page-field">
+                    <span>Nom de famille *</span>
+                    <input v-model="form.nom" type="text" autocomplete="family-name" maxlength="80" :disabled="isFormDisabled" required />
+                  </label>
+                </div>
+
+                <label class="contact-page-field">
+                  <span>Ville</span>
+                  <input v-model="form.ville" type="text" autocomplete="address-level2" maxlength="120" :disabled="isFormDisabled" />
+                </label>
+
+                <label class="contact-page-field">
+                  <span>Email *</span>
+                  <input v-model="form.email" type="email" autocomplete="email" maxlength="180" :disabled="isFormDisabled" required />
+                </label>
+
+                <label class="contact-page-field">
+                  <span>Ton message *</span>
+                  <textarea v-model="form.message" maxlength="4000" :disabled="isFormDisabled" required rows="6"></textarea>
+                </label>
+
+                <input v-model="form.website" type="text" class="contact-honeypot" tabindex="-1" autocomplete="off" aria-hidden="true" />
+
+                <label class="contact-page-checkbox">
+                  <input type="checkbox" v-model="form.newsletter" :disabled="isFormDisabled" />
+                  <span>Oui, je souhaite m'abonner à la newsletter.</span>
+                </label>
+
+                <p class="editor-msg" v-if="isEditor">Le formulaire est désactivé dans l'admin. Teste-le sur le site public.</p>
+                <p class="success-msg" v-if="submitted">Message envoyé, à bientôt !</p>
+                <p class="error-msg" v-if="errorMessage">{{ errorMessage }}</p>
+
+                <div class="contact-page-submit">
+                  <button type="submit" class="contact-page-btn" :disabled="isFormDisabled">
+                    {{ sending ? 'Envoi...' : "C'est parti !" }}
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <div class="contact-page-map-col">
+              <iframe
+                :src="props.mapEmbedUrl"
+                title="Carte — Eglise Cieux Ouverts Morlaix"
+                width="100%"
+                height="100%"
+                style="border:0;min-height:420px;"
+                loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade"
+              ></iframe>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div v-else class="contact-inner">
       <h2 class="contact-title">{{ props.title }}</h2>
 
       <div class="contact-wrap">
@@ -21,9 +98,9 @@
 
         <div class="contact-right">
           <div class="contact-questions">
-            <p>Tu as une question ?</p>
-            <p>Tu désires parler à un pasteur ?</p>
-            <p>Tu souhaites recevoir notre newsletter ?</p>
+            <p v-if="props.showQuestions !== false">Tu as une question ?</p>
+            <p v-if="props.showQuestions !== false">Tu désires parler à un pasteur ?</p>
+            <p v-if="props.showQuestions !== false">Tu souhaites recevoir notre newsletter ?</p>
           </div>
           <form class="contact-form" @submit.prevent="submitForm">
             <div class="form-row">
@@ -94,6 +171,7 @@ const errorMessage = ref('')
 const mountedAt = Date.now()
 
 const isFormDisabled = computed(() => sending.value || isEditor)
+const isClassicPageContact = computed(() => Boolean(p.props.mapEmbedUrl))
 
 function normalizeForm() {
   return {
@@ -165,6 +243,140 @@ async function submitForm() {
 .block-contact {
   container-type: inline-size;
   padding: 70px 24px;
+}
+.block-contact.page-mode {
+  padding: 0;
+  background: white !important;
+  color: #1a1a2e !important;
+}
+.contact-page-shell {
+  background: white;
+  color: #1a1a2e;
+}
+.contact-page-header {
+  background: white;
+  padding: 60px 48px 30px;
+}
+.contact-page-header-inner {
+  display: flex;
+  align-items: flex-start;
+  gap: 60px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.contact-page-title {
+  margin: 0;
+  flex-shrink: 0;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-style: italic;
+  font-size: 2.8em;
+  font-weight: 700;
+  color: #064886;
+}
+.contact-page-address {
+  padding-top: 10px;
+}
+.contact-page-address p {
+  margin: 0;
+  font-size: 1em;
+  color: #064886;
+  font-style: italic;
+  line-height: 1.7;
+  font-family: 'Playfair Display', Georgia, serif;
+}
+.contact-page-main {
+  background: white;
+}
+.contact-page-card {
+  background: #064886;
+  margin: 0 48px 80px;
+  padding: 40px 48px 60px;
+  border-radius: 12px;
+}
+.contact-page-card-inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  max-width: 1000px;
+  margin: 0 auto;
+  align-items: stretch;
+}
+.contact-page-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.contact-page-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.contact-page-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.contact-page-field span {
+  font-size: 0.82em;
+  font-weight: 500;
+  color: white;
+}
+.contact-page-field input,
+.contact-page-field textarea {
+  padding: 10px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.95em;
+  font-family: inherit;
+  color: #333;
+  background: white;
+  outline: none;
+  transition: box-shadow 0.2s;
+}
+.contact-page-field input:focus,
+.contact-page-field textarea:focus {
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.5);
+}
+.contact-page-field textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+.contact-page-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.88em;
+  color: #EF4B54;
+  font-weight: 600;
+  cursor: pointer;
+}
+.contact-page-checkbox input {
+  margin-top: 2px;
+  accent-color: #EF4B54;
+}
+.contact-page-submit {
+  display: flex;
+  justify-content: center;
+  margin-top: 4px;
+}
+.contact-page-btn {
+  padding: 12px 40px;
+  background: #3B82F6;
+  color: white;
+  font-size: 1em;
+  font-weight: 700;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.contact-page-btn:hover { background: #2563eb; }
+.contact-page-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.contact-page-map-col {
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 .contact-inner { max-width: 1000px; margin: 0 auto; }
 
@@ -245,6 +457,7 @@ async function submitForm() {
   line-height: 1.5;
 }
 .contact-questions p { margin: 0 0 5px 0; }
+.contact-questions:empty { display: none; }
 
 .contact-form { display: flex; flex-direction: column; gap: 16px; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
@@ -292,6 +505,12 @@ async function submitForm() {
 .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
 
 @container (max-width: 768px) {
+  .contact-page-header { padding: 40px 20px 20px; }
+  .contact-page-header-inner { flex-direction: column; gap: 16px; }
+  .contact-page-card { margin: 0 16px 60px; padding: 24px 20px 40px; }
+  .contact-page-card-inner { grid-template-columns: 1fr; }
+  .contact-page-row { grid-template-columns: 1fr; }
+  .contact-page-map-col iframe { min-height: 280px !important; }
   .contact-wrap { grid-template-columns: 1fr; gap: 40px; }
   .contact-phone { max-width: 200px; margin: 0 auto; }
   .form-row { grid-template-columns: 1fr; }

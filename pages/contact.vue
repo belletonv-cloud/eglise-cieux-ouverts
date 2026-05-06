@@ -3,7 +3,7 @@
 </template>
 
 <script setup>
-import { getDefaultContactPage } from '~/utils/blockTypes.js'
+import { getDefaultContactPage, normalizePageBlocks } from '~/utils/blockTypes.js'
 
 useSeoMeta({
   title: 'Contact — Église Cieux Ouverts Morlaix',
@@ -19,7 +19,7 @@ onMounted(async () => {
     const { doc, getDoc } = await import('firebase/firestore')
     const snap = await getDoc(doc($db, 'pages', 'contact'))
     if (snap.exists() && snap.data().blocks?.length) {
-      blocks.value = snap.data().blocks
+      blocks.value = normalizePageBlocks('contact', snap.data().blocks)
     }
   } catch (e) {
     console.error('Erreur chargement page contact:', e)
