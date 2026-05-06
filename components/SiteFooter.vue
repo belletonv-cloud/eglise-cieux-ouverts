@@ -83,22 +83,22 @@ function getCharStyle(i) {
 
 <style scoped>
 .site-footer {
-  /* Le footer commence bleu #064886 et va progressivement vers du blanc #ffffff */
-  background: linear-gradient(to bottom, #064886 0%, #064886 40%, #ffffff 100%);
+  /* Use a subtler background so the footer doesn't read as a separate heavy block on load */
+  background: linear-gradient(to bottom, rgba(6,72,134,0.95) 0%, rgba(6,72,134,0.85) 20%, rgba(6,72,134,0.6) 50%, rgba(255,255,255,0.03) 100%);
   position: relative;
   overflow: hidden;
-  min-height: 250px;
+  min-height: 180px;
 }
 
-.footer-inner {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 40px 24px 30px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 40px;
-}
+  .footer-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 28px 24px 22px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 40px;
+  }
 
 .footer-left {
   flex: 1;
@@ -159,7 +159,7 @@ function getCharStyle(i) {
   color: #064886;
 }
 
-@media (max-width: 768px) {
+  @media (max-width: 768px) {
   .site-footer {
     background: rgb(238, 108, 113);
     min-height: 0;

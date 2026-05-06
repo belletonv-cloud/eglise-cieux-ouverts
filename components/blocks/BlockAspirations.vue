@@ -12,9 +12,9 @@
           v-for="(item, i) in props.items"
           :key="i"
           class="aspiration-item"
-          :style="{ transitionDelay: (0.15 + i * 0.1) + 's' }"
+          :style="{ transitionDelay: (0.12 + i * 0.12) + 's' }"
         >
-          <span class="aspiration-bullet"></span>
+          <span class="aspiration-bullet" :style="{ transitionDelay: (0.18 + i * 0.12) + 's' }"></span>
           {{ item }}
         </li>
       </ul>
@@ -23,7 +23,7 @@
 </template>
 
 <script setup>
-import { computed, ref, inject, onMounted } from 'vue'
+import { computed, ref, inject, onMounted, onUnmounted } from 'vue'
 
 const p = defineProps({
   props: { type: Object, required: true },
@@ -43,18 +43,21 @@ const isVisible = ref(false)
 
 onMounted(() => {
   if (isEditor) {
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        isVisible.value = true
-      })
-    })
+    // in editor show immediately
+    isVisible.value = true
     return
   }
+
   const observer = new IntersectionObserver(
-    ([entry]) => { if (entry.isIntersecting) { isVisible.value = true; observer.disconnect() } },
-    { threshold: 0.15 }
+    ([entry]) => {
+      // toggle visibility so animations reverse on scroll up/down
+      isVisible.value = entry.isIntersecting
+    },
+    { threshold: 0.12 }
   )
   if (sectionRef.value) observer.observe(sectionRef.value)
+
+  onUnmounted(() => observer.disconnect())
 })
 </script>
 
@@ -85,7 +88,6 @@ onMounted(() => {
   opacity: 0;
   transform: translateY(40px);
   transition: opacity 0.7s cubic-bezier(0.4,0,0.2,1), transform 0.7s cubic-bezier(0.4,0,0.2,1);
-  transition-delay: 0s;
 }
 
 .aspirations-list {
@@ -109,7 +111,8 @@ onMounted(() => {
   padding-left: 50px;
   will-change: transform, opacity;
   opacity: 0;
-  transform: translateY(30px);
+  /* start left and below, will animate to position */
+  transform: translate(-140px, 60px);
   transition: opacity 0.6s cubic-bezier(0.4,0,0.2,1), transform 0.6s cubic-bezier(0.4,0,0.2,1);
 }
 
@@ -125,22 +128,12 @@ onMounted(() => {
   opacity: 0;
   transform: scale(0);
   transition: opacity 0.4s cubic-bezier(0.4,0,0.2,1), transform 0.4s cubic-bezier(0.34,1.4,0.64,1);
-  transition-delay: inherit;
 }
 
 /* Triggered state */
-.is-visible .aspirations-title {
-  opacity: 1;
-  transform: none;
-}
-.is-visible .aspiration-item {
-  opacity: 1;
-  transform: none;
-}
-.is-visible .aspiration-bullet {
-  opacity: 1;
-  transform: scale(1);
-}
+.is-visible .aspirations-title { opacity: 1; transform: none; }
+.is-visible .aspiration-item { opacity: 1; transform: none; }
+.is-visible .aspiration-bullet { opacity: 1; transform: scale(1); }
 
 @container (max-width: 768px) {
   .aspirations-inner { align-items: center; text-align: center; }
@@ -149,6 +142,7 @@ onMounted(() => {
     font-size: clamp(20px, 5vw, 36px);
     padding-left: 0;
     justify-content: center;
+    transform: none; /* disable initial offset on small screens */
   }
   .aspiration-bullet { display: none; }
 }
