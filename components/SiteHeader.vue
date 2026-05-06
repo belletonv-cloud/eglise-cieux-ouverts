@@ -9,8 +9,7 @@
         <NuxtLink to="/" exact-active-class="active">Accueil</NuxtLink>
         <NuxtLink to="/messages" active-class="active">Messages</NuxtLink>
         <NuxtLink to="/agenda" active-class="active">Agenda</NuxtLink>
-        <NuxtLink to="/billetterie" active-class="active">Billetterie Événements</NuxtLink>
-        <NuxtLink to="/photos" active-class="active">Photos</NuxtLink>
+        <NuxtLink to="/billetterie" active-class="active">Billetterie Évènements</NuxtLink>
         <NuxtLink to="/contact" active-class="active">Contact</NuxtLink>
       </nav>
 
@@ -27,10 +26,8 @@
       <NuxtLink to="/" exact-active-class="active" @click="menuOpen = false">Accueil</NuxtLink>
       <NuxtLink to="/messages" active-class="active" @click="menuOpen = false">Messages</NuxtLink>
       <NuxtLink to="/agenda" active-class="active" @click="menuOpen = false">Agenda</NuxtLink>
-      <NuxtLink to="/billetterie" active-class="active" @click="menuOpen = false">Billetterie Événements</NuxtLink>
-      <NuxtLink to="/photos" active-class="active" @click="menuOpen = false">Photos</NuxtLink>
+      <NuxtLink to="/billetterie" active-class="active" @click="menuOpen = false">Billetterie Évènements</NuxtLink>
       <NuxtLink to="/contact" active-class="active" @click="menuOpen = false">Contact</NuxtLink>
-      <a href="https://www.facebook.com/eglisecieuxouverts" target="_blank" rel="noopener" @click="menuOpen = false">Facebook</a>
     </nav>
   </header>
   <div class="header-spacer"></div>
@@ -77,9 +74,9 @@ onUnmounted(() => {
 }
 
 .header-inner {
-  max-width: 1100px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 14px 24px;
+  padding: 10px 24px;
   display: flex;
   align-items: center;
   gap: 32px;
@@ -94,9 +91,10 @@ onUnmounted(() => {
 }
 
 .logo {
-  height: 36px;
+  height: 52px;
   width: auto;
   object-fit: contain;
+  display: block;
 }
 
 .nav-desktop {
@@ -193,7 +191,7 @@ onUnmounted(() => {
   font-weight: 600;
 }
 
-.header-spacer { height: 70px; }
+.header-spacer { height: 76px; }
 
 @media (max-width: 768px) {
   .nav-desktop, .desktop-only {
