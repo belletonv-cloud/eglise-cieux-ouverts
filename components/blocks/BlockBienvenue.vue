@@ -56,7 +56,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 600px;
+  min-height: 450px;
 }
 
 .bienvenue-img {

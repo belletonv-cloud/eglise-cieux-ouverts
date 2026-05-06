@@ -41,7 +41,7 @@ const formattedQuote = computed(() => {
 <style scoped>
 .vision-section {
   container-type: inline-size;
-  padding: 100px 24px;
+  padding: 70px 24px;
   text-align: center;
 }
 

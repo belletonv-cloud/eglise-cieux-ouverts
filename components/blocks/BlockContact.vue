@@ -160,7 +160,7 @@ async function submitForm() {
 <style scoped>
 .block-contact {
   container-type: inline-size;
-  padding: 100px 24px;
+  padding: 70px 24px;
 }
 .contact-inner { max-width: 1000px; margin: 0 auto; }
 .contact-title {

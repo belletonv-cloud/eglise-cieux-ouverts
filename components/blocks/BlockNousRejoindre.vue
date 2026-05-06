@@ -49,13 +49,13 @@ onMounted(() => {
 <style scoped>
 .block-nous-rejoindre {
   container-type: inline-size;
-  padding: 150px 24px;
+  padding: 80px 24px;
   display: flex;
   justify-content: center;
   align-items: center;
   position: relative;
   overflow: hidden;
-  min-height: 500px;
+  min-height: 380px;
 }
 
 .circle {

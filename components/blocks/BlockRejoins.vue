@@ -97,7 +97,7 @@ function getHoraireStyle(index) {
 <style scoped>
 .block-rejoins {
   container-type: inline-size;
-  padding: 100px 24px;
+  padding: 70px 24px;
   color: white;
   overflow: hidden;
   position: relative;

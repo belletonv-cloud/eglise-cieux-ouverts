@@ -67,8 +67,8 @@ const contentStyle = computed(() => {
   position: relative;
   width: 100vw;
   margin-left: calc(-50vw + 50%);
-  height: 100vh;
-  min-height: 600px;
+  height: 85vh;
+  min-height: 500px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -116,6 +116,7 @@ const contentStyle = computed(() => {
 }
 
 @container (max-width: 600px) {
+  .block-main-hero { height: 75vh; min-height: 380px; }
   .hero-name { max-width: 85vw; }
   .hero-logo { max-width: 80px; }
   .hero-content { gap: 24px; }

@@ -54,7 +54,7 @@ onMounted(() => {
 <style scoped>
 .block-aspirations {
   container-type: inline-size;
-  padding: 100px 24px;
+  padding: 70px 24px;
   overflow: hidden;
 }
 

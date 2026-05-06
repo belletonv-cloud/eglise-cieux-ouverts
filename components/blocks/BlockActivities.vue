@@ -68,7 +68,7 @@ function nextSlide() {
 <style scoped>
 .block-activities {
   container-type: inline-size;
-  padding: 100px 24px;
+  padding: 70px 24px;
   background-color: white;
 }
 
