@@ -96,6 +96,7 @@ function getHoraireStyle(index) {
 
 <style scoped>
 .block-rejoins {
+  container-type: inline-size;
   padding: 100px 24px;
   color: white;
   overflow: hidden;
@@ -172,7 +173,7 @@ function getHoraireStyle(index) {
   margin-top: 5px;
 }
 
-@media (max-width: 900px) {
+@container (max-width: 900px) {
   .rejoins-inner {
     flex-direction: column;
     text-align: center;

@@ -63,6 +63,7 @@ const contentStyle = computed(() => {
 
 <style scoped>
 .block-main-hero {
+  container-type: inline-size;
   position: relative;
   width: 100vw;
   margin-left: calc(-50vw + 50%);
@@ -109,7 +110,7 @@ const contentStyle = computed(() => {
   object-fit: contain;
 }
 
-@media (max-width: 768px) {
+@container (max-width: 768px) {
   .hero-name { max-width: 80vw; }
   .hero-logo { max-width: 100px; }
 }

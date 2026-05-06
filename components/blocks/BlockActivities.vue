@@ -67,6 +67,7 @@ function nextSlide() {
 
 <style scoped>
 .block-activities {
+  container-type: inline-size;
   padding: 100px 24px;
   background-color: white;
 }
@@ -210,7 +211,7 @@ function nextSlide() {
   object-fit: cover;
 }
 
-@media (max-width: 768px) {
+@container (max-width: 768px) {
   .activity-main {
     aspect-ratio: 4 / 3;
   }

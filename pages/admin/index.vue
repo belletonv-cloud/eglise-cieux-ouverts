@@ -156,6 +156,9 @@ import BlockNousRejoindre from '~/components/blocks/BlockNousRejoindre.vue'
 
 definePageMeta({ layout: false })
 
+// Signale aux blocs qu'ils sont dans l'éditeur → désactive les animations scroll
+provide('isEditor', true)
+
 const BLOCK_COMPONENTS = {
   hero: BlockHero,
   bienvenue: BlockBienvenue,

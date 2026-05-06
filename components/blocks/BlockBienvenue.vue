@@ -18,12 +18,14 @@
 </template>
 
 <script setup>
-import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { computed, ref, inject, onMounted, onUnmounted } from 'vue'
 
 const p = defineProps({
   props: { type: Object, required: true },
   visibility: { type: Object, default: () => ({}) },
 })
+
+const isEditor = inject('isEditor', false)
 
 const visibilityClasses = computed(() => ({
   'hide-mobile': p.visibility.mobile === false,
@@ -32,14 +34,12 @@ const visibilityClasses = computed(() => ({
 }))
 
 const sectionRef = ref(null)
-const scrollProgress = ref(0) // 0 (start) to 1 (fully formed)
+const scrollProgress = ref(isEditor ? 1 : 0)
 
 const onScroll = () => {
-  if (!sectionRef.value) return
+  if (isEditor || !sectionRef.value) return
   const rect = sectionRef.value.getBoundingClientRect()
   const vh = window.innerHeight
-  // Start animation when top of element is near bottom of viewport
-  // End animation when it reaches middle of viewport
   const start = vh
   const end = vh * 0.3
   
@@ -48,16 +48,16 @@ const onScroll = () => {
   } else if (rect.top < end) {
     scrollProgress.value = 1
   } else {
-    // 0 -> 1 progress
     scrollProgress.value = 1 - ((rect.top - end) / (start - end))
   }
 }
 
 onMounted(() => {
+  if (isEditor) return
   window.addEventListener('scroll', onScroll, { passive: true })
   onScroll()
 })
-onUnmounted(() => window.removeEventListener('scroll', onScroll))
+onUnmounted(() => { if (!isEditor) window.removeEventListener('scroll', onScroll) })
 
 // Color is always #054886
 const color = '#054886'
@@ -110,6 +110,7 @@ const subtitleStyle = computed(() => {
 
 <style scoped>
 .block-bienvenue {
+  container-type: inline-size;
   position: relative;
   overflow: hidden;
   width: 100vw;
@@ -173,7 +174,7 @@ const subtitleStyle = computed(() => {
   will-change: transform, opacity;
 }
 
-@media (max-width: 768px) {
+@container (max-width: 768px) {
   .hero-bienvenue-wrapper {
     font-size: clamp(30px, 8vw, 50px);
     flex-wrap: wrap;

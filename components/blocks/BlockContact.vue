@@ -54,12 +54,14 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, inject, onMounted, onUnmounted } from 'vue'
 
 const p = defineProps({
   props: { type: Object, required: true },
   visibility: { type: Object, default: () => ({}) },
 })
+
+const isEditor = inject('isEditor', false)
 
 const visibilityClasses = computed(() => ({
   'hide-mobile': p.visibility.mobile === false,
@@ -69,10 +71,10 @@ const visibilityClasses = computed(() => ({
 
 const sectionRef = ref(null)
 const questionsRef = ref(null)
-const scrollProgress = ref(0)
+const scrollProgress = ref(isEditor ? 1 : 0)
 
 const onScroll = () => {
-  if (!sectionRef.value) return
+  if (isEditor || !sectionRef.value) return
   const rect = sectionRef.value.getBoundingClientRect()
   const vh = window.innerHeight
   const start = vh
@@ -88,10 +90,11 @@ const onScroll = () => {
 }
 
 onMounted(() => {
+  if (isEditor) return
   window.addEventListener('scroll', onScroll, { passive: true })
   onScroll()
 })
-onUnmounted(() => window.removeEventListener('scroll', onScroll))
+onUnmounted(() => { if (!isEditor) window.removeEventListener('scroll', onScroll) })
 
 const titleStyle = computed(() => {
   const p = scrollProgress.value
@@ -156,6 +159,7 @@ async function submitForm() {
 
 <style scoped>
 .block-contact {
+  container-type: inline-size;
   padding: 100px 24px;
 }
 .contact-inner { max-width: 1000px; margin: 0 auto; }
@@ -233,7 +237,7 @@ async function submitForm() {
 }
 .btn-submit:hover { transform: translateY(-2px); background: #f0f0f0; }
 .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
-@media (max-width: 768px) {
+@container (max-width: 768px) {
   .contact-wrap { grid-template-columns: 1fr; gap: 40px; }
   .contact-phone { max-width: 200px; margin: 0 auto; }
   .form-row { grid-template-columns: 1fr; }

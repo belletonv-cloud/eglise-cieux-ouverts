@@ -57,7 +57,7 @@ function nextImage() {
 </script>
 
 <style scoped>
-.block-gallery { padding: 60px 24px; }
+.block-gallery { container-type: inline-size; padding: 60px 24px; }
 .gallery-inner { max-width: 1100px; margin: 0 auto; }
 .gallery-title {
   font-family: Georgia, serif;
@@ -106,7 +106,7 @@ function nextImage() {
 .lightbox-next { right: 16px; }
 .lightbox-prev:hover, .lightbox-next:hover { background: rgba(255,255,255,0.25); }
 
-@media (max-width: 768px) {
+@container (max-width: 768px) {
   .gallery-grid { grid-template-columns: repeat(2, 1fr) !important; }
 }
 </style>

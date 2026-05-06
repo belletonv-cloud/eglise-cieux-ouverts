@@ -31,7 +31,7 @@ const visibilityClasses = computed(() => ({
 </script>
 
 <style scoped>
-.block-textimage { padding: 80px 24px; }
+.block-textimage { container-type: inline-size; padding: 80px 24px; }
 .ti-inner {
   max-width: 1100px;
   margin: 0 auto;
@@ -63,7 +63,7 @@ const visibilityClasses = computed(() => ({
 .ti-cta:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.15); }
 .ti-img { width: 100%; border-radius: 16px; box-shadow: 0 8px 40px rgba(0,0,0,0.15); }
 .ti-img-placeholder { width: 100%; aspect-ratio: 4/3; border-radius: 16px; background: rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; font-size: 3em; }
-@media (max-width: 768px) {
+@container (max-width: 768px) {
   .ti-inner { grid-template-columns: 1fr; gap: 32px; }
   .reverse .ti-inner { direction: ltr; }
 }

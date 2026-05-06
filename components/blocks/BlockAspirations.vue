@@ -23,12 +23,14 @@
 </template>
 
 <script setup>
-import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { computed, ref, inject, onMounted, onUnmounted } from 'vue'
 
 const p = defineProps({
   props: { type: Object, required: true },
   visibility: { type: Object, default: () => ({}) },
 })
+
+const isEditor = inject('isEditor', false)
 
 const visibilityClasses = computed(() => ({
   'hide-mobile': p.visibility.mobile === false,
@@ -37,15 +39,14 @@ const visibilityClasses = computed(() => ({
 }))
 
 const sectionRef = ref(null)
-const scrollProgress = ref(0)
+const scrollProgress = ref(isEditor ? 1 : 0)
 
 const onScroll = () => {
-  if (!sectionRef.value) return
+  if (isEditor || !sectionRef.value) return
   const rect = sectionRef.value.getBoundingClientRect()
   const vh = window.innerHeight
   const start = vh
   const end = vh * 0.2
-  
   if (rect.top > start) {
     scrollProgress.value = 0
   } else if (rect.top < end) {
@@ -56,10 +57,11 @@ const onScroll = () => {
 }
 
 onMounted(() => {
+  if (isEditor) return
   window.addEventListener('scroll', onScroll, { passive: true })
   onScroll()
 })
-onUnmounted(() => window.removeEventListener('scroll', onScroll))
+onUnmounted(() => { if (!isEditor) window.removeEventListener('scroll', onScroll) })
 
 const titleStyle = computed(() => {
   const p = scrollProgress.value
@@ -100,6 +102,7 @@ function getBulletStyle(index) {
 
 <style scoped>
 .block-aspirations {
+  container-type: inline-size;
   padding: 100px 24px;
   overflow: hidden;
 }
@@ -156,7 +159,7 @@ function getBulletStyle(index) {
   will-change: transform, opacity;
 }
 
-@media (max-width: 768px) {
+@container (max-width: 768px) {
   .aspirations-inner {
     align-items: center;
     text-align: center;
