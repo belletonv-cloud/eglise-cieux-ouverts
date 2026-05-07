@@ -71,6 +71,7 @@ function assertString(value: unknown, max: number) {
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig(event)
+  const body = await readBody(event)
   
   // Cloudflare Pages: read from process.env directly
   const firebaseProjectId = process.env.NUXT_FIREBASE_PROJECT_ID || config.firebaseProjectId || ''
