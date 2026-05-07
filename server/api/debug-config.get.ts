@@ -1,15 +1,10 @@
 export default defineEventHandler(async (event) => {
-  const config = useRuntimeConfig(event)
   return {
-    hasProjectId: !!config.firebaseProjectId,
-    hasClientEmail: !!config.firebaseClientEmail,
-    hasPrivateKey: !!config.firebasePrivateKey,
-    projectIdLength: config.firebaseProjectId?.length || 0,
-    clientEmailLength: config.firebaseClientEmail?.length || 0,
-    privateKeyLength: config.firebasePrivateKey?.length || 0,
-    privateKeyStart: config.firebasePrivateKey?.substring?.(0, 30) || 'N/A',
-    privateKeyHasNewlines: config.firebasePrivateKey?.includes?.('\n') || false,
-    nodeEnv: process.env.NODE_ENV,
+    projectId: process.env.NUXT_FIREBASE_PROJECT_ID || 'MISSING',
+    clientEmail: process.env.NUXT_FIREBASE_CLIENT_EMAIL || 'MISSING',
+    privateKeyLength: process.env.NUXT_FIREBASE_PRIVATE_KEY?.length || 0,
+    privateKeyStart: process.env.NUXT_FIREBASE_PRIVATE_KEY?.substring?.(0, 40) || 'MISSING',
+    privateKeyHasNewlines: process.env.NUXT_FIREBASE_PRIVATE_KEY?.includes?.('\n') || false,
     allEnvKeys: Object.keys(process.env).filter(k => k.includes('FIREBASE') || k.includes('NUXT')),
   }
 })

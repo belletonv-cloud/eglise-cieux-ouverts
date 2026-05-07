@@ -72,10 +72,10 @@ function assertString(value: unknown, max: number) {
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig(event)
   
-  // Cloudflare Pages: read from process.env directly (NUXT_ prefix handled by Nitro)
-  const firebaseProjectId = config.firebaseProjectId || process.env.NUXT_FIREBASE_PROJECT_ID || ''
-  const firebaseClientEmail = config.firebaseClientEmail || process.env.NUXT_FIREBASE_CLIENT_EMAIL || ''
-  const firebasePrivateKey = config.firebasePrivateKey || process.env.NUXT_FIREBASE_PRIVATE_KEY || ''
+  // Cloudflare Pages: read from process.env directly
+  const firebaseProjectId = process.env.NUXT_FIREBASE_PROJECT_ID || config.firebaseProjectId || ''
+  const firebaseClientEmail = process.env.NUXT_FIREBASE_CLIENT_EMAIL || config.firebaseClientEmail || ''
+  const firebasePrivateKey = process.env.NUXT_FIREBASE_PRIVATE_KEY || config.firebasePrivateKey || ''
   
   const prenom = assertString(body?.prenom, 80)
   const nom = assertString(body?.nom, 80)
