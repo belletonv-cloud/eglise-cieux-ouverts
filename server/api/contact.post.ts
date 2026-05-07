@@ -137,22 +137,36 @@ export default defineEventHandler(async (event) => {
       throw new Error(`Firestore error: ${errorText}`)
     }
   
-    // Envoyer notification Telegram (non-bloquant)
-    const telegramToken = process.env.NUXT_TELEGRAM_BOT_TOKEN || ''
-    const telegramChatId = process.env.NUXT_TELEGRAM_CHAT_ID || ''
+    // Envoyer notification email via Resend (non-bloquant)
+    const resendApiKey = process.env.NUXT_RESEND_API_KEY || ''
     
-    if (telegramToken && telegramChatId) {
-      const telegramMessage = `📬 *Nouveau contact !*\n\n*Nom :* ${prenom} ${nom}\n*Email :* ${email}\n${ville ? `*Ville :* ${ville}\n` : ''}*Message :*\n${message.substring(0, 500)}${message.length > 500 ? '...' : ''}\n\n[Voir dans Firestore](https://console.firebase.google.com/project/eglise-cieux-ouverts/firestore/data/~2Fcontacts)`
+    if (resendApiKey) {
+      const emailHtml = `
+        <h2>Nouveau contact reçu</h2>
+        <p><strong>Nom :</strong> ${prenom} ${nom}</p>
+        <p><strong>Email :</strong> <a href="mailto:${email}">${email}</a></p>
+        ${ville ? `<p><strong>Ville :</strong> ${ville}</p>` : ''}
+        <p><strong>Message :</strong></p>
+        <div style="background:#f5f5f5;padding:15px;border-radius:8px;margin:10px 0">
+          ${message.replace(/\n/g, '<br>')}
+        </div>
+        <p><small>Reçu le ${new Date().toLocaleString('fr-FR')}</small></p>
+        <p><a href="https://console.firebase.google.com/project/eglise-cieux-ouverts/firestore/data/~2Fcontacts">Voir dans Firestore</a></p>
+      `
       
-      fetch(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
+      fetch('https://api.resend.com/emails', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${resendApiKey}`,
+        },
         body: JSON.stringify({
-          chat_id: telegramChatId,
-          text: telegramMessage,
-          parse_mode: 'Markdown',
+          from: 'Contact <onboarding@resend.dev>',
+          to: ['contact@cieuxouverts.bzh'],
+          subject: `Nouveau contact : ${prenom} ${nom}`,
+          html: emailHtml,
         }),
-      }).catch(err => console.error('Telegram notification error:', err))
+      }).catch(err => console.error('Resend notification error:', err))
     }
   
     return { ok: true }
