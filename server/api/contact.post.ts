@@ -137,7 +137,7 @@ export default defineEventHandler(async (event) => {
       throw new Error(`Firestore error: ${errorText}`)
     }
   
-    // Envoyer notification email via Resend (non-bloquant)
+    // Envoyer notification email via Resend
     const resendApiKey = process.env.NUXT_RESEND_API_KEY || ''
     
     if (resendApiKey) {
@@ -154,7 +154,7 @@ export default defineEventHandler(async (event) => {
         <p><a href="https://console.firebase.google.com/project/eglise-cieux-ouverts/firestore/data/~2Fcontacts">Voir dans Firestore</a></p>
       `
       
-      fetch('https://api.resend.com/emails', {
+      const resendResponse = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -162,11 +162,18 @@ export default defineEventHandler(async (event) => {
         },
         body: JSON.stringify({
           from: 'Contact <onboarding@resend.dev>',
-          to: ['v.belleton@outlook.fr'],
+          to: ['belletonv@gmail.com'],
           subject: `Nouveau contact : ${prenom} ${nom}`,
           html: emailHtml,
         }),
-      }).catch(err => console.error('Resend notification error:', err))
+      })
+      
+      if (!resendResponse.ok) {
+        const errorText = await resendResponse.text()
+        console.error('Resend error:', errorText)
+      } else {
+        console.log('Resend success')
+      }
     }
   
     return { ok: true }
