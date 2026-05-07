@@ -102,37 +102,43 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 503, statusMessage: 'Configuration serveur contact incomplète.' })
   }
   
-  const accessToken = await getAccessToken(firebaseClientEmail, firebasePrivateKey)
-  const firestoreUrl = `https://firestore.googleapis.com/v1/projects/${config.firebaseProjectId}/databases/(default)/documents/contacts`
-
-  const response = await fetch(firestoreUrl, {
-    method: 'POST',
-    headers: {
-      authorization: `Bearer ${accessToken}`,
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify({
-      fields: {
-        prenom: { stringValue: prenom },
-        nom: { stringValue: nom },
-        ville: { stringValue: ville },
-        email: { stringValue: email },
-        message: { stringValue: message },
-        newsletter: { booleanValue: newsletter },
-        source: { stringValue: source },
-        status: { stringValue: 'new' },
-        ip: { stringValue: getRequestIP(event) || '' },
-        userAgent: { stringValue: getRequestHeader(event, 'user-agent') || '' },
-        language: { stringValue: getRequestHeader(event, 'accept-language') || '' },
-        createdAt: { timestampValue: new Date().toISOString() },
+  try {
+    const accessToken = await getAccessToken(firebaseClientEmail, firebasePrivateKey)
+    
+    const firestoreUrl = `https://firestore.googleapis.com/v1/projects/${firebaseProjectId}/databases/(default)/documents/contacts`
+    
+    const response = await fetch(firestoreUrl, {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${accessToken}`,
+        'content-type': 'application/json',
       },
-    }),
-  })
-
-  if (!response.ok) {
-    const errorText = await response.text()
-    throw createError({ statusCode: 502, statusMessage: `Firestore error: ${errorText}` })
+      body: JSON.stringify({
+        fields: {
+          prenom: { stringValue: prenom },
+          nom: { stringValue: nom },
+          ville: { stringValue: ville },
+          email: { stringValue: email },
+          message: { stringValue: message },
+          newsletter: { booleanValue: newsletter },
+          source: { stringValue: source },
+          status: { stringValue: 'new' },
+          ip: { stringValue: getRequestIP(event) || '' },
+          userAgent: { stringValue: getRequestHeader(event, 'user-agent') || '' },
+          language: { stringValue: getRequestHeader(event, 'accept-language') || '' },
+          createdAt: { timestampValue: new Date().toISOString() },
+        },
+      }),
+    })
+  
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(`Firestore error: ${errorText}`)
+    }
+  
+    return { ok: true }
+  } catch (err) {
+    console.error('Contact API error:', err)
+    throw createError({ statusCode: 500, statusMessage: err.message || 'Server Error' })
   }
-
-  return { ok: true }
 })
