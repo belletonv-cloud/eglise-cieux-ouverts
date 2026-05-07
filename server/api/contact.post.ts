@@ -137,6 +137,24 @@ export default defineEventHandler(async (event) => {
       throw new Error(`Firestore error: ${errorText}`)
     }
   
+    // Envoyer notification Telegram (non-bloquant)
+    const telegramToken = process.env.NUXT_TELEGRAM_BOT_TOKEN || ''
+    const telegramChatId = process.env.NUXT_TELEGRAM_CHAT_ID || ''
+    
+    if (telegramToken && telegramChatId) {
+      const telegramMessage = `📬 *Nouveau contact !*\n\n*Nom :* ${prenom} ${nom}\n*Email :* ${email}\n${ville ? `*Ville :* ${ville}\n` : ''}*Message :*\n${message.substring(0, 500)}${message.length > 500 ? '...' : ''}\n\n[Voir dans Firestore](https://console.firebase.google.com/project/eglise-cieux-ouverts/firestore/data/~2Fcontacts)`
+      
+      fetch(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: telegramChatId,
+          text: telegramMessage,
+          parse_mode: 'Markdown',
+        }),
+      }).catch(err => console.error('Telegram notification error:', err))
+    }
+  
     return { ok: true }
   } catch (err) {
     console.error('Contact API error:', err)

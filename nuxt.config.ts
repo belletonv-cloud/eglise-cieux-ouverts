@@ -7,6 +7,8 @@ export default defineNuxtConfig({
     firebaseProjectId: process.env.NUXT_FIREBASE_PROJECT_ID || '',
     firebaseClientEmail: process.env.NUXT_FIREBASE_CLIENT_EMAIL || '',
     firebasePrivateKey: process.env.NUXT_FIREBASE_PRIVATE_KEY || '',
+    telegramBotToken: process.env.NUXT_TELEGRAM_BOT_TOKEN || '',
+    telegramChatId: process.env.NUXT_TELEGRAM_CHAT_ID || '',
   },
   app: {
     head: {
