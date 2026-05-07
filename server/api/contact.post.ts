@@ -162,7 +162,7 @@ export default defineEventHandler(async (event) => {
         },
         body: JSON.stringify({
           from: 'Contact <onboarding@resend.dev>',
-          to: ['contact@cieuxouverts.bzh'],
+          to: ['v.belleton@outlook.fr'],
           subject: `Nouveau contact : ${prenom} ${nom}`,
           html: emailHtml,
         }),
