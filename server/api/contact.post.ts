@@ -1,68 +1,29 @@
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token'
+const RATE_LIMIT = {
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  maxRequests: 3, // max 3 requests per IP per window
+}
+const rateLimitStore = new Map()
 
-function base64UrlEncode(input: string | Uint8Array) {
-  const bytes = typeof input === 'string' ? new TextEncoder().encode(input) : input
-  let binary = ''
-  for (const byte of bytes) binary += String.fromCharCode(byte)
-  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '')
+function getRateLimitKey(event) {
+  return getRequestIP(event) || 'unknown'
 }
 
-async function createSignedJwt(clientEmail: string, privateKey: string) {
-  const now = Math.floor(Date.now() / 1000)
-  const header = { alg: 'RS256', typ: 'JWT' }
-  const payload = {
-    iss: clientEmail,
-    sub: clientEmail,
-    aud: GOOGLE_TOKEN_URL,
-    scope: 'https://www.googleapis.com/auth/datastore',
-    iat: now,
-    exp: now + 3600,
+function checkRateLimit(key) {
+  const now = Date.now()
+  const entry = rateLimitStore.get(key)
+  
+  if (!entry || now - entry.resetTime > RATE_LIMIT.windowMs) {
+    rateLimitStore.set(key, { count: 1, resetTime: now })
+    return { allowed: true, remaining: RATE_LIMIT.maxRequests - 1 }
   }
-
-  const encodedHeader = base64UrlEncode(JSON.stringify(header))
-  const encodedPayload = base64UrlEncode(JSON.stringify(payload))
-  const unsignedToken = `${encodedHeader}.${encodedPayload}`
-
-  const keyData = privateKey.replace(/\\n/g, '\n')
-  const binaryKey = Uint8Array.from(atob(keyData
-    .replace('-----BEGIN PRIVATE KEY-----', '')
-    .replace('-----END PRIVATE KEY-----', '')
-    .replace(/\s+/g, '')), char => char.charCodeAt(0))
-
-  const cryptoKey = await crypto.subtle.importKey(
-    'pkcs8',
-    binaryKey.buffer,
-    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
-    false,
-    ['sign']
-  )
-
-  const signature = await crypto.subtle.sign(
-    'RSASSA-PKCS1-v1_5',
-    cryptoKey,
-    new TextEncoder().encode(unsignedToken)
-  )
-
-  return `${unsignedToken}.${base64UrlEncode(new Uint8Array(signature))}`
-}
-
-async function getAccessToken(clientEmail: string, privateKey: string) {
-  const assertion = await createSignedJwt(clientEmail, privateKey)
-  const response = await fetch(GOOGLE_TOKEN_URL, {
-    method: 'POST',
-    headers: { 'content-type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-      assertion,
-    }),
-  })
-
-  if (!response.ok) {
-    throw new Error(`OAuth token error: ${response.status}`)
+  
+  if (entry.count >= RATE_LIMIT.maxRequests) {
+    return { allowed: false, remaining: 0, resetIn: Math.ceil((entry.resetTime + RATE_LIMIT.windowMs - now) / 1000) }
   }
-
-  const data = await response.json()
-  return data.access_token
+  
+  entry.count++
+  return { allowed: true, remaining: RATE_LIMIT.maxRequests - entry.count }
 }
 
 function assertString(value: unknown, max: number) {
@@ -72,6 +33,16 @@ function assertString(value: unknown, max: number) {
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig(event)
   const body = await readBody(event)
+  
+  // Rate limiting check
+  const rateLimitKey = getRateLimitKey(event)
+  const rateCheck = checkRateLimit(rateLimitKey)
+  if (!rateCheck.allowed) {
+    throw createError({
+      statusCode: 429,
+      statusMessage: `Trop de requêtes. Réessayez dans ${rateCheck.resetIn} secondes.`
+    })
+  }
   
   // Cloudflare Pages: read from process.env directly
   const firebaseProjectId = process.env.NUXT_FIREBASE_PROJECT_ID || config.firebaseProjectId || ''
