@@ -67,20 +67,21 @@ const titleStyle = computed(() => {
   }
 })
 
-const t = 'transform 0.15s ease-out, opacity 0.15s ease-out'
+const t = 'transform 0.08s linear, opacity 0.08s linear'
 
 function getItemStyle(index) {
   const sp = scrollProgress.value
-  const stagger = index * 0.18
+  const stagger = index * 0.22
   const effectiveP = Math.max(0, Math.min(1, (sp - stagger) / (1 - stagger)))
 
-  const splitGap = 100 * (1 - effectiveP)
-  const ty = 40 * (1 - effectiveP)
+  const splitGap = 180 * (1 - effectiveP)
+  const ty = 60 * (1 - effectiveP)
   const items = blockProps.props?.items || []
 
   return {
     transform: `translateY(${ty}px)`,
-    opacity: Math.min(1, effectiveP * 1.5),
+    opacity: Math.min(1, effectiveP * 6),
+    paddingLeft: `${50 + index * 50}px`,
     marginBottom: index < items.length - 1 ? `${splitGap}px` : '0',
     transition: t
   }
@@ -88,14 +89,18 @@ function getItemStyle(index) {
 
 function getBulletStyle(index) {
   const sp = scrollProgress.value
-  const stagger = index * 0.18 + 0.06
+  const stagger = index * 0.22 + 0.06
   const effectiveP = Math.max(0, Math.min(1, (sp - stagger) / (1 - stagger)))
 
-  const ty = 60 * (1 - effectiveP)
+  const ty = 80 * (1 - effectiveP)
+  const circleOpacity = 0.9 - index * 0.2
 
   return {
+    left: `${index * 50}px`,
     transform: `translateY(${ty}px)`,
-    opacity: Math.min(1, effectiveP * 1.5),
+    opacity: Math.min(circleOpacity, effectiveP * 6),
+    backgroundColor: '#1A96DF',
+    border: 'none',
     transition: t
   }
 }
