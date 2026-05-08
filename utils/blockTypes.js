@@ -247,18 +247,20 @@ export const BLOCK_TYPES = {
     defaults: {
       content: 'Écrivez votre texte ici...',
       backgroundColor: '#ffffff',
+      backgroundGradient: '',
       textColor: '#1a1a2e',
       textAlign: 'left',
       padding: 60,
       animation: 'fadeIn',
     },
     schema: [
-      { key: 'content',         label: 'Contenu HTML',    type: 'richtext' },
-      { key: 'backgroundColor', label: 'Fond',            type: 'color' },
-      { key: 'textColor',       label: 'Couleur texte',   type: 'color' },
-      { key: 'textAlign',       label: 'Alignement',      type: 'select', options: ['left','center','right'] },
-      { key: 'padding',         label: 'Espacement (px)', type: 'number', min: 0, max: 200 },
-      { key: 'animation',       label: 'Animation',       type: 'animation' },
+      { key: 'content',           label: 'Contenu HTML',    type: 'richtext' },
+      { key: 'backgroundColor',   label: 'Fond (couleur)',  type: 'color' },
+      { key: 'backgroundGradient', label: 'Fond (dégradé)', type: 'text' },
+      { key: 'textColor',         label: 'Couleur texte',   type: 'color' },
+      { key: 'textAlign',         label: 'Alignement',      type: 'select', options: ['left','center','right'] },
+      { key: 'padding',           label: 'Espacement (px)', type: 'number', min: 0, max: 200 },
+      { key: 'animation',         label: 'Animation',       type: 'animation' },
     ]
   },
 
@@ -386,7 +388,7 @@ export function getDefaultMessagesPage() {
     }),
     createBlock('richText', {
       content: `<div style="max-width:900px;margin:0 auto;text-align:center;"><h2 style="font-family:'Playfair Display',Georgia,serif;font-style:italic;color:#064886;">Dernier message</h2><div style="position:relative;width:100%;padding-bottom:56.25%;"><iframe src="https://www.youtube.com/embed/wZebQj0gR98" title="Dernier message" style="position:absolute;inset:0;width:100%;height:100%;border:none;" allowfullscreen></iframe></div></div>`,
-      backgroundColor: '#ffffff',
+      backgroundGradient: DEFAULT_MESSAGES_GRADIENT,
       textColor: '#064886',
       textAlign: 'left',
       padding: 20,
@@ -465,6 +467,7 @@ function normalizeMessagesBlocks(blocks) {
         props: {
           ...BLOCK_TYPES.richText.defaults,
           ...block.props,
+          backgroundGradient: block.props?.backgroundGradient || DEFAULT_MESSAGES_GRADIENT,
           backgroundColor: block.props?.backgroundColor || '#ffffff',
           padding: block.props?.padding !== undefined ? block.props.padding : 20,
         },

@@ -2,7 +2,7 @@
   <section
     class="block-richtext"
     :style="{
-      background: props.backgroundColor,
+      background: props.backgroundGradient || props.backgroundColor,
       color: props.textColor,
       paddingTop: props.padding + 'px',
       paddingBottom: props.padding + 'px',
