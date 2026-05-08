@@ -2,15 +2,15 @@
   <section
     class="block-nous-rejoindre"
     :style="{ background: props.backgroundGradient }"
-    :class="[visibilityClasses, { 'is-visible': isVisible }]"
+    :class="[visibilityClasses]"
     ref="sectionRef"
   >
     <!-- Background Circles Parallax -->
-    <div class="circle circle-left"></div>
-    <div class="circle circle-right"></div>
-    <div class="circle circle-small"></div>
+    <div class="circle circle-left" :style="circleLeftStyle"></div>
+    <div class="circle circle-right" :style="circleRightStyle"></div>
+    <div class="circle circle-small" :style="circleSmallStyle"></div>
 
-    <div class="content">
+    <div class="content" :style="contentStyle">
       <NuxtLink :to="props.link || '/contact'" class="cta-cercle">
         <span class="cta-text">{{ props.title }}</span>
       </NuxtLink>
@@ -35,25 +35,64 @@ const visibilityClasses = computed(() => ({
 }))
 
 const sectionRef = ref(null)
-const isVisible = ref(isEditor)
+const scrollProgress = ref(0)
+
+const onScroll = () => {
+  if (!sectionRef.value) return
+  const rect = sectionRef.value.getBoundingClientRect()
+  const vh = window.innerHeight
+  const start = vh
+  const end = vh * 0.15
+
+  if (rect.top > start) { scrollProgress.value = 0; return }
+  if (rect.top < end) { scrollProgress.value = 1; return }
+  scrollProgress.value = 1 - (rect.top - end) / (start - end)
+}
 
 onMounted(() => {
   if (isEditor) {
-    isVisible.value = true
+    scrollProgress.value = 1
     return
   }
 
-  const observer = new IntersectionObserver(
-    ([entry]) => {
-      // toggle visibility so circles overlap on enter and separate on leave
-      isVisible.value = entry.isIntersecting
-    },
-    { threshold: 0.15 }
-  )
+  window.addEventListener('scroll', onScroll, { passive: true })
+  onScroll()
+})
 
-  if (sectionRef.value) observer.observe(sectionRef.value)
+onUnmounted(() => {
+  window.removeEventListener('scroll', onScroll)
+})
 
-  onUnmounted(() => observer.disconnect())
+const circleLeftStyle = computed(() => {
+  const p = scrollProgress.value
+  return {
+    transform: `translateX(${-220 + 200 * p}px) scale(${0.8 + 0.2 * p})`,
+    opacity: p,
+  }
+})
+
+const circleRightStyle = computed(() => {
+  const p = scrollProgress.value
+  return {
+    transform: `translateX(${220 - 200 * p}px) scale(${0.8 + 0.2 * p})`,
+    opacity: p * 0.6,
+  }
+})
+
+const circleSmallStyle = computed(() => {
+  const p = scrollProgress.value
+  return {
+    transform: `translateY(${80 - 80 * p}px) scale(${0.6 + 0.4 * p})`,
+    opacity: p,
+  }
+})
+
+const contentStyle = computed(() => {
+  const p = scrollProgress.value
+  return {
+    transform: `scale(${0.9 + 0.1 * p})`,
+    opacity: p,
+  }
 })
 </script>
 
@@ -75,58 +114,30 @@ onMounted(() => {
   pointer-events: none;
   z-index: 0;
   will-change: transform, opacity;
-  opacity: 0;
 }
 
 .circle-left {
   width: 400px; height: 400px;
   background: rgba(255,255,255,0.15);
   left: 10%; top: 50%; margin-top: -200px;
-  /* start off-left */
-  transform: translateX(-220px) scale(0.8);
-  transition: transform 0.6s cubic-bezier(0.2,0.9,0.2,1);
 }
 
 .circle-right {
   width: 600px; height: 600px;
   background: rgba(255,255,255,0.08);
   right: -5%; top: 50%; margin-top: -300px;
-  /* start off-right */
-  transform: translateX(220px) scale(0.9);
-  transition: transform 0.6s cubic-bezier(0.2,0.9,0.2,1);
 }
 
 .circle-small {
   width: 80px; height: 80px;
   background: rgba(255,255,255,0.9);
   bottom: 20%; left: 30%;
-  transform: translateY(80px) scale(0.6);
-  transition: transform 0.45s cubic-bezier(0.2,0.9,0.2,1);
 }
 
 .content {
   position: relative;
   z-index: 1;
   will-change: transform, opacity;
-  opacity: 0;
-  transform: scale(0.9);
-  transition: opacity 0.8s cubic-bezier(0.4,0,0.2,1), transform 0.8s cubic-bezier(0.34,1.2,0.64,1);
-}
-
-/* Triggered */
-.is-visible .content {
-  opacity: 1;
-  transform: none;
-}
-.is-visible .circle-left {
-  transform: translateX(-20px) scale(1);
-}
-.is-visible .circle-right {
-  transform: translateX(20px) scale(1);
-  opacity: 0.6;
-}
-.is-visible .circle-small {
-  transform: translateY(0) scale(1);
 }
 
 .cta-cercle { /* kept unchanged */

@@ -12,9 +12,9 @@
           v-for="(item, i) in props.items"
           :key="i"
           class="aspiration-item"
-          :style="{ transitionDelay: (0.12 + i * 0.12) + 's' }"
+          :style="itemStyle(i)"
         >
-          <span class="aspiration-bullet" :style="{ transitionDelay: (0.18 + i * 0.12) + 's' }"></span>
+          <span class="aspiration-bullet" :style="bulletStyle(i)"></span>
           {{ item }}
         </li>
       </ul>
@@ -40,25 +40,64 @@ const visibilityClasses = computed(() => ({
 
 const sectionRef = ref(null)
 const isVisible = ref(false)
+const scrollProgress = ref(0)
+
+const onScroll = () => {
+  if (!sectionRef.value) return
+  const rect = sectionRef.value.getBoundingClientRect()
+  const vh = window.innerHeight
+  const start = vh
+  const end = vh * 0.12
+
+  if (rect.top > start) { scrollProgress.value = 0; return }
+  if (rect.top < end) { scrollProgress.value = 1; return }
+  scrollProgress.value = 1 - (rect.top - end) / (start - end)
+}
 
 onMounted(() => {
   if (isEditor) {
-    // in editor show immediately
     isVisible.value = true
     return
   }
 
+  window.addEventListener('scroll', onScroll, { passive: true })
+  onScroll()
+
   const observer = new IntersectionObserver(
     ([entry]) => {
-      // toggle visibility so animations reverse on scroll up/down
       isVisible.value = entry.isIntersecting
     },
     { threshold: 0.12 }
   )
   if (sectionRef.value) observer.observe(sectionRef.value)
 
-  onUnmounted(() => observer.disconnect())
+  onUnmounted(() => {
+    observer.disconnect()
+    window.removeEventListener('scroll', onScroll)
+  })
 })
+
+function itemStyle(i) {
+  const p = scrollProgress.value
+  const staggerStart = i * 0.06
+  const adjustedP = Math.max(0, Math.min(1, (p - staggerStart) / (1 - staggerStart)))
+
+  return {
+    transform: `translate(${-140 * (1 - adjustedP)}px, ${60 * (1 - adjustedP)}px)`,
+    opacity: adjustedP,
+  }
+}
+
+function bulletStyle(i) {
+  const p = scrollProgress.value
+  const staggerStart = i * 0.06 + 0.06
+  const adjustedP = Math.max(0, Math.min(1, (p - staggerStart) / (1 - staggerStart)))
+
+  return {
+    transform: `scale(${adjustedP})`,
+    opacity: adjustedP,
+  }
+}
 </script>
 
 <style scoped>
@@ -110,10 +149,6 @@ onMounted(() => {
   position: relative;
   padding-left: 50px;
   will-change: transform, opacity;
-  opacity: 0;
-  /* start left and below, will animate to position */
-  transform: translate(-140px, 60px);
-  transition: opacity 0.6s cubic-bezier(0.4,0,0.2,1), transform 0.6s cubic-bezier(0.4,0,0.2,1);
 }
 
 .aspiration-bullet {
@@ -125,15 +160,10 @@ onMounted(() => {
   border: 2px solid white;
   background: transparent;
   will-change: transform, opacity;
-  opacity: 0;
-  transform: scale(0);
-  transition: opacity 0.4s cubic-bezier(0.4,0,0.2,1), transform 0.4s cubic-bezier(0.34,1.4,0.64,1);
 }
 
 /* Triggered state */
 .is-visible .aspirations-title { opacity: 1; transform: none; }
-.is-visible .aspiration-item { opacity: 1; transform: none; }
-.is-visible .aspiration-bullet { opacity: 1; transform: scale(1); }
 
 @container (max-width: 768px) {
   .aspirations-inner { align-items: center; text-align: center; }
@@ -142,7 +172,6 @@ onMounted(() => {
     font-size: clamp(20px, 5vw, 36px);
     padding-left: 0;
     justify-content: center;
-    transform: none; /* disable initial offset on small screens */
   }
   .aspiration-bullet { display: none; }
 }

@@ -477,7 +477,7 @@ async function submitForm() {
 .contact-form input::placeholder,
 .contact-form textarea::placeholder { color: #888; }
 .checkbox-label { display: flex; align-items: center; gap: 10px; font-size: 0.9em; cursor: pointer; opacity: 0.9; margin-top: 10px; margin-bottom: 10px; }
-.checkbox-label input[type="checkbox"] { width: 18px; height: 18px; accent-color: #3B82F6; }
+.checkbox-label input[type="checkbox"] { width: 18px; height: 18px; accent-color: #EF4B54; }
 .contact-honeypot {
   position: absolute;
   left: -9999px;

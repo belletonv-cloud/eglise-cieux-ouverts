@@ -56,10 +56,11 @@ onMounted(() => {
     return
   }
   const observer = new IntersectionObserver(
-    ([entry]) => { if (entry.isIntersecting) { isVisible.value = true; observer.disconnect() } },
+    ([entry]) => { isVisible.value = entry.isIntersecting },
     { threshold: 0.15 }
   )
   if (sectionRef.value) observer.observe(sectionRef.value)
+  onUnmounted(() => observer.disconnect())
 })
 </script>
 

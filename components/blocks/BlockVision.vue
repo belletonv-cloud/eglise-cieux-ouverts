@@ -3,15 +3,18 @@
     class="vision-section"
     :style="{ background: props.backgroundGradient, color: props.textColor }"
     :class="[visibilityClasses, { 'is-triggered': isTriggered || isEditor }]"
+    ref="sectionRef"
   >
-    <p class="vision-label" v-if="props.label">{{ props.label }}</p>
-    <p class="vision-quote" v-if="props.quote" v-html="formattedQuote"></p>
-    <NuxtLink v-if="props.ctaText && props.ctaLink" :to="props.ctaLink" class="btn btn-white">{{ props.ctaText }}</NuxtLink>
+    <div class="vision-content" :style="contentStyle">
+      <p class="vision-label" v-if="props.label">{{ props.label }}</p>
+      <p class="vision-quote" v-if="props.quote" v-html="formattedQuote"></p>
+      <NuxtLink v-if="props.ctaText && props.ctaLink" :to="props.ctaLink" class="btn btn-white">{{ props.ctaText }}</NuxtLink>
+    </div>
   </section>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 
 const p = defineProps({
   props: { type: Object, required: true },
@@ -36,6 +39,34 @@ const formattedQuote = computed(() => {
   text = text.replace(/volonté/g, '<strong>volonté</strong>')
   return text
 })
+
+const sectionRef = ref(null)
+const scrollProgress = ref(0)
+
+const onScroll = () => {
+  if (!sectionRef.value) return
+  const rect = sectionRef.value.getBoundingClientRect()
+  const vh = window.innerHeight
+  const start = vh
+  const end = vh * 0.15
+
+  if (rect.top > start) { scrollProgress.value = 0; return }
+  if (rect.top < end) { scrollProgress.value = 1; return }
+  scrollProgress.value = 1 - (rect.top - end) / (start - end)
+}
+
+onMounted(() => {
+  window.addEventListener('scroll', onScroll, { passive: true })
+  onScroll()
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', onScroll)
+})
+
+const contentStyle = computed(() => ({
+  transform: `scale(${0.85 + scrollProgress.value * 0.15})`
+}))
 </script>
 
 <style scoped>
@@ -43,6 +74,11 @@ const formattedQuote = computed(() => {
   container-type: inline-size;
   padding: 70px 24px;
   text-align: center;
+}
+
+.vision-content {
+  transform-origin: center center;
+  transition: transform 0.1s ease-out;
 }
 
 .vision-label {

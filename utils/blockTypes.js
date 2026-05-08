@@ -387,7 +387,7 @@ export function getDefaultMessagesPage() {
     }),
     createBlock('richText', {
       content: `<div style="max-width:900px;margin:0 auto;text-align:center;"><h2 style="font-family:'Playfair Display',Georgia,serif;font-style:italic;color:#064886;">Dernier message</h2><div style="position:relative;width:100%;padding-bottom:56.25%;border-radius:16px;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,0.25);"><iframe src="https://www.youtube.com/embed/wZebQj0gR98" title="Dernier message" style="position:absolute;inset:0;width:100%;height:100%;border:none;" allowfullscreen></iframe></div></div>`,
-      backgroundColor: DEFAULT_MESSAGES_GRADIENT,
+      backgroundColor: '#ffffff',
       textColor: '#1a1a2e',
       textAlign: 'left',
       padding: 80,

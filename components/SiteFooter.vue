@@ -106,7 +106,7 @@ function getCharStyle(i) {
 
 .footer-title {
   font-family: 'Playfair Display', serif;
-  font-size: clamp(24px, 4vw, 45px); /* Tient sur une ligne */
+  font-size: clamp(18px, 3vw, 32px);
   font-weight: 700;
   color: #ffffff; /* Texte blanc sur le fond bleu du haut du footer */
   margin: 0;
@@ -180,7 +180,7 @@ function getCharStyle(i) {
   }
   .footer-title {
     white-space: normal;
-    font-size: clamp(18px, 6vw, 26px);
+    font-size: clamp(14px, 4vw, 20px);
     text-align: center;
   }
   .footer-email {
