@@ -7,7 +7,7 @@
   >
     <div class="aspirations-inner">
       <h2 class="aspirations-title" :style="titleStyle">{{ props.title }}</h2>
-      <ul class="aspirations-list" :style="listStyle">
+      <ul class="aspirations-list">
         <li
           v-for="(item, i) in props.items"
           :key="i"
@@ -91,10 +91,11 @@ function getBulletStyle(index) {
   const stagger = index * 0.18 + 0.06
   const effectiveP = Math.max(0, Math.min(1, (sp - stagger) / (1 - stagger)))
 
+  const tx = index * 50 * (1 - effectiveP)
   const ty = 60 * (1 - effectiveP)
 
   return {
-    transform: `translateY(${ty}px)`,
+    transform: `translate(${tx}px, ${ty}px)`,
     opacity: Math.min(1, effectiveP * 1.5),
     transition: t
   }

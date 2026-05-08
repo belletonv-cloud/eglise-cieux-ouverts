@@ -95,8 +95,9 @@ const circleSmallStyle = computed(() => {
 const textStyle = computed(() => {
   const p = scrollProgress.value
   const scale = 0.25 + 0.75 * p
+  const ty = 320 * p
   return {
-    transform: `scale(${scale})`,
+    transform: `translateY(${ty}px) scale(${scale})`,
     opacity: Math.min(1, p * 1.3),
     transition: 'transform 0.2s ease-out, opacity 0.2s ease-out'
   }
@@ -109,10 +110,11 @@ const textStyle = computed(() => {
   padding: 80px 24px;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
+  padding-top: 40px;
   position: relative;
   overflow: hidden;
-  min-height: 380px;
+  min-height: 500px;
 }
 
 .circle {
