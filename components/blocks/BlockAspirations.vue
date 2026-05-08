@@ -13,6 +13,7 @@
           v-for="(item, i) in blockProps.props.items"
           :key="'circle-' + i"
           class="aspiration-circle"
+          :class="{ 'is-active': isItemActive(i) }"
           :style="getCircleStyle(i)"
         ></span>
 
@@ -21,9 +22,10 @@
           v-for="(item, i) in blockProps.props.items"
           :key="'line-' + i"
           class="aspiration-line"
+          :class="{ 'is-active': isItemActive(i) }"
           :style="getLineStyle(i)"
         >
-          <span class="aspiration-text">{{ item }}</span>
+          <span class="aspiration-text" :style="getTextStyle(i)">{{ item }}</span>
         </div>
       </div>
     </div>
@@ -31,7 +33,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 
 const blockProps = defineProps({
   props: { type: Object, required: true },
@@ -89,63 +91,62 @@ function getLineStyle(index) {
   if (isMobile.value) return { transform: 'translateY(0)', opacity: 1 }
 
   const sp = scrollProgress.value
-  const lineTotal = 1 / count.value
-  const startP = index * lineTotal
-  const activeEnd = startP + (lineTotal * lineActive)
-
-  // Ligne suivante : cachée
-  if (sp < startP) return { transform: 'translateY(100px)', opacity: 0 }
-  
-  // Ligne en cours d'animation : de 100px vers sa position de liste (translateY(0))
-  if (sp < activeEnd) {
-    const localP = (sp - startP) / (lineTotal * lineActive)
-    const ty = 100 * (1 - localP)
-    return {
-      transform: `translateY(${ty}px)`,
-      opacity: Math.min(1, localP * 6),
-    }
-  }
-
-  // Ligne terminée : à sa position de liste (translateY(0))
-  return { transform: 'translateY(0)', opacity: 1 }
+  // On déplace la logique d'animation vers le CSS. Ici on renvoie un
+  // style vide pour desktop et gère l'affichage immédiat sur mobile.
+  if (isMobile.value) return { transform: 'translateY(0)', opacity: 1 }
+  return {}
 }
 
-function getCircleStyle(index) {
-  if (isMobile.value) return { 
-    opacity: 1, 
-    top: circleTop + 'px', 
-    left: (index * 30 + circleLeftOffset) + 'px',
-    width: circleSize + 'px',
-    height: circleSize + 'px',
-  }
+// Style du texte : synchronisé pour apparaître quand son cercle commence à monter
+function getTextStyle(index) {
+  if (isMobile.value) return { opacity: 1, transform: 'translateY(0)' }
 
   const sp = scrollProgress.value
   const lineTotal = 1 / count.value
   const startP = index * lineTotal
 
-  // Position Y de départ : à côté de sa ligne de texte + 100px
-  const startTop = index * lineHeight + 100
+  // Avant le début : caché et un peu décalé
+  if (sp < startP) return { transform: 'translateY(20px)', opacity: 0 }
 
-  // Cercle caché avant startP
-  if (sp < startP) return { 
+  // On laisse désormais CSS piloter l'animation complète ; on renvoie
+  // les valeurs initiales + un delay pour obtenir un stagger en CSS.
+  return {
+    transform: 'translateY(20px)',
     opacity: 0,
-    top: startTop + 'px', 
-    left: (index * 30 + circleLeftOffset) + 'px',
-    width: circleSize + 'px',
-    height: circleSize + 'px',
+    transitionDelay: `${index * 0.12}s`,
   }
-  
-  // Le cercle monte de startTop vers circleTop (0px) de startP jusqu'à 1.0
-  const circleProgress = Math.min(1, (sp - startP) / (1 - startP))
-  const currentTop = startTop + (circleTop - startTop) * circleProgress
+}
 
-  return { 
-    opacity: Math.min(1, circleProgress * 6),
-    top: currentTop + 'px', 
+function getCircleStyle(index) {
+  // Cette fonction renvoie la position initiale du cercle (autour de sa ligne).
+  // L'animation vers la position finale (top: 0) se fait via CSS lorsque
+  // la classe "is-active" est ajoutée.
+  if (isMobile.value) return {
+    opacity: 1,
+    top: circleTop + 'px',
     left: (index * 30 + circleLeftOffset) + 'px',
     width: circleSize + 'px',
     height: circleSize + 'px',
   }
+
+  const startTop = index * lineHeight + 100
+  return {
+    opacity: 0,
+    top: startTop + 'px',
+    left: (index * 30 + circleLeftOffset) + 'px',
+    width: circleSize + 'px',
+    height: circleSize + 'px',
+    transitionDelay: `${index * 0.12}s`,
+  }
+}
+
+function isItemActive(index) {
+  if (isMobile.value) return true
+  const sp = scrollProgress.value
+  const lineTotal = 1 / count.value
+  const startP = index * lineTotal
+  // Dès que le scrollProgress atteint startP, on active l'item (CSS gère le reste)
+  return sp >= startP
 }
 </script>
 
@@ -200,10 +201,29 @@ function getCircleStyle(index) {
   position: absolute;
   border-radius: 50%;
   background: rgba(26, 150, 223, 0.55);
+  transition: top 480ms cubic-bezier(.22,.9,.3,1), opacity 360ms ease-out;
 }
 
 .aspiration-text {
   margin-left: 25px;
+  display: inline-block; /* allow transform on the text when animating */
+}
+
+/* When an item becomes active we move its circle to the shared top (0) and reveal the text */
+.aspiration-circle.is-active {
+  top: 0 !important;
+  opacity: 1 !important;
+}
+
+.aspiration-line .aspiration-text {
+  transform: translateY(20px);
+  opacity: 0;
+  transition: transform 420ms cubic-bezier(.22,.9,.3,1), opacity 420ms ease-out;
+}
+
+.aspiration-line.is-active .aspiration-text {
+  transform: translateY(0);
+  opacity: 1;
 }
 
 @container (max-width: 768px) {
