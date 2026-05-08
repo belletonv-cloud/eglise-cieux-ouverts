@@ -12,10 +12,9 @@
           v-for="(item, i) in props.items"
           :key="i"
           class="aspiration-line"
-          :style="getLineStyle(i)"
         >
           <span class="aspiration-circle" :style="getCircleStyle(i)"></span>
-          <span class="aspiration-text">{{ item }}</span>
+          <span class="aspiration-text" :style="getTextStyle(i)">{{ item }}</span>
         </div>
       </div>
     </div>
@@ -67,28 +66,39 @@ const titleStyle = computed(() => {
   }
 })
 
-const t = 'transform 0.1s ease-out, opacity 0.1s ease-out'
+function lineProgress(sp, index) {
+  const startP = index * 0.2
+  const endP = (index + 1) * 0.2
+  if (sp <= startP) return 0
+  if (sp >= endP) return 1
+  return (sp - startP) / 0.2
+}
 
-function getLineStyle(index) {
+const t = 'transform 0.05s linear, opacity 0.05s linear'
+
+function getCircleStyle(index) {
   const sp = scrollProgress.value
-  const stagger = index * 0.15
-  const effectiveP = Math.max(0, Math.min(1, (sp - stagger) / (1 - stagger)))
+  const localP = lineProgress(sp, index)
+  const easeP = 1 - Math.pow(1 - localP, 1.5)
+
+  const tx = (index * 15) * (1 - easeP)
+  const ty = 100 * (1 - easeP)
 
   return {
-    transform: `translateY(${80 * (1 - effectiveP)}px)`,
-    opacity: Math.min(1, effectiveP * 5),
+    transform: `translate(${tx}px, ${ty}px)`,
+    opacity: Math.min(0.55, easeP * 3),
     transition: t
   }
 }
 
-function getCircleStyle(index) {
+function getTextStyle(index) {
   const sp = scrollProgress.value
-  const stagger = index * 0.15 + 0.03
-  const effectiveP = Math.max(0, Math.min(1, (sp - stagger) / (1 - stagger)))
+  const localP = lineProgress(sp, index + 0.02)
+  const ty = 100 * (1 - localP)
 
   return {
-    marginLeft: `${index * 20}px`,
-    opacity: Math.min(1, effectiveP * 5),
+    transform: `translateY(${ty}px)`,
+    opacity: Math.min(1, localP * 5),
     transition: t
   }
 }
@@ -128,16 +138,16 @@ function getCircleStyle(index) {
 }
 
 .aspiration-line {
-  display: flex;
+  display: grid;
+  grid-template-columns: 55px 1fr;
   align-items: center;
-  gap: 18px;
   padding: 18px 0;
   border-bottom: 1px solid rgba(255,255,255,0.2);
   font-family: Helvetica, Arial, sans-serif;
   font-size: 36px;
   font-weight: 700;
   line-height: 1.4;
-  will-change: transform, opacity;
+  position: relative;
 }
 
 .aspiration-line:last-child {
@@ -145,12 +155,12 @@ function getCircleStyle(index) {
 }
 
 .aspiration-circle {
-  flex-shrink: 0;
-  width: 14px;
-  height: 14px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
-  background: #1A96DF;
-  will-change: opacity;
+  background: rgba(26, 150, 223, 0.55);
+  justify-self: flex-start;
+  will-change: transform, opacity;
 }
 
 .aspiration-text {
@@ -161,13 +171,13 @@ function getCircleStyle(index) {
   .aspirations-inner { align-items: center; text-align: center; }
   .aspirations-title { font-size: clamp(32px, 8vw, 60px); }
   .aspiration-line {
+    grid-template-columns: 40px 1fr;
     font-size: clamp(16px, 4.5vw, 28px);
     padding: 14px 0;
-    gap: 12px;
   }
   .aspiration-circle {
-    width: 10px;
-    height: 10px;
+    width: 14px;
+    height: 14px;
   }
 }
 
