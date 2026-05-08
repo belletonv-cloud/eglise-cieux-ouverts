@@ -1,29 +1,31 @@
 <template>
   <section
     class="block-bienvenue"
-    :class="visibilityClasses"
+    :class="[visibilityClasses, { 'is-visible': isVisible }]"
     ref="sectionRef"
   >
     <img src="https://static.wixstatic.com/media/d65230_c609095100164117aabdd3b55d9cdf56~mv2.png/v1/fill/w_1920,h_515,al_c,q_90,usm_0.66_1.00_0.01,enc_avif,quality_auto/d65230_c609095100164117aabdd3b55d9cdf56~mv2.png" alt="Foule Croix" class="bienvenue-img" />
     
     <div class="bienvenue-content">
       <div class="hero-bienvenue-wrapper" aria-label="BIENVENUE">
-        <div class="hero-bienvenue-line line-1" :style="line1Style">B I E&nbsp;</div>
-        <div class="hero-bienvenue-line line-2" :style="line2Style">N V E&nbsp;</div>
-        <div class="hero-bienvenue-line line-3" :style="line3Style">N U E</div>
+        <div class="hero-bienvenue-line line-1">B I E&nbsp;</div>
+        <div class="hero-bienvenue-line line-2">N V E&nbsp;</div>
+        <div class="hero-bienvenue-line line-3">N U E</div>
       </div>
-      <p class="hero-subtitle" :style="subtitleStyle">à l'Église Cieux Ouverts à Morlaix</p>
+      <p class="hero-subtitle">à l'Église Cieux Ouverts à Morlaix</p>
     </div>
   </section>
 </template>
 
 <script setup>
-import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { ref, inject, onMounted, onUnmounted, computed } from 'vue'
 
 const p = defineProps({
   props: { type: Object, required: true },
   visibility: { type: Object, default: () => ({}) },
 })
+
+const isEditor = inject('isEditor', false)
 
 const visibilityClasses = computed(() => ({
   'hide-mobile': p.visibility.mobile === false,
@@ -32,79 +34,24 @@ const visibilityClasses = computed(() => ({
 }))
 
 const sectionRef = ref(null)
-const scrollProgress = ref(0) // 0 (start) to 1 (fully formed)
-
-const onScroll = () => {
-  if (!sectionRef.value) return
-  const rect = sectionRef.value.getBoundingClientRect()
-  const vh = window.innerHeight
-  // Start animation when top of element is near bottom of viewport
-  // End animation when it reaches middle of viewport
-  const start = vh
-  const end = vh * 0.3
-  
-  if (rect.top > start) {
-    scrollProgress.value = 0
-  } else if (rect.top < end) {
-    scrollProgress.value = 1
-  } else {
-    // 0 -> 1 progress
-    scrollProgress.value = 1 - ((rect.top - end) / (start - end))
-  }
-}
+const isVisible = ref(false)
 
 onMounted(() => {
-  window.addEventListener('scroll', onScroll, { passive: true })
-  onScroll()
-})
-onUnmounted(() => window.removeEventListener('scroll', onScroll))
-
-// Color is always #054886
-const color = '#054886'
-
-const line1Style = computed(() => {
-  const p = scrollProgress.value
-  const tx = -300 * (1 - p)
-  const rot = -45 * (1 - p)
-  return {
-    color,
-    transform: `translateX(${tx}px) rotate(${rot}deg)`,
-    opacity: p === 0 ? 0 : 0.2 + (p * 0.8),
-    transition: 'transform 0.1s linear, opacity 0.1s linear'
+  if (isEditor) {
+    isVisible.value = true
+    return
   }
-})
 
-const line2Style = computed(() => {
-  const p = scrollProgress.value
-  const ty = 150 * (1 - p)
-  const rot = 15 * (1 - p)
-  return {
-    color,
-    transform: `translateY(${ty}px) rotate(${rot}deg)`,
-    opacity: p === 0 ? 0 : 0.2 + (p * 0.8),
-    transition: 'transform 0.1s linear, opacity 0.1s linear'
-  }
-})
+  const observer = new IntersectionObserver(
+    ([entry]) => {
+      isVisible.value = entry.isIntersecting
+    },
+    { threshold: 0.15 }
+  )
 
-const line3Style = computed(() => {
-  const p = scrollProgress.value
-  const tx = 300 * (1 - p)
-  const rot = 45 * (1 - p)
-  return {
-    color,
-    transform: `translateX(${tx}px) rotate(${rot}deg)`,
-    opacity: p === 0 ? 0 : 0.2 + (p * 0.8),
-    transition: 'transform 0.1s linear, opacity 0.1s linear'
-  }
-})
+  if (sectionRef.value) observer.observe(sectionRef.value)
 
-const subtitleStyle = computed(() => {
-  const p = scrollProgress.value
-  return {
-    transform: `translateY(${(1-p)*50}px)`,
-    opacity: p,
-    transition: 'transform 0.1s linear, opacity 0.1s linear'
-  }
+  onUnmounted(() => observer.disconnect())
 })
 </script>
 
@@ -163,6 +110,29 @@ const subtitleStyle = computed(() => {
   letter-spacing: 0.1em;
   will-change: transform, opacity;
   transform-origin: center center;
+  opacity: 0;
+}
+
+.line-1 {
+  transform: translateX(-300px) rotate(-45deg);
+  transition: transform 0.6s cubic-bezier(0.16,1,0.3,1), opacity 0.6s ease;
+}
+.line-2 {
+  transform: translateY(150px) rotate(15deg);
+  transition: transform 0.6s cubic-bezier(0.16,1,0.3,1), opacity 0.6s ease;
+  transition-delay: 0.1s;
+}
+.line-3 {
+  transform: translateX(300px) rotate(45deg);
+  transition: transform 0.6s cubic-bezier(0.16,1,0.3,1), opacity 0.6s ease;
+  transition-delay: 0.2s;
+}
+
+.is-visible .line-1,
+.is-visible .line-2,
+.is-visible .line-3 {
+  opacity: 1;
+  transform: none;
 }
 
 .hero-subtitle {
@@ -172,6 +142,15 @@ const subtitleStyle = computed(() => {
   font-weight: 400;
   margin-top: 20px;
   will-change: transform, opacity;
+  opacity: 0;
+  transform: translateY(50px);
+  transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.16,1,0.3,1);
+  transition-delay: 0.3s;
+}
+
+.is-visible .hero-subtitle {
+  opacity: 1;
+  transform: none;
 }
 
 @media (max-width: 768px) {
