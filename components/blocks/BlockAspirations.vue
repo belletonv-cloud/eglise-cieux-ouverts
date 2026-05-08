@@ -7,17 +7,17 @@
   >
     <div class="aspirations-inner">
       <h2 class="aspirations-title" :style="titleStyle">{{ props.title }}</h2>
-      <ul class="aspirations-list">
-        <li
+      <div class="aspirations-list">
+        <div
           v-for="(item, i) in props.items"
           :key="i"
-          class="aspiration-item"
-          :style="getItemStyle(i)"
+          class="aspiration-line"
+          :style="getLineStyle(i)"
         >
           <span class="aspiration-bullet" :style="getBulletStyle(i)"></span>
           <span class="aspiration-text">{{ item }}</span>
-        </li>
-      </ul>
+        </div>
+      </div>
     </div>
   </section>
 </template>
@@ -67,41 +67,29 @@ const titleStyle = computed(() => {
   }
 })
 
-const t = 'transform 0.08s linear, opacity 0.08s linear'
+const t = 'transform 0.1s ease-out, opacity 0.1s ease-out'
 
-function getItemStyle(index) {
+function getLineStyle(index) {
   const sp = scrollProgress.value
-  const stagger = index * 0.22
+  const stagger = index * 0.15
   const effectiveP = Math.max(0, Math.min(1, (sp - stagger) / (1 - stagger)))
 
-  const splitGap = 160 * (1 - effectiveP)
-  const ty = 60 * (1 - effectiveP)
-  const items = blockProps.props?.items || []
+  const ty = 80 * (1 - effectiveP)
 
   return {
     transform: `translateY(${ty}px)`,
-    opacity: Math.min(1, effectiveP * 6),
-    paddingLeft: '50px',
-    marginBottom: index < items.length - 1 ? `${splitGap}px` : '0',
+    opacity: Math.min(1, effectiveP * 5),
     transition: t
   }
 }
 
 function getBulletStyle(index) {
   const sp = scrollProgress.value
-  const stagger = index * 0.22 + 0.06
+  const stagger = index * 0.15 + 0.03
   const effectiveP = Math.max(0, Math.min(1, (sp - stagger) / (1 - stagger)))
 
-  const tx = index * 50 * (1 - effectiveP)
-  const ty = 80 * (1 - effectiveP)
-  const circleOpacity = (0.8 - index * 0.16) * Math.min(1, effectiveP * 6)
-
   return {
-    transform: `translate(${tx}px, ${ty}px)`,
-    opacity: circleOpacity,
-    left: '0',
-    backgroundColor: '#1A96DF',
-    border: 'none',
+    opacity: Math.min(1, effectiveP * 5),
     transition: t
   }
 }
@@ -134,53 +122,54 @@ function getBulletStyle(index) {
 }
 
 .aspirations-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
   display: flex;
   flex-direction: column;
   gap: 0;
   width: 100%;
 }
 
-.aspiration-item {
+.aspiration-line {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 18px 0 18px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.2);
   font-family: Helvetica, Arial, sans-serif;
   font-size: 36px;
   font-weight: 700;
   line-height: 1.4;
-  display: flex;
-  align-items: center;
-  position: relative;
-  padding-left: 50px;
-  will-change: transform, opacity, margin;
+  will-change: transform, opacity;
+}
+
+.aspiration-line:last-child {
+  border-bottom: none;
+}
+
+.aspiration-bullet {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #1A96DF;
+  will-change: opacity;
 }
 
 .aspiration-text {
   will-change: transform, opacity;
 }
 
-.aspiration-bullet {
-  position: absolute;
-  left: 0;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  border: 2px solid white;
-  background: transparent;
-  will-change: transform, opacity;
-}
-
 @container (max-width: 768px) {
   .aspirations-inner { align-items: center; text-align: center; }
-  .aspirations-title { font-size: clamp(40px, 8vw, 75px); }
-  .aspiration-item {
-    font-size: clamp(20px, 5vw, 36px);
-    padding-left: 0;
-    justify-content: center;
-    flex-direction: column;
-    gap: 8px;
+  .aspirations-title { font-size: clamp(32px, 8vw, 60px); }
+  .aspiration-line {
+    font-size: clamp(18px, 4.5vw, 28px);
+    padding: 14px 0;
+    gap: 14px;
   }
-  .aspiration-bullet { display: none; }
+  .aspiration-bullet {
+    width: 12px;
+    height: 12px;
+  }
 }
 
 @container (max-width: 600px) {
