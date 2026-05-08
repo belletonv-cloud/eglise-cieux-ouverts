@@ -6,16 +6,19 @@
     ref="sectionRef"
   >
     <div class="aspirations-inner">
-      <h2 class="aspirations-title" :style="titleStyle">{{ props.title }}</h2>
+      <h2 class="aspirations-title">{{ props.title }}</h2>
       <div class="aspirations-list">
         <div
           v-for="(item, i) in props.items"
           :key="i"
           class="aspiration-line"
-          :style="getLineStyle(i)"
+          :data-index="i"
+          :data-visible="visible[i] ? 'true' : 'false'"
+          ref="el => (lineRefs.value[i] = el)"
+          :style="{ ['--delay']: (i * 0.12) + 's' }"
         >
           <span class="circle-slot">
-            <span class="aspiration-circle" :style="getCircleStyle(i)"></span>
+            <span class="aspiration-circle"></span>
           </span>
           <span class="aspiration-text">{{ item }}</span>
         </div>
@@ -25,7 +28,7 @@
 </template>
 
 <script setup>
-import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { computed, ref, onMounted, onUnmounted, nextTick } from 'vue'
 
 const blockProps = defineProps({
   props: { type: Object, required: true },
@@ -39,71 +42,35 @@ const visibilityClasses = computed(() => ({
 }))
 
 const sectionRef = ref(null)
-const scrollProgress = ref(0)
 
-const onScroll = () => {
-  if (!sectionRef.value) return
-  const rect = sectionRef.value.getBoundingClientRect()
-  const vh = window.innerHeight
-  const start = vh
-  const end = vh * 0.2
+// IntersectionObserver-driven reveal per line. We keep a minimal reactive
+// array of booleans so Vue updates bindings if needed, but the observer will
+// also rely on data-* and CSS variable --delay for smooth cascade delays.
+const visible = ref([])
+const lineRefs = ref([])
+let observer = null
 
-  if (rect.top > start) { scrollProgress.value = 0; return }
-  if (rect.top < end) { scrollProgress.value = 1; return }
-  scrollProgress.value = 1 - ((rect.top - end) / (start - end))
-}
+onMounted(async () => {
+  visible.value = (blockProps.props.items || []).map(() => false)
+  await nextTick()
 
-onMounted(() => {
-  window.addEventListener('scroll', onScroll, { passive: true })
-  onScroll()
+  observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.target) return
+      const idx = Number(entry.target.dataset.index)
+      if (entry.isIntersecting) {
+        visible.value[idx] = true
+        observer.unobserve(entry.target)
+      }
+    })
+  }, { threshold: 0.15 })
+
+  lineRefs.value.forEach((el) => { if (el) observer.observe(el) })
 })
 
-onUnmounted(() => window.removeEventListener('scroll', onScroll))
-
-const titleStyle = computed(() => {
-  const p = scrollProgress.value
-  return {
-    transform: `translateY(${80 * (1 - p)}px)`,
-    opacity: p,
-    transition: 'transform 0.15s ease-out, opacity 0.15s ease-out'
-  }
+onUnmounted(() => {
+  if (observer) observer.disconnect()
 })
-
-const t = 'transform 0.05s linear, opacity 0.05s linear'
-
-function getLineStyle(index) {
-  const sp = scrollProgress.value
-  const startP = index * 0.2
-  const endP = (index + 1) * 0.2
-
-  if (sp <= startP) return { transform: 'translateY(100px)', opacity: 0, transition: 'none' }
-  if (sp >= endP) return { transform: 'translateY(0)', opacity: 1, transition: 'none' }
-
-  const localP = (sp - startP) / 0.2
-  const ty = 100 * (1 - localP)
-
-  return {
-    transform: `translateY(${ty}px)`,
-    opacity: Math.min(1, localP * 8),
-    transition: t
-  }
-}
-
-function getCircleStyle(index) {
-  const sp = scrollProgress.value
-  const startP = index * 0.2
-  const endP = (index + 1) * 0.2
-
-  const offset = index * 15
-
-  if (sp <= startP) return { transform: `translateX(${offset}px)`, transition: 'none' }
-  if (sp >= endP) return { transform: 'translateX(0)', transition: 'none' }
-
-  const localP = (sp - startP) / 0.2
-  const tx = offset * (1 - localP)
-
-  return { transform: `translateX(${tx}px)`, transition: t }
-}
 </script>
 
 <style scoped>
@@ -140,8 +107,10 @@ function getCircleStyle(index) {
 }
 
 .aspiration-line {
-  display: flex;
+  display: grid;
+  grid-template-columns: 55px 1fr;
   align-items: center;
+  column-gap: 18px;
   padding: 18px 0;
   border-bottom: 1px solid rgba(255,255,255,0.2);
   font-family: Helvetica, Arial, sans-serif;
@@ -149,6 +118,12 @@ function getCircleStyle(index) {
   font-weight: 700;
   line-height: 1.4;
   will-change: transform, opacity;
+
+  /* initial hidden state */
+  transform: translateY(100px);
+  opacity: 0;
+  transition: transform 420ms cubic-bezier(.2,.9,.3,1), opacity 320ms ease-out;
+  transition-delay: var(--delay, 0s);
 }
 
 .aspiration-line:last-child {
@@ -188,6 +163,20 @@ function getCircleStyle(index) {
     height: 14px;
   }
 }
+
+/* When visible is set to true (by data-visible attribute), reveal the line */
+.aspiration-line[data-visible="true"] {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* Subtle scale for circle on reveal to give a modern feel but no horizontal movement */
+.aspiration-line[data-visible="true"] .aspiration-circle {
+  transform: scale(1);
+  opacity: 1;
+  transition: transform 320ms cubic-bezier(.2,.9,.3,1) calc(var(--delay, 0s) + 60ms), opacity 200ms ease-out var(--delay);
+}
+.aspiration-circle { transform: scale(0.92); opacity: 0; }
 
 @container (max-width: 600px) {
   .block-aspirations { padding: 50px 20px; }
