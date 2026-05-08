@@ -8,7 +8,7 @@
     <div class="aspirations-inner">
       <h2 class="aspirations-title" :style="getTitleStyle()">{{ blockProps.props.title }}</h2>
       <div class="aspirations-list" ref="listRef">
-        <!-- Cercles : TOUS montent à Y=0 (première ligne) -->
+        <!-- Cercles : TOUS montent vers Y=0 (ligne horizontale commune) -->
         <span
           v-for="(item, i) in blockProps.props.items"
           :key="'circle-' + i"
@@ -16,7 +16,7 @@
           :style="getCircleStyle(i)"
         ></span>
 
-        <!-- Lignes de texte -->
+        <!-- Lignes de texte (liste normale, chacune à sa position) -->
         <div
           v-for="(item, i) in blockProps.props.items"
           :key="'line-' + i"
@@ -48,8 +48,8 @@ const sectionRef = ref(null)
 const scrollProgress = ref(0)
 const isMobile = ref(false)
 
-const lineHeight = 87
-const circleTop = 0 // TOUS les cercles finissent à Y=0
+const lineHeight = 87 // Hauteur d'une ligne de texte
+const circleTop = 0 // Y commun final pour TOUS les cercles (première ligne)
 const circleSize = 24
 const circleLeft = -80 // Encore plus à gauche
 
@@ -75,7 +75,7 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
 
 const count = computed(() => (blockProps.props.items || []).length)
 
-const lineActive = 0.02
+const lineActive = 0.02 // 2% du segment pour l'animation active
 
 function getTitleStyle() {
   if (isMobile.value) return { opacity: 1 }
@@ -83,6 +83,11 @@ function getTitleStyle() {
   if (sp <= 0) return { opacity: 0 }
   if (sp >= 0.02) return { opacity: 1 }
   return { opacity: sp / 0.02 }
+}
+
+function getCurrentIndex(sp) {
+  const lineTotal = 1 / count.value
+  return Math.min(Math.floor(sp / lineTotal), count.value - 1)
 }
 
 function getLineStyle(index) {
@@ -93,18 +98,15 @@ function getLineStyle(index) {
   const startP = index * lineTotal
   const activeEnd = startP + (lineTotal * lineActive)
 
-  // Position finale = sa propre position (index * lineHeight)
-  const finalY = -index * lineHeight
-
-  // Si l'animation est terminée, on affiche à sa position finale
-  if (sp >= activeEnd) {
-    return { transform: `translateY(${finalY}px)`, opacity: 1 }
+  // Lignes précédentes : visibles à leur position de liste (translateY(0))
+  if (sp >= activeEnd && index < getCurrentIndex(sp)) {
+    return { transform: 'translateY(0)', opacity: 1 }
   }
 
-  // Si on est dans l'animation
+  // Ligne en cours d'animation : de 100px vers 0 (sa position de liste)
   if (sp >= startP && sp < activeEnd) {
     const localP = (sp - startP) / (lineTotal * lineActive)
-    const ty = 100 + (finalY - 100) * localP
+    const ty = 100 * (1 - localP)
     return {
       transform: `translateY(${ty}px)`,
       opacity: Math.min(1, localP * 6),
@@ -131,21 +133,34 @@ function getCircleStyle(index) {
   // Position Y de départ : à côté de sa ligne de texte + 100px
   const startTop = index * lineHeight + 100
 
-  // Le cercle monte de startTop vers circleTop (0px) de startP jusqu'à 1.0
-  if (sp <= startP) return { 
-    opacity: 0,
-    top: startTop + 'px', 
-    left: (index * 30 + circleLeft) + 'px',
-    width: circleSize + 'px',
-    height: circleSize + 'px',
+  // Cercle précédent : visible à sa place finale (Y=0, ligne horizontale commune)
+  if (sp >= startP && index < getCurrentIndex(sp)) {
+    return { 
+      opacity: 1, 
+      top: circleTop + 'px', 
+      left: (index * 30 + circleLeft) + 'px',
+      width: circleSize + 'px',
+      height: circleSize + 'px',
+    }
   }
 
-  const circleProgress = Math.min(1, (sp - startP) / (1 - startP))
-  const currentTop = startTop + (circleTop - startTop) * circleProgress
+  // Cercle en cours : monte de startTop vers circleTop (0px)
+  if (sp >= startP) {
+    const circleProgress = Math.min(1, (sp - startP) / (1 - startP))
+    const currentTop = startTop + (circleTop - startTop) * circleProgress
+    return { 
+      opacity: Math.min(1, circleProgress * 6),
+      top: currentTop + 'px', 
+      left: (index * 30 + circleLeft) + 'px',
+      width: circleSize + 'px',
+      height: circleSize + 'px',
+    }
+  }
 
+  // Futur : caché
   return { 
-    opacity: Math.min(1, circleProgress * 6),
-    top: currentTop + 'px', 
+    opacity: 0, 
+    top: startTop + 'px', 
     left: (index * 30 + circleLeft) + 'px',
     width: circleSize + 'px',
     height: circleSize + 'px',
