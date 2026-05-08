@@ -25,15 +25,15 @@
 <script setup>
 import { computed, ref, onMounted, onUnmounted } from 'vue'
 
-const p = defineProps({
+const blockProps = defineProps({
   props: { type: Object, required: true },
   visibility: { type: Object, default: () => ({}) },
 })
 
 const visibilityClasses = computed(() => ({
-  'hide-mobile': p.visibility.mobile === false,
-  'hide-tablet': p.visibility.tablet === false,
-  'hide-desktop': p.visibility.desktop === false,
+  'hide-mobile': blockProps.visibility.mobile === false,
+  'hide-tablet': blockProps.visibility.tablet === false,
+  'hide-desktop': blockProps.visibility.desktop === false,
 }))
 
 const sectionRef = ref(null)
@@ -70,25 +70,26 @@ const titleStyle = computed(() => {
 const t = 'transform 0.15s ease-out, opacity 0.15s ease-out'
 
 function getItemStyle(index) {
-  const p = scrollProgress.value
+  const sp = scrollProgress.value
   const stagger = index * 0.18
-  const effectiveP = Math.max(0, Math.min(1, (p - stagger) / (1 - stagger)))
+  const effectiveP = Math.max(0, Math.min(1, (sp - stagger) / (1 - stagger)))
 
   const splitGap = 100 * (1 - effectiveP)
   const ty = 40 * (1 - effectiveP)
+  const items = blockProps.props?.items || []
 
   return {
     transform: `translateY(${ty}px)`,
     opacity: Math.min(1, effectiveP * 1.5),
-    marginBottom: index < p.props.items.length - 1 ? `${splitGap}px` : '0',
+    marginBottom: index < items.length - 1 ? `${splitGap}px` : '0',
     transition: t
   }
 }
 
 function getBulletStyle(index) {
-  const p = scrollProgress.value
+  const sp = scrollProgress.value
   const stagger = index * 0.18 + 0.06
-  const effectiveP = Math.max(0, Math.min(1, (p - stagger) / (1 - stagger)))
+  const effectiveP = Math.max(0, Math.min(1, (sp - stagger) / (1 - stagger)))
 
   const ty = 60 * (1 - effectiveP)
 
