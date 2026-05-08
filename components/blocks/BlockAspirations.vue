@@ -14,7 +14,7 @@
           class="aspiration-line"
           :style="getLineStyle(i)"
         >
-          <span class="aspiration-bullet" :style="getBulletStyle(i)"></span>
+          <span class="aspiration-circle" :style="getCircleStyle(i)"></span>
           <span class="aspiration-text">{{ item }}</span>
         </div>
       </div>
@@ -74,21 +74,20 @@ function getLineStyle(index) {
   const stagger = index * 0.15
   const effectiveP = Math.max(0, Math.min(1, (sp - stagger) / (1 - stagger)))
 
-  const ty = 80 * (1 - effectiveP)
-
   return {
-    transform: `translateY(${ty}px)`,
+    transform: `translateY(${80 * (1 - effectiveP)}px)`,
     opacity: Math.min(1, effectiveP * 5),
     transition: t
   }
 }
 
-function getBulletStyle(index) {
+function getCircleStyle(index) {
   const sp = scrollProgress.value
   const stagger = index * 0.15 + 0.03
   const effectiveP = Math.max(0, Math.min(1, (sp - stagger) / (1 - stagger)))
 
   return {
+    marginLeft: `${index * 20}px`,
     opacity: Math.min(1, effectiveP * 5),
     transition: t
   }
@@ -132,7 +131,7 @@ function getBulletStyle(index) {
   display: flex;
   align-items: center;
   gap: 18px;
-  padding: 18px 0 18px 0;
+  padding: 18px 0;
   border-bottom: 1px solid rgba(255,255,255,0.2);
   font-family: Helvetica, Arial, sans-serif;
   font-size: 36px;
@@ -145,10 +144,10 @@ function getBulletStyle(index) {
   border-bottom: none;
 }
 
-.aspiration-bullet {
+.aspiration-circle {
   flex-shrink: 0;
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
   background: #1A96DF;
   will-change: opacity;
@@ -162,13 +161,13 @@ function getBulletStyle(index) {
   .aspirations-inner { align-items: center; text-align: center; }
   .aspirations-title { font-size: clamp(32px, 8vw, 60px); }
   .aspiration-line {
-    font-size: clamp(18px, 4.5vw, 28px);
+    font-size: clamp(16px, 4.5vw, 28px);
     padding: 14px 0;
-    gap: 14px;
+    gap: 12px;
   }
-  .aspiration-bullet {
-    width: 12px;
-    height: 12px;
+  .aspiration-circle {
+    width: 10px;
+    height: 10px;
   }
 }
 
