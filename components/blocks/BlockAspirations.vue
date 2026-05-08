@@ -7,16 +7,14 @@
   >
     <div class="aspirations-inner">
       <h2 class="aspirations-title" :style="getTitleStyle()">{{ blockProps.props.title }}</h2>
-      <div class="aspirations-list">
+      <div class="aspirations-list" ref="listRef">
         <div
           v-for="(item, i) in blockProps.props.items"
           :key="i"
           class="aspiration-line"
           :style="getLineStyle(i)"
         >
-          <span class="circle-slot">
-            <span class="aspiration-circle" :style="getCircleStyle(i)"></span>
-          </span>
+          <span class="aspiration-circle" :style="getCircleStyle(i)"></span>
           <span class="aspiration-text">{{ item }}</span>
         </div>
       </div>
@@ -39,6 +37,7 @@ const visibilityClasses = computed(() => ({
 }))
 
 const sectionRef = ref(null)
+const listRef = ref(null)
 const scrollProgress = ref(0)
 const isMobile = ref(false)
 
@@ -64,14 +63,17 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
 
 const count = computed(() => (blockProps.props.items || []).length)
 
+const circleTop = '20px'
+const circleSpacing = 28
+
 function getTitleStyle() {
   if (isMobile.value) return { opacity: 1 }
   const sp = scrollProgress.value
-  const n = count.value
-  const segSize = 1 / n
+  const totalPerLine = 1 / count.value
+  const active = totalPerLine * 0.3
   if (sp <= 0) return { opacity: 0 }
-  if (sp >= segSize) return { opacity: 1 }
-  return { opacity: sp / segSize }
+  if (sp >= active) return { opacity: 1 }
+  return { opacity: sp / active }
 }
 
 function getLineStyle(index) {
@@ -79,16 +81,16 @@ function getLineStyle(index) {
 
   const sp = scrollProgress.value
   const n = count.value
-  const segSize = 1 / n
-  const startP = index * segSize
-  const endP = (index + 1) * segSize
+  const totalPerLine = 1 / n
+  const active = totalPerLine * 0.2
+  const startP = index * totalPerLine
+  const endP = startP + active
 
   if (sp <= startP) return { transform: 'translateY(100px)', opacity: 0 }
   if (sp >= endP) return { transform: 'translateY(0)', opacity: 1 }
 
-  const localP = (sp - startP) / segSize
+  const localP = (sp - startP) / active
   const ty = 100 * (1 - localP)
-
   return {
     transform: `translateY(${ty}px)`,
     opacity: localP,
@@ -96,19 +98,20 @@ function getLineStyle(index) {
 }
 
 function getCircleStyle(index) {
-  if (isMobile.value) return { opacity: 1 }
+  if (isMobile.value) return { opacity: 1, top: circleTop, left: (index * circleSpacing) + 'px' }
 
   const sp = scrollProgress.value
   const n = count.value
-  const segSize = 1 / n
-  const startP = index * segSize
-  const endP = (index + 1) * segSize
+  const totalPerLine = 1 / n
+  const active = totalPerLine * 0.2
+  const startP = index * totalPerLine
+  const endP = startP + active
 
-  if (sp <= startP) return { opacity: 0 }
-  if (sp >= endP) return { opacity: 1 }
+  if (sp <= startP) return { opacity: 0, top: circleTop, left: (index * circleSpacing) + 'px' }
+  if (sp >= endP) return { opacity: 1, top: circleTop, left: (index * circleSpacing) + 'px' }
 
-  const localP = (sp - startP) / segSize
-  return { opacity: localP }
+  const localP = (sp - startP) / active
+  return { opacity: localP, top: circleTop, left: (index * circleSpacing) + 'px' }
 }
 </script>
 
@@ -136,6 +139,7 @@ function getCircleStyle(index) {
 }
 
 .aspirations-list {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 0;
@@ -143,33 +147,33 @@ function getCircleStyle(index) {
 }
 
 .aspiration-line {
-  display: grid;
-  grid-template-columns: 55px 1fr;
+  display: flex;
   align-items: center;
-  column-gap: 18px;
   padding: 18px 0;
   border-bottom: 1px solid rgba(255,255,255,0.2);
   font-family: Helvetica, Arial, sans-serif;
   font-size: 36px;
   font-weight: 700;
   line-height: 1.4;
+  will-change: transform, opacity;
 }
 
 .aspiration-line:last-child {
   border-bottom: none;
 }
 
-.circle-slot {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-}
-
 .aspiration-circle {
+  position: absolute;
   width: 18px;
   height: 18px;
   border-radius: 50%;
   background: rgba(26, 150, 223, 0.55);
+  will-change: opacity;
+}
+
+.aspiration-text {
+  margin-left: 55px;
+  will-change: opacity;
 }
 
 @container (max-width: 768px) {
@@ -178,13 +182,13 @@ function getCircleStyle(index) {
   .aspiration-line {
     font-size: clamp(16px, 4.5vw, 28px);
     padding: 14px 0;
-    grid-template-columns: 40px 1fr;
-    column-gap: 12px;
   }
-  .circle-slot { width: 40px; }
   .aspiration-circle {
     width: 14px;
     height: 14px;
+  }
+  .aspiration-text {
+    margin-left: 40px;
   }
 }
 
