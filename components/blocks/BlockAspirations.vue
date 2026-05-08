@@ -12,9 +12,12 @@
           v-for="(item, i) in props.items"
           :key="i"
           class="aspiration-line"
+          :style="getLineStyle(i)"
         >
-          <span class="aspiration-circle" :style="getCircleStyle(i)"></span>
-          <span class="aspiration-text" :style="getTextStyle(i)">{{ item }}</span>
+          <span class="circle-slot">
+            <span class="aspiration-circle" :style="getCircleStyle(i)"></span>
+          </span>
+          <span class="aspiration-text">{{ item }}</span>
         </div>
       </div>
     </div>
@@ -66,41 +69,40 @@ const titleStyle = computed(() => {
   }
 })
 
-function lineProgress(sp, index) {
-  const startP = index * 0.2
-  const endP = (index + 1) * 0.2
-  if (sp <= startP) return 0
-  if (sp >= endP) return 1
-  return (sp - startP) / 0.2
-}
-
 const t = 'transform 0.05s linear, opacity 0.05s linear'
 
-function getCircleStyle(index) {
+function getLineStyle(index) {
   const sp = scrollProgress.value
-  const localP = lineProgress(sp, index)
-  const easeP = 1 - Math.pow(1 - localP, 1.5)
+  const startP = index * 0.2
+  const endP = (index + 1) * 0.2
 
-  const tx = (index * 15) * (1 - easeP)
-  const ty = 100 * (1 - easeP)
+  if (sp <= startP) return { transform: 'translateY(100px)', opacity: 0, transition: 'none' }
+  if (sp >= endP) return { transform: 'translateY(0)', opacity: 1, transition: 'none' }
 
-  return {
-    transform: `translate(${tx}px, ${ty}px)`,
-    opacity: Math.min(0.55, easeP * 3),
-    transition: t
-  }
-}
-
-function getTextStyle(index) {
-  const sp = scrollProgress.value
-  const localP = lineProgress(sp, index + 0.02)
+  const localP = (sp - startP) / 0.2
   const ty = 100 * (1 - localP)
 
   return {
     transform: `translateY(${ty}px)`,
-    opacity: Math.min(1, localP * 5),
+    opacity: Math.min(1, localP * 8),
     transition: t
   }
+}
+
+function getCircleStyle(index) {
+  const sp = scrollProgress.value
+  const startP = index * 0.2
+  const endP = (index + 1) * 0.2
+
+  const offset = index * 15
+
+  if (sp <= startP) return { transform: `translateX(${offset}px)`, transition: 'none' }
+  if (sp >= endP) return { transform: 'translateX(0)', transition: 'none' }
+
+  const localP = (sp - startP) / 0.2
+  const tx = offset * (1 - localP)
+
+  return { transform: `translateX(${tx}px)`, transition: t }
 }
 </script>
 
@@ -138,8 +140,7 @@ function getTextStyle(index) {
 }
 
 .aspiration-line {
-  display: grid;
-  grid-template-columns: 55px 1fr;
+  display: flex;
   align-items: center;
   padding: 18px 0;
   border-bottom: 1px solid rgba(255,255,255,0.2);
@@ -147,11 +148,19 @@ function getTextStyle(index) {
   font-size: 36px;
   font-weight: 700;
   line-height: 1.4;
-  position: relative;
+  will-change: transform, opacity;
 }
 
 .aspiration-line:last-child {
   border-bottom: none;
+}
+
+.circle-slot {
+  flex-shrink: 0;
+  width: 55px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
 }
 
 .aspiration-circle {
@@ -159,8 +168,7 @@ function getTextStyle(index) {
   height: 18px;
   border-radius: 50%;
   background: rgba(26, 150, 223, 0.55);
-  justify-self: flex-start;
-  will-change: transform, opacity;
+  will-change: transform;
 }
 
 .aspiration-text {
@@ -171,10 +179,10 @@ function getTextStyle(index) {
   .aspirations-inner { align-items: center; text-align: center; }
   .aspirations-title { font-size: clamp(32px, 8vw, 60px); }
   .aspiration-line {
-    grid-template-columns: 40px 1fr;
     font-size: clamp(16px, 4.5vw, 28px);
     padding: 14px 0;
   }
+  .circle-slot { width: 40px; }
   .aspiration-circle {
     width: 14px;
     height: 14px;
