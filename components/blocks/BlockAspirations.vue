@@ -109,10 +109,9 @@ function getTextStyle(index) {
   if (sp < startP) return { transform: 'translateY(20px)', opacity: 0 }
 
   // On laisse désormais CSS piloter l'animation complète ; on renvoie
-  // les valeurs initiales + un delay pour obtenir un stagger en CSS.
+  // uniquement le delay pour le stagger. Ne pas mettre transform/opacity inline
+  // car cela a priorité sur les règles CSS d'état final.
   return {
-    transform: 'translateY(20px)',
-    opacity: 0,
     transitionDelay: `${index * 0.12}s`,
   }
 }
