@@ -8,7 +8,7 @@
     <div class="aspirations-inner">
       <h2 class="aspirations-title" :style="getTitleStyle()">{{ blockProps.props.title }}</h2>
       <div class="aspirations-list" ref="listRef">
-        <!-- Cercles positionnés par rapport au conteneur -->
+        <!-- Cercles : TOUS montent à Y=0 (première ligne) -->
         <span
           v-for="(item, i) in blockProps.props.items"
           :key="'circle-' + i"
@@ -16,7 +16,7 @@
           :style="getCircleStyle(i)"
         ></span>
 
-        <!-- Lignes de texte uniquement -->
+        <!-- Lignes de texte -->
         <div
           v-for="(item, i) in blockProps.props.items"
           :key="'line-' + i"
@@ -48,10 +48,10 @@ const sectionRef = ref(null)
 const scrollProgress = ref(0)
 const isMobile = ref(false)
 
-const lineHeight = 87 // Hauteur approximative d'une ligne
-const circleTop = 20 // Y commun final pour tous les cercles
-const circleSize = 24 // Plus gros
-const circleSpacing = 30 // Décalage horizontal entre cercles
+const lineHeight = 87
+const circleTop = 0 // TOUS les cercles finissent à Y=0
+const circleSize = 24
+const circleLeft = -80 // Encore plus à gauche
 
 const onScroll = () => {
   if (!sectionRef.value) return
@@ -75,7 +75,6 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
 
 const count = computed(() => (blockProps.props.items || []).length)
 
-// Chaque ligne = 1/N du scroll, animation sur 2% du segment
 const lineActive = 0.02
 
 function getTitleStyle() {
@@ -94,15 +93,18 @@ function getLineStyle(index) {
   const startP = index * lineTotal
   const activeEnd = startP + (lineTotal * lineActive)
 
-  // Lignes précédentes : visibles à leur place
-  if (sp >= activeEnd && index < getCurrentIndex(sp)) {
-    return { transform: 'translateY(0)', opacity: 1 }
+  // Position finale = sa propre position (index * lineHeight)
+  const finalY = -index * lineHeight
+
+  // Si l'animation est terminée, on affiche à sa position finale
+  if (sp >= activeEnd) {
+    return { transform: `translateY(${finalY}px)`, opacity: 1 }
   }
 
-  // Ligne en cours d'animation
+  // Si on est dans l'animation
   if (sp >= startP && sp < activeEnd) {
     const localP = (sp - startP) / (lineTotal * lineActive)
-    const ty = 100 * (1 - localP)
+    const ty = 100 + (finalY - 100) * localP
     return {
       transform: `translateY(${ty}px)`,
       opacity: Math.min(1, localP * 6),
@@ -113,16 +115,11 @@ function getLineStyle(index) {
   return { transform: 'translateY(100px)', opacity: 0 }
 }
 
-function getCurrentIndex(sp) {
-  const lineTotal = 1 / count.value
-  return Math.min(Math.floor(sp / lineTotal), count.value - 1)
-}
-
 function getCircleStyle(index) {
   if (isMobile.value) return { 
     opacity: 1, 
     top: circleTop + 'px', 
-    left: (index * circleSpacing) + 'px',
+    left: (index * 30 + circleLeft) + 'px',
     width: circleSize + 'px',
     height: circleSize + 'px',
   }
@@ -134,35 +131,22 @@ function getCircleStyle(index) {
   // Position Y de départ : à côté de sa ligne de texte + 100px
   const startTop = index * lineHeight + 100
 
-  // Cercle précédent : visible à sa place finale
-  if (sp >= startP && index < getCurrentIndex(sp)) {
-    return { 
-      opacity: 1, 
-      top: circleTop + 'px', 
-      left: (index * circleSpacing) + 'px',
-      width: circleSize + 'px',
-      height: circleSize + 'px',
-    }
-  }
-
-  // Cercle en cours d'animation : de startTop vers circleTop
-  if (sp >= startP) {
-    const circleProgress = Math.min(1, (sp - startP) / (1 - startP))
-    const currentTop = startTop + (circleTop - startTop) * circleProgress
-    return { 
-      opacity: Math.min(1, circleProgress * 6),
-      top: currentTop + 'px', 
-      left: (index * circleSpacing) + 'px',
-      width: circleSize + 'px',
-      height: circleSize + 'px',
-    }
-  }
-
-  // Futur : caché
-  return { 
-    opacity: 0, 
+  // Le cercle monte de startTop vers circleTop (0px) de startP jusqu'à 1.0
+  if (sp <= startP) return { 
+    opacity: 0,
     top: startTop + 'px', 
-    left: (index * circleSpacing) + 'px',
+    left: (index * 30 + circleLeft) + 'px',
+    width: circleSize + 'px',
+    height: circleSize + 'px',
+  }
+
+  const circleProgress = Math.min(1, (sp - startP) / (1 - startP))
+  const currentTop = startTop + (circleTop - startTop) * circleProgress
+
+  return { 
+    opacity: Math.min(1, circleProgress * 6),
+    top: currentTop + 'px', 
+    left: (index * 30 + circleLeft) + 'px',
     width: circleSize + 'px',
     height: circleSize + 'px',
   }
@@ -204,7 +188,7 @@ function getCircleStyle(index) {
   display: flex;
   align-items: center;
   padding: 18px 0;
-  padding-left: 20px;
+  padding-left: 25px;
   border-bottom: 1px solid rgba(255,255,255,0.2);
   font-family: Helvetica, Arial, sans-serif;
   font-size: 36px;
@@ -223,7 +207,7 @@ function getCircleStyle(index) {
 }
 
 .aspiration-text {
-  margin-left: 20px;
+  margin-left: 25px;
 }
 
 @container (max-width: 768px) {
@@ -232,14 +216,14 @@ function getCircleStyle(index) {
   .aspiration-line {
     font-size: clamp(16px, 4.5vw, 28px);
     padding: 14px 0;
-    padding-left: 15px;
+    padding-left: 20px;
   }
   .aspiration-circle {
     width: 18px;
     height: 18px;
   }
   .aspiration-text {
-    margin-left: 15px;
+    margin-left: 20px;
   }
 }
 
