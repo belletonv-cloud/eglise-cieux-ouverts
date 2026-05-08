@@ -58,8 +58,6 @@ onMounted(() => {
   )
 
   const el = sectionRef.value
-  // 1-frame delay so the initial CSS state (opacity 0, rotated) paints
-  // before the observer fires and triggers the transition
   requestAnimationFrame(() => {
     if (el) observer.observe(el)
   })
@@ -128,18 +126,25 @@ onMounted(() => {
 }
 
 .line-1 {
-  transform: translateX(-300px) rotate(-45deg);
-  transition: transform 0.9s cubic-bezier(0.16,1,0.3,1), opacity 0.9s ease;
+  transform: translateX(-400px) rotate(-55deg);
+  transition-property: transform, opacity;
+  transition-duration: 0.9s, 0.9s;
+  transition-timing-function: cubic-bezier(0.16,1,0.3,1), ease;
+  transition-delay: 0s, 0s;
 }
 .line-2 {
-  transform: translateY(150px) rotate(15deg);
-  transition: transform 0.9s cubic-bezier(0.16,1,0.3,1), opacity 0.9s ease;
-  transition-delay: 0.15s;
+  transform: translateY(200px) rotate(20deg);
+  transition-property: transform, opacity;
+  transition-duration: 0.9s, 0.9s;
+  transition-timing-function: cubic-bezier(0.16,1,0.3,1), ease;
+  transition-delay: 0.15s, 0.15s;
 }
 .line-3 {
-  transform: translateX(300px) rotate(45deg);
-  transition: transform 0.9s cubic-bezier(0.16,1,0.3,1), opacity 0.9s ease;
-  transition-delay: 0.3s;
+  transform: translateX(400px) rotate(55deg);
+  transition-property: transform, opacity;
+  transition-duration: 0.9s, 0.9s;
+  transition-timing-function: cubic-bezier(0.16,1,0.3,1), ease;
+  transition-delay: 0.3s, 0.3s;
 }
 
 .is-visible .line-1,
@@ -147,6 +152,8 @@ onMounted(() => {
 .is-visible .line-3 {
   opacity: 1;
   transform: none;
+  transition-duration: 0.9s, 0.3s;
+  transition-delay: 0s, 0s;
 }
 
 .hero-subtitle {
@@ -158,13 +165,17 @@ onMounted(() => {
   will-change: transform, opacity;
   opacity: 0;
   transform: translateY(50px);
-  transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.16,1,0.3,1);
-  transition-delay: 0.3s;
+  transition-property: transform, opacity;
+  transition-duration: 0.8s, 0.8s;
+  transition-timing-function: cubic-bezier(0.16,1,0.3,1), ease;
+  transition-delay: 0.4s, 0.4s;
 }
 
 .is-visible .hero-subtitle {
   opacity: 1;
   transform: none;
+  transition-duration: 0.8s, 0.3s;
+  transition-delay: 0s, 0s;
 }
 
 .hero-socials {
@@ -174,13 +185,17 @@ onMounted(() => {
   will-change: transform, opacity;
   opacity: 0;
   transform: translateY(30px);
-  transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.16,1,0.3,1);
-  transition-delay: 0.4s;
+  transition-property: transform, opacity;
+  transition-duration: 0.8s, 0.8s;
+  transition-timing-function: cubic-bezier(0.16,1,0.3,1), ease;
+  transition-delay: 0.5s, 0.5s;
 }
 
 .is-visible .hero-socials {
   opacity: 1;
   transform: none;
+  transition-duration: 0.8s, 0.3s;
+  transition-delay: 0s, 0s;
 }
 
 .social-icon {
