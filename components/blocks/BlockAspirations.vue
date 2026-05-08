@@ -64,7 +64,7 @@ const onScroll = () => {
   if (!sectionRef.value) return
   const rect = sectionRef.value.getBoundingClientRect()
   const vh = window.innerHeight
-  const start = vh * 5
+  const start = vh * 1.5
   const end = 0
 
   if (rect.top > start) { scrollProgress.value = 0; return }
@@ -96,7 +96,7 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
 const count = computed(() => (blockProps.props.items || []).length)
 
 // Chaque ligne utilise 1/N du scroll, avec une TRÈS longue pause
-const lineActive = 0.02 // Seulement 2% du segment pour l'animation, 98% de pause
+const lineActive = 0.06 // Seulement 6% du segment pour l'animation, 94% de pause
 
 function getTitleStyle() {
   if (isMobile.value) return { opacity: 1 }
