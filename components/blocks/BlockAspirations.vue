@@ -7,7 +7,7 @@
   >
     <div class="aspirations-inner">
       <h2 class="aspirations-title" :style="titleStyle">{{ props.title }}</h2>
-      <ul class="aspirations-list">
+      <ul class="aspirations-list" :style="listStyle">
         <li
           v-for="(item, i) in props.items"
           :key="i"
@@ -15,7 +15,7 @@
           :style="getItemStyle(i)"
         >
           <span class="aspiration-bullet" :style="getBulletStyle(i)"></span>
-          {{ item }}
+          <span class="aspiration-text">{{ item }}</span>
         </li>
       </ul>
     </div>
@@ -46,19 +46,16 @@ const onScroll = () => {
   const start = vh
   const end = vh * 0.2
 
-  if (rect.top > start) {
-    scrollProgress.value = 0
-  } else if (rect.top < end) {
-    scrollProgress.value = 1
-  } else {
-    scrollProgress.value = 1 - ((rect.top - end) / (start - end))
-  }
+  if (rect.top > start) { scrollProgress.value = 0; return }
+  if (rect.top < end) { scrollProgress.value = 1; return }
+  scrollProgress.value = 1 - ((rect.top - end) / (start - end))
 }
 
 onMounted(() => {
   window.addEventListener('scroll', onScroll, { passive: true })
   onScroll()
 })
+
 onUnmounted(() => window.removeEventListener('scroll', onScroll))
 
 const titleStyle = computed(() => {
@@ -70,27 +67,35 @@ const titleStyle = computed(() => {
   }
 })
 
+const t = 'transform 0.15s ease-out, opacity 0.15s ease-out'
+
 function getItemStyle(index) {
   const p = scrollProgress.value
-  const delay = index * 0.18
-  const progress = Math.max(0, Math.min(1, (p - delay) / (1 - delay)))
-  const ty = 60 * (1 - progress)
+  const stagger = index * 0.18
+  const effectiveP = Math.max(0, Math.min(1, (p - stagger) / (1 - stagger)))
+
+  const splitGap = 100 * (1 - effectiveP)
+  const ty = 40 * (1 - effectiveP)
+
   return {
     transform: `translateY(${ty}px)`,
-    opacity: progress,
-    transition: 'transform 0.15s ease-out, opacity 0.15s ease-out'
+    opacity: Math.min(1, effectiveP * 1.5),
+    marginBottom: index < p.props.items.length - 1 ? `${splitGap}px` : '0',
+    transition: t
   }
 }
 
 function getBulletStyle(index) {
   const p = scrollProgress.value
-  const delay = index * 0.18 + 0.06
-  const progress = Math.max(0, Math.min(1, (p - delay) / (1 - delay)))
-  const ty = 60 * (1 - progress)
+  const stagger = index * 0.18 + 0.06
+  const effectiveP = Math.max(0, Math.min(1, (p - stagger) / (1 - stagger)))
+
+  const ty = 60 * (1 - effectiveP)
+
   return {
     transform: `translateY(${ty}px)`,
-    opacity: progress,
-    transition: 'transform 0.15s ease-out, opacity 0.15s ease-out'
+    opacity: Math.min(1, effectiveP * 1.5),
+    transition: t
   }
 }
 </script>
@@ -127,7 +132,7 @@ function getBulletStyle(index) {
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 30px;
+  gap: 0;
   width: 100%;
 }
 
@@ -140,6 +145,10 @@ function getBulletStyle(index) {
   align-items: center;
   position: relative;
   padding-left: 50px;
+  will-change: transform, opacity, margin;
+}
+
+.aspiration-text {
   will-change: transform, opacity;
 }
 
@@ -161,7 +170,8 @@ function getBulletStyle(index) {
     font-size: clamp(20px, 5vw, 36px);
     padding-left: 0;
     justify-content: center;
-    transform: none !important;
+    flex-direction: column;
+    gap: 8px;
   }
   .aspiration-bullet { display: none; }
 }

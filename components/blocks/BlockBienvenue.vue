@@ -41,52 +41,35 @@ const visibilityClasses = computed(() => ({
 
 const sectionRef = ref(null)
 const scrollProgress = ref(0)
-const scrollTracking = ref(false)
 
 const onScroll = () => {
   if (!sectionRef.value) return
   const rect = sectionRef.value.getBoundingClientRect()
   const vh = window.innerHeight
 
-  // progress = 1 when hero is fully in view (top near header)
-  // progress = 0 when hero has scrolled past (~80px visible at bottom)
-  const start = 80
-  const end = -(rect.height - 80)
+  const start = vh
+  const end = 76
 
-  if (rect.top > start) { scrollProgress.value = 1; return }
-  if (rect.top < end) { scrollProgress.value = 0; return }
-  scrollProgress.value = (rect.top - end) / (start - end)
+  if (rect.top > start) { scrollProgress.value = 0; return }
+  if (rect.top < end) { scrollProgress.value = 1; return }
+  scrollProgress.value = 1 - ((rect.top - end) / (start - end))
 }
 
 onMounted(() => {
-  // Initial animation: play on page load
-  const startTime = Date.now()
-  const duration = 900
-
-  function animateIn() {
-    const elapsed = Date.now() - startTime
-    scrollProgress.value = Math.min(1, elapsed / duration)
-    if (scrollProgress.value < 1) {
-      requestAnimationFrame(animateIn)
-    } else {
-      // After initial animation, track scroll
-      scrollTracking.value = true
-      window.addEventListener('scroll', onScroll, { passive: true })
-    }
-  }
-  requestAnimationFrame(animateIn)
-
-  onUnmounted(() => window.removeEventListener('scroll', onScroll))
+  window.addEventListener('scroll', onScroll, { passive: true })
+  onScroll()
 })
 
-const trans = () => scrollTracking.value ? 'transform 0.08s linear, opacity 0.08s linear' : 'none'
+onUnmounted(() => window.removeEventListener('scroll', onScroll))
+
+const t = 'transform 0.08s linear, opacity 0.1s linear'
 
 const line1Style = computed(() => {
   const p = scrollProgress.value
   return {
     transform: `translateX(${-400 * (1 - p)}px) rotate(${55 * (1 - p)}deg)`,
-    opacity: p > 0 ? Math.min(1, p * 1.2) : 0,
-    transition: trans(),
+    opacity: p > 0 ? Math.min(1, p * 1.3) : 0,
+    transition: t,
     color: '#054886'
   }
 })
@@ -95,8 +78,8 @@ const line2Style = computed(() => {
   const p = scrollProgress.value
   return {
     transform: `translateY(${200 * (1 - p)}px) rotate(${-20 * (1 - p)}deg)`,
-    opacity: p > 0 ? Math.min(1, p * 1.2) : 0,
-    transition: trans(),
+    opacity: p > 0 ? Math.min(1, p * 1.3) : 0,
+    transition: t,
     color: '#054886'
   }
 })
@@ -105,8 +88,8 @@ const line3Style = computed(() => {
   const p = scrollProgress.value
   return {
     transform: `translateX(${400 * (1 - p)}px) rotate(${-55 * (1 - p)}deg)`,
-    opacity: p > 0 ? Math.min(1, p * 1.2) : 0,
-    transition: trans(),
+    opacity: p > 0 ? Math.min(1, p * 1.3) : 0,
+    transition: t,
     color: '#054886'
   }
 })
@@ -116,7 +99,7 @@ const subtitleStyle = computed(() => {
   return {
     transform: `translateY(${50 * (1 - p)}px)`,
     opacity: p,
-    transition: trans(),
+    transition: t,
     color: '#054886'
   }
 })
@@ -126,7 +109,7 @@ const socialsStyle = computed(() => {
   return {
     transform: `translateY(${30 * (1 - p)}px)`,
     opacity: p,
-    transition: trans(),
+    transition: t,
     pointerEvents: p > 0.5 ? 'auto' : 'none',
   }
 })

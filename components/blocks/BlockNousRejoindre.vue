@@ -5,16 +5,13 @@
     :class="[visibilityClasses]"
     ref="sectionRef"
   >
-    <!-- Background Circles Parallax -->
     <div class="circle circle-left" :style="circleLeftStyle"></div>
     <div class="circle circle-right" :style="circleRightStyle"></div>
     <div class="circle circle-small" :style="circleSmallStyle"></div>
 
-    <div class="content" :style="contentStyle">
-      <NuxtLink :to="props.link || '/contact'" class="cta-cercle">
-        <span class="cta-text">{{ props.title }}</span>
-      </NuxtLink>
-    </div>
+    <NuxtLink :to="props.link || '/contact'" class="cta-link" :style="textStyle">
+      {{ props.title }}
+    </NuxtLink>
   </section>
 </template>
 
@@ -54,54 +51,54 @@ onMounted(() => {
     scrollProgress.value = 1
     return
   }
-
   window.addEventListener('scroll', onScroll, { passive: true })
   onScroll()
 })
 
-onUnmounted(() => {
-  window.removeEventListener('scroll', onScroll)
-})
+onUnmounted(() => window.removeEventListener('scroll', onScroll))
+
+const ct = 'transform 0.4s cubic-bezier(.22,.9,.35,1)'
 
 const circleLeftStyle = computed(() => {
   const p = scrollProgress.value
-  const txPct = -200 * (1 - p)
-  const scale = 0.8 + 0.4 * p
   return {
-    transform: `translateX(${txPct}%) scale(${scale})`,
-    opacity: Math.min(1, p * 1.1),
-    transition: 'transform 0.45s cubic-bezier(.22,.9,.35,1)'
+    left: '50%',
+    top: '50%',
+    transform: `translate(calc(-50% + ${-350 * (1 - p)}px), calc(-50% + ${-150 * (1 - p)}px)) scale(${0.6 + 0.6 * p})`,
+    opacity: Math.min(1, p * 1.5),
+    transition: ct
   }
 })
 
 const circleRightStyle = computed(() => {
   const p = scrollProgress.value
-  const txPct = 200 * (1 - p)
-  const scale = 0.9 + 0.3 * p
   return {
-    transform: `translateX(${txPct}%) scale(${scale})`,
-    opacity: Math.min(0.9, p * 0.9),
-    transition: 'transform 0.45s cubic-bezier(.22,.9,.35,1)'
+    left: '50%',
+    top: '50%',
+    transform: `translate(calc(-50% + ${400 * (1 - p)}px), calc(-50% + ${80 * (1 - p)}px)) scale(${0.7 + 0.4 * p})`,
+    opacity: Math.min(0.9, p * 0.9 + 0.1),
+    transition: ct
   }
 })
 
 const circleSmallStyle = computed(() => {
   const p = scrollProgress.value
-  const ty = 120 * (1 - p)
-  const scale = 0.6 + 0.5 * p
   return {
-    transform: `translateY(${ty}px) scale(${scale})`,
+    left: '50%',
+    top: '50%',
+    transform: `translate(calc(-50% + ${-100 * (1 - p)}px), calc(-50% + ${200 * (1 - p)}px)) scale(${0.4 + 0.7 * p})`,
     opacity: p,
-    transition: 'transform 0.45s cubic-bezier(.22,.9,.35,1)'
+    transition: ct
   }
 })
 
-const contentStyle = computed(() => {
+const textStyle = computed(() => {
   const p = scrollProgress.value
+  const scale = 0.25 + 0.75 * p
   return {
-    transform: `scale(${0.8 + p * 0.2})`,
-    opacity: p,
-    transition: 'transform 0.2s ease, opacity 0.2s ease'
+    transform: `scale(${scale})`,
+    opacity: Math.min(1, p * 1.3),
+    transition: 'transform 0.2s ease-out, opacity 0.2s ease-out'
   }
 })
 </script>
@@ -129,47 +126,31 @@ const contentStyle = computed(() => {
 .circle-left {
   width: 400px; height: 400px;
   background: rgba(255,255,255,0.15);
-  left: 10%; top: 50%; margin-top: -200px;
 }
 
 .circle-right {
   width: 600px; height: 600px;
   background: rgba(255,255,255,0.08);
-  right: -5%; top: 50%; margin-top: -300px;
 }
 
 .circle-small {
   width: 80px; height: 80px;
   background: rgba(255,255,255,0.9);
-  bottom: 20%; left: 30%;
 }
 
-.content {
+.cta-link {
   position: relative;
   z-index: 1;
+  color: white;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-style: italic;
+  font-size: clamp(2em, 5vw, 4em);
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+  line-height: 1.1;
   will-change: transform, opacity;
 }
-
-.cta-cercle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: clamp(200px, 30vw, 300px);
-  height: clamp(200px, 30vw, 300px);
-  border-radius: 50%;
-  background-color: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  text-decoration: none;
-  transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1), background-color 0.4s;
-  cursor: pointer;
-  position: relative;
-}
-
-.cta-cercle::before { content: ""; position: absolute; top: 10px; right: 10px; bottom: 10px; left: 10px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.3); transition: transform 0.4s; }
-.cta-cercle:hover { transform: scale(1.05); background-color: rgba(255,255,255,0.1); border-color: white; }
-.cta-cercle:hover::before { transform: scale(0.9); border-color: rgba(255,255,255,0.8); }
-
-.cta-text { color: white; font-family: 'Playfair Display', Georgia, serif; font-style: italic; font-size: clamp(2em, 4vw, 3.5em); font-weight: 700; text-align: center; line-height: 1.1; padding: 20px; }
 
 @container (max-width: 600px) {
   .block-nous-rejoindre { padding: 50px 20px; min-height: 300px; }
