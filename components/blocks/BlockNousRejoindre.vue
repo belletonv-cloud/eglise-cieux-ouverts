@@ -6,11 +6,11 @@
     ref="sectionRef"
   >
     <!-- Background Circles Parallax -->
-    <div class="circle circle-left" :style="circleLeftStyle"></div>
-    <div class="circle circle-right" :style="circleRightStyle"></div>
-    <div class="circle circle-small" :style="circleSmallStyle"></div>
+    <div class="circle circle-left"></div>
+    <div class="circle circle-right"></div>
+    <div class="circle circle-small"></div>
 
-    <div class="content" :style="contentStyle">
+    <div class="content">
       <NuxtLink :to="props.link || '/contact'" class="cta-cercle">
         <span class="cta-text">{{ props.title }}</span>
       </NuxtLink>
@@ -36,84 +36,24 @@ const visibilityClasses = computed(() => ({
 
 const sectionRef = ref(null)
 const isVisible = ref(isEditor)
-const scrollProgress = ref(0)
-
-function onScroll() {
-  if (!sectionRef.value) return
-  const rect = sectionRef.value.getBoundingClientRect()
-  const vh = window.innerHeight
-  const start = vh
-  const end = vh * 0.3
-  if (rect.top > start) scrollProgress.value = 0
-  else if (rect.top < end) scrollProgress.value = 1
-  else scrollProgress.value = 1 - ((rect.top - end) / (start - end))
-}
 
 onMounted(() => {
   if (isEditor) {
     isVisible.value = true
+    return
   }
 
   const observer = new IntersectionObserver(
     ([entry]) => {
+      // toggle visibility so circles overlap on enter and separate on leave
       isVisible.value = entry.isIntersecting
     },
-    { threshold: 0.12 }
+    { threshold: 0.15 }
   )
+
   if (sectionRef.value) observer.observe(sectionRef.value)
 
-  window.addEventListener('scroll', onScroll, { passive: true })
-  onScroll()
-
-  onUnmounted(() => {
-    observer.disconnect()
-    window.removeEventListener('scroll', onScroll)
-  })
-})
-
-// Left circle (medium, transparent white)
-const circleLeftStyle = computed(() => {
-  const p = scrollProgress.value
-  const txPct = -200 * (1 - p)
-  const scale = 0.8 + 0.4 * p
-  return {
-    transform: `translateX(${txPct}%) scale(${scale})`,
-    opacity: Math.min(1, p * 1.1),
-    transition: 'transform 0.45s cubic-bezier(.22,.9,.35,1)'
-  }
-})
-
-// Right circle (large, more transparent)
-const circleRightStyle = computed(() => {
-  const p = scrollProgress.value
-  const txPct = 200 * (1 - p)
-  const scale = 0.9 + 0.3 * p
-  return {
-    transform: `translateX(${txPct}%) scale(${scale})`,
-    opacity: Math.min(0.9, p * 0.9),
-    transition: 'transform 0.45s cubic-bezier(.22,.9,.35,1)'
-  }
-})
-
-// Small circle (solid white, from bottom or top)
-const circleSmallStyle = computed(() => {
-  const p = scrollProgress.value
-  const ty = 120 * (1 - p)
-  const scale = 0.6 + 0.5 * p
-  return {
-    transform: `translateY(${ty}px) scale(${scale})`,
-    opacity: p,
-    transition: 'transform 0.45s cubic-bezier(.22,.9,.35,1)'
-  }
-})
-
-const contentStyle = computed(() => {
-  const p = scrollProgress.value
-  return {
-    transform: `scale(${0.8 + (p * 0.2)})`,
-    opacity: p,
-    transition: 'transform 0.2s ease, opacity 0.2s ease'
-  }
+  onUnmounted(() => observer.disconnect())
 })
 </script>
 
@@ -142,24 +82,26 @@ const contentStyle = computed(() => {
   width: 400px; height: 400px;
   background: rgba(255,255,255,0.15);
   left: 10%; top: 50%; margin-top: -200px;
-  transform: translateX(-80px);
-  transition: transform 0.8s cubic-bezier(0.4,0,0.2,1);
+  /* start off-left */
+  transform: translateX(-220px) scale(0.8);
+  transition: transform 0.6s cubic-bezier(0.2,0.9,0.2,1);
 }
 
 .circle-right {
   width: 600px; height: 600px;
   background: rgba(255,255,255,0.08);
   right: -5%; top: 50%; margin-top: -300px;
-  transform: translateX(80px);
-  transition: transform 0.9s cubic-bezier(0.4,0,0.2,1);
+  /* start off-right */
+  transform: translateX(220px) scale(0.9);
+  transition: transform 0.6s cubic-bezier(0.2,0.9,0.2,1);
 }
 
 .circle-small {
   width: 80px; height: 80px;
   background: rgba(255,255,255,0.9);
   bottom: 20%; left: 30%;
-  transform: translateY(50px);
-  transition: transform 0.7s cubic-bezier(0.4,0,0.2,1);
+  transform: translateY(80px) scale(0.6);
+  transition: transform 0.45s cubic-bezier(0.2,0.9,0.2,1);
 }
 
 .content {
@@ -172,12 +114,20 @@ const contentStyle = computed(() => {
 }
 
 /* Triggered */
-.is-visible .circle,
 .is-visible .content {
   opacity: 1;
   transform: none;
 }
-.is-visible .circle-right { opacity: 0.6; }
+.is-visible .circle-left {
+  transform: translateX(-20px) scale(1);
+}
+.is-visible .circle-right {
+  transform: translateX(20px) scale(1);
+  opacity: 0.6;
+}
+.is-visible .circle-small {
+  transform: translateY(0) scale(1);
+}
 
 .cta-cercle { /* kept unchanged */
   display: flex;
