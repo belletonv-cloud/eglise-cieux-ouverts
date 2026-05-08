@@ -64,34 +64,33 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
 const titleStyle = computed(() => {
   const p = scrollProgress.value
   return {
-    transform: `translateY(${100 * (1 - p)}px)`,
+    transform: `translateY(${80 * (1 - p)}px)`,
     opacity: p,
-    transition: 'transform 0.1s linear, opacity 0.1s linear'
+    transition: 'transform 0.15s ease-out, opacity 0.15s ease-out'
   }
 })
 
 function getItemStyle(index) {
   const p = scrollProgress.value
-  const delay = index * 0.15
+  const delay = index * 0.18
   const progress = Math.max(0, Math.min(1, (p - delay) / (1 - delay)))
-  const ty = 50 * (1 - progress)
-  const tx = index * 20
+  const ty = 60 * (1 - progress)
   return {
-    transform: `translate(${tx}px, ${ty}px)`,
+    transform: `translateY(${ty}px)`,
     opacity: progress,
-    transition: 'transform 0.1s linear, opacity 0.1s linear'
+    transition: 'transform 0.15s ease-out, opacity 0.15s ease-out'
   }
 }
 
 function getBulletStyle(index) {
   const p = scrollProgress.value
-  const delay = index * 0.15
+  const delay = index * 0.18 + 0.06
   const progress = Math.max(0, Math.min(1, (p - delay) / (1 - delay)))
-  const ty = 30 * (1 - progress)
+  const ty = 60 * (1 - progress)
   return {
     transform: `translateY(${ty}px)`,
     opacity: progress,
-    transition: 'transform 0.1s linear, opacity 0.1s linear'
+    transition: 'transform 0.15s ease-out, opacity 0.15s ease-out'
   }
 }
 </script>

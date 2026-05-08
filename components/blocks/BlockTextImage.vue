@@ -89,7 +89,7 @@ const visibilityClasses = computed(() => ({
   max-width: 1120px;
   gap: 40px;
   padding: 56px 40px;
-  background: #f4f4f4;
+  background: #ffffff;
   border-radius: 22px;
   box-shadow: 0 16px 50px rgba(6, 72, 134, 0.08);
 }

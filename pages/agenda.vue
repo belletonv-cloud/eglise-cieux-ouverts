@@ -181,9 +181,11 @@ function formatMonth(ts) {
 }
 
 .agenda-title {
-  font-size: 1.4em;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 2.8em;
   font-weight: 700;
-  color: #333;
+  font-style: italic;
+  color: #064886;
   margin: 0 0 4px;
 }
 

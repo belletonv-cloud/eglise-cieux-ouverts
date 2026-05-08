@@ -54,7 +54,7 @@ onMounted(() => {
     ([entry]) => {
       isVisible.value = entry.isIntersecting
     },
-    { threshold: 0.15 }
+    { threshold: 0.3 }
   )
 
   const el = sectionRef.value
@@ -129,17 +129,17 @@ onMounted(() => {
 
 .line-1 {
   transform: translateX(-300px) rotate(-45deg);
-  transition: transform 0.6s cubic-bezier(0.16,1,0.3,1), opacity 0.6s ease;
+  transition: transform 0.9s cubic-bezier(0.16,1,0.3,1), opacity 0.9s ease;
 }
 .line-2 {
   transform: translateY(150px) rotate(15deg);
-  transition: transform 0.6s cubic-bezier(0.16,1,0.3,1), opacity 0.6s ease;
-  transition-delay: 0.1s;
+  transition: transform 0.9s cubic-bezier(0.16,1,0.3,1), opacity 0.9s ease;
+  transition-delay: 0.15s;
 }
 .line-3 {
   transform: translateX(300px) rotate(45deg);
-  transition: transform 0.6s cubic-bezier(0.16,1,0.3,1), opacity 0.6s ease;
-  transition-delay: 0.2s;
+  transition: transform 0.9s cubic-bezier(0.16,1,0.3,1), opacity 0.9s ease;
+  transition-delay: 0.3s;
 }
 
 .is-visible .line-1,
