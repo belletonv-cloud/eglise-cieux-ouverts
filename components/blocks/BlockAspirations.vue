@@ -64,7 +64,7 @@ const onScroll = () => {
   if (!sectionRef.value) return
   const rect = sectionRef.value.getBoundingClientRect()
   const vh = window.innerHeight
-  const start = vh * 10
+  const start = vh * 50
   const end = 0
 
   if (rect.top > start) { scrollProgress.value = 0; return }
