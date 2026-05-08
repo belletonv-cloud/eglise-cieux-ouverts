@@ -1,15 +1,15 @@
 <template>
   <section
     class="block-aspirations"
-    :style="{ background: props.backgroundColor, color: props.textColor }"
+    :style="{ background: blockProps.props.backgroundColor, color: blockProps.props.textColor }"
     :class="[visibilityClasses, { 'is-visible': isVisible }]"
     ref="sectionRef"
   >
     <div class="aspirations-inner">
-      <h2 class="aspirations-title">{{ props.title }}</h2>
+      <h2 class="aspirations-title">{{ blockProps.props.title }}</h2>
       <div class="aspirations-list">
         <div
-          v-for="(item, i) in props.items"
+          v-for="(item, i) in blockProps.props.items"
           :key="i"
           class="aspiration-line"
           :style="{ '--delay': i * 0.15 + 's' }"
@@ -27,15 +27,15 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 
-const props = defineProps({
+const blockProps = defineProps({
   props: { type: Object, required: true },
   visibility: { type: Object, default: () => ({}) },
 })
 
 const visibilityClasses = computed(() => ({
-  'hide-mobile': props.visibility.mobile === false,
-  'hide-tablet': props.visibility.tablet === false,
-  'hide-desktop': props.visibility.desktop === false,
+  'hide-mobile': blockProps.visibility.mobile === false,
+  'hide-tablet': blockProps.visibility.tablet === false,
+  'hide-desktop': blockProps.visibility.desktop === false,
 }))
 
 const sectionRef = ref(null)
