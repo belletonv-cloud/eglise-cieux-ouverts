@@ -14,17 +14,11 @@
           class="aspiration-item"
           :style="getItemStyle(i)"
         >
-          {{ item }}
+          <span class="aspiration-bullet" :style="getBulletStyle(i)"></span>
+          <span class="aspiration-text">{{ item }}</span>
         </li>
       </ul>
     </div>
-
-    <span
-      v-for="i in 4"
-      :key="'c' + i"
-      class="aspiration-circle"
-      :style="getCircleStyle(i - 1)"
-    ></span>
   </section>
 </template>
 
@@ -80,31 +74,34 @@ function getItemStyle(index) {
   const stagger = index * 0.22
   const effectiveP = Math.max(0, Math.min(1, (sp - stagger) / (1 - stagger)))
 
-  const splitGap = 180 * (1 - effectiveP)
+  const splitGap = 160 * (1 - effectiveP)
   const ty = 60 * (1 - effectiveP)
   const items = blockProps.props?.items || []
 
   return {
     transform: `translateY(${ty}px)`,
     opacity: Math.min(1, effectiveP * 6),
+    paddingLeft: '50px',
     marginBottom: index < items.length - 1 ? `${splitGap}px` : '0',
     transition: t
   }
 }
 
-function getCircleStyle(index) {
+function getBulletStyle(index) {
   const sp = scrollProgress.value
   const stagger = index * 0.22 + 0.06
   const effectiveP = Math.max(0, Math.min(1, (sp - stagger) / (1 - stagger)))
 
-  const ty = 120 * (1 - effectiveP)
-  const circleOpacity = (0.7 - index * 0.15) * Math.min(1, effectiveP * 6)
-  const leftPos = 20 + index * 25
+  const tx = index * 50 * (1 - effectiveP)
+  const ty = 80 * (1 - effectiveP)
+  const circleOpacity = (0.8 - index * 0.16) * Math.min(1, effectiveP * 6)
 
   return {
-    left: `${leftPos}%`,
-    transform: `translateY(${ty}px)`,
+    transform: `translate(${tx}px, ${ty}px)`,
     opacity: circleOpacity,
+    left: '0',
+    backgroundColor: '#1A96DF',
+    border: 'none',
     transition: t
   }
 }
@@ -115,7 +112,6 @@ function getCircleStyle(index) {
   container-type: inline-size;
   padding: 70px 24px;
   overflow: hidden;
-  position: relative;
 }
 
 .aspirations-inner {
@@ -126,8 +122,6 @@ function getCircleStyle(index) {
   justify-content: center;
   align-items: flex-start;
   gap: 40px;
-  position: relative;
-  z-index: 1;
 }
 
 .aspirations-title {
@@ -154,18 +148,25 @@ function getCircleStyle(index) {
   font-size: 36px;
   font-weight: 700;
   line-height: 1.4;
+  display: flex;
+  align-items: center;
+  position: relative;
   padding-left: 50px;
   will-change: transform, opacity, margin;
 }
 
-.aspiration-circle {
+.aspiration-text {
+  will-change: transform, opacity;
+}
+
+.aspiration-bullet {
   position: absolute;
+  left: 0;
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: #1A96DF;
-  pointer-events: none;
-  bottom: 20px;
+  border: 2px solid white;
+  background: transparent;
   will-change: transform, opacity;
 }
 
@@ -175,8 +176,11 @@ function getCircleStyle(index) {
   .aspiration-item {
     font-size: clamp(20px, 5vw, 36px);
     padding-left: 0;
+    justify-content: center;
+    flex-direction: column;
+    gap: 8px;
   }
-  .aspiration-circle { display: none; }
+  .aspiration-bullet { display: none; }
 }
 
 @container (max-width: 600px) {
