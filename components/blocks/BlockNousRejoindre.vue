@@ -42,11 +42,11 @@ const onScroll = () => {
   const rect = sectionRef.value.getBoundingClientRect()
   const vh = window.innerHeight
   const start = vh
-  const end = vh * 0.15
+  const end = vh * 0.3
 
   if (rect.top > start) { scrollProgress.value = 0; return }
   if (rect.top < end) { scrollProgress.value = 1; return }
-  scrollProgress.value = 1 - (rect.top - end) / (start - end)
+  scrollProgress.value = 1 - ((rect.top - end) / (start - end))
 }
 
 onMounted(() => {
@@ -65,33 +65,43 @@ onUnmounted(() => {
 
 const circleLeftStyle = computed(() => {
   const p = scrollProgress.value
+  const txPct = -200 * (1 - p)
+  const scale = 0.8 + 0.4 * p
   return {
-    transform: `translateX(${-220 + 200 * p}px) scale(${0.8 + 0.2 * p})`,
-    opacity: p,
+    transform: `translateX(${txPct}%) scale(${scale})`,
+    opacity: Math.min(1, p * 1.1),
+    transition: 'transform 0.45s cubic-bezier(.22,.9,.35,1)'
   }
 })
 
 const circleRightStyle = computed(() => {
   const p = scrollProgress.value
+  const txPct = 200 * (1 - p)
+  const scale = 0.9 + 0.3 * p
   return {
-    transform: `translateX(${220 - 200 * p}px) scale(${0.8 + 0.2 * p})`,
-    opacity: p * 0.6,
+    transform: `translateX(${txPct}%) scale(${scale})`,
+    opacity: Math.min(0.9, p * 0.9),
+    transition: 'transform 0.45s cubic-bezier(.22,.9,.35,1)'
   }
 })
 
 const circleSmallStyle = computed(() => {
   const p = scrollProgress.value
+  const ty = 120 * (1 - p)
+  const scale = 0.6 + 0.5 * p
   return {
-    transform: `translateY(${80 - 80 * p}px) scale(${0.6 + 0.4 * p})`,
+    transform: `translateY(${ty}px) scale(${scale})`,
     opacity: p,
+    transition: 'transform 0.45s cubic-bezier(.22,.9,.35,1)'
   }
 })
 
 const contentStyle = computed(() => {
   const p = scrollProgress.value
   return {
-    transform: `scale(${0.9 + 0.1 * p})`,
+    transform: `scale(${0.8 + p * 0.2})`,
     opacity: p,
+    transition: 'transform 0.2s ease, opacity 0.2s ease'
   }
 })
 </script>
@@ -140,7 +150,7 @@ const contentStyle = computed(() => {
   will-change: transform, opacity;
 }
 
-.cta-cercle { /* kept unchanged */
+.cta-cercle {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -164,5 +174,4 @@ const contentStyle = computed(() => {
 @container (max-width: 600px) {
   .block-nous-rejoindre { padding: 50px 20px; min-height: 300px; }
 }
-
 </style>

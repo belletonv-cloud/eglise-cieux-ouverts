@@ -380,7 +380,7 @@ export function getDefaultMessagesPage() {
       body: DEFAULT_MESSAGES_BODY,
       image: 'https://static.wixstatic.com/media/d65230_4715cdbb28a040dda63d2bcc671903c4~mv2.png/v1/fill/w_890,h_564,al_c,q_90,usm_0.66_1.00_0.01,enc_avif,quality_auto/2.png',
       visualStyle: 'messagesLaptop',
-      backgroundColor: '#f4f4f4',
+      backgroundColor: '#ffffff',
       textColor: '#064886',
       ctaText: 'Notre chaine YouTube',
       ctaLink: 'https://www.youtube.com/@eglisecieuxouverts',
@@ -452,7 +452,7 @@ function normalizeMessagesBlocks(blocks) {
           subtitle: block.props?.subtitle || 'Cieux Ouverts est aussi en ligne !',
           body: block.props?.body || DEFAULT_MESSAGES_BODY,
           visualStyle: block.props?.visualStyle || 'messagesLaptop',
-          backgroundColor: block.props?.backgroundColor || '#f4f4f4',
+          backgroundColor: block.props?.backgroundColor || '#ffffff',
           textColor: block.props?.textColor || '#064886',
           ctaText: block.props?.ctaText || 'Notre chaine YouTube',
           ctaLink: block.props?.ctaLink || 'https://www.youtube.com/@eglisecieuxouverts',
@@ -466,7 +466,7 @@ function normalizeMessagesBlocks(blocks) {
         props: {
           ...BLOCK_TYPES.richText.defaults,
           ...block.props,
-          backgroundColor: block.props?.backgroundColor === '#ffffff' ? DEFAULT_MESSAGES_GRADIENT : (block.props?.backgroundColor || DEFAULT_MESSAGES_GRADIENT),
+          backgroundColor: block.props?.backgroundColor || '#ffffff',
           padding: block.props?.padding || 80,
         },
       }

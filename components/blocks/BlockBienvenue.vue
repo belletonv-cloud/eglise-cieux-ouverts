@@ -1,24 +1,24 @@
 <template>
   <section
     class="block-bienvenue"
-    :class="[visibilityClasses, { 'is-visible': isVisible }]"
+    :class="visibilityClasses"
     ref="sectionRef"
   >
     <img src="https://static.wixstatic.com/media/d65230_c609095100164117aabdd3b55d9cdf56~mv2.png/v1/fill/w_1920,h_515,al_c,q_90,usm_0.66_1.00_0.01,enc_avif,quality_auto/d65230_c609095100164117aabdd3b55d9cdf56~mv2.png" alt="Foule Croix" class="bienvenue-img" />
     
     <div class="bienvenue-content">
       <div class="hero-bienvenue-wrapper" aria-label="BIENVENUE">
-        <div class="hero-bienvenue-line line-1">B I E&nbsp;</div>
-        <div class="hero-bienvenue-line line-2">N V E&nbsp;</div>
-        <div class="hero-bienvenue-line line-3">N U E</div>
+        <div class="hero-bienvenue-line line-1" :style="line1Style">B I E&nbsp;</div>
+        <div class="hero-bienvenue-line line-2" :style="line2Style">N V E&nbsp;</div>
+        <div class="hero-bienvenue-line line-3" :style="line3Style">N U E</div>
       </div>
-      <p class="hero-subtitle">à l'Église Cieux Ouverts à Morlaix</p>
-      <div class="hero-socials">
-        <a href="https://www.instagram.com/eglise_cieux_ouverts/" target="_blank" rel="noopener" aria-label="Instagram Cieux Ouverts">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+      <p class="hero-subtitle" :style="subtitleStyle">à l'Église Cieux Ouverts à Morlaix</p>
+      <div class="hero-socials" :style="socialsStyle">
+        <a href="https://www.instagram.com/eglise_cieux_ouverts/" target="_blank" rel="noopener" aria-label="Instagram Cieux Ouverts" class="social-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
         </a>
-        <a href="https://www.facebook.com/eglisecieuxouverts" target="_blank" rel="noopener" aria-label="Facebook Cieux Ouverts">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.971h-1.513c-1.491 0-1.956.93-1.956 1.874v2.25h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/></svg>
+        <a href="https://www.facebook.com/eglisecieuxouverts" target="_blank" rel="noopener" aria-label="Facebook Cieux Ouverts" class="social-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.971h-1.513c-1.491 0-1.956.93-1.956 1.874v2.25h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/></svg>
         </a>
       </div>
     </div>
@@ -26,14 +26,12 @@
 </template>
 
 <script setup>
-import { ref, inject, onMounted, onUnmounted, computed } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 
 const p = defineProps({
   props: { type: Object, required: true },
   visibility: { type: Object, default: () => ({}) },
 })
-
-const isEditor = inject('isEditor', false)
 
 const visibilityClasses = computed(() => ({
   'hide-mobile': p.visibility.mobile === false,
@@ -42,29 +40,80 @@ const visibilityClasses = computed(() => ({
 }))
 
 const sectionRef = ref(null)
-const isVisible = ref(false)
+const scrollProgress = ref(0)
+
+const onScroll = () => {
+  if (!sectionRef.value) return
+  const rect = sectionRef.value.getBoundingClientRect()
+  const vh = window.innerHeight
+  const start = vh
+  const end = vh * 0.3
+
+  if (rect.top > start) {
+    scrollProgress.value = 0
+  } else if (rect.top < end) {
+    scrollProgress.value = 1
+  } else {
+    scrollProgress.value = 1 - ((rect.top - end) / (start - end))
+  }
+}
 
 onMounted(() => {
-  if (isEditor) {
-    isVisible.value = true
-    return
+  window.addEventListener('scroll', onScroll, { passive: true })
+  onScroll()
+})
+onUnmounted(() => window.removeEventListener('scroll', onScroll))
+
+const titleColor = '#054886'
+
+const line1Style = computed(() => {
+  const p = scrollProgress.value
+  return {
+    color: titleColor,
+    transform: `translateX(${-300 * (1 - p)}px) rotate(${-45 * (1 - p)}deg)`,
+    opacity: p === 0 ? 0 : 0.2 + p * 0.8,
+    transition: 'transform 0.1s linear, opacity 0.1s linear'
   }
+})
 
-  // Delay observer start so animation plays after page load (hero already in viewport)
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      const observer = new IntersectionObserver(
-        ([entry]) => {
-          isVisible.value = entry.isIntersecting
-        },
-        { threshold: 0.15 }
-      )
+const line2Style = computed(() => {
+  const p = scrollProgress.value
+  return {
+    color: titleColor,
+    transform: `translateY(${150 * (1 - p)}px) rotate(${15 * (1 - p)}deg)`,
+    opacity: p === 0 ? 0 : 0.2 + p * 0.8,
+    transition: 'transform 0.1s linear, opacity 0.1s linear'
+  }
+})
 
-      if (sectionRef.value) observer.observe(sectionRef.value)
+const line3Style = computed(() => {
+  const p = scrollProgress.value
+  return {
+    color: titleColor,
+    transform: `translateX(${300 * (1 - p)}px) rotate(${45 * (1 - p)}deg)`,
+    opacity: p === 0 ? 0 : 0.2 + p * 0.8,
+    transition: 'transform 0.1s linear, opacity 0.1s linear'
+  }
+})
 
-      onUnmounted(() => observer.disconnect())
-    })
-  })
+const subtitleStyle = computed(() => {
+  const p = scrollProgress.value
+  return {
+    color: '#054886',
+    transform: `translateY(${(1 - p) * 50}px)`,
+    opacity: p,
+    transition: 'transform 0.1s linear, opacity 0.1s linear'
+  }
+})
+
+const socialsStyle = computed(() => {
+  const p = scrollProgress.value
+  return {
+    opacity: p,
+    transform: `translateY(${(1 - p) * 30}px)`,
+    transition: 'transform 0.1s linear, opacity 0.1s linear',
+    pointerEvents: p > 0.5 ? 'auto' : 'none',
+  }
 })
 </script>
 
@@ -111,7 +160,7 @@ onMounted(() => {
   flex-wrap: nowrap;
   font-family: 'Playfair Display', serif;
   font-size: 80px;
-  line-height:1.3;
+  line-height: 1.3;
   margin-bottom: 20px;
   position: relative;
   width: 100%;
@@ -123,80 +172,38 @@ onMounted(() => {
   letter-spacing: 0.1em;
   will-change: transform, opacity;
   transform-origin: center center;
-  opacity: 0;
-}
-
-.line-1 {
-  transform: translateX(-300px) rotate(-45deg);
-  transition: transform 0.6s cubic-bezier(0.16,1,0.3,1), opacity 0.6s ease;
-}
-.line-2 {
-  transform: translateY(150px) rotate(15deg);
-  transition: transform 0.6s cubic-bezier(0.16,1,0.3,1), opacity 0.6s ease;
-  transition-delay: 0.1s;
-}
-.line-3 {
-  transform: translateX(300px) rotate(45deg);
-  transition: transform 0.6s cubic-bezier(0.16,1,0.3,1), opacity 0.6s ease;
-  transition-delay: 0.2s;
-}
-
-.is-visible .line-1,
-.is-visible .line-2,
-.is-visible .line-3 {
-  opacity: 1;
-  transform: none;
 }
 
 .hero-subtitle {
   font-family: Helvetica, Arial, sans-serif;
   font-size: 17.5px;
-  color: #054886;
   font-weight: 400;
   margin-top: 20px;
   will-change: transform, opacity;
-  opacity: 0;
-  transform: translateY(50px);
-  transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.16,1,0.3,1);
-  transition-delay: 0.3s;
-}
-
-.is-visible .hero-subtitle {
-  opacity: 1;
-  transform: none;
 }
 
 .hero-socials {
   display: flex;
-  gap: 16px;
+  gap: 12px;
   margin-top: 24px;
-  will-change: transform, opacity;
-  opacity: 0;
-  transform: translateY(30px);
-  transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.16,1,0.3,1);
-  transition-delay: 0.4s;
 }
 
-.hero-socials a {
-  color: white;
+.social-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background: rgba(255,255,255,0.15);
+  background: rgba(5, 72, 134, 0.85);
+  color: white;
+  text-decoration: none;
   transition: background 0.2s, transform 0.2s;
 }
 
-.hero-socials a:hover {
-  background: rgba(255,255,255,0.3);
+.social-icon:hover {
+  background: #054886;
   transform: scale(1.1);
-}
-
-.is-visible .hero-socials {
-  opacity: 1;
-  transform: none;
 }
 
 @media (max-width: 768px) {
@@ -209,6 +216,5 @@ onMounted(() => {
   }
   .hero-subtitle { font-size: 16px; margin-top: 15px; }
   .hero-socials { margin-top: 16px; }
-  .hero-socials a { width: 36px; height: 36px; }
 }
 </style>

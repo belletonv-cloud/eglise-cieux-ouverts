@@ -2,19 +2,19 @@
   <section
     class="block-aspirations"
     :style="{ background: props.backgroundColor, color: props.textColor }"
-    :class="[visibilityClasses, { 'is-visible': isVisible }]"
+    :class="visibilityClasses"
     ref="sectionRef"
   >
     <div class="aspirations-inner">
-      <h2 class="aspirations-title">{{ props.title }}</h2>
+      <h2 class="aspirations-title" :style="titleStyle">{{ props.title }}</h2>
       <ul class="aspirations-list">
         <li
           v-for="(item, i) in props.items"
           :key="i"
           class="aspiration-item"
-          :style="itemStyle(i)"
+          :style="getItemStyle(i)"
         >
-          <span class="aspiration-bullet" :style="bulletStyle(i)"></span>
+          <span class="aspiration-bullet" :style="getBulletStyle(i)"></span>
           {{ item }}
         </li>
       </ul>
@@ -23,14 +23,12 @@
 </template>
 
 <script setup>
-import { computed, ref, inject, onMounted, onUnmounted } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 
 const p = defineProps({
   props: { type: Object, required: true },
   visibility: { type: Object, default: () => ({}) },
 })
-
-const isEditor = inject('isEditor', false)
 
 const visibilityClasses = computed(() => ({
   'hide-mobile': p.visibility.mobile === false,
@@ -39,7 +37,6 @@ const visibilityClasses = computed(() => ({
 }))
 
 const sectionRef = ref(null)
-const isVisible = ref(false)
 const scrollProgress = ref(0)
 
 const onScroll = () => {
@@ -47,55 +44,54 @@ const onScroll = () => {
   const rect = sectionRef.value.getBoundingClientRect()
   const vh = window.innerHeight
   const start = vh
-  const end = vh * 0.12
+  const end = vh * 0.2
 
-  if (rect.top > start) { scrollProgress.value = 0; return }
-  if (rect.top < end) { scrollProgress.value = 1; return }
-  scrollProgress.value = 1 - (rect.top - end) / (start - end)
+  if (rect.top > start) {
+    scrollProgress.value = 0
+  } else if (rect.top < end) {
+    scrollProgress.value = 1
+  } else {
+    scrollProgress.value = 1 - ((rect.top - end) / (start - end))
+  }
 }
 
 onMounted(() => {
-  if (isEditor) {
-    isVisible.value = true
-    return
-  }
-
   window.addEventListener('scroll', onScroll, { passive: true })
   onScroll()
+})
+onUnmounted(() => window.removeEventListener('scroll', onScroll))
 
-  const observer = new IntersectionObserver(
-    ([entry]) => {
-      isVisible.value = entry.isIntersecting
-    },
-    { threshold: 0.12 }
-  )
-  if (sectionRef.value) observer.observe(sectionRef.value)
-
-  onUnmounted(() => {
-    observer.disconnect()
-    window.removeEventListener('scroll', onScroll)
-  })
+const titleStyle = computed(() => {
+  const p = scrollProgress.value
+  return {
+    transform: `translateY(${100 * (1 - p)}px)`,
+    opacity: p,
+    transition: 'transform 0.1s linear, opacity 0.1s linear'
+  }
 })
 
-function itemStyle(i) {
+function getItemStyle(index) {
   const p = scrollProgress.value
-  const staggerStart = i * 0.06
-  const adjustedP = Math.max(0, Math.min(1, (p - staggerStart) / (1 - staggerStart)))
-
+  const delay = index * 0.15
+  const progress = Math.max(0, Math.min(1, (p - delay) / (1 - delay)))
+  const ty = 50 * (1 - progress)
+  const tx = index * 20
   return {
-    transform: `translate(${-140 * (1 - adjustedP)}px, ${60 * (1 - adjustedP)}px)`,
-    opacity: adjustedP,
+    transform: `translate(${tx}px, ${ty}px)`,
+    opacity: progress,
+    transition: 'transform 0.1s linear, opacity 0.1s linear'
   }
 }
 
-function bulletStyle(i) {
+function getBulletStyle(index) {
   const p = scrollProgress.value
-  const staggerStart = i * 0.06 + 0.06
-  const adjustedP = Math.max(0, Math.min(1, (p - staggerStart) / (1 - staggerStart)))
-
+  const delay = index * 0.15
+  const progress = Math.max(0, Math.min(1, (p - delay) / (1 - delay)))
+  const ty = 30 * (1 - progress)
   return {
-    transform: `scale(${adjustedP})`,
-    opacity: adjustedP,
+    transform: `translateY(${ty}px)`,
+    opacity: progress,
+    transition: 'transform 0.1s linear, opacity 0.1s linear'
   }
 }
 </script>
@@ -124,9 +120,6 @@ function bulletStyle(i) {
   line-height: 1.3;
   margin: 0;
   will-change: transform, opacity;
-  opacity: 0;
-  transform: translateY(40px);
-  transition: opacity 0.7s cubic-bezier(0.4,0,0.2,1), transform 0.7s cubic-bezier(0.4,0,0.2,1);
 }
 
 .aspirations-list {
@@ -162,9 +155,6 @@ function bulletStyle(i) {
   will-change: transform, opacity;
 }
 
-/* Triggered state */
-.is-visible .aspirations-title { opacity: 1; transform: none; }
-
 @container (max-width: 768px) {
   .aspirations-inner { align-items: center; text-align: center; }
   .aspirations-title { font-size: clamp(40px, 8vw, 75px); }
@@ -172,6 +162,7 @@ function bulletStyle(i) {
     font-size: clamp(20px, 5vw, 36px);
     padding-left: 0;
     justify-content: center;
+    transform: none !important;
   }
   .aspiration-bullet { display: none; }
 }
