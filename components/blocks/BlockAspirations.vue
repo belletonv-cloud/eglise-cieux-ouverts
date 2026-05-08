@@ -2,7 +2,7 @@
   <section
     class="block-aspirations"
     :style="{ background: blockProps.props.backgroundColor, color: blockProps.props.textColor }"
-    :class="[visibilityClasses, { 'is-visible': isVisible }]"
+    :class="visibilityClasses"
     ref="sectionRef"
   >
     <div class="aspirations-inner">
@@ -12,10 +12,10 @@
           v-for="(item, i) in blockProps.props.items"
           :key="i"
           class="aspiration-line"
-          :style="{ '--delay': i * 0.15 + 's' }"
+          :style="getLineStyle(i)"
         >
           <span class="circle-slot">
-            <span class="aspiration-circle"></span>
+            <span class="aspiration-circle" :style="getCircleStyle(i)"></span>
           </span>
           <span class="aspiration-text">{{ item }}</span>
         </div>
@@ -39,23 +39,61 @@ const visibilityClasses = computed(() => ({
 }))
 
 const sectionRef = ref(null)
-const isVisible = ref(false)
-let observer = null
+const scrollProgress = ref(0)
+
+const onScroll = () => {
+  if (!sectionRef.value) return
+  const rect = sectionRef.value.getBoundingClientRect()
+  const vh = window.innerHeight
+  const start = vh
+  const end = vh * 0.2
+
+  if (rect.top > start) { scrollProgress.value = 0; return }
+  if (rect.top < end) { scrollProgress.value = 1; return }
+  scrollProgress.value = 1 - ((rect.top - end) / (start - end))
+}
 
 onMounted(() => {
-  observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        isVisible.value = true
-        observer.unobserve(entry.target)
-      }
-    })
-  }, { threshold: 0.1 })
-
-  if (sectionRef.value) observer.observe(sectionRef.value)
+  window.addEventListener('scroll', onScroll, { passive: true })
+  onScroll()
 })
 
-onUnmounted(() => { if (observer) observer.disconnect() })
+onUnmounted(() => window.removeEventListener('scroll', onScroll))
+
+const count = computed(() => (blockProps.props.items || []).length)
+
+function getLineStyle(index) {
+  const sp = scrollProgress.value
+  const n = count.value
+  const segSize = 1 / n
+  const startP = index * segSize
+  const endP = (index + 1) * segSize
+
+  if (sp <= startP) return { transform: 'translateY(100px)', opacity: 0 }
+  if (sp >= endP) return { transform: 'translateY(0)', opacity: 1 }
+
+  const localP = (sp - startP) / segSize
+  const ty = 100 * (1 - localP)
+
+  return {
+    transform: `translateY(${ty}px)`,
+    opacity: Math.min(1, localP * 6),
+  }
+}
+
+function getCircleStyle(index) {
+  const sp = scrollProgress.value
+  const n = count.value
+  const segSize = 1 / n
+  const startP = index * segSize
+  const endP = (index + 1) * segSize
+
+  if (sp <= startP) return { opacity: 0 }
+  if (sp >= endP) return { opacity: 1 }
+
+  const localP = (sp - startP) / segSize
+  return { opacity: Math.min(1, localP * 6) }
+}
 </script>
 
 <style scoped>
@@ -99,17 +137,7 @@ onUnmounted(() => { if (observer) observer.disconnect() })
   font-size: 36px;
   font-weight: 700;
   line-height: 1.4;
-
-  /* initial hidden state */
-  transform: translateY(100px);
-  opacity: 0;
-  transition: transform 420ms cubic-bezier(.2,.9,.3,1), opacity 320ms ease-out;
-  transition-delay: var(--delay, 0s);
-}
-
-.is-visible .aspiration-line {
-  transform: translateY(0);
-  opacity: 1;
+  will-change: transform, opacity;
 }
 
 .aspiration-line:last-child {
@@ -127,15 +155,11 @@ onUnmounted(() => { if (observer) observer.disconnect() })
   height: 18px;
   border-radius: 50%;
   background: rgba(26, 150, 223, 0.55);
-  transform: scale(0.92);
-  opacity: 0;
-  transition: transform 320ms cubic-bezier(.2,.9,.3,1), opacity 200ms ease-out;
-  transition-delay: calc(var(--delay, 0s) + 60ms);
+  will-change: opacity;
 }
 
-.is-visible .aspiration-circle {
-  transform: scale(1);
-  opacity: 1;
+.aspiration-text {
+  will-change: opacity;
 }
 
 @container (max-width: 768px) {
