@@ -8,13 +8,22 @@
     <div class="aspirations-inner">
       <h2 class="aspirations-title" :style="getTitleStyle()">{{ blockProps.props.title }}</h2>
       <div class="aspirations-list" ref="listRef">
+        <!-- Cercles positionnés par rapport au conteneur, pas aux lignes -->
+        <span
+          v-for="(item, i) in blockProps.props.items"
+          :key="'circle-' + i"
+          class="aspiration-circle"
+          :style="getCircleStyle(i)"
+        ></span>
+
+        <!-- Lignes de texte uniquement -->
         <div
           v-for="(item, i) in blockProps.props.items"
-          :key="i"
+          :key="'line-' + i"
           class="aspiration-line"
           :style="getLineStyle(i)"
+          :ref="el => setLineRef(el, i)"
         >
-          <span class="aspiration-circle" :style="getCircleStyle(i)"></span>
           <span class="aspiration-text">{{ item }}</span>
         </div>
       </div>
@@ -23,7 +32,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue'
 
 const blockProps = defineProps({
   props: { type: Object, required: true },
@@ -41,6 +50,16 @@ const listRef = ref(null)
 const scrollProgress = ref(0)
 const isMobile = ref(false)
 
+// Positions des lignes de texte (mesurées au montage)
+const lineTops = ref([])
+const lineRefs = ref([])
+const circleTop = 20 // Y commun pour tous les cercles (en px)
+const circleSpacing = 28 // Espacement horizontal entre cercles
+
+function setLineRef(el, i) {
+  if (el) lineRefs.value[i] = el
+}
+
 const onScroll = () => {
   if (!sectionRef.value) return
   const rect = sectionRef.value.getBoundingClientRect()
@@ -53,9 +72,22 @@ const onScroll = () => {
   scrollProgress.value = 1 - ((rect.top - end) / (start - end))
 }
 
-onMounted(() => {
+onMounted(async () => {
   isMobile.value = window.innerWidth < 768
   window.addEventListener('scroll', onScroll, { passive: true })
+  
+  await nextTick()
+  
+  // Mesurer la position Y de chaque ligne de texte par rapport au conteneur
+  if (listRef.value && lineRefs.value.length) {
+    const listRect = listRef.value.getBoundingClientRect()
+    lineTops.value = lineRefs.value.map(line => {
+      if (!line) return 0
+      const lineRect = line.getBoundingClientRect()
+      return lineRect.top - listRect.top
+    })
+  }
+  
   onScroll()
 })
 
@@ -63,14 +95,13 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
 
 const count = computed(() => (blockProps.props.items || []).length)
 
-const circleTop = '20px'
-const circleSpacing = 28
+// Chaque ligne utilise 1/N du scroll, avec une pause après
+const lineActive = 1 / count.value
 
 function getTitleStyle() {
   if (isMobile.value) return { opacity: 1 }
   const sp = scrollProgress.value
-  const totalPerLine = 1 / count.value
-  const active = totalPerLine * 0.3
+  const active = lineActive * 0.3
   if (sp <= 0) return { opacity: 0 }
   if (sp >= active) return { opacity: 1 }
   return { opacity: sp / active }
@@ -80,16 +111,13 @@ function getLineStyle(index) {
   if (isMobile.value) return { transform: 'translateY(0)', opacity: 1 }
 
   const sp = scrollProgress.value
-  const n = count.value
-  const totalPerLine = 1 / n
-  const active = totalPerLine * 0.2
-  const startP = index * totalPerLine
-  const endP = startP + active
+  const startP = index * lineActive
+  const endP = startP + lineActive
 
   if (sp <= startP) return { transform: 'translateY(100px)', opacity: 0 }
   if (sp >= endP) return { transform: 'translateY(0)', opacity: 1 }
 
-  const localP = (sp - startP) / active
+  const localP = (sp - startP) / lineActive
   const ty = 100 * (1 - localP)
   return {
     transform: `translateY(${ty}px)`,
@@ -98,20 +126,37 @@ function getLineStyle(index) {
 }
 
 function getCircleStyle(index) {
-  if (isMobile.value) return { opacity: 1, top: circleTop, left: (index * circleSpacing) + 'px' }
+  if (isMobile.value) return { 
+    opacity: 1, 
+    top: circleTop + 'px', 
+    left: (index * circleSpacing) + 'px' 
+  }
 
   const sp = scrollProgress.value
-  const n = count.value
-  const totalPerLine = 1 / n
-  const active = totalPerLine * 0.2
-  const startP = index * totalPerLine
-  const endP = startP + active
-
-  if (sp <= startP) return { opacity: 0, top: circleTop, left: (index * circleSpacing) + 'px' }
-  if (sp >= endP) return { opacity: 1, top: circleTop, left: (index * circleSpacing) + 'px' }
-
-  const localP = (sp - startP) / active
-  return { opacity: localP, top: circleTop, left: (index * circleSpacing) + 'px' }
+  const startP = index * lineActive
+  
+  // Position Y de départ du cercle (à côté de sa ligne de texte + 100px)
+  const lineTop = lineTops.value[index] || (index * 60)
+  const startTop = lineTop + 100
+  
+  // Le cercle commence à monter avec le texte, et continue après que le texte s'est arrêté
+  // Il finit à circleTop (Y commun)
+  if (sp <= startP) return { 
+    opacity: 0,
+    top: startTop + 'px', 
+    left: (index * circleSpacing) + 'px' 
+  }
+  
+  // Le cercle a commencé à monter. Il doit atteindre circleTop à la fin du scroll (sp = 1)
+  // Progression : de startP à 1.0
+  const circleProgress = Math.min(1, (sp - startP) / (1 - startP))
+  const currentTop = startTop + (circleTop - startTop) * circleProgress
+  
+  return { 
+    opacity: Math.min(1, circleProgress * 6),
+    top: currentTop + 'px', 
+    left: (index * circleSpacing) + 'px' 
+  }
 }
 </script>
 
@@ -150,6 +195,7 @@ function getCircleStyle(index) {
   display: flex;
   align-items: center;
   padding: 18px 0;
+  padding-left: 55px;
   border-bottom: 1px solid rgba(255,255,255,0.2);
   font-family: Helvetica, Arial, sans-serif;
   font-size: 36px;
@@ -168,11 +214,10 @@ function getCircleStyle(index) {
   height: 18px;
   border-radius: 50%;
   background: rgba(26, 150, 223, 0.55);
-  will-change: opacity;
+  will-change: top, opacity;
 }
 
 .aspiration-text {
-  margin-left: 55px;
   will-change: opacity;
 }
 
@@ -182,13 +227,11 @@ function getCircleStyle(index) {
   .aspiration-line {
     font-size: clamp(16px, 4.5vw, 28px);
     padding: 14px 0;
+    padding-left: 40px;
   }
   .aspiration-circle {
     width: 14px;
     height: 14px;
-  }
-  .aspiration-text {
-    margin-left: 40px;
   }
 }
 
