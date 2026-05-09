@@ -1,34 +1,42 @@
 <template>
-  <section
-    class="block-aspirations"
-    :style="{ background: blockProps.props.backgroundColor, color: blockProps.props.textColor }"
-    :class="[visibilityClasses, { 'js-mounted': mounted }]"
-    ref="sectionRef"
+  <!-- Viewport wrapper : crée l'espace pour scroller (comme dans le prototype) -->
+  <div
+    class="aspirations-viewport"
+    :class="visibilityClasses"
+    ref="viewportRef"
   >
-    <div class="aspirations-inner">
-      <h2 class="aspirations-title">{{ blockProps.props.title }}</h2>
-      <div class="aspirations-list" ref="listRef">
-        <!-- Cercles : mouvement DIRECTEMENT piloté par le scroll (pas de transitions CSS) -->
-        <span
-          v-for="(item, i) in blockProps.props.items"
-          :key="'circle-' + i"
-          class="aspiration-circle"
-          :class="{ 'is-active': isItemActive(i) }"
-          :style="getCircleStyle(i)"
-        ></span>
+    <!-- Bloc fixed : reste au centre de l'écran pendant l'animation -->
+    <section
+      class="block-aspirations"
+      :style="{ background: blockProps.props.backgroundColor, color: blockProps.props.textColor }"
+      :class="{ 'js-mounted': mounted, 'is-visible': isVisible }"
+      ref="sectionRef"
+    >
+      <div class="aspirations-inner">
+        <h2 class="aspirations-title">{{ blockProps.props.title }}</h2>
+        <div class="aspirations-list" ref="listRef">
+          <!-- Cercles : mouvement DIRECTEMENT piloté par le scroll (pas de transitions CSS) -->
+          <span
+            v-for="(item, i) in blockProps.props.items"
+            :key="'circle-' + i"
+            class="aspiration-circle"
+            :class="{ 'is-active': isItemActive(i) }"
+            :style="getCircleStyle(i)"
+          ></span>
 
-        <!-- Lignes de texte : chacune à sa position de liste, fade-in avec transitions CSS -->
-        <div
-          v-for="(item, i) in blockProps.props.items"
-          :key="'line-' + i"
-          class="aspiration-line"
-          :class="{ 'is-active': isItemActive(i) }"
-        >
-          <span class="aspiration-text" :style="getTextStyle(i)">{{ item }}</span>
+          <!-- Lignes de texte : chacune à sa position de liste, fade-in avec transitions CSS -->
+          <div
+            v-for="(item, i) in blockProps.props.items"
+            :key="'line-' + i"
+            class="aspiration-line"
+            :class="{ 'is-active': isItemActive(i) }"
+          >
+            <span class="aspiration-text" :style="getTextStyle(i)">{{ item }}</span>
+          </div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
+  </div>
 </template>
 
 <script setup>
@@ -51,10 +59,12 @@ const visibilityClasses = computed(() => ({
 }))
 
 const sectionRef = ref(null)
+const viewportRef = ref(null)
 const scrollProgress = ref(0)
 const isMobile = ref(false)
 const titleShown = ref(false)
 const mounted = ref(false)
+const isVisible = ref(false)
 
 const lineHeight = 87 // Hauteur d'une ligne de texte
 const circleTop = 0 // Y commun final pour TOUS les cercles (première ligne)
@@ -140,13 +150,20 @@ function getTimingFor(index) {
 }
 
 const onScroll = () => {
-  if (!sectionRef.value) return
-  const rect = sectionRef.value.getBoundingClientRect()
+  if (!viewportRef.value) return
+  const rect = viewportRef.value.getBoundingClientRect()
   const vh = window.innerHeight
-  // Animation commence quand le HAUT de la section atteint le BAS du viewport
-  // et se termine quand le HAUT de la section est à 100px du haut du viewport
-  const start = vh  // section top at viewport bottom
-  const end = 100   // section top 100px from viewport top
+
+  // isVisible : vrai quand le viewport est dans la fenêtre
+  // (on montre le bloc fixed seulement pendant l'animation)
+  isVisible.value = rect.top < vh && rect.bottom > 0
+
+  // Plage de scroll pour l'animation :
+  // - scrollProgress = 0 quand le HAUT du viewport est au BAS de la fenêtre
+  // - scrollProgress = 1 quand le HAUT du viewport est à 20% du haut de la fenêtre
+  // Cela donne une grande plage pour que tous les cercles aient le temps de s'animer
+  const start = vh  // viewport top at viewport bottom
+  const end = vh * 0.2  // viewport top at 20% from viewport top
 
   if (rect.top > start) { scrollProgress.value = 0; return }
   if (rect.top < end) { scrollProgress.value = 1; return }
@@ -263,10 +280,35 @@ function isItemActive(index) {
 </script>
 
 <style scoped>
+/* Viewport wrapper : crée l'espace pour scroller (comme dans le prototype) */
+.aspirations-viewport {
+  min-height: 500vh;
+  position: relative;
+}
+
+/* Bloc fixed : reste au centre de l'écran pendant l'animation */
+/* Caché par défaut, montré seulement quand is-visible est true */
 .block-aspirations {
-  container-type: inline-size;
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: calc(100% - 48px);
+  max-width: 1048px;
   padding: 70px 24px;
-  overflow: hidden;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  z-index: 10;
+  pointer-events: none;
+  container-type: inline-size;
+}
+
+/* Montrer le bloc quand il est dans la zone d'animation */
+.block-aspirations.is-visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
 
 .aspirations-inner {
