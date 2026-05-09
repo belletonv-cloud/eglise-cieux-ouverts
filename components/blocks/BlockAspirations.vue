@@ -6,9 +6,9 @@
     ref="sectionRef"
   >
     <div class="aspirations-inner">
-      <h2 class="aspirations-title" :style="getTitleStyle()">{{ blockProps.props.title }}</h2>
+      <h2 class="aspirations-title">{{ blockProps.props.title }}</h2>
       <div class="aspirations-list" ref="listRef">
-        <!-- Cercles : TOUS montent vers Y=0 (ligne horizontale commune) -->
+        <!-- Cercles : mouvement DIRECTEMENT piloté par le scroll (pas de transitions CSS) -->
         <span
           v-for="(item, i) in blockProps.props.items"
           :key="'circle-' + i"
@@ -17,13 +17,12 @@
           :style="getCircleStyle(i)"
         ></span>
 
-        <!-- Lignes de texte : chacune à sa position de liste -->
+        <!-- Lignes de texte : chacune à sa position de liste, fade-in avec transitions CSS -->
         <div
           v-for="(item, i) in blockProps.props.items"
           :key="'line-' + i"
           class="aspiration-line"
           :class="{ 'is-active': isItemActive(i) }"
-          :style="getLineStyle(i)"
         >
           <span class="aspiration-text" :style="getTextStyle(i)">{{ item }}</span>
         </div>
@@ -61,6 +60,37 @@ const lineHeight = 87 // Hauteur d'une ligne de texte
 const circleTop = 0 // Y commun final pour TOUS les cercles (première ligne)
 const circleSize = 24
 const circleLeftOffset = -80 // Décalage horizontal à gauche
+
+// Calcul de la position Y d'un cercle directement à partir de scrollProgress
+// (mouvement piloté par le scroll, pas de transitions CSS)
+function getCircleY(index) {
+  const sp = scrollProgress.value
+  const n = count.value
+  const lineTotal = 1 / Math.max(1, n)
+  
+  // Segment de scrollProgress pour cet item
+  // (même logique que activeCount pour la cohérence)
+  const startP = index * lineTotal + lineActive
+  const endP = (index + 1) * lineTotal
+  
+  // Position de départ et d'arrivée
+  const startY = index * lineHeight + 100
+  const endY = 0
+  
+  // Si scroll est avant le début du segment : cercle à sa position initiale
+  if (sp <= startP) {
+    return startY
+  }
+  
+  // Si scroll est après la fin du segment : cercle à sa position finale
+  if (sp >= endP) {
+    return endY
+  }
+  
+  // Pendant le segment : interpolation linéaire directe
+  const segmentProgress = (sp - startP) / (endP - startP)
+  return startY + (endY - startY) * segmentProgress
+}
 
 // Use per-item timings when available, otherwise fall back to default constants
 const DEFAULT = {
@@ -177,61 +207,16 @@ const activeCount = computed(() => {
 
 const lineActive = 0.02 // 2% du segment pour l'animation active
 
-function getTitleStyle() {
-  // Ensure we don't flash the title on SSR -> client hydration. We keep the
-  // title hidden until the component is mounted (client) and scrollProgress
-  // progression makes it visible. Mobile always shows the title.
-  if (!mounted.value) return { opacity: 0 }
-  if (isMobile.value) return { opacity: 1 }
-  const sp = scrollProgress.value
-  // Prevent flashing: once fully shown, keep shown
-  if (sp <= 0 && !titleShown.value) return { opacity: 0 }
-  if (sp >= 0.02) {
-    titleShown.value = true
-    return { opacity: 1 }
-  }
-  if (titleShown.value) return { opacity: 1 }
-  return { opacity: sp / 0.02 }
-}
-
-function getLineStyle(index) {
-  if (isMobile.value) return { transform: 'translateY(0)', opacity: 1 }
-
-  const sp = scrollProgress.value
-  // On déplace la logique d'animation vers le CSS. Ici on renvoie un
-  // style vide pour desktop et gère l'affichage immédiat sur mobile.
-  if (isMobile.value) return { transform: 'translateY(0)', opacity: 1 }
-  return {}
-}
+// Titre : maintenant géré par CSS via la classe .js-mounted
+// (pas de style inline pour éviter le flash SSR)
 
 // Style du texte : synchronisé pour apparaître quand son cercle commence à monter
+// On utilise uniquement des CSS variables pour les timings (pas de transform/opacity inline)
 function getTextStyle(index) {
-  // Avoid emitting transform/opacity inline on the server to prevent SSR
-  // residues. Server-side render should keep markup minimal; client will set
-  // CSS variables on mount. `window` is undefined during SSR.
-  if (typeof window === 'undefined') return {}
-  if (isMobile.value) return { opacity: 1, transform: 'translateY(0)' }
+  // SSR : retourner un style vide pour éviter les flashs
+  if (typeof window === 'undefined' || !mounted.value) return {}
+  if (isMobile.value) return {}
 
-  const sp = scrollProgress.value
-  const lineTotal = 1 / count.value
-  // Add a small threshold so the first item isn't active immediately when
-  // scrollProgress is 0. This prevents the first circle/text from becoming
-  // active before the section is actually in view.
-  const startP = index * lineTotal + lineActive
-
-  // Avant le début : caché et mis au même niveau vertical que le cercle (début)
-  const startTop = index * lineHeight + 100
-  const lineTop = index * lineHeight
-  // limit the text offset so it doesn't appear extremely low; keep it subtle
-  const textOffset = Math.min(startTop - lineTop, 20) // décalage vertical initial du texte
-  if (sp < startP) return { transform: `translateY(${textOffset}px)`, opacity: 0 }
-
-  // On laisse CSS piloter la transformation finale. Ici on prépare:
-  // - une position initiale basse pour le texte (alignée sur le cercle)
-  // - quand l'item devient actif, on ne met PAS transform/opacity inline afin que
-  //   les règles CSS (.aspiration-line.is-active .aspiration-text) prennent effet.
-  // On synchronise le démarrage du texte avec le cercle (même delay), mais on
-  // donne une durée plus courte au texte pour qu'il s'arrête à sa ligne avant le cercle.
   const itemTiming = getTimingFor(index) || DEFAULT
   const c = (itemTiming && itemTiming.circle) || DEFAULT.circle
   const t = (itemTiming && itemTiming.text) || DEFAULT.text
@@ -249,46 +234,28 @@ function getTextStyle(index) {
   }
 }
 
+// Style du cercle : MOUVEMENT DIRECTEMENT PILOTÉ PAR LE SCROLL
+// (pas de transitions CSS, calcul direct de translateY à partir de scrollProgress)
 function getCircleStyle(index) {
-  // Cette fonction renvoie la position initiale du cercle (autour de sa ligne).
-  // The animation used to rely on top:0 via CSS. We now use transform to
-  // move circles vertically; keep the comment for context.
-  // Avoid outputting many inline properties during SSR — keep SSR markup
-  // minimal to prevent mismatches. Client-side mount will populate variables.
-  if (typeof window === 'undefined') return {
+  // SSR : seulement left, pas de transform pour éviter flash
+  if (typeof window === 'undefined' || !mounted.value) return {
     left: (index * 30 + circleLeftOffset) + 'px',
   }
 
+  // Mobile : cercle à sa position finale (pas d'animation)
   if (isMobile.value) return {
-    '--aspir-start-y': '0px',
     left: (index * 30 + circleLeftOffset) + 'px',
+    transform: 'translateY(0)',
   }
 
-  const startTop = index * lineHeight + 100
-  const itemTiming = getTimingFor(index) || DEFAULT
-  const c = (itemTiming && itemTiming.circle) || DEFAULT.circle
-  const active = isItemActive(index)
-  // For reverse animation compute a reversed stagger so when scrolling up
-  // the circles move down in reversed order.
-  const reverseStep = 0.06
-  const reverseDelay = (count.value - 1 - index) * reverseStep
-  // Keep horizontal position fixed: circles do NOT move left/right. Only
-  // vertical motion via transform and opacity are animated. Left is static.
+  // Desktop : calcul DIRECT de la position Y à partir de scrollProgress
+  // (mouvement piloté par le scroll, pas de transitions CSS)
+  const currentY = getCircleY(index)
   const left = (index * 30 + circleLeftOffset)
 
-  // Use transform for vertical movement (translateY). When inactive the
-  // circle is translated down by startTop (so visually at its line). When
-  // active it translates to 0 (shared top row). Left is animated as before.
-  // Use CSS variables instead of many inline styles. We set start Y, delays
-  // and timings via variables; CSS handles the transitions.
   return {
-    '--aspir-start-y': `${active ? 0 : startTop}px`,
-    '--aspir-delay': `${active ? c.delay : reverseDelay}s`,
-    '--aspir-duration': `${c.duration}s`,
-    '--aspir-opacity-duration': `${c.opacityDuration || c.duration}s`,
-    '--aspir-timing': c.timing,
-    '--aspir-opacity-timing': c.opacityTiming || 'ease-out',
     left: left + 'px',
+    transform: `translateY(${currentY}px)`,
   }
 }
 
@@ -319,7 +286,13 @@ function isItemActive(index) {
   font-weight: 400;
   line-height: 1.3;
   margin: 0;
+  opacity: 0;
   transition: opacity 320ms ease-out;
+}
+
+/* Titre apparaît quand le composant est monté (évite flash SSR) */
+.block-aspirations.js-mounted .aspirations-title {
+  opacity: 1;
 }
 
 .aspirations-list {
@@ -350,17 +323,11 @@ function isItemActive(index) {
   position: absolute;
   border-radius: 50%;
   background: rgba(26, 150, 223, 0.55);
-  /* tighten durations and keep a smooth easing curve.
-     We use CSS variables to allow JS to set delays/durations without
-     many inline style properties. */
-  --aspir-start-y: 0px;
-  --aspir-delay: 0s;
-  --aspir-duration: 0.42s;
-  --aspir-opacity-duration: 0.32s;
-  --aspir-timing: cubic-bezier(.22,.9,.3,1);
-  --aspir-opacity-timing: ease-out;
-  transition: transform var(--aspir-duration) var(--aspir-timing), opacity var(--aspir-opacity-duration) var(--aspir-opacity-timing);
-  transform: translateY(var(--aspir-start-y));
+  /* IMPORTANT : PAS de transitions CSS pour les cercles !
+     Le mouvement est DIRECTEMENT piloté par le scroll via
+     transform: translateY() calculé dans getCircleStyle().
+     Cela évite l'effet "pop" et donne un mouvement "naturel" lié au scroll. */
+  opacity: 1;
 }
 
 .aspiration-text {
@@ -380,13 +347,6 @@ function isItemActive(index) {
 .aspiration-line.is-active .aspiration-text {
   transform: translateY(0);
   opacity: 1;
-}
-
-/* Circle active state is driven by CSS variables set on the element */
-.aspiration-circle.is-active {
-  transform: translateY(var(--aspir-start-y));
-  opacity: 1;
-  transition-delay: var(--aspir-delay);
 }
 
 /* Prevent SSR inline "top" residues from flashing on desktop before JS runs.
