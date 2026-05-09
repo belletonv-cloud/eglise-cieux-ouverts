@@ -265,13 +265,17 @@ function getCircleStyle(index) {
   const activatedIndex = active ? index : null
   const left = active ? leftActivePosition(index) : (index * 30 + circleLeftOffset)
 
+  // Use transform for vertical movement (translateY). When inactive the
+  // circle is translated down by startTop (so visually at its line). When
+  // active it translates to 0 (shared top row). Left is animated as before.
+  const translateY = active ? 0 : startTop
   return {
     opacity: active ? 1 : 0,
-    top: active ? circleTop + 'px' : startTop + 'px',
+    transform: `translateY(${translateY}px)`,
     left: left + 'px',
     width: circleSize + 'px',
     height: circleSize + 'px',
-    transitionProperty: 'top, left, opacity',
+    transitionProperty: 'transform, left, opacity',
     transitionDuration: `${c.duration}s, ${c.duration}s, ${c.opacityDuration || c.duration}s`,
     transitionTimingFunction: `${c.timing}, ${c.timing}, ${c.opacityTiming || 'ease-out'}`,
     transitionDelay: `${active ? c.delay : reverseDelay}s`,
@@ -337,7 +341,7 @@ function isItemActive(index) {
   border-radius: 50%;
   background: rgba(26, 150, 223, 0.55);
   /* tighten durations and keep a smooth easing curve */
-  transition: top 420ms cubic-bezier(.22,.9,.3,1), left 420ms cubic-bezier(.22,.9,.3,1), opacity 320ms ease-out;
+  transition: transform 420ms cubic-bezier(.22,.9,.3,1), left 420ms cubic-bezier(.22,.9,.3,1), opacity 320ms ease-out;
 }
 
 .aspiration-text {
@@ -346,10 +350,7 @@ function isItemActive(index) {
 }
 
 /* When an item becomes active we move its circle to the shared top (0) and reveal the text */
-.aspiration-circle.is-active {
-  top: 0 !important;
-  opacity: 1 !important;
-}
+
 
 .aspiration-line .aspiration-text {
   transform: translateY(20px);
