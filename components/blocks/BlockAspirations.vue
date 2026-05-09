@@ -156,6 +156,17 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
 
 const count = computed(() => (blockProps.props.items || []).length)
 
+// Number of items that should be considered active based on discrete steps.
+// This makes activation cumulative and stepwise: as scrollProgress increases
+// the activeCount rises by integer steps so items activate one-by-one.
+const activeCount = computed(() => {
+  if (isMobile.value) return count.value
+  const sp = scrollProgress.value
+  // map progress [0,1] to [0,count]
+  const n = Math.floor(sp * count.value + 0.000001)
+  return Math.max(0, Math.min(count.value, n))
+})
+
 const lineActive = 0.02 // 2% du segment pour l'animation active
 
 function getTitleStyle() {
@@ -257,11 +268,7 @@ function getCircleStyle(index) {
 
 function isItemActive(index) {
   if (isMobile.value) return true
-  const sp = scrollProgress.value
-  const lineTotal = 1 / count.value
-  const startP = index * lineTotal + lineActive
-  // Dès que le scrollProgress atteint startP, on active l'item (CSS gère le reste)
-  return sp >= startP
+  return index < activeCount.value
 }
 </script>
 
