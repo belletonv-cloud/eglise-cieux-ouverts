@@ -38,17 +38,7 @@ import { ref, onMounted, onUnmounted, computed } from 'vue'
 // Try to import timings from test-results during local dev; in production the file
 // is served from /aspirations-timings.json under public/. If the build tool can't
 // resolve the dev path, fall back to fetching at runtime (see getTimingFor).
-let timings
-try {
-  // this will work in local dev where test-results exists
-  // eslint-disable-next-line import/no-unresolved
-  // @ts-ignore
-  timings = await import('../../test-results/aspirations-timings.json')
-  timings = timings.default || timings
-} catch (err) {
-  // ignore; we'll fetch from public at runtime
-  timings = null
-}
+let timings = null
 
 const blockProps = defineProps({
   props: { type: Object, required: true },
@@ -91,19 +81,17 @@ function getTimingFor(index) {
   }
 
   let items = (timings && timings.items) || []
-  // If timings not present at build time, try to fetch the public JSON once
+  // If timings not present at build time, we try to use any timings previously
+  // loaded on the client (onMounted will attempt to import local JSON or fetch
+  // the public JSON). We avoid awaiting here to keep this function sync so
+  // it can be used directly during render.
   if ((!items || items.length === 0) && typeof window !== 'undefined') {
-    try {
-      const resp = window.__aspirationsTimings || null
-      if (!resp) {
-        // fetch once and cache on window
-        window.__aspirationsTimings = fetch('/aspirations-timings.json').then(r => r.json()).catch(() => null)
-      }
-      const loaded = await (window.__aspirationsTimings || Promise.resolve(null))
-      items = (loaded && loaded.items) || items
-    } catch (e) {
-      // ignore
+    const w = window.__aspirationsTimings
+    if (w && typeof w.then !== 'function') {
+      // already resolved object
+      items = (w && w.items) || items
     }
+    // if w is a promise or absent, onMounted will populate timings/window cache
   }
   const label = blockProps.props && blockProps.props.items && blockProps.props.items[index]
   if (label) {
@@ -130,6 +118,38 @@ onMounted(() => {
   isMobile.value = window.innerWidth < 768
   window.addEventListener('scroll', onScroll, { passive: true })
   onScroll()
+
+  // Try to load local test-results JSON (only in dev where it's available).
+  // We do this asynchronously and cache the result on `timings` and on
+  // `window.__aspirationsTimings` so getTimingFor can read it synchronously.
+  ;(async () => {
+    try {
+      // Attempt a runtime-import of the local JSON only when present. We use
+      // new Function(...) to avoid bundlers statically resolving this path at
+      // build time (the file exists only on some developer machines).
+      // eslint-disable-next-line no-new-func
+      const mod = await new Function('return import("../../test-results/aspirations-timings.json")')()
+      timings = mod && (mod.default || mod)
+      if (typeof window !== 'undefined') window.__aspirationsTimings = timings
+      return
+    } catch (e) {
+      // ignore local import failure and try fetching public JSON
+    }
+
+    try {
+      if (typeof window !== 'undefined') {
+        const p = fetch('/aspirations-timings.json').then(r => r.json()).catch(() => null)
+        // store promise on window so other code can await if needed
+        window.__aspirationsTimings = p
+        const loaded = await p
+        timings = loaded || timings
+        // replace promise with resolved object for sync reads
+        window.__aspirationsTimings = timings
+      }
+    } catch (e) {
+      // ignore fetch failure
+    }
+  })()
 })
 
 onUnmounted(() => window.removeEventListener('scroll', onScroll))
