@@ -73,9 +73,15 @@ function getCircleY(index) {
   const startP = index * lineTotal + lineActive
   const endP = (index + 1) * lineTotal
   
-  // Position de départ et d'arrivée
-  const startY = index * lineHeight + 100
-  const endY = 0
+  // Position de départ : alignée avec le texte correspondant
+  // Chaque .aspiration-line a padding: 18px 0, donc le contenu est à ~18px
+  // On utilise lineHeight pour l'espacement entre les lignes
+  const itemPadding = 18
+  const startY = index * lineHeight + itemPadding
+  
+  // Position finale : tous les cercles s'alignent sur le premier item
+  // (au niveau du padding-top du premier .aspiration-line)
+  const endY = itemPadding
   
   // Si scroll est avant le début du segment : cercle à sa position initiale
   if (sp <= startP) {
@@ -137,8 +143,10 @@ const onScroll = () => {
   if (!sectionRef.value) return
   const rect = sectionRef.value.getBoundingClientRect()
   const vh = window.innerHeight
-  const start = vh * 3
-  const end = 0
+  // Animation commence quand le HAUT de la section atteint le BAS du viewport
+  // et se termine quand le HAUT de la section est à 100px du haut du viewport
+  const start = vh  // section top at viewport bottom
+  const end = 100   // section top 100px from viewport top
 
   if (rect.top > start) { scrollProgress.value = 0; return }
   if (rect.top < end) { scrollProgress.value = 1; return }
@@ -211,10 +219,8 @@ const lineActive = 0.02 // 2% du segment pour l'animation active
 // (pas de style inline pour éviter le flash SSR)
 
 // Style du texte : synchronisé pour apparaître quand son cercle commence à monter
-// On utilise uniquement des CSS variables pour les timings (pas de transform/opacity inline)
+// On utilise uniquement des CSS variables pour les timings
 function getTextStyle(index) {
-  // SSR : retourner un style vide pour éviter les flashs
-  if (typeof window === 'undefined' || !mounted.value) return {}
   if (isMobile.value) return {}
 
   const itemTiming = getTimingFor(index) || DEFAULT
@@ -222,11 +228,8 @@ function getTextStyle(index) {
   const t = (itemTiming && itemTiming.text) || DEFAULT.text
   const textDuration = Math.min(0.32, Number(t.duration) || 0.38)
   const active = isItemActive(index)
-  // when deactivating we want a reversed stagger so items animate back in
-  // reverse order; compute a small reverse delay based on the index
   const reverseStep = 0.06
   const reverseDelay = (count.value - 1 - index) * reverseStep
-  // expose CSS variables for text animation timing
   return {
     '--aspir-text-delay': `${active ? c.delay : reverseDelay}s`,
     '--aspir-text-duration': `${textDuration}s`,
@@ -237,19 +240,13 @@ function getTextStyle(index) {
 // Style du cercle : MOUVEMENT DIRECTEMENT PILOTÉ PAR LE SCROLL
 // (pas de transitions CSS, calcul direct de translateY à partir de scrollProgress)
 function getCircleStyle(index) {
-  // SSR : seulement left, pas de transform pour éviter flash
-  if (typeof window === 'undefined' || !mounted.value) return {
-    left: (index * 30 + circleLeftOffset) + 'px',
-  }
-
   // Mobile : cercle à sa position finale (pas d'animation)
   if (isMobile.value) return {
     left: (index * 30 + circleLeftOffset) + 'px',
-    transform: 'translateY(0)',
+    transform: 'translateY(18px)',
   }
 
   // Desktop : calcul DIRECT de la position Y à partir de scrollProgress
-  // (mouvement piloté par le scroll, pas de transitions CSS)
   const currentY = getCircleY(index)
   const left = (index * 30 + circleLeftOffset)
 
@@ -286,13 +283,6 @@ function isItemActive(index) {
   font-weight: 400;
   line-height: 1.3;
   margin: 0;
-  opacity: 0;
-  transition: opacity 320ms ease-out;
-}
-
-/* Titre apparaît quand le composant est monté (évite flash SSR) */
-.block-aspirations.js-mounted .aspirations-title {
-  opacity: 1;
 }
 
 .aspirations-list {
@@ -349,24 +339,6 @@ function isItemActive(index) {
 .aspiration-line.is-active .aspiration-text {
   transform: translateY(0);
   opacity: 1;
-}
-
-/* Prevent SSR inline "top" residues from flashing on desktop before JS runs.
-   We keep mobile immediate (no hide). When JS mounts we add .js-mounted and
-   allow the CSS-driven transforms to take over. */
-.block-aspirations:not(.js-mounted) .aspiration-circle,
-.block-aspirations:not(.js-mounted) .aspiration-line .aspiration-text {
-  /* hide on desktop until hydrated to avoid mismatched SSR styles */
-  opacity: 0 !important;
-  transform: translateY(20px) !important;
-}
-
-@media (max-width: 767px) {
-  .block-aspirations:not(.js-mounted) .aspiration-circle,
-  .block-aspirations:not(.js-mounted) .aspiration-line .aspiration-text {
-    opacity: 1 !important;
-    transform: none !important;
-  }
 }
 
 @container (max-width: 768px) {
