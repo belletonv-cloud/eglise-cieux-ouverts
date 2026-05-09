@@ -240,11 +240,11 @@ function getTextStyle(index) {
 
 function getCircleStyle(index) {
   // Cette fonction renvoie la position initiale du cercle (autour de sa ligne).
-  // L'animation vers la position finale (top: 0) se fait via CSS lorsque
-  // la classe "is-active" est ajoutée.
+  // The animation used to rely on top:0 via CSS. We now use transform to
+  // move circles vertically; keep the comment for context.
   if (isMobile.value) return {
     opacity: 1,
-    top: circleTop + 'px',
+    transform: 'translateY(0)',
     left: (index * 30 + circleLeftOffset) + 'px',
     width: circleSize + 'px',
     height: circleSize + 'px',
@@ -258,12 +258,9 @@ function getCircleStyle(index) {
   // the circles move down in reversed order.
   const reverseStep = 0.06
   const reverseDelay = (count.value - 1 - index) * reverseStep
-  // When active, move circles to a shared top (circleTop) and arrange
-  // them horizontally left-to-right so they form a row; inactive ones stay
-  // at their line position. leftActivePosition spaces activated circles.
-  const leftActivePosition = (activatedIndex) => (activatedIndex * (circleSize + 8) + circleLeftOffset)
-  const activatedIndex = active ? index : null
-  const left = active ? leftActivePosition(index) : (index * 30 + circleLeftOffset)
+  // Keep horizontal position fixed: circles do NOT move left/right. Only
+  // vertical motion via transform and opacity are animated. Left is static.
+  const left = (index * 30 + circleLeftOffset)
 
   // Use transform for vertical movement (translateY). When inactive the
   // circle is translated down by startTop (so visually at its line). When
@@ -275,9 +272,9 @@ function getCircleStyle(index) {
     left: left + 'px',
     width: circleSize + 'px',
     height: circleSize + 'px',
-    transitionProperty: 'transform, left, opacity',
-    transitionDuration: `${c.duration}s, ${c.duration}s, ${c.opacityDuration || c.duration}s`,
-    transitionTimingFunction: `${c.timing}, ${c.timing}, ${c.opacityTiming || 'ease-out'}`,
+    transitionProperty: 'transform, opacity',
+    transitionDuration: `${c.duration}s, ${c.opacityDuration || c.duration}s`,
+    transitionTimingFunction: `${c.timing}, ${c.opacityTiming || 'ease-out'}`,
     transitionDelay: `${active ? c.delay : reverseDelay}s`,
   }
 }
@@ -341,7 +338,7 @@ function isItemActive(index) {
   border-radius: 50%;
   background: rgba(26, 150, 223, 0.55);
   /* tighten durations and keep a smooth easing curve */
-  transition: transform 420ms cubic-bezier(.22,.9,.3,1), left 420ms cubic-bezier(.22,.9,.3,1), opacity 320ms ease-out;
+  transition: transform 420ms cubic-bezier(.22,.9,.3,1), opacity 320ms ease-out;
 }
 
 .aspiration-text {
