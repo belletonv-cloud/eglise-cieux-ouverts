@@ -143,24 +143,27 @@ function getTextStyle(index) {
   const lineTotal = 1 / count.value
   const startP = index * lineTotal
 
-  // Avant le début : caché et un peu décalé
-  if (sp < startP) return { transform: 'translateY(20px)', opacity: 0 }
+  // Avant le début : caché et mis au même niveau vertical que le cercle (début)
+  const startTop = index * lineHeight + 100
+  const lineTop = index * lineHeight
+  // limit the text offset so it doesn't appear extremely low; keep it subtle
+  const textOffset = Math.min(startTop - lineTop, 20) // décalage vertical initial du texte
+  if (sp < startP) return { transform: `translateY(${textOffset}px)`, opacity: 0 }
 
-  // On laisse désormais CSS piloter l'animation complète ; on renvoie
-  // uniquement le delay/duration/timing pour le stagger. Ne pas mettre transform/opacity inline
-  // car cela a priorité sur les règles CSS d'état final.
-  // Ensure the text appears after the circle has finished its movement
-  // Compute text delay as circle.delay + circle.duration (+ small offset)
+  // On laisse CSS piloter la transformation finale. Ici on prépare:
+  // - une position initiale basse pour le texte (alignée sur le cercle)
+  // - quand l'item devient actif, on ne met PAS transform/opacity inline afin que
+  //   les règles CSS (.aspiration-line.is-active .aspiration-text) prennent effet.
+  // On synchronise le démarrage du texte avec le cercle (même delay), mais on
+  // donne une durée plus courte au texte pour qu'il s'arrête à sa ligne avant le cercle.
   const itemTiming = getTimingFor(index) || DEFAULT
   const c = (itemTiming && itemTiming.circle) || DEFAULT.circle
   const t = (itemTiming && itemTiming.text) || DEFAULT.text
-  // small offset so text starts right after circle finishes (in seconds)
-  const afterOffset = 0.02
-  const computedDelay = (Number(c.delay) || 0) + (Number(c.duration) || 0) + afterOffset
+  const textDuration = Math.min(0.32, Number(t.duration) || 0.38)
   return {
-    transitionDelay: `${computedDelay}s`,
+    transitionDelay: `${c.delay}s`,
     transitionTimingFunction: t.timing,
-    transitionDuration: `${t.duration}s`,
+    transitionDuration: `${textDuration}s`,
   }
 }
 
