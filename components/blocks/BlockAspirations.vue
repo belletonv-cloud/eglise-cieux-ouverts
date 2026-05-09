@@ -321,6 +321,8 @@ function isItemActive(index) {
 
 .aspiration-circle {
   position: absolute;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   background: rgba(26, 150, 223, 0.55);
   /* IMPORTANT : PAS de transitions CSS pour les cercles !
