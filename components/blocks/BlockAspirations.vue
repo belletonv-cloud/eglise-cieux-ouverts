@@ -162,9 +162,14 @@ const count = computed(() => (blockProps.props.items || []).length)
 const activeCount = computed(() => {
   if (isMobile.value) return count.value
   const sp = scrollProgress.value
-  // map progress [0,1] to [0,count]
-  const n = Math.floor(sp * count.value + 0.000001)
-  return Math.max(0, Math.min(count.value, n))
+  // Count how many items have reached their individual start threshold.
+  const lineTotal = 1 / Math.max(1, count.value)
+  let n = 0
+  for (let i = 0; i < count.value; i++) {
+    const startP = i * lineTotal + lineActive
+    if (sp >= startP) n++
+  }
+  return n
 })
 
 const lineActive = 0.02 // 2% du segment pour l'animation active
