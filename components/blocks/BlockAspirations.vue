@@ -206,15 +206,20 @@ function getTextStyle(index) {
   //   les règles CSS (.aspiration-line.is-active .aspiration-text) prennent effet.
   // On synchronise le démarrage du texte avec le cercle (même delay), mais on
   // donne une durée plus courte au texte pour qu'il s'arrête à sa ligne avant le cercle.
-  const itemTiming = getTimingFor(index) || DEFAULT
-  const c = (itemTiming && itemTiming.circle) || DEFAULT.circle
-  const t = (itemTiming && itemTiming.text) || DEFAULT.text
-  const textDuration = Math.min(0.32, Number(t.duration) || 0.38)
-  return {
-    transitionDelay: `${c.delay}s`,
-    transitionTimingFunction: t.timing,
-    transitionDuration: `${textDuration}s`,
-  }
+   const itemTiming = getTimingFor(index) || DEFAULT
+   const c = (itemTiming && itemTiming.circle) || DEFAULT.circle
+   const t = (itemTiming && itemTiming.text) || DEFAULT.text
+   const textDuration = Math.min(0.32, Number(t.duration) || 0.38)
+   const active = isItemActive(index)
+   // when deactivating we want a reversed stagger so items animate back in
+   // reverse order; compute a small reverse delay based on the index
+   const reverseStep = 0.06
+   const reverseDelay = (count.value - 1 - index) * reverseStep
+   return {
+     transitionDelay: `${active ? c.delay : reverseDelay}s`,
+     transitionTimingFunction: t.timing,
+     transitionDuration: `${textDuration}s`,
+   }
 }
 
 function getCircleStyle(index) {
@@ -229,21 +234,25 @@ function getCircleStyle(index) {
     height: circleSize + 'px',
   }
 
-  const startTop = index * lineHeight + 100
-  const c = (getTimingFor(index) && getTimingFor(index).circle) || DEFAULT.circle
-  return {
-    opacity: 0,
-    top: startTop + 'px',
-    left: (index * 30 + circleLeftOffset) + 'px',
-    width: circleSize + 'px',
-    height: circleSize + 'px',
-    transitionDelay: `${c.delay}s`,
-    transitionTimingFunction: c.timing,
-    transitionDuration: `${c.duration}s`,
-    transitionProperty: 'top, opacity',
-    transitionDuration: `${c.duration}s, ${c.opacityDuration || c.duration}s`,
-    transitionTimingFunction: `${c.timing}, ${c.opacityTiming || 'ease-out'}`,
-  }
+   const startTop = index * lineHeight + 100
+   const itemTiming = getTimingFor(index) || DEFAULT
+   const c = (itemTiming && itemTiming.circle) || DEFAULT.circle
+   const active = isItemActive(index)
+   // For reverse animation compute a reversed stagger so when scrolling up
+   // the circles move down in reversed order.
+   const reverseStep = 0.06
+   const reverseDelay = (count.value - 1 - index) * reverseStep
+   return {
+     opacity: 0,
+     top: startTop + 'px',
+     left: (index * 30 + circleLeftOffset) + 'px',
+     width: circleSize + 'px',
+     height: circleSize + 'px',
+     transitionProperty: 'top, opacity',
+     transitionDuration: `${c.duration}s, ${c.opacityDuration || c.duration}s`,
+     transitionTimingFunction: `${c.timing}, ${c.opacityTiming || 'ease-out'}`,
+     transitionDelay: `${active ? c.delay : reverseDelay}s`,
+   }
 }
 
 function isItemActive(index) {
