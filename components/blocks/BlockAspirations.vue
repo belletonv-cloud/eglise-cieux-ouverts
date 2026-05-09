@@ -206,6 +206,10 @@ function getLineStyle(index) {
 
 // Style du texte : synchronisé pour apparaître quand son cercle commence à monter
 function getTextStyle(index) {
+  // Avoid emitting transform/opacity inline on the server to prevent SSR
+  // residues. Server-side render should keep markup minimal; client will set
+  // CSS variables on mount. `window` is undefined during SSR.
+  if (typeof window === 'undefined') return {}
   if (isMobile.value) return { opacity: 1, transform: 'translateY(0)' }
 
   const sp = scrollProgress.value
@@ -249,6 +253,12 @@ function getCircleStyle(index) {
   // Cette fonction renvoie la position initiale du cercle (autour de sa ligne).
   // The animation used to rely on top:0 via CSS. We now use transform to
   // move circles vertically; keep the comment for context.
+  // Avoid outputting many inline properties during SSR — keep SSR markup
+  // minimal to prevent mismatches. Client-side mount will populate variables.
+  if (typeof window === 'undefined') return {
+    left: (index * 30 + circleLeftOffset) + 'px',
+  }
+
   if (isMobile.value) return {
     '--aspir-start-y': '0px',
     left: (index * 30 + circleLeftOffset) + 'px',
