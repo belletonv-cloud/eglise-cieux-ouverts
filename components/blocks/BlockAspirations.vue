@@ -2,7 +2,7 @@
   <section
     class="block-aspirations"
     :style="{ background: blockProps.props.backgroundColor, color: blockProps.props.textColor }"
-    :class="visibilityClasses"
+    :class="[visibilityClasses, { 'js-mounted': mounted }]"
     ref="sectionRef"
   >
     <div class="aspirations-inner">
@@ -377,6 +377,24 @@ function isItemActive(index) {
   transform: translateY(var(--aspir-start-y));
   opacity: 1;
   transition-delay: var(--aspir-delay);
+}
+
+/* Prevent SSR inline "top" residues from flashing on desktop before JS runs.
+   We keep mobile immediate (no hide). When JS mounts we add .js-mounted and
+   allow the CSS-driven transforms to take over. */
+.block-aspirations:not(.js-mounted) .aspiration-circle,
+.block-aspirations:not(.js-mounted) .aspiration-line .aspiration-text {
+  /* hide on desktop until hydrated to avoid mismatched SSR styles */
+  opacity: 0 !important;
+  transform: translateY(20px) !important;
+}
+
+@media (max-width: 767px) {
+  .block-aspirations:not(.js-mounted) .aspiration-circle,
+  .block-aspirations:not(.js-mounted) .aspiration-line .aspiration-text {
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }
 
 @container (max-width: 768px) {
