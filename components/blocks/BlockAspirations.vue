@@ -55,6 +55,7 @@ const sectionRef = ref(null)
 const scrollProgress = ref(0)
 const isMobile = ref(false)
 const titleShown = ref(false)
+const mounted = ref(false)
 
 const lineHeight = 87 // Hauteur d'une ligne de texte
 const circleTop = 0 // Y commun final pour TOUS les cercles (première ligne)
@@ -150,6 +151,8 @@ onMounted(() => {
       // ignore fetch failure
     }
   })()
+  // mark mounted after attempting to load timings so SSR won't flash the title
+  mounted.value = true
 })
 
 onUnmounted(() => window.removeEventListener('scroll', onScroll))
@@ -175,6 +178,10 @@ const activeCount = computed(() => {
 const lineActive = 0.02 // 2% du segment pour l'animation active
 
 function getTitleStyle() {
+  // Ensure we don't flash the title on SSR -> client hydration. We keep the
+  // title hidden until the component is mounted (client) and scrollProgress
+  // progression makes it visible. Mobile always shows the title.
+  if (!mounted.value) return { opacity: 0 }
   if (isMobile.value) return { opacity: 1 }
   const sp = scrollProgress.value
   // Prevent flashing: once fully shown, keep shown
@@ -183,7 +190,6 @@ function getTitleStyle() {
     titleShown.value = true
     return { opacity: 1 }
   }
-  // if title already shown, keep it visible
   if (titleShown.value) return { opacity: 1 }
   return { opacity: sp / 0.02 }
 }
