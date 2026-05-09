@@ -228,20 +228,21 @@ function getTextStyle(index) {
   //   les règles CSS (.aspiration-line.is-active .aspiration-text) prennent effet.
   // On synchronise le démarrage du texte avec le cercle (même delay), mais on
   // donne une durée plus courte au texte pour qu'il s'arrête à sa ligne avant le cercle.
-   const itemTiming = getTimingFor(index) || DEFAULT
-   const c = (itemTiming && itemTiming.circle) || DEFAULT.circle
-   const t = (itemTiming && itemTiming.text) || DEFAULT.text
-   const textDuration = Math.min(0.32, Number(t.duration) || 0.38)
-   const active = isItemActive(index)
-   // when deactivating we want a reversed stagger so items animate back in
-   // reverse order; compute a small reverse delay based on the index
-   const reverseStep = 0.06
-   const reverseDelay = (count.value - 1 - index) * reverseStep
-   return {
-     transitionDelay: `${active ? c.delay : reverseDelay}s`,
-     transitionTimingFunction: t.timing,
-     transitionDuration: `${textDuration}s`,
-   }
+  const itemTiming = getTimingFor(index) || DEFAULT
+  const c = (itemTiming && itemTiming.circle) || DEFAULT.circle
+  const t = (itemTiming && itemTiming.text) || DEFAULT.text
+  const textDuration = Math.min(0.32, Number(t.duration) || 0.38)
+  const active = isItemActive(index)
+  // when deactivating we want a reversed stagger so items animate back in
+  // reverse order; compute a small reverse delay based on the index
+  const reverseStep = 0.06
+  const reverseDelay = (count.value - 1 - index) * reverseStep
+  // expose CSS variables for text animation timing
+  return {
+    '--aspir-text-delay': `${active ? c.delay : reverseDelay}s`,
+    '--aspir-text-duration': `${textDuration}s`,
+    '--aspir-text-timing': t.timing,
+  }
 }
 
 function getCircleStyle(index) {
@@ -249,11 +250,8 @@ function getCircleStyle(index) {
   // The animation used to rely on top:0 via CSS. We now use transform to
   // move circles vertically; keep the comment for context.
   if (isMobile.value) return {
-    opacity: 1,
-    transform: 'translateY(0)',
+    '--aspir-start-y': '0px',
     left: (index * 30 + circleLeftOffset) + 'px',
-    width: circleSize + 'px',
-    height: circleSize + 'px',
   }
 
   const startTop = index * lineHeight + 100
@@ -271,17 +269,16 @@ function getCircleStyle(index) {
   // Use transform for vertical movement (translateY). When inactive the
   // circle is translated down by startTop (so visually at its line). When
   // active it translates to 0 (shared top row). Left is animated as before.
-  const translateY = active ? 0 : startTop
+  // Use CSS variables instead of many inline styles. We set start Y, delays
+  // and timings via variables; CSS handles the transitions.
   return {
-    opacity: active ? 1 : 0,
-    transform: `translateY(${translateY}px)`,
+    '--aspir-start-y': `${active ? 0 : startTop}px`,
+    '--aspir-delay': `${active ? c.delay : reverseDelay}s`,
+    '--aspir-duration': `${c.duration}s`,
+    '--aspir-opacity-duration': `${c.opacityDuration || c.duration}s`,
+    '--aspir-timing': c.timing,
+    '--aspir-opacity-timing': c.opacityTiming || 'ease-out',
     left: left + 'px',
-    width: circleSize + 'px',
-    height: circleSize + 'px',
-    transitionProperty: 'transform, opacity',
-    transitionDuration: `${c.duration}s, ${c.opacityDuration || c.duration}s`,
-    transitionTimingFunction: `${c.timing}, ${c.opacityTiming || 'ease-out'}`,
-    transitionDelay: `${active ? c.delay : reverseDelay}s`,
   }
 }
 
@@ -343,8 +340,17 @@ function isItemActive(index) {
   position: absolute;
   border-radius: 50%;
   background: rgba(26, 150, 223, 0.55);
-  /* tighten durations and keep a smooth easing curve */
-  transition: transform 420ms cubic-bezier(.22,.9,.3,1), opacity 320ms ease-out;
+  /* tighten durations and keep a smooth easing curve.
+     We use CSS variables to allow JS to set delays/durations without
+     many inline style properties. */
+  --aspir-start-y: 0px;
+  --aspir-delay: 0s;
+  --aspir-duration: 0.42s;
+  --aspir-opacity-duration: 0.32s;
+  --aspir-timing: cubic-bezier(.22,.9,.3,1);
+  --aspir-opacity-timing: ease-out;
+  transition: transform var(--aspir-duration) var(--aspir-timing), opacity var(--aspir-opacity-duration) var(--aspir-opacity-timing);
+  transform: translateY(var(--aspir-start-y));
 }
 
 .aspiration-text {
@@ -358,12 +364,19 @@ function isItemActive(index) {
 .aspiration-line .aspiration-text {
   transform: translateY(20px);
   opacity: 0;
-  transition: transform 380ms cubic-bezier(.22,.9,.3,1), opacity 380ms ease-out;
+  transition: transform var(--aspir-text-duration, 380ms) var(--aspir-text-timing, cubic-bezier(.22,.9,.3,1)), opacity var(--aspir-text-duration, 380ms) ease-out;
 }
 
 .aspiration-line.is-active .aspiration-text {
   transform: translateY(0);
   opacity: 1;
+}
+
+/* Circle active state is driven by CSS variables set on the element */
+.aspiration-circle.is-active {
+  transform: translateY(var(--aspir-start-y));
+  opacity: 1;
+  transition-delay: var(--aspir-delay);
 }
 
 @container (max-width: 768px) {
