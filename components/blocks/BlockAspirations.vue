@@ -8,8 +8,14 @@
     <!-- Bloc fixed : reste au centre de l'écran pendant l'animation -->
     <section
       class="block-aspirations"
-      :style="{ background: blockProps.props.backgroundColor, color: blockProps.props.textColor }"
-      :class="{ 'js-mounted': mounted, 'is-visible': isVisible }"
+      :style="{ 
+        background: blockProps.props.backgroundColor, 
+        color: blockProps.props.textColor,
+        opacity: blockOpacity,
+        visibility: blockOpacity > 0 ? 'visible' : 'hidden',
+        pointerEvents: blockOpacity > 0 ? 'auto' : 'none'
+      }"
+      :class="{ 'js-mounted': mounted }"
       ref="sectionRef"
     >
       <div class="aspirations-inner">
@@ -64,7 +70,7 @@ const scrollProgress = ref(0)
 const isMobile = ref(false)
 const titleShown = ref(false)
 const mounted = ref(false)
-const isVisible = ref(false)
+const blockOpacity = ref(0)
 
 const lineHeight = 87 // Hauteur d'une ligne de texte
 const circleTop = 0 // Y commun final pour TOUS les cercles (première ligne)
@@ -152,15 +158,24 @@ const onScroll = () => {
   const rect = viewportRef.value.getBoundingClientRect()
   const vh = window.innerHeight
 
-  // isVisible : vrai quand le viewport est dans la fenêtre
-  isVisible.value = rect.top < vh && rect.bottom > 0
+  // Plage pour le fondu du bloc :
+  // - blockOpacity = 0 quand viewport.top > vh * 1.5
+  // - blockOpacity = 1 quand viewport.top <= vh
+  const fadeStart = vh * 1.5
+  const fadeEnd = vh
+  if (rect.top > fadeStart) {
+    blockOpacity.value = 0
+  } else if (rect.top <= fadeEnd) {
+    blockOpacity.value = 1
+  } else {
+    blockOpacity.value = 1 - ((rect.top - fadeEnd) / (fadeStart - fadeEnd))
+  }
 
-  // Plage de scroll pour l'animation :
-  // - scrollProgress = 0 quand le HAUT du viewport est au BAS de la fenêtre
-  // - scrollProgress = 1 quand le HAUT du viewport est au NIVEAU du haut de la fenêtre
-  // Cela donne une plage de 'vh' pixels de scroll pour voir l'animation complète
-  const start = vh  // viewport top at viewport bottom
-  const end = 0     // viewport top at viewport top
+  // Plage pour le scrollProgress (mouvement des cercles) :
+  // - scrollProgress = 0 quand viewport.top > vh
+  // - scrollProgress = 1 quand viewport.top <= 0
+  const start = vh
+  const end = 0
 
   if (rect.top > start) { scrollProgress.value = 0; return }
   if (rect.top < end) { scrollProgress.value = 1; return }
@@ -290,7 +305,7 @@ function isItemActive(index) {
 }
 
 /* Bloc fixed : reste au centre de l'écran pendant l'animation */
-/* Caché par défaut, montré seulement quand is-visible est true */
+/* L'opacité et la visibilité sont maintenant gérées par le style inline via blockOpacity */
 .block-aspirations {
   position: fixed;
   left: 50%;
@@ -299,19 +314,8 @@ function isItemActive(index) {
   width: calc(100% - 48px);
   max-width: 1048px;
   padding: 70px 24px;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.3s ease, visibility 0.3s ease;
   z-index: 10;
-  pointer-events: none;
   container-type: inline-size;
-}
-
-/* Montrer le bloc quand il est dans la zone d'animation */
-.block-aspirations.is-visible {
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
 }
 
 .aspirations-inner {
