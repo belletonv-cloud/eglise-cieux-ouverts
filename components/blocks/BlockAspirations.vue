@@ -35,7 +35,20 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 // Import local per-item timings (derived from extraction) to match original site
-import timings from '../../test-results/aspirations-timings.json'
+// Try to import timings from test-results during local dev; in production the file
+// is served from /aspirations-timings.json under public/. If the build tool can't
+// resolve the dev path, fall back to fetching at runtime (see getTimingFor).
+let timings
+try {
+  // this will work in local dev where test-results exists
+  // eslint-disable-next-line import/no-unresolved
+  // @ts-ignore
+  timings = await import('../../test-results/aspirations-timings.json')
+  timings = timings.default || timings
+} catch (err) {
+  // ignore; we'll fetch from public at runtime
+  timings = null
+}
 
 const blockProps = defineProps({
   props: { type: Object, required: true },
@@ -77,7 +90,21 @@ function getTimingFor(index) {
       .toLowerCase()
   }
 
-  const items = (timings && timings.items) || []
+  let items = (timings && timings.items) || []
+  // If timings not present at build time, try to fetch the public JSON once
+  if ((!items || items.length === 0) && typeof window !== 'undefined') {
+    try {
+      const resp = window.__aspirationsTimings || null
+      if (!resp) {
+        // fetch once and cache on window
+        window.__aspirationsTimings = fetch('/aspirations-timings.json').then(r => r.json()).catch(() => null)
+      }
+      const loaded = await (window.__aspirationsTimings || Promise.resolve(null))
+      items = (loaded && loaded.items) || items
+    } catch (e) {
+      // ignore
+    }
+  }
   const label = blockProps.props && blockProps.props.items && blockProps.props.items[index]
   if (label) {
     const nl = normalize(label)
