@@ -245,25 +245,32 @@ function getCircleStyle(index) {
     height: circleSize + 'px',
   }
 
-   const startTop = index * lineHeight + 100
-   const itemTiming = getTimingFor(index) || DEFAULT
-   const c = (itemTiming && itemTiming.circle) || DEFAULT.circle
-   const active = isItemActive(index)
-   // For reverse animation compute a reversed stagger so when scrolling up
-   // the circles move down in reversed order.
-   const reverseStep = 0.06
-   const reverseDelay = (count.value - 1 - index) * reverseStep
-   return {
-     opacity: 0,
-     top: startTop + 'px',
-     left: (index * 30 + circleLeftOffset) + 'px',
-     width: circleSize + 'px',
-     height: circleSize + 'px',
-     transitionProperty: 'top, opacity',
-     transitionDuration: `${c.duration}s, ${c.opacityDuration || c.duration}s`,
-     transitionTimingFunction: `${c.timing}, ${c.opacityTiming || 'ease-out'}`,
-     transitionDelay: `${active ? c.delay : reverseDelay}s`,
-   }
+  const startTop = index * lineHeight + 100
+  const itemTiming = getTimingFor(index) || DEFAULT
+  const c = (itemTiming && itemTiming.circle) || DEFAULT.circle
+  const active = isItemActive(index)
+  // For reverse animation compute a reversed stagger so when scrolling up
+  // the circles move down in reversed order.
+  const reverseStep = 0.06
+  const reverseDelay = (count.value - 1 - index) * reverseStep
+  // When active, move circles to a shared top (circleTop) and arrange
+  // them horizontally left-to-right so they form a row; inactive ones stay
+  // at their line position. leftActivePosition spaces activated circles.
+  const leftActivePosition = (activatedIndex) => (activatedIndex * (circleSize + 8) + circleLeftOffset)
+  const activatedIndex = active ? index : null
+  const left = active ? leftActivePosition(index) : (index * 30 + circleLeftOffset)
+
+  return {
+    opacity: active ? 1 : 0,
+    top: active ? circleTop + 'px' : startTop + 'px',
+    left: left + 'px',
+    width: circleSize + 'px',
+    height: circleSize + 'px',
+    transitionProperty: 'top, left, opacity',
+    transitionDuration: `${c.duration}s, ${c.duration}s, ${c.opacityDuration || c.duration}s`,
+    transitionTimingFunction: `${c.timing}, ${c.timing}, ${c.opacityTiming || 'ease-out'}`,
+    transitionDelay: `${active ? c.delay : reverseDelay}s`,
+  }
 }
 
 function isItemActive(index) {
@@ -325,7 +332,7 @@ function isItemActive(index) {
   border-radius: 50%;
   background: rgba(26, 150, 223, 0.55);
   /* tighten durations and keep a smooth easing curve */
-  transition: top 420ms cubic-bezier(.22,.9,.3,1), opacity 320ms ease-out;
+  transition: top 420ms cubic-bezier(.22,.9,.3,1), left 420ms cubic-bezier(.22,.9,.3,1), opacity 320ms ease-out;
 }
 
 .aspiration-text {
