@@ -276,16 +276,6 @@ function getCircleStyle(index) {
   }
 }
 
-  // Desktop : calcul DIRECT de la position Y à partir de scrollProgress
-  const currentY = getCircleY(index)
-  const left = (index * 30 + circleLeftOffset)
-
-  return {
-    left: left + 'px',
-    transform: `translateY(${currentY}px)`,
-  }
-}
-
 function isItemActive(index) {
   if (isMobile.value) return true
   return index < activeCount.value
