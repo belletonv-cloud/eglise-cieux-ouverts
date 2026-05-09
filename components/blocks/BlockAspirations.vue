@@ -51,6 +51,7 @@ const visibilityClasses = computed(() => ({
 const sectionRef = ref(null)
 const scrollProgress = ref(0)
 const isMobile = ref(false)
+const titleShown = ref(false)
 
 const lineHeight = 87 // Hauteur d'une ligne de texte
 const circleTop = 0 // Y commun final pour TOUS les cercles (première ligne)
@@ -113,8 +114,14 @@ const lineActive = 0.02 // 2% du segment pour l'animation active
 function getTitleStyle() {
   if (isMobile.value) return { opacity: 1 }
   const sp = scrollProgress.value
-  if (sp <= 0) return { opacity: 0 }
-  if (sp >= 0.02) return { opacity: 1 }
+  // Prevent flashing: once fully shown, keep shown
+  if (sp <= 0 && !titleShown.value) return { opacity: 0 }
+  if (sp >= 0.02) {
+    titleShown.value = true
+    return { opacity: 1 }
+  }
+  // if title already shown, keep it visible
+  if (titleShown.value) return { opacity: 1 }
   return { opacity: sp / 0.02 }
 }
 
@@ -217,6 +224,7 @@ function isItemActive(index) {
   font-weight: 400;
   line-height: 1.3;
   margin: 0;
+  transition: opacity 320ms ease-out;
 }
 
 .aspirations-list {
