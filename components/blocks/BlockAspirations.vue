@@ -83,15 +83,13 @@ function getCircleY(index) {
   const startP = index * lineTotal + lineActive
   const endP = (index + 1) * lineTotal
   
-  // Position de départ : alignée avec le texte correspondant
-  // Chaque .aspiration-line a padding: 18px 0, donc le contenu est à ~18px
-  // On utilise lineHeight pour l'espacement entre les lignes
-  const itemPadding = 18
-  const startY = index * lineHeight + itemPadding
+  // Position de départ : comme dans l'original
+  // Les cercles commencent en bas de leur texte respectif
+  const startY = index * lineHeight + 100
   
-  // Position finale : tous les cercles s'alignent sur le premier item
-  // (au niveau du padding-top du premier .aspiration-line)
-  const endY = itemPadding
+  // Position finale : TOUS les cercles montent vers Y=0 (ligne horizontale commune)
+  // comme indiqué dans le commentaire original
+  const endY = 0
   
   // Si scroll est avant le début du segment : cercle à sa position initiale
   if (sp <= startP) {
@@ -155,15 +153,14 @@ const onScroll = () => {
   const vh = window.innerHeight
 
   // isVisible : vrai quand le viewport est dans la fenêtre
-  // (on montre le bloc fixed seulement pendant l'animation)
   isVisible.value = rect.top < vh && rect.bottom > 0
 
   // Plage de scroll pour l'animation :
   // - scrollProgress = 0 quand le HAUT du viewport est au BAS de la fenêtre
-  // - scrollProgress = 1 quand le HAUT du viewport est à 20% du haut de la fenêtre
-  // Cela donne une grande plage pour que tous les cercles aient le temps de s'animer
+  // - scrollProgress = 1 quand le HAUT du viewport est au NIVEAU du haut de la fenêtre
+  // Cela donne une plage de 'vh' pixels de scroll pour voir l'animation complète
   const start = vh  // viewport top at viewport bottom
-  const end = vh * 0.2  // viewport top at 20% from viewport top
+  const end = 0     // viewport top at viewport top
 
   if (rect.top > start) { scrollProgress.value = 0; return }
   if (rect.top < end) { scrollProgress.value = 1; return }
@@ -257,11 +254,27 @@ function getTextStyle(index) {
 // Style du cercle : MOUVEMENT DIRECTEMENT PILOTÉ PAR LE SCROLL
 // (pas de transitions CSS, calcul direct de translateY à partir de scrollProgress)
 function getCircleStyle(index) {
-  // Mobile : cercle à sa position finale (pas d'animation)
+  // SSR : seulement left, pas de transform pour éviter flash
+  if (typeof window === 'undefined' || !mounted.value) return {
+    left: (index * 30 + circleLeftOffset) + 'px',
+  }
+
+  // Mobile : cercle à sa position finale (Y=0, pas d'animation)
   if (isMobile.value) return {
     left: (index * 30 + circleLeftOffset) + 'px',
-    transform: 'translateY(18px)',
+    transform: 'translateY(0)',
   }
+
+  // Desktop : calcul DIRECT de la position Y à partir de scrollProgress
+  // (mouvement piloté par le scroll, pas de transitions CSS)
+  const currentY = getCircleY(index)
+  const left = (index * 30 + circleLeftOffset)
+
+  return {
+    left: left + 'px',
+    transform: `translateY(${currentY}px)`,
+  }
+}
 
   // Desktop : calcul DIRECT de la position Y à partir de scrollProgress
   const currentY = getCircleY(index)
