@@ -34,6 +34,8 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue'
+// Import local per-item timings (derived from extraction) to match original site
+import timings from '../../test-results/aspirations-timings.json'
 
 const blockProps = defineProps({
   props: { type: Object, required: true },
@@ -54,6 +56,35 @@ const lineHeight = 87 // Hauteur d'une ligne de texte
 const circleTop = 0 // Y commun final pour TOUS les cercles (première ligne)
 const circleSize = 24
 const circleLeftOffset = -80 // Décalage horizontal à gauche
+
+// Use per-item timings when available, otherwise fall back to default constants
+const DEFAULT = {
+  circle: { delay: 0, duration: 0.42, timing: 'cubic-bezier(.22,.9,.3,1)', opacityDuration: 0.32, opacityTiming: 'ease-out' },
+  text: { delay: 0, duration: 0.38, timing: 'cubic-bezier(.22,.9,.3,1)' }
+}
+
+function getTimingFor(index) {
+  // Normalize labels for robust matching (remove diacritics, case, extra spaces)
+  const normalize = (s) => {
+    if (!s || typeof s !== 'string') return ''
+    // decompose accents, remove combining marks, collapse whitespace, lowercase
+    return s
+      .normalize('NFD')
+      .replace(/\p{M}/gu, '') // remove diacritic marks
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toLowerCase()
+  }
+
+  const items = (timings && timings.items) || []
+  const label = blockProps.props && blockProps.props.items && blockProps.props.items[index]
+  if (label) {
+    const nl = normalize(label)
+    const byLabel = items.find((it) => normalize(it.label) === nl)
+    if (byLabel) return byLabel
+  }
+  return items[index] || DEFAULT
+}
 
 const onScroll = () => {
   if (!sectionRef.value) return
@@ -109,10 +140,13 @@ function getTextStyle(index) {
   if (sp < startP) return { transform: 'translateY(20px)', opacity: 0 }
 
   // On laisse désormais CSS piloter l'animation complète ; on renvoie
-  // uniquement le delay pour le stagger. Ne pas mettre transform/opacity inline
+  // uniquement le delay/duration/timing pour le stagger. Ne pas mettre transform/opacity inline
   // car cela a priorité sur les règles CSS d'état final.
+  const t = (getTimingFor(index) && getTimingFor(index).text) || DEFAULT.text
   return {
-    transitionDelay: `${index * 0.12}s`,
+    transitionDelay: `${t.delay}s`,
+    transitionTimingFunction: t.timing,
+    transitionDuration: `${t.duration}s`,
   }
 }
 
@@ -129,13 +163,19 @@ function getCircleStyle(index) {
   }
 
   const startTop = index * lineHeight + 100
+  const c = (getTimingFor(index) && getTimingFor(index).circle) || DEFAULT.circle
   return {
     opacity: 0,
     top: startTop + 'px',
     left: (index * 30 + circleLeftOffset) + 'px',
     width: circleSize + 'px',
     height: circleSize + 'px',
-    transitionDelay: `${index * 0.12}s`,
+    transitionDelay: `${c.delay}s`,
+    transitionTimingFunction: c.timing,
+    transitionDuration: `${c.duration}s`,
+    transitionProperty: 'top, opacity',
+    transitionDuration: `${c.duration}s, ${c.opacityDuration || c.duration}s`,
+    transitionTimingFunction: `${c.timing}, ${c.opacityTiming || 'ease-out'}`,
   }
 }
 
@@ -200,7 +240,8 @@ function isItemActive(index) {
   position: absolute;
   border-radius: 50%;
   background: rgba(26, 150, 223, 0.55);
-  transition: top 480ms cubic-bezier(.22,.9,.3,1), opacity 360ms ease-out;
+  /* tighten durations and keep a smooth easing curve */
+  transition: top 420ms cubic-bezier(.22,.9,.3,1), opacity 320ms ease-out;
 }
 
 .aspiration-text {
@@ -217,7 +258,7 @@ function isItemActive(index) {
 .aspiration-line .aspiration-text {
   transform: translateY(20px);
   opacity: 0;
-  transition: transform 420ms cubic-bezier(.22,.9,.3,1), opacity 420ms ease-out;
+  transition: transform 380ms cubic-bezier(.22,.9,.3,1), opacity 380ms ease-out;
 }
 
 .aspiration-line.is-active .aspiration-text {
