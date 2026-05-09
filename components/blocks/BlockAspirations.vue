@@ -142,9 +142,16 @@ function getTextStyle(index) {
   // On laisse désormais CSS piloter l'animation complète ; on renvoie
   // uniquement le delay/duration/timing pour le stagger. Ne pas mettre transform/opacity inline
   // car cela a priorité sur les règles CSS d'état final.
-  const t = (getTimingFor(index) && getTimingFor(index).text) || DEFAULT.text
+  // Ensure the text appears after the circle has finished its movement
+  // Compute text delay as circle.delay + circle.duration (+ small offset)
+  const itemTiming = getTimingFor(index) || DEFAULT
+  const c = (itemTiming && itemTiming.circle) || DEFAULT.circle
+  const t = (itemTiming && itemTiming.text) || DEFAULT.text
+  // small offset so text starts right after circle finishes (in seconds)
+  const afterOffset = 0.02
+  const computedDelay = (Number(c.delay) || 0) + (Number(c.duration) || 0) + afterOffset
   return {
-    transitionDelay: `${t.delay}s`,
+    transitionDelay: `${computedDelay}s`,
     transitionTimingFunction: t.timing,
     transitionDuration: `${t.duration}s`,
   }
