@@ -188,7 +188,10 @@ function getTextStyle(index) {
 
   const sp = scrollProgress.value
   const lineTotal = 1 / count.value
-  const startP = index * lineTotal
+  // Add a small threshold so the first item isn't active immediately when
+  // scrollProgress is 0. This prevents the first circle/text from becoming
+  // active before the section is actually in view.
+  const startP = index * lineTotal + lineActive
 
   // Avant le début : caché et mis au même niveau vertical que le cercle (début)
   const startTop = index * lineHeight + 100
@@ -247,7 +250,7 @@ function isItemActive(index) {
   if (isMobile.value) return true
   const sp = scrollProgress.value
   const lineTotal = 1 / count.value
-  const startP = index * lineTotal
+  const startP = index * lineTotal + lineActive
   // Dès que le scrollProgress atteint startP, on active l'item (CSS gère le reste)
   return sp >= startP
 }
