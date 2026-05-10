@@ -4,49 +4,34 @@
     :class="visibilityClasses"
     ref="viewportRef"
   >
-    <section
-      class="block-aspirations"
-      :style="{
-        background: blockProps.props.backgroundColor,
-        color: blockProps.props.textColor,
-      }"
-      ref="sectionRef"
-    >
-      <div class="aspirations-inner">
-        <h2 class="aspirations-title">{{ blockProps.props.title }}</h2>
-        <div class="aspirations-list" ref="listRef">
+    <div class="timeline-block">
+      <div class="inner-block">
+        <h2 class="titre-main">{{ blockProps.props.title }}</h2>
+        <div class="cercles-flottants" ref="cerclesRef">
           <span
-            v-for="(item, i) in blockProps.props.items"
-            :key="'circle-' + i"
-            class="aspiration-circle"
-            :class="{ 'is-active': isItemActive(i) }"
-            :style="getCircleStyle(i)"
-          ></span>
-          <div
-            v-for="(item, i) in blockProps.props.items"
-            :key="'line-' + i"
-            class="aspiration-line"
-            :class="{ 'is-active': isItemActive(i) }"
-          >
-            <span class="aspiration-text" :style="getTextStyle(i)">{{ item }}</span>
-          </div>
+            v-for="(_, i) in items"
+            :key="'c' + i"
+            class="cercle"
+            :style="getCercleStyle(i)"
+          >{{ i + 1 }}</span>
         </div>
+        <ul class="liste-timeline" ref="listRef">
+          <li
+            v-for="(item, i) in items"
+            :key="'l' + i"
+            :class="{ visible: isRevealed(i) }"
+            :ref="el => setItemRef(el, i)"
+          >
+            <span class="text-col">{{ item }}</span>
+          </li>
+        </ul>
       </div>
-    </section>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue'
-
-let gsap, ScrollTrigger
-if (import.meta.client) {
-  const gsapModule = await import('gsap')
-  const scrollTriggerModule = await import('gsap/ScrollTrigger')
-  gsap = gsapModule.gsap || gsapModule.default || gsapModule
-  ScrollTrigger = scrollTriggerModule.ScrollTrigger || scrollTriggerModule.default || scrollTriggerModule
-  gsap.registerPlugin(ScrollTrigger)
-}
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 
 const blockProps = defineProps({
   props: { type: Object, required: true },
@@ -60,112 +45,90 @@ const visibilityClasses = computed(() => ({
 }))
 
 const viewportRef = ref(null)
-const sectionRef = ref(null)
+const listRef = ref(null)
 const scrollProgress = ref(0)
 const mounted = ref(false)
 const isMobile = ref(false)
+const itemOffsets = ref([])
 
-const lineHeight = 87
-const circleLeftOffset = -80
-const circleSize = 24
+const items = computed(() => blockProps.props.items || [])
 
-function getCircleY(index) {
-  const sp = scrollProgress.value
-  const n = count.value
-  const lineTotal = 1 / Math.max(1, n)
-  const startP = index * lineTotal + lineActive
-  const endP = (index + 1) * lineTotal
-  const startY = index * lineHeight + 100
-  const endY = 0
-  if (sp <= startP) return startY
-  if (sp >= endP) return endY
-  const segmentProgress = (sp - startP) / (endP - startP)
-  return startY + (endY - startY) * segmentProgress
+const rawProgress = computed(() => {
+  const p = Math.max(0, Math.min(1, scrollProgress.value))
+  return p * items.value.length
+})
+
+const revealed = computed(() => Math.min(Math.floor(rawProgress.value), items.value.length))
+const remainder = computed(() => {
+  const r = rawProgress.value - revealed.value
+  return Math.max(0, Math.min(1, r))
+})
+
+const headerY = 87
+
+function setItemRef(el, index) {
+  if (el && mounted.value && !isMobile.value) {
+    itemOffsets.value[index] = el.offsetTop + 14
+  }
+}
+
+function isRevealed(index) {
+  if (isMobile.value) return true
+  return index < revealed.value
+}
+
+function getCercleStyle(index) {
+  if (isMobile.value) {
+    return {
+      left: (index * 32) + 'px',
+      top: headerY + 'px',
+      opacity: 1,
+      transform: 'translateY(0)',
+    }
+  }
+
+  const inlineY = itemOffsets.value[index] ?? (headerY + (index + 1) * 61)
+  let currentY
+
+  if (index < revealed.value - 1) {
+    currentY = headerY
+  } else if (index === revealed.value - 1) {
+    const t = remainder.value
+    currentY = inlineY + (headerY - inlineY) * t
+  } else {
+    currentY = inlineY
+  }
+
+  return {
+    left: (index * 32) + 'px',
+    top: currentY + 'px',
+    opacity: index < revealed.value || isMobile.value ? 1 : 0,
+    transition: 'none',
+  }
 }
 
 const onScroll = () => {
   if (!viewportRef.value) return
   const rect = viewportRef.value.getBoundingClientRect()
   const vh = window.innerHeight
-  const start = vh
-  const end = 0
+  const start = vh * 1.1
+  const end = -viewportRef.value.offsetHeight + vh * 0.3
   if (rect.top > start) { scrollProgress.value = 0; return }
   if (rect.top < end) { scrollProgress.value = 1; return }
   scrollProgress.value = 1 - ((rect.top - end) / (start - end))
 }
 
-onMounted(() => {
+onMounted(async () => {
   isMobile.value = window.innerWidth < 768
-
-  if (!isMobile.value && typeof window !== 'undefined' && gsap && ScrollTrigger && viewportRef.value) {
-    gsap.to({}, {
-      scrollTrigger: {
-        trigger: viewportRef.value,
-        start: 'top bottom',
-        end: 'top top',
-        scrub: 1,
-        onUpdate: (self) => {
-          scrollProgress.value = self.progress
-        },
-      },
-    })
-  } else {
-    window.addEventListener('scroll', onScroll, { passive: true })
-    onScroll()
-  }
-
+  await nextTick()
+  window.addEventListener('scroll', onScroll, { passive: true })
+  onScroll()
   mounted.value = true
 })
 
 onUnmounted(() => {
   window.removeEventListener('scroll', onScroll)
 })
-
-const count = computed(() => (blockProps.props.items || []).length)
-
-const activeCount = computed(() => {
-  if (isMobile.value) return count.value
-  const sp = scrollProgress.value
-  const lineTotal = 1 / Math.max(1, count.value)
-  let n = 0
-  for (let i = 0; i < count.value; i++) {
-    const startP = i * lineTotal + lineActive
-    if (sp >= startP) n++
-  }
-  return n
-})
-
-const lineActive = 0.02
-
-function getTextStyle(index) {
-  if (isMobile.value) return {}
-  const active = isItemActive(index)
-  const reverseStep = 0.06
-  const reverseDelay = (count.value - 1 - index) * reverseStep
-  return {
-    '--aspir-text-delay': `${active ? 0 : reverseDelay}s`,
-    '--aspir-text-duration': '0.38s',
-    '--aspir-text-timing': 'cubic-bezier(.22,.9,.3,1)',
-  }
-}
-
-function getCircleStyle(index) {
-  if (!mounted.value) {
-    return { left: (index * 30 + circleLeftOffset) + 'px' }
-  }
-  if (isMobile.value) {
-    return { left: (index * 30 + circleLeftOffset) + 'px', transform: 'translateY(0)' }
-  }
-  return {
-    left: (index * 30 + circleLeftOffset) + 'px',
-    transform: `translateY(${getCircleY(index)}px)`,
-  }
-}
-
-function isItemActive(index) {
-  if (isMobile.value) return true
-  return index < activeCount.value
-}
 </script>
 
 <style scoped>
@@ -174,103 +137,132 @@ function isItemActive(index) {
   position: relative;
 }
 
-.block-aspirations {
-  container-type: inline-size;
+.timeline-block {
   position: fixed;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  width: calc(100% - 48px);
-  max-width: 1048px;
-  padding: 70px 24px;
   z-index: 10;
-}
-
-.aspirations-inner {
-  max-width: 1000px;
-  margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 40px;
+  align-items: center;
+  width: 100vw;
+  pointer-events: none;
 }
 
-.aspirations-title {
-  font-family: 'Playfair Display', serif;
-  font-size: 75px;
-  font-weight: 400;
-  line-height: 1.3;
-  margin: 0;
-}
-
-.aspirations-list {
+.inner-block {
+  pointer-events: auto;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 8px 28px rgba(20, 68, 145, 0.1);
+  padding: 48px 34px 56px 34px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 330px;
+  max-width: 430px;
+  min-height: 245px;
   position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  width: 100%;
 }
 
-.aspiration-line {
+.titre-main {
+  font-family: 'Playfair Display', serif;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #226aad;
+  width: 100%;
+  margin: 0 0 33px 0;
+  text-align: center;
+  z-index: 5;
+}
+
+.cercles-flottants {
+  position: absolute;
+  left: 34px;
+  right: 34px;
+  top: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.cercle {
+  position: absolute;
+  width: 25px;
+  height: 25px;
+  border-radius: 40px;
+  border: 3px solid #226aad;
+  background: #fff;
+  color: #226aad;
+  font-weight: bold;
+  text-align: center;
+  font-size: 1.15em;
+  box-shadow: 0 2px 6px rgba(0, 82, 178, 0.1);
   display: flex;
   align-items: center;
-  padding: 18px 0;
-  padding-left: 25px;
-  border-bottom: 1px solid rgba(255,255,255,0.2);
-  font-family: Helvetica, Arial, sans-serif;
-  font-size: 36px;
-  font-weight: 700;
-  line-height: 1.4;
+  justify-content: center;
+  pointer-events: none;
+  transition: none;
+  will-change: top, opacity;
 }
 
-.aspiration-line:last-child {
-  border-bottom: none;
+.liste-timeline {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  position: relative;
+  min-height: 145px;
+  display: flex;
+  flex-direction: column;
+  gap: 34px;
 }
 
-.aspiration-circle {
-  position: absolute;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: rgba(26, 150, 223, 0.55);
-  opacity: 1;
-}
-
-.aspiration-text {
-  margin-left: 25px;
-  display: inline-block;
-}
-
-.aspiration-line .aspiration-text {
-  transform: translateY(20px);
+.liste-timeline li {
+  display: flex;
+  align-items: center;
   opacity: 0;
-  transition: transform var(--aspir-text-duration, 380ms) var(--aspir-text-timing, cubic-bezier(.22,.9,.3,1)), opacity var(--aspir-text-duration, 380ms) ease-out;
+  transform: translateY(25px);
+  transition: opacity 0.42s, transform 0.56s;
+  position: relative;
+  padding-left: 120px;
 }
 
-.aspiration-line.is-active .aspiration-text {
-  transform: translateY(0);
+.liste-timeline li.visible {
   opacity: 1;
+  transform: translateY(0);
 }
 
-@container (max-width: 768px) {
-  .aspirations-viewport { min-height: auto; }
-  .block-aspirations { position: relative; left: auto; top: auto; transform: none; width: 100%; max-width: 100%; }
-  .aspirations-inner { align-items: center; text-align: center; }
-  .aspirations-title { font-size: clamp(32px, 8vw, 60px); }
-  .aspiration-line {
-    font-size: clamp(16px, 4.5vw, 28px);
-    padding: 14px 0;
-    padding-left: 20px;
-  }
-  .aspiration-circle {
-    width: 18px;
-    height: 18px;
-  }
-  .aspiration-text {
-    margin-left: 20px;
-  }
+.text-col {
+  font-size: 1.12rem;
+  color: #214b7f;
+  font-weight: 400;
+  line-height: 1.52;
+  flex: 1;
+  position: relative;
+  z-index: 1;
 }
 
-@container (max-width: 600px) {
-  .block-aspirations { padding: 50px 20px; }
+@media (max-width: 544px) {
+  .inner-block {
+    max-width: 96vw;
+    min-width: 0;
+    padding: 7vw 1vw 8vw 1vw;
+  }
+  .liste-timeline {
+    min-height: 98px;
+    gap: 20px;
+  }
+  .liste-timeline li {
+    padding-left: 60px;
+  }
+  .text-col {
+    font-size: 1rem;
+  }
+  .cercle {
+    width: 17px;
+    height: 17px;
+    font-size: 0.85em;
+  }
 }
 </style>
