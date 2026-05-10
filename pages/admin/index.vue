@@ -1168,6 +1168,26 @@ html, body { height: 100%; background: #0f0f1a !important; }
 }
 
 @media (max-width: 900px) {
+  .admin-layout { flex-direction: column; }
+  .sidebar-pages { width: 100%; min-width: 0; flex-direction: row; overflow-x: auto; border-right: none; border-bottom: 1px solid #2d2d3f; }
+  .sidebar-logo { display: none; }
+  .sidebar-section-label { display: none; }
+  .pages-list { display: flex; flex: none; }
+  .page-btn { white-space: nowrap; width: auto; padding: 10px 14px; font-size: 0.82em; }
+  .sidebar-footer { flex-direction: row; flex-wrap: wrap; border-top: none; border-left: 1px solid #2d2d3f; padding: 8px 12px; }
+  .sidebar-footer .save-btn,
+  .sidebar-footer .logout-btn,
+  .sidebar-footer .preview-site-btn { width: auto; font-size: 0.78em; padding: 6px 12px; white-space: nowrap; }
+  .editor-main { height: auto; flex: 1; }
+  .editor-toolbar { flex-wrap: wrap; height: auto; padding: 8px 12px; gap: 8px; }
+  .toolbar-left, .toolbar-right { flex: none; }
+  .toolbar-page-name { font-size: 0.78em; }
+  .device-btn { padding: 4px 8px; font-size: 0.85em; }
+  .btn-add-block { padding: 6px 12px; font-size: 0.78em; }
+  .canvas-wrap { padding: 12px; }
+  .canvas-tablet { width: 100%; }
+  .canvas-mobile { width: 100%; }
+
   .agenda-form-grid {
     grid-template-columns: 1fr;
   }
@@ -1185,6 +1205,19 @@ html, body { height: 100%; background: #0f0f1a !important; }
   .agenda-admin-date {
     min-width: 0;
   }
+
+  .block-picker-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 480px) {
+  .sidebar-pages { flex-wrap: wrap; }
+  .sidebar-footer { width: 100%; border-left: none; border-top: 1px solid #2d2d3f; justify-content: center; }
+  .editor-toolbar { gap: 4px; }
+  .toolbar-center { order: -1; width: 100%; justify-content: center; }
+  .device-btn { padding: 4px 6px; font-size: 0.78em; }
+  .block-picker-grid { grid-template-columns: 1fr; }
+  .modal-block-picker { max-width: 100vw; border-radius: 0; max-height: 100vh; }
+  .canvas-wrap { padding: 8px; }
 }
 
 /* ─── Block picker modal ─────────────────────────────────────────────────────── */

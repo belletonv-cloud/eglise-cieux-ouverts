@@ -309,11 +309,18 @@ function formatDayLabel(date) {
 
 @media (max-width: 700px) {
   .agenda-header { padding: 30px 16px 16px; }
+  .agenda-title { font-size: 2em; }
   .agenda-calendar { padding: 0 8px 30px; }
   .day-cell { min-height: 50px; padding: 3px; }
-  .event-pill { display: none; }
+  .event-pill { font-size: 0.6em; padding: 1px 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
   .event-card { flex-direction: column; gap: 12px; }
   .view-toggle { gap: 2px; }
   .view-btn { font-size: 0.72em; padding: 4px 4px; }
+}
+
+@media (max-width: 480px) {
+  .calendar-nav { flex-wrap: wrap; }
+  .view-toggle { order: -1; width: 100%; justify-content: center; margin-left: 0; }
+  .day-cell { min-height: 40px; }
 }
 </style>

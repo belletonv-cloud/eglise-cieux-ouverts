@@ -523,6 +523,7 @@ async function submitForm() {
 @container (max-width: 768px) {
   .contact-page-header { padding: 40px 20px 20px; }
   .contact-page-header-inner { flex-direction: column; gap: 16px; }
+  .contact-page-title { font-size: 2em; }
   .contact-page-card { margin: 0 16px 60px; padding: 24px 20px 40px; }
   .contact-page-card-inner { grid-template-columns: 1fr; }
   .contact-page-row { grid-template-columns: 1fr; }

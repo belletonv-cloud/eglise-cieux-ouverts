@@ -2,57 +2,46 @@ import { test, expect } from '@playwright/test'
 
 test.describe('Aspirations animation', () => {
   test('items activate one by one on scroll', async ({ page }) => {
-    await page.goto('http://localhost:3000/')
+    await page.goto('http://localhost:3001/')
 
-    // Wait for the aspirations section to be present
+    const viewport = page.locator('.aspirations-viewport')
+    await expect(viewport).toBeVisible({ timeout: 10000 })
+
     const aspirations = page.locator('.block-aspirations')
-    await expect(aspirations).toBeVisible({ timeout: 10000 })
-
-    // Find circles and lines
     const circles = page.locator('.aspiration-circle')
     const lines = page.locator('.aspiration-line')
 
     const count = await circles.count()
     expect(count).toBeGreaterThan(0)
 
-    // Scroll slowly down the section and observe that items gain the .is-active class sequentially
-    // Instead of individually scrolling to each element (which can cause
-    // reflow and detachment), perform controlled wheel scrolls over the
-    // aspirations section and observe items activating in sequence.
-    const box = await aspirations.boundingBox()
-    if (!box) throw new Error('aspirations bounding box not found')
-
-    // Start near the top of the section and perform incremental wheel scrolls
-    // to simulate a user scrolling down. After each small scroll, check for
-    // the next item's activation.
-    const startY = Math.floor(box.y + 10)
-    await page.mouse.move(Math.floor(box.x + box.width / 2), startY)
-
     for (let i = 0; i < count; i++) {
-      // Compute the scroll position that corresponds to the component's
-      // internal scrollProgress formula so we reliably trigger is-active.
       await page.evaluate(({ idx, cnt }) => {
-        const el = document.querySelector('.block-aspirations')
-        if (!el) return
+        const viewportEl = document.querySelector('.aspirations-viewport')
+        if (!viewportEl) return
         const vh = window.innerHeight
-        const start = vh * 3
-        const end = 0
+        const range_start = vh
+        const range_end = 0
+        const range = range_start - range_end
         const lineTotal = 1 / cnt
         const startP = idx * lineTotal
 
-        // we want rect.top such that scrollProgress >= startP
-        // scrollProgress = 1 - ((rect.top - end) / (start - end))
-        // => rect.top = start * (1 - startP)
-        // nudge a bit further to ensure progress passes the threshold
-        const desiredRectTop = start * (1 - startP) - 20
+        const viewport_rect = viewportEl.getBoundingClientRect()
+        const viewport_top = viewport_rect.top
+        let currentProgress = 0
+        if (range > 0) {
+          currentProgress = Math.max(0, Math.min(1, (range_start - viewport_top) / range))
+        }
 
-        const elTopDocument = el.getBoundingClientRect().top + window.scrollY
-        const targetScrollY = Math.max(0, Math.floor(elTopDocument - desiredRectTop))
-        window.scrollTo({ top: targetScrollY, behavior: 'auto' })
+        const desiredProgress = startP + 0.01
+        if (currentProgress < desiredProgress) {
+          const needed_viewport_top = range_start - desiredProgress * range
+          const viewport_top_document = viewport_rect.top + window.scrollY
+          const target_scroll_y = Math.max(0, Math.floor(viewport_top_document - needed_viewport_top))
+          window.scrollTo({ top: target_scroll_y, behavior: 'auto' })
+        }
       }, { idx: i, cnt: count })
 
-      // allow the scroll handler and CSS transitions to take effect
-      await page.waitForTimeout(150)
+      await page.waitForTimeout(250)
 
       const circle = circles.nth(i)
       const line = lines.nth(i)

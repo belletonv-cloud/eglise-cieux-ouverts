@@ -170,6 +170,6 @@ onMounted(() => {
 }
 
 @container (max-width: 600px) {
-  .block-rejoins { padding: 50px 20px; }
+  .block-rejoins { padding: 50px 20px; min-height: 400px; }
 }
 </style>

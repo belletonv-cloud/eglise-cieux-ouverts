@@ -111,6 +111,7 @@ const contentStyle = computed(() => {
 }
 
 @container (max-width: 768px) {
+  .block-main-hero { margin-top: -56px; min-height: 360px; }
   .hero-name { max-width: 80vw; }
   .hero-logo { max-width: 100px; }
 }

@@ -1,27 +1,20 @@
 <template>
-  <!-- Viewport wrapper : crée l'espace pour scroller (comme dans le prototype) -->
   <div
     class="aspirations-viewport"
     :class="visibilityClasses"
     ref="viewportRef"
   >
-    <!-- Bloc fixed : reste au centre de l'écran pendant l'animation -->
     <section
       class="block-aspirations"
-      :style="{ 
-        background: blockProps.props.backgroundColor, 
+      :style="{
+        background: blockProps.props.backgroundColor,
         color: blockProps.props.textColor,
-        opacity: blockOpacity,
-        visibility: blockOpacity > 0 ? 'visible' : 'hidden',
-        pointerEvents: blockOpacity > 0 ? 'auto' : 'none'
       }"
-      :class="{ 'js-mounted': mounted }"
       ref="sectionRef"
     >
       <div class="aspirations-inner">
         <h2 class="aspirations-title">{{ blockProps.props.title }}</h2>
         <div class="aspirations-list" ref="listRef">
-          <!-- Cercles : mouvement DIRECTEMENT piloté par le scroll (pas de transitions CSS) -->
           <span
             v-for="(item, i) in blockProps.props.items"
             :key="'circle-' + i"
@@ -29,8 +22,6 @@
             :class="{ 'is-active': isItemActive(i) }"
             :style="getCircleStyle(i)"
           ></span>
-
-          <!-- Lignes de texte : chacune à sa position de liste, fade-in avec transitions CSS -->
           <div
             v-for="(item, i) in blockProps.props.items"
             :key="'line-' + i"
@@ -47,11 +38,15 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue'
-// Import local per-item timings (derived from extraction) to match original site
-// Try to import timings from test-results during local dev; in production the file
-// is served from /aspirations-timings.json under public/. If the build tool can't
-// resolve the dev path, fall back to fetching at runtime (see getTimingFor).
-let timings = null
+
+let gsap, ScrollTrigger
+if (import.meta.client) {
+  const gsapModule = await import('gsap')
+  const scrollTriggerModule = await import('gsap/ScrollTrigger')
+  gsap = gsapModule.gsap || gsapModule.default || gsapModule
+  ScrollTrigger = scrollTriggerModule.ScrollTrigger || scrollTriggerModule.default || scrollTriggerModule
+  gsap.registerPlugin(ScrollTrigger)
+}
 
 const blockProps = defineProps({
   props: { type: Object, required: true },
@@ -64,119 +59,36 @@ const visibilityClasses = computed(() => ({
   'hide-desktop': blockProps.visibility.desktop === false,
 }))
 
-const sectionRef = ref(null)
 const viewportRef = ref(null)
+const sectionRef = ref(null)
 const scrollProgress = ref(0)
-const isMobile = ref(false)
-const titleShown = ref(false)
 const mounted = ref(false)
-const blockOpacity = ref(0)
+const isMobile = ref(false)
 
-const lineHeight = 87 // Hauteur d'une ligne de texte
-const circleTop = 0 // Y commun final pour TOUS les cercles (première ligne)
+const lineHeight = 87
+const circleLeftOffset = -80
 const circleSize = 24
-const circleLeftOffset = -80 // Décalage horizontal à gauche
 
-// Calcul de la position Y d'un cercle directement à partir de scrollProgress
-// (mouvement piloté par le scroll, pas de transitions CSS)
 function getCircleY(index) {
   const sp = scrollProgress.value
   const n = count.value
   const lineTotal = 1 / Math.max(1, n)
-  
-  // Segment de scrollProgress pour cet item
-  // (même logique que activeCount pour la cohérence)
   const startP = index * lineTotal + lineActive
   const endP = (index + 1) * lineTotal
-  
-  // Position de départ : comme dans l'original
-  // Les cercles commencent en bas de leur texte respectif
   const startY = index * lineHeight + 100
-  
-  // Position finale : TOUS les cercles montent vers Y=0 (ligne horizontale commune)
-  // comme indiqué dans le commentaire original
   const endY = 0
-  
-  // Si scroll est avant le début du segment : cercle à sa position initiale
-  if (sp <= startP) {
-    return startY
-  }
-  
-  // Si scroll est après la fin du segment : cercle à sa position finale
-  if (sp >= endP) {
-    return endY
-  }
-  
-  // Pendant le segment : interpolation linéaire directe
+  if (sp <= startP) return startY
+  if (sp >= endP) return endY
   const segmentProgress = (sp - startP) / (endP - startP)
   return startY + (endY - startY) * segmentProgress
-}
-
-// Use per-item timings when available, otherwise fall back to default constants
-const DEFAULT = {
-  circle: { delay: 0, duration: 0.42, timing: 'cubic-bezier(.22,.9,.3,1)', opacityDuration: 0.32, opacityTiming: 'ease-out' },
-  text: { delay: 0, duration: 0.38, timing: 'cubic-bezier(.22,.9,.3,1)' }
-}
-
-function getTimingFor(index) {
-  // Normalize labels for robust matching (remove diacritics, case, extra spaces)
-  const normalize = (s) => {
-    if (!s || typeof s !== 'string') return ''
-    // decompose accents, remove combining marks, collapse whitespace, lowercase
-    return s
-      .normalize('NFD')
-      .replace(/\p{M}/gu, '') // remove diacritic marks
-      .replace(/\s+/g, ' ')
-      .trim()
-      .toLowerCase()
-  }
-
-  let items = (timings && timings.items) || []
-  // If timings not present at build time, we try to use any timings previously
-  // loaded on the client (onMounted will attempt to import local JSON or fetch
-  // the public JSON). We avoid awaiting here to keep this function sync so
-  // it can be used directly during render.
-  if ((!items || items.length === 0) && typeof window !== 'undefined') {
-    const w = window.__aspirationsTimings
-    if (w && typeof w.then !== 'function') {
-      // already resolved object
-      items = (w && w.items) || items
-    }
-    // if w is a promise or absent, onMounted will populate timings/window cache
-  }
-  const label = blockProps.props && blockProps.props.items && blockProps.props.items[index]
-  if (label) {
-    const nl = normalize(label)
-    const byLabel = items.find((it) => normalize(it.label) === nl)
-    if (byLabel) return byLabel
-  }
-  return items[index] || DEFAULT
 }
 
 const onScroll = () => {
   if (!viewportRef.value) return
   const rect = viewportRef.value.getBoundingClientRect()
   const vh = window.innerHeight
-
-  // Plage pour le fondu du bloc :
-  // - blockOpacity = 0 quand viewport.top > vh * 1.5
-  // - blockOpacity = 1 quand viewport.top <= vh
-  const fadeStart = vh * 1.5
-  const fadeEnd = vh
-  if (rect.top > fadeStart) {
-    blockOpacity.value = 0
-  } else if (rect.top <= fadeEnd) {
-    blockOpacity.value = 1
-  } else {
-    blockOpacity.value = 1 - ((rect.top - fadeEnd) / (fadeStart - fadeEnd))
-  }
-
-  // Plage pour le scrollProgress (mouvement des cercles) :
-  // - scrollProgress = 0 quand viewport.top > vh
-  // - scrollProgress = 1 quand viewport.top <= 0
   const start = vh
   const end = 0
-
   if (rect.top > start) { scrollProgress.value = 0; return }
   if (rect.top < end) { scrollProgress.value = 1; return }
   scrollProgress.value = 1 - ((rect.top - end) / (start - end))
@@ -184,55 +96,36 @@ const onScroll = () => {
 
 onMounted(() => {
   isMobile.value = window.innerWidth < 768
-  window.addEventListener('scroll', onScroll, { passive: true })
-  onScroll()
 
-  // Try to load local test-results JSON (only in dev where it's available).
-  // We do this asynchronously and cache the result on `timings` and on
-  // `window.__aspirationsTimings` so getTimingFor can read it synchronously.
-  ;(async () => {
-    try {
-      // Attempt a runtime-import of the local JSON only when present. We use
-      // new Function(...) to avoid bundlers statically resolving this path at
-      // build time (the file exists only on some developer machines).
-      // eslint-disable-next-line no-new-func
-      const mod = await new Function('return import("../../test-results/aspirations-timings.json")')()
-      timings = mod && (mod.default || mod)
-      if (typeof window !== 'undefined') window.__aspirationsTimings = timings
-      return
-    } catch (e) {
-      // ignore local import failure and try fetching public JSON
-    }
+  if (!isMobile.value && typeof window !== 'undefined' && gsap && ScrollTrigger && viewportRef.value) {
+    gsap.to({}, {
+      scrollTrigger: {
+        trigger: viewportRef.value,
+        start: 'top bottom',
+        end: 'top top',
+        scrub: 1,
+        onUpdate: (self) => {
+          scrollProgress.value = self.progress
+        },
+      },
+    })
+  } else {
+    window.addEventListener('scroll', onScroll, { passive: true })
+    onScroll()
+  }
 
-    try {
-      if (typeof window !== 'undefined') {
-        const p = fetch('/aspirations-timings.json').then(r => r.json()).catch(() => null)
-        // store promise on window so other code can await if needed
-        window.__aspirationsTimings = p
-        const loaded = await p
-        timings = loaded || timings
-        // replace promise with resolved object for sync reads
-        window.__aspirationsTimings = timings
-      }
-    } catch (e) {
-      // ignore fetch failure
-    }
-  })()
-  // mark mounted after attempting to load timings so SSR won't flash the title
   mounted.value = true
 })
 
-onUnmounted(() => window.removeEventListener('scroll', onScroll))
+onUnmounted(() => {
+  window.removeEventListener('scroll', onScroll)
+})
 
 const count = computed(() => (blockProps.props.items || []).length)
 
-// Number of items that should be considered active based on discrete steps.
-// This makes activation cumulative and stepwise: as scrollProgress increases
-// the activeCount rises by integer steps so items activate one-by-one.
 const activeCount = computed(() => {
   if (isMobile.value) return count.value
   const sp = scrollProgress.value
-  // Count how many items have reached their individual start threshold.
   const lineTotal = 1 / Math.max(1, count.value)
   let n = 0
   for (let i = 0; i < count.value; i++) {
@@ -242,52 +135,30 @@ const activeCount = computed(() => {
   return n
 })
 
-const lineActive = 0.02 // 2% du segment pour l'animation active
+const lineActive = 0.02
 
-// Titre : maintenant géré par CSS via la classe .js-mounted
-// (pas de style inline pour éviter le flash SSR)
-
-// Style du texte : synchronisé pour apparaître quand son cercle commence à monter
-// On utilise uniquement des CSS variables pour les timings
 function getTextStyle(index) {
   if (isMobile.value) return {}
-
-  const itemTiming = getTimingFor(index) || DEFAULT
-  const c = (itemTiming && itemTiming.circle) || DEFAULT.circle
-  const t = (itemTiming && itemTiming.text) || DEFAULT.text
-  const textDuration = Math.min(0.32, Number(t.duration) || 0.38)
   const active = isItemActive(index)
   const reverseStep = 0.06
   const reverseDelay = (count.value - 1 - index) * reverseStep
   return {
-    '--aspir-text-delay': `${active ? c.delay : reverseDelay}s`,
-    '--aspir-text-duration': `${textDuration}s`,
-    '--aspir-text-timing': t.timing,
+    '--aspir-text-delay': `${active ? 0 : reverseDelay}s`,
+    '--aspir-text-duration': '0.38s',
+    '--aspir-text-timing': 'cubic-bezier(.22,.9,.3,1)',
   }
 }
 
-// Style du cercle : MOUVEMENT DIRECTEMENT PILOTÉ PAR LE SCROLL
-// (pas de transitions CSS, calcul direct de translateY à partir de scrollProgress)
 function getCircleStyle(index) {
-  // SSR : seulement left, pas de transform pour éviter flash
-  if (typeof window === 'undefined' || !mounted.value) return {
-    left: (index * 30 + circleLeftOffset) + 'px',
+  if (!mounted.value) {
+    return { left: (index * 30 + circleLeftOffset) + 'px' }
   }
-
-  // Mobile : cercle à sa position finale (Y=0, pas d'animation)
-  if (isMobile.value) return {
-    left: (index * 30 + circleLeftOffset) + 'px',
-    transform: 'translateY(0)',
+  if (isMobile.value) {
+    return { left: (index * 30 + circleLeftOffset) + 'px', transform: 'translateY(0)' }
   }
-
-  // Desktop : calcul DIRECT de la position Y à partir de scrollProgress
-  // (mouvement piloté par le scroll, pas de transitions CSS)
-  const currentY = getCircleY(index)
-  const left = (index * 30 + circleLeftOffset)
-
   return {
-    left: left + 'px',
-    transform: `translateY(${currentY}px)`,
+    left: (index * 30 + circleLeftOffset) + 'px',
+    transform: `translateY(${getCircleY(index)}px)`,
   }
 }
 
@@ -298,15 +169,13 @@ function isItemActive(index) {
 </script>
 
 <style scoped>
-/* Viewport wrapper : crée l'espace pour scroller (comme dans le prototype) */
 .aspirations-viewport {
   min-height: 500vh;
   position: relative;
 }
 
-/* Bloc fixed : reste au centre de l'écran pendant l'animation */
-/* L'opacité et la visibilité sont maintenant gérées par le style inline via blockOpacity */
 .block-aspirations {
+  container-type: inline-size;
   position: fixed;
   left: 50%;
   top: 50%;
@@ -315,7 +184,6 @@ function isItemActive(index) {
   max-width: 1048px;
   padding: 70px 24px;
   z-index: 10;
-  container-type: inline-size;
 }
 
 .aspirations-inner {
@@ -364,20 +232,13 @@ function isItemActive(index) {
   height: 24px;
   border-radius: 50%;
   background: rgba(26, 150, 223, 0.55);
-  /* IMPORTANT : PAS de transitions CSS pour les cercles !
-     Le mouvement est DIRECTEMENT piloté par le scroll via
-     transform: translateY() calculé dans getCircleStyle().
-     Cela évite l'effet "pop" et donne un mouvement "naturel" lié au scroll. */
   opacity: 1;
 }
 
 .aspiration-text {
   margin-left: 25px;
-  display: inline-block; /* allow transform on the text when animating */
+  display: inline-block;
 }
-
-/* When an item becomes active we move its circle to the shared top (0) and reveal the text */
-
 
 .aspiration-line .aspiration-text {
   transform: translateY(20px);
@@ -391,6 +252,8 @@ function isItemActive(index) {
 }
 
 @container (max-width: 768px) {
+  .aspirations-viewport { min-height: auto; }
+  .block-aspirations { position: relative; left: auto; top: auto; transform: none; width: 100%; max-width: 100%; }
   .aspirations-inner { align-items: center; text-align: center; }
   .aspirations-title { font-size: clamp(32px, 8vw, 60px); }
   .aspiration-line {

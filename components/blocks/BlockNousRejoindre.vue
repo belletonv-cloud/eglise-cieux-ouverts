@@ -154,7 +154,16 @@ const textStyle = computed(() => {
   will-change: transform, opacity;
 }
 
+@container (max-width: 768px) {
+  .circle-left { width: 250px; height: 250px; }
+  .circle-right { width: 350px; height: 350px; }
+  .circle-small { width: 60px; height: 60px; }
+}
+
 @container (max-width: 600px) {
   .block-nous-rejoindre { padding: 50px 20px; min-height: 300px; }
+  .circle-left { width: 180px; height: 180px; }
+  .circle-right { width: 250px; height: 250px; }
+  .circle-small { width: 50px; height: 50px; }
 }
 </style>

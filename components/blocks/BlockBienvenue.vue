@@ -214,5 +214,11 @@ const socialsStyle = computed(() => {
   }
   .hero-subtitle { font-size: 16px; margin-top: 15px; }
   .hero-socials { margin-top: 16px; }
+  .block-bienvenue { min-height: 400px; }
+}
+
+@media (max-width: 480px) {
+  .block-bienvenue { min-height: 320px; }
+  .hero-subtitle { font-size: 14px; }
 }
 </style>

@@ -21,4 +21,10 @@ const style = computed(() => ({
   background-repeat: no-repeat;
   background-size: cover;
 }
+
+@media (max-width: 768px) {
+  .full-width-image {
+    background-attachment: scroll;
+  }
+}
 </style>

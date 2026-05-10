@@ -46,4 +46,8 @@ onMounted(() => {
 <style scoped>
 .block-richtext { max-width: 100%; }
 .richtext-inner { max-width: 900px; margin: 0 auto; line-height: 1.7; font-size: 1.05em; }
+
+@media (max-width: 768px) {
+  .richtext-inner { padding: 0 16px; }
+}
 </style>

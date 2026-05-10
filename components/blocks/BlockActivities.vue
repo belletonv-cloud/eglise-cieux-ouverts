@@ -224,7 +224,8 @@ function nextSlide() {
   }
   .activity-overlay {
     padding: 18px 18px 16px;
-    opacity: 1;
+    opacity: 1 !important;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.2) 10%, rgba(0, 0, 0, 0.85) 100%);
   }
   .nav-arrow {
     width: 40px;

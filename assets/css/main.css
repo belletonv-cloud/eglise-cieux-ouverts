@@ -146,17 +146,11 @@ a:hover {
 
 @media (max-width: 768px) {
   .section {
-    padding: 16px 7px;
+    padding: 40px 16px;
   }
   .section-title {
-    font-size: 1.12em;
+    font-size: 1.6em;
     margin-bottom: 10px;
-  }
-  .btn {
-    width: 100%;
-    padding: 11px 18px;
-    font-size: 0.96em;
-    text-align: center;
   }
 }
 
