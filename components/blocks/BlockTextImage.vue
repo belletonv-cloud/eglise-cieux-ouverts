@@ -137,6 +137,73 @@ const visibilityClasses = computed(() => ({
   .style-messagesSeamless .ti-subtitle { font-size: 20px; }
 }
 
+.style-messagesLaptop .ti-laptop-shell {
+  position: relative;
+  width: 100%;
+  max-width: 800px;
+  perspective: 1200px;
+}
+
+.style-messagesLaptop .ti-laptop-screen-frame {
+  background-color: #ffffff;
+  background-image: radial-gradient(circle at 94.35% 89.61%, #054886 0%, 20%, rgba(5, 72, 134, 0) 40%), radial-gradient(circle at 9.07% 95.57%, rgba(238, 108, 113, 0.99) 0%, 25%, rgba(238, 108, 113, 0) 50%), radial-gradient(circle at 4.04% 13.51%, #054886 0%, 42%, rgba(5, 72, 134, 0) 70%), radial-gradient(circle at 93.32% 10.65%, #EF4B54 0%, 42%, rgba(239, 75, 84, 0) 70%), radial-gradient(circle at 48.90% 49.52%, #FFFFFF 0%, 100%, rgba(255, 255, 255, 0) 100%);
+  border: 1px solid rgba(199, 199, 199, 1);
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+  padding: 2.5%;
+  position: relative;
+  z-index: 2;
+}
+
+.style-messagesLaptop .ti-laptop-content {
+  background: white;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.1);
+}
+
+.style-messagesLaptop .ti-laptop-content .ti-img,
+.style-messagesLaptop .ti-laptop-content .ti-img-placeholder {
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.style-messagesLaptop .ti-laptop-base {
+  position: relative;
+  width: 114%;
+  left: -7%;
+  height: 16px;
+  background: linear-gradient(to bottom, #e2e2e2 0%, #a8a8a8 100%);
+  border-radius: 0 0 16px 16px;
+  box-shadow: inset 0 1px 2px rgba(255,255,255,0.8), 0 10px 20px rgba(0,0,0,0.25);
+  z-index: 1;
+  margin-top: -2px;
+}
+
+.style-messagesLaptop .ti-laptop-base::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 14%;
+  height: 4px;
+  background: #999;
+  border-radius: 0 0 4px 4px;
+}
+
+.style-messagesLaptop .ti-cta {
+  padding: 16px 32px;
+  font-size: 18px;
+  border-radius: 30px;
+}
+
+@container (max-width: 768px) {
+  .style-messagesLaptop .ti-inner { padding: 28px 16px; border-radius: 18px; }
+  .style-messagesLaptop .ti-title { font-size: 36px; }
+  .style-messagesLaptop .ti-subtitle { font-size: 20px; }
+}
+
 @container (max-width: 600px) {
   .block-textimage { padding: 50px 20px; }
 }
