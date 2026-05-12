@@ -132,4 +132,5 @@ onUnmounted(() => {
 .block-wrapper {
   /* Pas de contain: layout — ça casse les transitions GPU */
 }
+.block-wrapper.selected { outline: none !important; }
 </style>
