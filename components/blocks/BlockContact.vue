@@ -1,16 +1,16 @@
 <template>
   <section
     class="block-contact"
-    :style="{ background: props.backgroundGradient, color: props.textColor || '#ffffff' }"
+    :style="{ background: backgroundGradient, color: textColor || '#ffffff' }"
     :class="[visibilityClasses, { 'page-mode': isClassicPageContact }]"
   >
     <div v-if="isClassicPageContact" class="contact-page-shell">
       <section class="contact-page-header">
         <div class="contact-page-header-inner">
-          <h2 class="contact-page-title">{{ props.title }}</h2>
-          <div v-if="props.addressTitle || props.addressLine" class="contact-page-address">
-            <p v-if="props.addressTitle">{{ props.addressTitle }}</p>
-            <p v-if="props.addressLine">{{ props.addressLine }}</p>
+          <h2 class="contact-page-title">{{ title }}</h2>
+          <div v-if="addressTitle || addressLine" class="contact-page-address">
+            <p v-if="addressTitle">{{ addressTitle }}</p>
+            <p v-if="addressLine">{{ addressLine }}</p>
           </div>
         </div>
       </section>
@@ -67,7 +67,7 @@
 
             <div class="contact-page-map-col">
               <iframe
-                :src="props.mapEmbedUrl"
+                :src="mapEmbedUrl"
                 title="Carte — Eglise Cieux Ouverts Morlaix"
                 width="100%"
                 height="100%"
@@ -82,14 +82,14 @@
     </div>
 
     <div v-else class="contact-inner">
-      <h2 class="contact-title">{{ props.title }}</h2>
+      <h2 class="contact-title">{{ title }}</h2>
 
       <div class="contact-wrap">
         <div class="contact-left">
-          <img v-if="props.image" :src="props.image" alt="" class="contact-phone" />
+          <img v-if="image" :src="image" alt="" class="contact-phone" />
           <div v-else class="contact-phone-placeholder"></div>
 
-          <div class="contact-socials" v-if="props.showSocials">
+          <div class="contact-socials" v-if="showSocials">
             <a href="https://instagram.com/eglise_cieux_ouverts" target="_blank" rel="noopener" class="contact-social-icon" aria-label="Instagram Cieux Ouverts">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
             </a>
@@ -101,9 +101,9 @@
 
         <div class="contact-right">
           <div class="contact-questions">
-            <p v-if="props.showQuestions !== false">Tu as une question ?</p>
-            <p v-if="props.showQuestions !== false">Tu désires parler à un pasteur ?</p>
-            <p v-if="props.showQuestions !== false">Tu souhaites recevoir notre newsletter ?</p>
+            <p v-if="showQuestions !== false">Tu as une question ?</p>
+            <p v-if="showQuestions !== false">Tu désires parler à un pasteur ?</p>
+            <p v-if="showQuestions !== false">Tu souhaites recevoir notre newsletter ?</p>
           </div>
           <form class="contact-form" @submit.prevent="submitForm">
             <div class="form-row">
@@ -134,17 +134,36 @@
 <script setup>
 import { ref, computed, inject } from 'vue'
 
-const p = defineProps({
-  props: { type: Object, required: true },
+const {
+  backgroundGradient = '',
+  textColor = '#fff',
+  title = '',
+  addressTitle = '',
+  addressLine = '',
+  mapEmbedUrl = '',
+  image = '',
+  showSocials = false,
+  showQuestions = false,
+  visibility = {},
+} = defineProps({
+  backgroundGradient: { type: String, default: '' },
+  textColor: { type: String, default: '#fff' },
+  title: { type: String, default: '' },
+  addressTitle: { type: String, default: '' },
+  addressLine: { type: String, default: '' },
+  mapEmbedUrl: { type: String, default: '' },
+  image: { type: String, default: '' },
+  showSocials: { type: Boolean, default: false },
+  showQuestions: { type: Boolean, default: false },
   visibility: { type: Object, default: () => ({}) },
 })
 
 const isEditor = inject('isEditor', false)
 
 const visibilityClasses = computed(() => ({
-  'hide-mobile': p.visibility.mobile === false,
-  'hide-tablet': p.visibility.tablet === false,
-  'hide-desktop': p.visibility.desktop === false,
+  'hide-mobile': visibility.mobile === false,
+  'hide-tablet': visibility.tablet === false,
+  'hide-desktop': visibility.desktop === false,
 }))
 
 const route = useRoute()
@@ -155,7 +174,7 @@ const errorMessage = ref('')
 const mountedAt = Date.now()
 
 const isFormDisabled = computed(() => sending.value || isEditor)
-const isClassicPageContact = computed(() => Boolean(p.props.mapEmbedUrl))
+const isClassicPageContact = computed(() => Boolean(mapEmbedUrl))
 
 function normalizeForm() {
   return {

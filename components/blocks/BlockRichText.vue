@@ -2,39 +2,61 @@
   <section
     class="block-richtext"
     :style="{
-      background: props.backgroundGradient || props.backgroundColor,
-      color: props.textColor,
-      paddingTop: props.padding + 'px',
-      paddingBottom: props.padding + 'px',
-      textAlign: props.textAlign
+      background: backgroundGradient || backgroundColor,
+      color: textColor,
+      paddingTop: padding + 'px',
+      paddingBottom: padding + 'px',
+      textAlign: textAlign,
     }"
     :class="[visibilityClasses, animClass]"
     ref="sectionRef"
   >
-    <div class="richtext-inner" v-html="props.content"></div>
+    <div class="richtext-inner" v-html="content"></div>
   </section>
 </template>
 
 <script setup>
-const p = defineProps({
-  props: { type: Object, required: true },
+const {
+  backgroundGradient = '',
+  backgroundColor = '#ffffff',
+  textColor = '#000',
+  padding = 32,
+  textAlign = 'left',
+  content = '',
+  animation = 'none',
+  visibility = {},
+  isTriggered = false,
+} = defineProps({
+  backgroundGradient: { type: String, default: '' },
+  backgroundColor: { type: String, default: '#ffffff' },
+  textColor: { type: String, default: '#000' },
+  padding: { type: Number, default: 32 },
+  textAlign: { type: String, default: 'left' },
+  content: { type: String, default: '' },
+  animation: { type: String, default: 'none' },
   visibility: { type: Object, default: () => ({}) },
+  isTriggered: { type: Boolean, default: false },
 })
 const sectionRef = ref(null)
 const triggered = ref(false)
+const isEditor = inject('isEditor', false)
 
 const animClass = computed(() => {
-  if (!p.props.animation || p.props.animation === 'none') return ''
-  return `block-anim-${p.props.animation} ${triggered.value ? 'triggered' : ''}`
+  if (!animation || animation === 'none') return ''
+  return `block-anim-${animation} ${triggered.value ? 'triggered' : ''}`
 })
 
 const visibilityClasses = computed(() => ({
-  'hide-mobile': p.visibility.mobile === false,
-  'hide-tablet': p.visibility.tablet === false,
-  'hide-desktop': p.visibility.desktop === false,
+  'hide-mobile': visibility.mobile === false,
+  'hide-tablet': visibility.tablet === false,
+  'hide-desktop': visibility.desktop === false,
 }))
 
 onMounted(() => {
+  if (isTriggered || isEditor) {
+    triggered.value = true
+    return
+  }
   const observer = new IntersectionObserver(
     ([entry]) => { if (entry.isIntersecting) { triggered.value = true; observer.disconnect() } },
     { threshold: 0.1 }
@@ -48,6 +70,9 @@ onMounted(() => {
 .richtext-inner { max-width: 900px; margin: 0 auto; line-height: 1.7; font-size: 1.05em; }
 
 @media (max-width: 768px) {
+  .richtext-inner { padding: 0 16px; }
+}
+@container (max-width: 768px) {
   .richtext-inner { padding: 0 16px; }
 }
 </style>

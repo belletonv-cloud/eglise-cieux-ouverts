@@ -28,19 +28,20 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 
-const p = defineProps({
-  props: { type: Object, required: true },
+const { visibility = {}, isTriggered = false } = defineProps({
   visibility: { type: Object, default: () => ({}) },
+  isTriggered: { type: Boolean, default: false },
 })
 
 const visibilityClasses = computed(() => ({
-  'hide-mobile': p.visibility.mobile === false,
-  'hide-tablet': p.visibility.tablet === false,
-  'hide-desktop': p.visibility.desktop === false,
+  'hide-mobile': visibility.mobile === false,
+  'hide-tablet': visibility.tablet === false,
+  'hide-desktop': visibility.desktop === false,
 }))
 
 const sectionRef = ref(null)
 const scrollProgress = ref(0)
+const isEditor = inject('isEditor', false)
 
 const onScroll = () => {
   if (!sectionRef.value) return
@@ -55,12 +56,21 @@ const onScroll = () => {
   scrollProgress.value = 1 - ((rect.top - end) / (start - end))
 }
 
+let isEditorMode = false
+
 onMounted(() => {
+  if (p.isTriggered || isEditor) {
+    scrollProgress.value = 1
+    isEditorMode = true
+    return
+  }
   window.addEventListener('scroll', onScroll, { passive: true })
   onScroll()
 })
 
-onUnmounted(() => window.removeEventListener('scroll', onScroll))
+onUnmounted(() => {
+  if (!isEditorMode) window.removeEventListener('scroll', onScroll)
+})
 
 const t = 'transform 0.08s linear, opacity 0.1s linear'
 
@@ -216,8 +226,24 @@ const socialsStyle = computed(() => {
   .hero-socials { margin-top: 16px; }
   .block-bienvenue { min-height: 400px; }
 }
+@container (max-width: 768px) {
+  .hero-bienvenue-wrapper {
+    font-size: clamp(24px, 6vw, 50px);
+    flex-wrap: nowrap;
+    justify-content: center;
+    line-height: 1.1;
+    white-space: nowrap;
+  }
+  .hero-subtitle { font-size: 16px; margin-top: 15px; }
+  .hero-socials { margin-top: 16px; }
+  .block-bienvenue { min-height: 400px; }
+}
 
 @media (max-width: 480px) {
+  .block-bienvenue { min-height: 320px; }
+  .hero-subtitle { font-size: 14px; }
+}
+@container (max-width: 480px) {
   .block-bienvenue { min-height: 320px; }
   .hero-subtitle { font-size: 14px; }
 }

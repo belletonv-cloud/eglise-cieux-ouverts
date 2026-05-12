@@ -9,9 +9,10 @@
     >
       <component
         :is="blockComponent(block.type)"
-        :props="block.props"
+        v-bind="block.props"
         :visibility="block.visibility"
         :is-triggered="isTriggered(block.id)"
+        :preview-device="previewDevice"
       />
     </div>
   </div>

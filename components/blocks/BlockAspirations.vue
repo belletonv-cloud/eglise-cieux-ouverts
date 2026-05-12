@@ -1,11 +1,11 @@
 <template>
-  <div class="aspirations-viewport" :class="visibilityClasses">
+  <div class="aspirations-viewport" :class="[visibilityClasses, { triggered: isTriggered }]">
     <div
       class="sticky-box"
-      :style="{ background: blockProps.props.backgroundColor, color: blockProps.props.textColor }"
+      :style="{ background: backgroundGradient || backgroundColor, color: textColor }"
     >
       <div class="aspirations-content">
-        <h1 class="aspirations-title">{{ blockProps.props.title }}</h1>
+        <h1 class="aspirations-title">{{ title }}</h1>
         <div class="aspirations-divider"></div>
         <ol class="aspirations-list">
           <li
@@ -24,23 +24,34 @@
 
 <script setup>
 import { computed } from 'vue'
-
-const blockProps = defineProps({
-  props: { type: Object, required: true },
+const {
+  backgroundGradient = '',
+  backgroundColor = '#fff',
+  textColor = '#222',
+  title = '',
+  items = [],
+  visibility = {},
+  isTriggered = false
+} = defineProps({
+  backgroundGradient: { type: String, default: '' },
+  backgroundColor: { type: String, default: '#fff' },
+  textColor: { type: String, default: '#222' },
+  title: { type: String, default: '' },
+  items: { type: Array, default: () => [] },
   visibility: { type: Object, default: () => ({}) },
+  isTriggered: { type: Boolean, default: false },
 })
 
 const visibilityClasses = computed(() => ({
-  'hide-mobile': blockProps.visibility.mobile === false,
-  'hide-tablet': blockProps.visibility.tablet === false,
-  'hide-desktop': blockProps.visibility.desktop === false,
+  'hide-mobile': visibility.mobile === false,
+  'hide-tablet': visibility.tablet === false,
+  'hide-desktop': visibility.desktop === false,
 }))
 
-const items = computed(() => blockProps.props.items || [])
-const n = computed(() => items.value.length)
+const n = computed(() => items.length)
 
 function getItemStyle(index) {
-  const total = n.value
+  const total = n.value || 1 // éviter division par zéro
   const band = 80
   const step = band / total
   const pad = (100 - band) / 2
@@ -53,7 +64,7 @@ function getItemStyle(index) {
 }
 
 function getCircleStyle(index) {
-  const total = n.value
+  const total = n.value || 1
   const band = 80
   const step = band / total
   const pad = (100 - band) / 2
@@ -69,12 +80,12 @@ function getCircleStyle(index) {
 </script>
 
 <style scoped>
+/* styles inchangés */
 .aspirations-viewport {
   view-timeline: --cascade;
   height: 300vh;
   position: relative;
 }
-
 .sticky-box {
   position: sticky;
   top: 0;
@@ -84,14 +95,12 @@ function getCircleStyle(index) {
   flex-direction: column;
   justify-content: center;
 }
-
 .aspirations-content {
   width: 100%;
   max-width: 900px;
   margin: 0 auto;
   padding: 0 2rem;
 }
-
 .aspirations-title {
   font-family: 'Playfair Display', serif;
   font-style: italic;
@@ -101,21 +110,18 @@ function getCircleStyle(index) {
   text-align: center;
   padding-bottom: 1.5rem;
 }
-
 .aspirations-divider {
   width: 100%;
   height: 1px;
   background: linear-gradient(to right, transparent, rgba(255,255,255,0.4), transparent);
   margin-bottom: 1rem;
 }
-
 .aspirations-list {
   list-style: none;
   font-size: 2rem;
   padding: 0;
   margin: 0;
 }
-
 .aspirations-list li {
   position: relative;
   width: 100%;
@@ -125,11 +131,9 @@ function getCircleStyle(index) {
   text-shadow: 0 1px 5px hsla(0, 0%, 0%, 0.8);
   border-bottom: 1px solid rgba(255, 255, 255, 0.15);
 }
-
 .aspirations-list li:last-child {
   border-bottom: none;
 }
-
 .circle {
   position: absolute;
   z-index: -1;
@@ -141,13 +145,11 @@ function getCircleStyle(index) {
   top: 50%;
   transform: translateY(-50%);
 }
-
 .text {
   position: relative;
   z-index: 1;
   display: block;
 }
-
 @media (max-width: 768px) {
   .aspirations-viewport { height: auto; }
   .sticky-box { position: relative; top: auto; min-height: auto; padding: 50px 20px; }
@@ -156,13 +158,35 @@ function getCircleStyle(index) {
   .aspirations-list li { font-size: 1.2rem; padding: 0.8rem 0; text-align: center; border-bottom: 1px solid; }
   .circle { display: none; }
 }
+.triggered {
+  height: auto !important;
+}
+.triggered .sticky-box {
+  position: relative !important;
+  top: auto !important;
+  min-height: auto !important;
+  padding: 50px 20px !important;
+}
+.triggered .aspirations-list li {
+  opacity: 1 !important;
+  transform: none !important;
+  animation: none !important;
+}
+.triggered .aspirations-title {
+  opacity: 1 !important;
+  transform: none !important;
+  animation: none !important;
+}
+.triggered .circle {
+  display: none !important;
+}
 </style>
 
 <style>
+/* Keyframes et autres styles laissés intacts */
 .aspirations-viewport {
   view-timeline: --cascade;
 }
-
 @supports (animation-timeline: --cascade) {
   @media (min-width: 769px) {
     .aspirations-title {
@@ -172,7 +196,6 @@ function getCircleStyle(index) {
       animation-timeline: --cascade;
       animation-range: cover 0% cover 15%;
     }
-
     .aspirations-list li {
       opacity: 0;
       animation-name: aspir-item-in;
@@ -181,7 +204,6 @@ function getCircleStyle(index) {
       animation-timeline: --cascade;
       animation-range: cover var(--anim-start) cover var(--anim-end);
     }
-
     .circle {
       animation-timing-function: cubic-bezier(0.7, 0, 0.3, 1);
       animation-fill-mode: both;
@@ -190,18 +212,15 @@ function getCircleStyle(index) {
     }
   }
 }
-
 @keyframes aspir-title-in {
   0%   { opacity: 0; transform: translateY(20px); }
   100% { opacity: 1; transform: translateY(0); }
 }
-
 @keyframes aspir-item-in {
   0%   { opacity: 0; transform: translateY(25px); }
   25%  { opacity: 1; transform: translateY(0); }
   100% { opacity: 1; transform: translateY(0); }
 }
-
 @keyframes circle-0 {
   0%   { opacity: 0; transform: translateY(-80%); }
   25%  { opacity: 0.5; transform: translateY(-50%); }
