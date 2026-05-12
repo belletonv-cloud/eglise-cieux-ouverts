@@ -58,7 +58,7 @@ const onScroll = () => {
 let isEditorMode = false
 
 onMounted(() => {
-  if (p.isTriggered || isEditor) {
+  if (props.isTriggered || isEditor) {
     scrollProgress.value = 1
     isEditorMode = true
     return
