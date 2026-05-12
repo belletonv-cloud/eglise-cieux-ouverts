@@ -1,22 +1,20 @@
 <template>
   <footer class="site-footer" ref="footerRef">
     <div class="footer-inner">
-      <!-- Partie gauche : Titre avec effet stores (chaque lettre tourne sur elle-même) -->
       <div class="footer-left">
         <h2 class="footer-title">
           <span 
             v-for="(char, i) in titleChars" 
             :key="i" 
-            class="shutter-char" 
-            :class="{ 'fw-900': i >= 11 && i <= 15 }"
-            :style="getCharStyle(i)"
+            class="shutter-char"
+            :class="{ 'place-bold': i >= 10 && i <= 14, 'in-view': revealed }"
+            :style="{ animationDelay: `${i * 0.12}s` }"
           >
             {{ char === ' ' ? '&nbsp;' : char }}
           </span>
         </h2>
       </div>
       
-      <!-- Partie droite : Infos -->
       <div class="footer-right">
         <div class="footer-info">
           <a href="mailto:contact@cieuxouverts.bzh" class="footer-email">contact@cieuxouverts.bzh</a>
@@ -29,63 +27,40 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 
 const footerRef = ref(null)
-const scrollProgress = ref(0)
+const revealed = ref(false)
 
 const titleChars = "Il y a une place pour toi !".split('')
 
-const onScroll = () => {
-  if (!footerRef.value) return
-  const rect = footerRef.value.getBoundingClientRect()
-  const vh = window.innerHeight
-  // Commence à s'animer quand le footer rentre dans l'écran
-  const start = vh
-  // Finit l'animation quand le footer est bien visible (ex: 75% de l'écran)
-  const end = vh * 0.75
-  
-  if (rect.top > start) {
-    scrollProgress.value = 0
-  } else if (rect.top < end) {
-    scrollProgress.value = 1
-  } else {
-    scrollProgress.value = 1 - ((rect.top - end) / (start - end))
-  }
-}
-
 onMounted(() => {
-  window.addEventListener('scroll', onScroll, { passive: true })
-  onScroll()
-})
-
-onUnmounted(() => {
-  window.removeEventListener('scroll', onScroll)
-})
-
-function getCharStyle(i) {
-  const p = scrollProgress.value
-  const total = titleChars.length
-  
-  // Effet de vague (wave delay)
-  // Chaque lettre a un petit délai basé sur son index
-  const delay = (i / total) * 0.4
-  const progress = Math.max(0, Math.min(1, (p - delay) / (1 - 0.4)))
-  
-  // Rotation de 90deg (invisible) à 0deg (visible)
-  const rotX = 90 * (1 - progress)
-  
-  return {
-    transform: `rotateX(${rotX}deg)`,
-    opacity: progress === 0 ? 0 : 1
+  const check = () => {
+    if (!footerRef.value || revealed.value) return
+    const rect = footerRef.value.getBoundingClientRect()
+    if (rect.top < window.innerHeight) {
+      revealed.value = true
+    }
   }
-}
+  window.addEventListener('scroll', check, { passive: true })
+  check()
+  onUnmounted(() => window.removeEventListener('scroll', check))
+})
 </script>
+
+<style>
+@font-face {
+  font-family: 'wfont_9e41cf_58d674eb74ea449ba1ce06533c9a9704';
+  src: url("https://static.wixstatic.com/ufonts/9e41cf_58d674eb74ea449ba1ce06533c9a9704/woff2/file.woff2") format("woff2"),
+       url("https://static.wixstatic.com/ufonts/9e41cf_58d674eb74ea449ba1ce06533c9a9704/woff/file.woff") format("woff"),
+       url("https://static.wixstatic.com/ufonts/9e41cf_58d674eb74ea449ba1ce06533c9a9704/ttf/file.ttf") format("truetype");
+  font-display: swap;
+}
+</style>
 
 <style scoped>
 .site-footer {
-  /* Use a gradient that matches the bottom of the contact block */
-  background: linear-gradient(to bottom, #064886 0%, #064886 40%, #ffffff 100%);
+  background: linear-gradient(to bottom, #064886 0%, #064886 20%, #b8d4e8 100%);
   color: white;
   position: relative;
   overflow: hidden;
@@ -106,23 +81,46 @@ function getCharStyle(i) {
 }
 
 .footer-title {
-  font-family: 'Playfair Display', serif;
-  font-size: clamp(18px, 3vw, 32px);
-  font-weight: 700;
-  color: #ffffff; /* Texte blanc sur le fond bleu du haut du footer */
+  font-family: 'wfont_9e41cf_58d674eb74ea449ba1ce06533c9a9704', 'Nunito', sans-serif;
+  font-size: 24px;
+  font-weight: 400;
+  color: #ffffff;
   margin: 0;
   white-space: nowrap;
-  perspective: 1000px; /* Pour la profondeur 3D de la rotation X */
 }
 
 .shutter-char {
+  position: relative;
   display: inline-block;
-  transform-origin: center center;
-  will-change: transform, opacity;
+  overflow: hidden;
 }
 
-.fw-900 {
-  font-weight: 900;
+.shutter-char::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to right,
+    #064886 0,
+    #064886 6px,
+    transparent 6px,
+    transparent 12px
+  );
+  transform: translateX(0);
+  pointer-events: none;
+}
+
+.shutter-char.in-view::before {
+  animation: reveal 1.4s ease-out forwards;
+}
+
+@keyframes reveal {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-100%); }
+}
+
+.place-bold {
+  font-weight: 700;
 }
 
 .footer-right {
@@ -135,17 +133,19 @@ function getCharStyle(i) {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  font-size: 1.05em;
+  font-size: 19px;
+  font-weight: 700;
   color: white;
-  text-align: right;
+  text-align: left;
+  font-family: 'wfont_9e41cf_58d674eb74ea449ba1ce06533c9a9704', 'Nunito', sans-serif;
 }
 
 .footer-email {
   color: white;
   font-weight: 700;
   text-decoration: none;
-  margin-bottom: 12px;
-  font-size: 1.2em;
+  margin-bottom: 4px;
+  font-size: 19px;
   display: block;
 }
 
@@ -154,7 +154,7 @@ function getCharStyle(i) {
 }
 
 .footer-info p {
-  color: rgba(255,255,255,0.9);
+  color: white;
   line-height: 1.6;
   margin: 0;
 }
@@ -185,7 +185,7 @@ function getCharStyle(i) {
   }
   .footer-title {
     white-space: normal;
-    font-size: clamp(14px, 4vw, 20px);
+    font-size: 24px;
     text-align: center;
   }
   .footer-email {
