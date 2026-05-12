@@ -1,0 +1,170 @@
+[
+  {
+    "scrollY": 0,
+    "blockTop": 3816.01123046875,
+    "opacity": "0",
+    "visibility": "hidden",
+    "pointerEvents": "none",
+    "timestamp": 1778339644204
+  },
+  {
+    "scrollY": 166,
+    "blockTop": 3650.01123046875,
+    "opacity": "0",
+    "visibility": "hidden",
+    "pointerEvents": "none",
+    "timestamp": 1778339644434
+  },
+  {
+    "scrollY": 351,
+    "blockTop": 3811.47998046875,
+    "opacity": "0",
+    "visibility": "hidden",
+    "pointerEvents": "none",
+    "timestamp": 1778339644739
+  },
+  {
+    "scrollY": 531,
+    "blockTop": 3631.47998046875,
+    "opacity": "0",
+    "visibility": "hidden",
+    "pointerEvents": "none",
+    "timestamp": 1778339644943
+  },
+  {
+    "scrollY": 706,
+    "blockTop": 3456.47998046875,
+    "opacity": "0",
+    "visibility": "hidden",
+    "pointerEvents": "none",
+    "timestamp": 1778339645132
+  },
+  {
+    "scrollY": 885,
+    "blockTop": 3277.47998046875,
+    "opacity": "0",
+    "visibility": "hidden",
+    "pointerEvents": "none",
+    "timestamp": 1778339645320
+  },
+  {
+    "scrollY": 1071,
+    "blockTop": 3091.47998046875,
+    "opacity": "0.0900694",
+    "visibility": "visible",
+    "pointerEvents": "auto",
+    "timestamp": 1778339645524
+  },
+  {
+    "scrollY": 1246,
+    "blockTop": 2916.47998046875,
+    "opacity": "0.478958",
+    "visibility": "visible",
+    "pointerEvents": "auto",
+    "timestamp": 1778339645717
+  },
+  {
+    "scrollY": 1425,
+    "blockTop": 2737.47998046875,
+    "opacity": "0.876736",
+    "visibility": "visible",
+    "pointerEvents": "auto",
+    "timestamp": 1778339645899
+  },
+  {
+    "scrollY": 1605,
+    "blockTop": 2557.47998046875,
+    "opacity": "1",
+    "visibility": "visible",
+    "pointerEvents": "auto",
+    "timestamp": 1778339646084
+  },
+  {
+    "scrollY": 1785,
+    "blockTop": 2371.4921875,
+    "opacity": "1",
+    "visibility": "visible",
+    "pointerEvents": "auto",
+    "timestamp": 1778339646263
+  },
+  {
+    "scrollY": 1965,
+    "blockTop": 2176.8583984375,
+    "opacity": "1",
+    "visibility": "visible",
+    "pointerEvents": "auto",
+    "timestamp": 1778339646444
+  },
+  {
+    "scrollY": 2145,
+    "blockTop": 1991.52783203125,
+    "opacity": "1",
+    "visibility": "visible",
+    "pointerEvents": "auto",
+    "timestamp": 1778339646626
+  },
+  {
+    "scrollY": 2331,
+    "blockTop": 1805.46923828125,
+    "opacity": "1",
+    "visibility": "visible",
+    "pointerEvents": "auto",
+    "timestamp": 1778339646806
+  },
+  {
+    "scrollY": 2511,
+    "blockTop": 1626.4267578125,
+    "opacity": "1",
+    "visibility": "visible",
+    "pointerEvents": "auto",
+    "timestamp": 1778339646990
+  },
+  {
+    "scrollY": 2686,
+    "blockTop": 1451.4375,
+    "opacity": "1",
+    "visibility": "visible",
+    "pointerEvents": "auto",
+    "timestamp": 1778339647173
+  },
+  {
+    "scrollY": 2871,
+    "blockTop": 1266.4375,
+    "opacity": "1",
+    "visibility": "visible",
+    "pointerEvents": "auto",
+    "timestamp": 1778339647356
+  },
+  {
+    "scrollY": 3051,
+    "blockTop": 1086.4375,
+    "opacity": "1",
+    "visibility": "visible",
+    "pointerEvents": "auto",
+    "timestamp": 1778339647539
+  },
+  {
+    "scrollY": 3231,
+    "blockTop": 906.4375,
+    "opacity": "1",
+    "visibility": "visible",
+    "pointerEvents": "auto",
+    "timestamp": 1778339647723
+  },
+  {
+    "scrollY": 3411,
+    "blockTop": 726.4375,
+    "opacity": "1",
+    "visibility": "visible",
+    "pointerEvents": "auto",
+    "timestamp": 1778339647906
+  },
+  {
+    "scrollY": 3586,
+    "blockTop": 551.4375,
+    "opacity": "1",
+    "visibility": "visible",
+    "pointerEvents": "auto",
+    "timestamp": 1778339648091
+  }
+]
