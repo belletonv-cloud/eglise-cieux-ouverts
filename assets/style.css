@@ -27,15 +27,17 @@
 
 html {
   scroll-behavior: smooth;
-  background-color: white;
+  background-color: #FAFAFA;
+  overflow-x: hidden;
 }
 
 body {
   font-family: 'Nunito', Helvetica, Arial, sans-serif;
   color: var(--text-dark);
-  background-color: white;
+  background-color: #FAFAFA;
   line-height: 1.6;
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
 @media (prefers-color-scheme: dark) {
