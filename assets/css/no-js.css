@@ -1,0 +1,65 @@
+.no-js .hero-content {
+  transform: none !important;
+  opacity: 1 !important;
+}
+
+.no-js .hero-bienvenue-line,
+.no-js .hero-subtitle,
+.no-js .hero-socials {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+.no-js .vision-label,
+.no-js .vision-quote,
+.no-js .btn-white {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+.no-js .contact-title,
+.no-js .contact-phone,
+.no-js .contact-socials,
+.no-js .contact-right {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+.no-js .rejoins-text-container,
+.no-js .rejoins-horaire {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+.no-js .shutter-char {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+.no-js .cta-link,
+.no-js .circle-left,
+.no-js .circle-right,
+.no-js .circle-small {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+.no-js .aspirations-list li {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+.no-js .circle {
+  opacity: 0.5 !important;
+  transform: translateY(-50%) !important;
+}
+
+.no-js .nav-desktop {
+  display: flex !important;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.no-js .burger {
+  display: none !important;
+}
