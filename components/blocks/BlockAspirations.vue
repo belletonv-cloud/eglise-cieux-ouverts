@@ -164,64 +164,72 @@ function getCircleStyle(index) {
 }
 
 @supports (animation-timeline: --cascade) {
-  .aspirations-list li {
-    opacity: 0;
-    animation: aspir-item-in ease-out both;
-    animation-timeline: --cascade;
-    animation-range: cover var(--anim-start) cover var(--anim-end);
+  @media (min-width: 769px) {
+    .aspirations-title {
+      opacity: 0;
+      animation: aspir-title-in both;
+      animation-timing-function: cubic-bezier(0.7, 0, 0.3, 1);
+      animation-timeline: --cascade;
+      animation-range: cover 0% cover 15%;
+    }
+
+    .aspirations-list li {
+      opacity: 0;
+      animation-name: aspir-item-in;
+      animation-timing-function: cubic-bezier(0.7, 0, 0.3, 1);
+      animation-fill-mode: both;
+      animation-timeline: --cascade;
+      animation-range: cover var(--anim-start) cover var(--anim-end);
+    }
+
+    .circle {
+      animation-timing-function: cubic-bezier(0.7, 0, 0.3, 1);
+      animation-fill-mode: both;
+      animation-timeline: --cascade;
+      animation-range: cover var(--anim-start) cover var(--anim-end);
+    }
   }
 }
 
-@supports (animation-timeline: --cascade) {
-  .circle {
-    animation-timeline: --cascade;
-    animation-range: cover var(--anim-start) cover var(--anim-end);
-    animation-fill-mode: both;
-    animation-timing-function: ease-out;
-  }
+@keyframes aspir-title-in {
+  0%   { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes aspir-item-in {
   0%   { opacity: 0; transform: translateY(25px); }
-  18%  { opacity: 1; transform: translateY(0); }
-  85%  { opacity: 1; transform: translateY(0); }
-  100% { opacity: 0; transform: translateY(-15px); }
+  25%  { opacity: 1; transform: translateY(0); }
+  100% { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes circle-0 {
-  0%   { opacity: 0; transform: translateY(80%); }
-  18%  { opacity: 0.5; transform: translateY(-50%); }
-  85%  { opacity: 0.5; transform: translateY(-50%); }
-  100% { opacity: 0; transform: translateY(-150%); }
+  0%   { opacity: 0; transform: translateY(-80%); }
+  25%  { opacity: 0.5; transform: translateY(-50%); }
+  100% { opacity: 0.5; transform: translateY(-50%); }
 }
 @keyframes circle-1 {
-  0%   { opacity: 0; transform: translateY(80%); }
-  18%  { opacity: 0.5; transform: translateY(calc(-50% - 4.5rem)); }
-  85%  { opacity: 0.5; transform: translateY(calc(-50% - 4.5rem)); }
-  100% { opacity: 0; transform: translateY(calc(-50% - 4.5rem - 100%)); }
+  0%   { opacity: 0; transform: translateY(-80%); }
+  25%  { opacity: 0.5; transform: translateY(calc(-50% - 4.5rem)); }
+  100% { opacity: 0.5; transform: translateY(calc(-50% - 4.5rem)); }
 }
 @keyframes circle-2 {
-  0%   { opacity: 0; transform: translateY(80%); }
-  18%  { opacity: 0.5; transform: translateY(calc(-50% - 9rem)); }
-  85%  { opacity: 0.5; transform: translateY(calc(-50% - 9rem)); }
-  100% { opacity: 0; transform: translateY(calc(-50% - 9rem - 100%)); }
+  0%   { opacity: 0; transform: translateY(-80%); }
+  25%  { opacity: 0.5; transform: translateY(calc(-50% - 9rem)); }
+  100% { opacity: 0.5; transform: translateY(calc(-50% - 9rem)); }
 }
 @keyframes circle-3 {
-  0%   { opacity: 0; transform: translateY(80%); }
-  18%  { opacity: 0.5; transform: translateY(calc(-50% - 13.5rem)); }
-  85%  { opacity: 0.5; transform: translateY(calc(-50% - 13.5rem)); }
-  100% { opacity: 0; transform: translateY(calc(-50% - 13.5rem - 100%)); }
+  0%   { opacity: 0; transform: translateY(-80%); }
+  25%  { opacity: 0.5; transform: translateY(calc(-50% - 13.5rem)); }
+  100% { opacity: 0.5; transform: translateY(calc(-50% - 13.5rem)); }
 }
 @keyframes circle-4 {
-  0%   { opacity: 0; transform: translateY(80%); }
-  18%  { opacity: 0.5; transform: translateY(calc(-50% - 18rem)); }
-  85%  { opacity: 0.5; transform: translateY(calc(-50% - 18rem)); }
-  100% { opacity: 0; transform: translateY(calc(-50% - 18rem - 100%)); }
+  0%   { opacity: 0; transform: translateY(-80%); }
+  25%  { opacity: 0.5; transform: translateY(calc(-50% - 18rem)); }
+  100% { opacity: 0.5; transform: translateY(calc(-50% - 18rem)); }
 }
 @keyframes circle-5 {
-  0%   { opacity: 0; transform: translateY(80%); }
-  18%  { opacity: 0.5; transform: translateY(calc(-50% - 22.5rem)); }
-  85%  { opacity: 0.5; transform: translateY(calc(-50% - 22.5rem)); }
-  100% { opacity: 0; transform: translateY(calc(-50% - 22.5rem - 100%)); }
+  0%   { opacity: 0; transform: translateY(-80%); }
+  25%  { opacity: 0.5; transform: translateY(calc(-50% - 22.5rem)); }
+  100% { opacity: 0.5; transform: translateY(calc(-50% - 22.5rem)); }
 }
 </style>
