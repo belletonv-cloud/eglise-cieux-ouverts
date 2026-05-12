@@ -8,6 +8,7 @@
             v-for="(char, i) in titleChars" 
             :key="i" 
             class="shutter-char" 
+            :class="{ 'fw-900': i >= 11 && i <= 15 }"
             :style="getCharStyle(i)"
           >
             {{ char === ' ' ? '&nbsp;' : char }}
@@ -118,6 +119,10 @@ function getCharStyle(i) {
   display: inline-block;
   transform-origin: center center;
   will-change: transform, opacity;
+}
+
+.fw-900 {
+  font-weight: 900;
 }
 
 .footer-right {

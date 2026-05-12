@@ -2,8 +2,7 @@
   <section
     class="block-contact"
     :style="{ background: props.backgroundGradient, color: props.textColor || '#ffffff' }"
-    :class="[visibilityClasses, { 'is-visible': isVisible, 'page-mode': isClassicPageContact }]"
-    ref="sectionRef"
+    :class="[visibilityClasses, { 'page-mode': isClassicPageContact }]"
   >
     <div v-if="isClassicPageContact" class="contact-page-shell">
       <section class="contact-page-header">
@@ -133,7 +132,7 @@
 </template>
 
 <script setup>
-import { ref, computed, inject, onMounted } from 'vue'
+import { ref, computed, inject } from 'vue'
 
 const p = defineProps({
   props: { type: Object, required: true },
@@ -147,25 +146,6 @@ const visibilityClasses = computed(() => ({
   'hide-tablet': p.visibility.tablet === false,
   'hide-desktop': p.visibility.desktop === false,
 }))
-
-const sectionRef = ref(null)
-const isVisible = ref(false)
-
-onMounted(() => {
-  if (isEditor) {
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        isVisible.value = true
-      })
-    })
-    return
-  }
-  const observer = new IntersectionObserver(
-    ([entry]) => { if (entry.isIntersecting) { isVisible.value = true; observer.disconnect() } },
-    { threshold: 0.15 }
-  )
-  if (sectionRef.value) observer.observe(sectionRef.value)
-})
 
 const route = useRoute()
 const form = ref({ prenom: '', nom: '', ville: '', email: '', message: '', newsletter: false, website: '' })
@@ -245,6 +225,7 @@ async function submitForm() {
 
 <style scoped>
 .block-contact {
+  view-timeline: --contact;
   container-type: inline-size;
   padding: 70px 24px;
 }
@@ -392,12 +373,9 @@ async function submitForm() {
   margin-bottom: 60px;
   font-weight: 700;
   font-style: italic;
-  will-change: transform, opacity;
-  opacity: 0;
-  transform: scale(0.6);
-  transition: opacity 0.9s cubic-bezier(0.16,1,0.3,1),
-              transform 0.9s cubic-bezier(0.16,1,0.3,1);
-  transition-delay: 0s;
+  animation: ct-title-in both;
+  animation-timeline: --contact;
+  animation-range: entry 0% entry 60%;
 }
 
 /* ── Left col ── */
@@ -406,20 +384,16 @@ async function submitForm() {
   height: auto;
   border-radius: 12px;
   object-fit: cover;
-  will-change: transform, opacity;
-  opacity: 0;
-  transform: translateY(80px);
-  transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1),
-              transform 0.8s cubic-bezier(0.16,1,0.3,1);
-  transition-delay: 0.15s;
+  animation: ct-phone-in both;
+  animation-timeline: --contact;
+  animation-range: entry 5% entry 65%;
 }
 
 .contact-socials {
   display: flex; gap: 14px; justify-content: center;
-  will-change: opacity;
-  opacity: 0;
-  transition: opacity 0.7s cubic-bezier(0.16,1,0.3,1);
-  transition-delay: 0.4s;
+  animation: ct-fade-in both;
+  animation-timeline: --contact;
+  animation-range: entry 25% entry 75%;
 }
 .contact-social-icon {
   display: flex;
@@ -437,21 +411,29 @@ async function submitForm() {
 /* ── Right col ── */
 .contact-right {
   display: flex; flex-direction: column; justify-content: center;
-  will-change: transform, opacity;
-  opacity: 0;
-  transform: translateX(80px);
-  transition: opacity 0.8s cubic-bezier(0.16,1,0.3,1),
-              transform 0.8s cubic-bezier(0.16,1,0.3,1);
-  transition-delay: 0.1s;
+  animation: ct-right-in both;
+  animation-timeline: --contact;
+  animation-range: entry 10% entry 70%;
 }
 
-/* ── Triggered ── */
-.is-visible .contact-title,
-.is-visible .contact-phone,
-.is-visible .contact-socials,
-.is-visible .contact-right {
-  opacity: 1;
-  transform: none;
+@keyframes ct-title-in {
+  0%   { opacity: 0; transform: scale(0.6); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes ct-phone-in {
+  0%   { opacity: 0; transform: translateY(80px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ct-fade-in {
+  0%   { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes ct-right-in {
+  0%   { opacity: 0; transform: translateX(80px); }
+  100% { opacity: 1; transform: translateX(0); }
 }
 
 .contact-wrap {

@@ -268,12 +268,16 @@ export const BLOCK_TYPES = {
     label: 'Galerie photos',
     icon: '🖼️',
     defaults: {
+      title: '',
+      textColor: '#064886',
       images: [],
       columns: 3,
       backgroundColor: '#ffffff',
       animation: 'fadeIn',
     },
     schema: [
+      { key: 'title',           label: 'Titre',           type: 'text' },
+      { key: 'textColor',       label: 'Couleur texte',   type: 'color' },
       { key: 'images',          label: 'Images',          type: 'images' },
       { key: 'columns',         label: 'Colonnes',        type: 'number', min: 1, max: 4 },
       { key: 'backgroundColor', label: 'Fond',            type: 'color' },
@@ -365,6 +369,7 @@ export function getDefaultHomePage() {
     createBlock('rejoins'),
     createBlock('aspirations'),
     createBlock('vision'),
+    createBlock('activities'),
     createBlock('nousRejoindre'),
     createBlock('contact', { 
       image: 'https://static.wixstatic.com/media/11062b_c518f30e29fa44f0b424cabfdd0b5a6a~mv2.jpg/v1/fill/w_147,h_246,al_c,q_80,usm_0.66_1.00_0.01,blur_2,enc_avif,quality_auto/Smartphone%20en%20main.jpg', 
@@ -404,11 +409,11 @@ export function getDefaultPhotosPage() {
       textColor: '#064886',
       columns: 3,
       images: [
-        '/photos/salle.jpg',
-        '/photos/mains.jpg',
-        '/photos/promenade.jpg',
-        '/photos/pizza.jpg',
-        '/photos/buffet.jpg',
+        '/photos/slide-salle.jpg',
+        '/photos/slide-mains.jpg',
+        '/photos/slide-promenade.jpg',
+        '/photos/slide-pizza.jpg',
+        '/photos/slide-buffet.jpg',
       ],
     }),
   ].filter(Boolean)

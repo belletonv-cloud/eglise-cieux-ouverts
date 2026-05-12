@@ -163,8 +163,12 @@ function getCircleStyle(index) {
   view-timeline: --cascade;
 }
 
+.circle { display: none; }
+
 @supports (animation-timeline: --cascade) {
   @media (min-width: 769px) {
+    .circle { display: block; }
+
     .aspirations-title {
       opacity: 0;
       animation: aspir-title-in both;
@@ -190,6 +194,8 @@ function getCircleStyle(index) {
     }
   }
 }
+
+.js-ready .circle { display: block; }
 
 @keyframes aspir-title-in {
   0%   { opacity: 0; transform: translateY(20px); }
