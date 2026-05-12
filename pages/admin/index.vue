@@ -60,6 +60,7 @@
         <div
           class="canvas"
           :class="`canvas-${previewDevice}`"
+          :data-preview="previewDevice"
         >
           <VueDraggable
             v-if="currentPageIsBuilder"
@@ -72,6 +73,7 @@
             <div
               v-for="block in blocks"
               :key="block.id"
+              :ref="el => setBlockRef(el, block.id)"
               class="block-wrapper"
               :class="[
                 getAnimClass(block.props),
@@ -79,15 +81,32 @@
                 { selected: selectedBlockId === block.id }
               ]"
               @click="onBlockWrapperClick($event, block.id)"
+              @mouseenter="onBlockHover(block)"
             >
               <!-- Block overlay controls -->
               <div class="block-controls">
                 <span class="drag-handle" title="Déplacer">⠿</span>
                 <span class="block-type-badge">{{ getBlockDef(block.type)?.icon }} {{ getBlockDef(block.type)?.label }}</span>
+                <span class="block-anim-badge" :style="{ background: animBadgeColor(block.props?.animation) }" :title="'Animation: ' + getAnimLabel(block.props?.animation)">
+                  {{ getAnimLabel(block.props?.animation) }}
+                </span>
                 <div class="block-actions">
+                  <button v-if="copiedStyle" @click.stop="pasteBlockStyle(block.id)" title="Coller le style" class="btn-paste" :style="{ background: '#10b981' }">📋</button>
+                  <button @click.stop="copyBlockStyle(block.id)" title="Copier le style">📋</button>
                   <button @click.stop="duplicateBlock(block.id)" title="Dupliquer">⧉</button>
                   <button @click.stop="deleteBlock(block.id)" title="Supprimer" class="btn-del">✕</button>
                 </div>
+              </div>
+              <!-- Animation quick-picker (shown on hover/select) -->
+              <div class="block-anim-quick" v-if="selectedBlockId === block.id || hoveredBlockId === block.id">
+                <button
+                  v-for="anim in ANIMATIONS"
+                  :key="anim.id"
+                  class="anim-q-btn"
+                  :class="{ active: (block.props?.animation || 'none') === anim.id }"
+                  @click.stop="quickSetAnimation(block.id, anim.id)"
+                  :title="anim.label"
+                >{{ anim.icon || anim.label.slice(0, 2) }}</button>
               </div>
               <!-- Rendered block -->
               <component
@@ -95,7 +114,7 @@
                 :is="blockComponent(block.type)"
                 :props="block.props"
                 :visibility="block.visibility"
-                :is-triggered="true"
+                :is-triggered="triggeredBlocks.has(block.id)"
               />
             </div>
           </VueDraggable>
@@ -272,6 +291,18 @@ definePageMeta({ layout: false })
 // Signale aux blocs qu'ils sont dans l'éditeur → désactive les animations scroll
 provide('isEditor', true)
 
+const ANIM_COLORS = {
+  none: '#555',
+  fadeIn: '#3b82f6',
+  slideUp: '#8b5cf6',
+  slideLeft: '#06b6d4',
+  zoom: '#10b981',
+  portal: '#f59e0b',
+  bounce: '#ef4444',
+  flip: '#ec4899',
+  wave: '#14b8a6',
+}
+
 const BLOCK_COMPONENTS = {
   hero: BlockHero,
   bienvenue: BlockBienvenue,
@@ -336,6 +367,9 @@ const currentPageMeta = computed(() => pages.find(p => p.slug === currentPage.va
 const currentPageIsBuilder = computed(() => currentPageMeta.value?.builder !== false)
 const currentPageLabel = computed(() => currentPageMeta.value?.label ?? '')
 const selectedBlock = computed(() => blocks.value.find(b => b.id === selectedBlockId.value) ?? null)
+const hoveredBlockId = ref(null)
+const copiedStyle = ref(null)
+const blockRefs = ref({})
 const { evenements: agendaEvents, loading: agendaLoading, refresh: refreshAgendaEvents } = useEvenements({ futureOnly: false })
 const sortedAgendaEvents = computed(() => {
   return [...agendaEvents.value].sort((a, b) => getAgendaDateValue(a.date) - getAgendaDateValue(b.date))
@@ -565,8 +599,12 @@ function addBlock(type) {
   blocks.value.push(block)
   selectedBlockId.value = block.id
   showBlockPicker.value = false
+  // animation preview: trigger after a delay
   nextTick(() => {
-    triggeredBlocks.value = new Set([...triggeredBlocks.value, block.id])
+    setTimeout(() => {
+      triggeredBlocks.value = new Set([...triggeredBlocks.value, block.id])
+      setupCanvasObserver()
+    }, 100)
   })
 }
 
@@ -602,21 +640,9 @@ function onBlockUpdate(updatedBlock) {
     blocks.value[idx].props = updatedBlock.props
     blocks.value[idx].visibility = updatedBlock.visibility
 
-    // Rejouer l'animation si elle a changé
     if (nextAnim && nextAnim !== 'none' && nextAnim !== prevAnim) {
-      previewVersions.value = {
-        ...previewVersions.value,
-        [updatedBlock.id]: (previewVersions.value[updatedBlock.id] || 0) + 1,
-      }
-      triggeredBlocks.value.delete(updatedBlock.id)
-      triggeredBlocks.value = new Set(triggeredBlocks.value)
-      nextTick(() => {
-        setTimeout(() => {
-          triggeredBlocks.value = new Set([...triggeredBlocks.value, updatedBlock.id])
-        }, 50)
-      })
+      replayAnimation(updatedBlock.id, prevAnim, nextAnim)
     } else {
-      // S'assurer que le bloc est bien déclenché
       triggeredBlocks.value = new Set([...triggeredBlocks.value, updatedBlock.id])
     }
   }
@@ -626,9 +652,101 @@ function triggerAllBlocks() {
   triggeredBlocks.value = new Set(blocks.value.map(b => b.id))
 }
 
-function onDragEnd() {
-  // auto-save after reorder
+function setBlockRef(el, id) {
+  if (el) blockRefs.value[id] = el
+}
+
+function onBlockHover(block) {
+  hoveredBlockId.value = block.id
+}
+
+function getAnimLabel(animId) {
+  if (!animId || animId === 'none') return 'Aucune'
+  const a = ANIMATIONS.find(a => a.id === animId)
+  return a ? a.label : animId
+}
+
+function animBadgeColor(animId) {
+  return ANIM_COLORS[animId] || '#555'
+}
+
+function copyBlockStyle(id) {
+  const block = blocks.value.find(b => b.id === id)
+  if (!block) return
+  copiedStyle.value = {
+    animation: block.props?.animation || 'none',
+    props: { ...block.props },
+  }
+  // feedback visuel
+  const btn = document.querySelector(`[data-copy-btn="${id}"]`)
+}
+
+function pasteBlockStyle(id) {
+  if (!copiedStyle.value) return
+  const block = blocks.value.find(b => b.id === id)
+  if (!block) return
+  const prevAnim = block.props?.animation
+  block.props.animation = copiedStyle.value.animation
+  // rejouer l'animation
+  replayAnimation(block.id, prevAnim, copiedStyle.value.animation)
+}
+
+function quickSetAnimation(id, animId) {
+  const block = blocks.value.find(b => b.id === id)
+  if (!block) return
+  const prevAnim = block.props?.animation
+  if (!block.props) block.props = {}
+  block.props.animation = animId
+  replayAnimation(id, prevAnim, animId)
+  // auto-save
   savePage()
+}
+
+function replayAnimation(id, prevAnim, nextAnim) {
+  if (nextAnim && nextAnim !== 'none') {
+    previewVersions.value = {
+      ...previewVersions.value,
+      [id]: (previewVersions.value[id] || 0) + 1,
+    }
+    triggeredBlocks.value.delete(id)
+    triggeredBlocks.value = new Set(triggeredBlocks.value)
+    nextTick(() => {
+      setTimeout(() => {
+        triggeredBlocks.value = new Set([...triggeredBlocks.value, id])
+      }, 800)
+    })
+  } else {
+    triggeredBlocks.value = new Set([...triggeredBlocks.value, id])
+  }
+}
+
+function onDragEnd() {
+  savePage()
+}
+
+// IntersectionObserver pour déclencher les animations dans le canvas
+let canvasObserver = null
+
+function setupCanvasObserver() {
+  const canvas = document.querySelector('.canvas-wrap')
+  if (!canvas) return
+  canvasObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.dataset?.blockId
+        if (id && !triggeredBlocks.value.has(id)) {
+          triggeredBlocks.value = new Set([...triggeredBlocks.value, id])
+        }
+      }
+    })
+  }, { root: canvas, rootMargin: '0px', threshold: 0.1 })
+  // observer chaque block wrapper
+  Object.entries(blockRefs.value).forEach(([id, el]) => {
+    if (el) {
+      el.dataset.blockId = id
+      canvasObserver.observe(el)
+    }
+  })
 }
 
 async function logout() {
@@ -648,7 +766,12 @@ onMounted(async () => {
   window.addEventListener('keydown', (e) => {
     if ((e.metaKey || e.ctrlKey) && e.key === 's') { e.preventDefault(); savePage() }
     if (e.key === 'Escape') selectedBlockId.value = null
+    if ((e.metaKey || e.ctrlKey) && e.key === 'v' && copiedStyle.value && selectedBlockId.value) {
+      e.preventDefault()
+      pasteBlockStyle(selectedBlockId.value)
+    }
   })
+  nextTick(() => setupCanvasObserver())
 })
 </script>
 
@@ -844,11 +967,24 @@ html, body { height: 100%; background: #0f0f1a !important; }
   overflow: hidden;
   box-shadow: 0 8px 40px rgba(0,0,0,0.5);
   transition: width 0.3s ease;
+  container-type: inline-size;
 }
 
 .canvas-desktop { width: 100%; max-width: 100%; }
 .canvas-tablet  { width: 768px; }
 .canvas-mobile  { width: 390px; }
+
+/* Device frame effect */
+.canvas-tablet, .canvas-mobile {
+  border: 2px solid #333;
+  border-radius: 12px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.1);
+}
+
+.canvas-mobile {
+  border-width: 3px;
+  border-radius: 18px;
+}
 
 /* Block wrapper */
 .block-wrapper {
@@ -889,7 +1025,51 @@ html, body { height: 100%; background: #0f0f1a !important; }
 }
 .drag-handle:active { cursor: grabbing; }
 
-.block-type-badge { flex: 1; font-weight: 600; font-size: 0.85em; }
+.block-type-badge { font-weight: 600; font-size: 0.85em; margin-right: 4px; }
+
+.block-anim-badge {
+  font-size: 0.65em;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.block-anim-quick {
+  position: absolute;
+  top: 28px;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 4px 8px;
+  background: rgba(0,0,0,0.85);
+  z-index: 99;
+  justify-content: center;
+}
+.anim-q-btn {
+  background: #2d2d3f;
+  border: 1px solid #3d3d55;
+  color: #999;
+  font-size: 0.7em;
+  padding: 2px 5px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.1s;
+}
+.anim-q-btn.active {
+  background: #064886;
+  border-color: #064886;
+  color: white;
+}
+.anim-q-btn:hover:not(.active) {
+  border-color: #064886;
+  color: white;
+}
 
 .block-actions {
   display: flex;
