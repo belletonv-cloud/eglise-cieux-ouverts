@@ -7,8 +7,8 @@
             v-for="(char, i) in titleChars" 
             :key="i" 
             class="shutter-char"
-            :class="{ 'place-bold': i >= 10 && i <= 14, 'in-view': revealed }"
-            :style="{ animationDelay: `${i * 0.12}s` }"
+            :class="[char === ' ' ? 'space' : '', { 'place-bold': i >= 10 && i <= 14, 'in-view': revealed }]"
+            :style="{ transitionDelay: char !== ' ' ? `${i * 0.05}s` : undefined }"
           >
             {{ char === ' ' ? '&nbsp;' : char }}
           </span>
@@ -90,33 +90,21 @@ onMounted(() => {
 }
 
 .shutter-char {
-  position: relative;
   display: inline-block;
   overflow: hidden;
+  clip-path: inset(0 100% 0 0);
+  opacity: 0;
+  transition: clip-path 0.6s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 0.6s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
-.shutter-char::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(
-    to right,
-    #064886 0,
-    #064886 6px,
-    transparent 6px,
-    transparent 12px
-  );
-  transform: translateX(0);
-  pointer-events: none;
+.shutter-char.in-view {
+  clip-path: inset(0 0 0 0);
+  opacity: 1;
 }
 
-.shutter-char.in-view::before {
-  animation: reveal 1.4s ease-out forwards;
-}
-
-@keyframes reveal {
-  0%   { transform: translateX(0); }
-  100% { transform: translateX(-100%); }
+.space {
+  display: inline-block;
+  width: 0.35em;
 }
 
 .place-bold {
