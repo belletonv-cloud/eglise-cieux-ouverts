@@ -66,7 +66,7 @@ const p = defineProps({
   visibility: { type: Object, default: () => ({}) },
 })
 
-const uid = Math.random().toString(36).slice(2, 8)
+const uid = p.blockId;
 const isHydrated = ref(false)
 const modalOpen = ref(false)
 const currentIndex = ref(0)

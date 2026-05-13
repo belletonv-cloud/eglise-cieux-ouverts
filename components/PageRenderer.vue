@@ -12,6 +12,7 @@
         :props="block.props"
         :visibility="block.visibility"
         :is-triggered="isTriggered(block.id)"
+        :block-id="block.id"
       />
     </div>
   </div>
