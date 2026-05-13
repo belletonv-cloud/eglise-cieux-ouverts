@@ -119,8 +119,8 @@ const socialsStyle = computed(() => {
 .block-bienvenue {
   position: relative;
   overflow: hidden;
-  width: 100vw;
-  margin-left: calc(-50vw + 50%);
+  width: 100%;
+  margin-left: 0;
   display: flex;
   align-items: center;
   justify-content: center;

@@ -31,8 +31,8 @@ const visibilityClasses = computed(() => ({
 .block-main-hero {
   container-type: inline-size;
   position: relative;
-  width: 100vw;
-  margin-left: calc(-50vw + 50%);
+  width: 100%;
+  margin-left: 0;
   height: 72vh;
   min-height: 420px;
   display: flex;
