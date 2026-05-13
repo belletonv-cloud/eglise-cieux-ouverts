@@ -128,6 +128,7 @@ onUnmounted(() => {
 <style scoped>
 .page-renderer {
   width: 100%;
+  overflow-x: hidden;
 }
 .block-wrapper {
   /* Pas de contain: layout — ça casse les transitions GPU */
