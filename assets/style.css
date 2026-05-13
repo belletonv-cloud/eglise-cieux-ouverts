@@ -28,10 +28,12 @@
 html {
   scroll-behavior: smooth;
   background-color: white;
+  overflow-x: hidden;
   overflow-x: clip;
 }
 
 body {
+  overflow-x: hidden;
   overflow-x: clip;
   font-family: 'Nunito', Helvetica, Arial, sans-serif;
   color: var(--text-dark);
