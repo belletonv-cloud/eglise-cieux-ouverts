@@ -7,11 +7,12 @@
     <img src="https://static.wixstatic.com/media/d65230_c609095100164117aabdd3b55d9cdf56~mv2.png/v1/fill/w_1920,h_515,al_c,q_90,usm_0.66_1.00_0.01,enc_avif,quality_auto/d65230_c609095100164117aabdd3b55d9cdf56~mv2.png" alt="Foule Croix" class="bienvenue-img" />
     
     <div class="bienvenue-content">
-      <div class="hero-bienvenue-portal" aria-label="BIENVENUE">
-        <span v-for="(char, i) in wordArr" :key="i" class="hero-bienvenue-char" :style="getPortalLetterStyle(i)">{{ char }}</span>
+      <div class="hero-bienvenue-wrapper" aria-label="BIENVENUE">
+        <div class="hero-bienvenue-line line-1" :style="line1Style">B I E&nbsp;</div>
+        <div class="hero-bienvenue-line line-2" :style="line2Style">N V E&nbsp;</div>
+        <div class="hero-bienvenue-line line-3" :style="line3Style">N U E</div>
       </div>
       <p class="hero-subtitle" :style="subtitleStyle">à l'Église Cieux Ouverts à Morlaix</p>
-      <!-- All content is static for now. If dynamic text is desired, add explicit props for title/subtitle/fb/insta links here. -->
       <div class="hero-socials" :style="socialsStyle">
         <a href="https://www.instagram.com/eglise_cieux_ouverts/" target="_blank" rel="noopener" aria-label="Instagram Cieux Ouverts" class="social-icon">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
@@ -27,20 +28,19 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 
-const props = defineProps({
+const p = defineProps({
+  props: { type: Object, required: true },
   visibility: { type: Object, default: () => ({}) },
-  isTriggered: { type: Boolean, default: false },
 })
 
 const visibilityClasses = computed(() => ({
-  'hide-mobile': props.visibility.mobile === false,
-  'hide-tablet': props.visibility.tablet === false,
-  'hide-desktop': props.visibility.desktop === false,
+  'hide-mobile': p.visibility.mobile === false,
+  'hide-tablet': p.visibility.tablet === false,
+  'hide-desktop': p.visibility.desktop === false,
 }))
 
 const sectionRef = ref(null)
 const scrollProgress = ref(0)
-const isEditor = inject('isEditor', false)
 
 const onScroll = () => {
   if (!sectionRef.value) return
@@ -55,66 +55,44 @@ const onScroll = () => {
   scrollProgress.value = 1 - ((rect.top - end) / (start - end))
 }
 
-let isEditorMode = false
-
 onMounted(() => {
-  if (props.isTriggered || isEditor) {
-    scrollProgress.value = 1
-    isEditorMode = true
-    return
-  }
   window.addEventListener('scroll', onScroll, { passive: true })
   onScroll()
 })
 
-onUnmounted(() => {
-  if (!isEditorMode) window.removeEventListener('scroll', onScroll)
-})
+onUnmounted(() => window.removeEventListener('scroll', onScroll))
 
 const t = 'transform 0.08s linear, opacity 0.1s linear'
 
-const wordArr = ['B','I','E','N','V','E','N','U','E']
-
-/**
- * Styles "portail" pour chaque lettre, regroupement parfait à la fin
- */
-function getPortalLetterStyle(i) {
+const line1Style = computed(() => {
   const p = scrollProgress.value
-  const wordLength = wordArr.length
-  const center = (wordLength - 1) / 2
-
-  // Espacement horizontal (éventail fermé > ouvert)
-  let maxSpread = 120
-  // Adapte pour mobile
-  if (window.innerWidth <= 480) maxSpread = 48
-  else if (window.innerWidth <= 768) maxSpread = 80
-  const offsetX = (i - center) * maxSpread * (1 - p)
-
-  // Décalage vertical pour éventail haut
-  const amplitude = 95
-  let offsetY = -amplitude * Math.abs(i - center) * (1 - p)
-  if (i === 0 || i === wordLength - 1) offsetY *= 1.14 // encore plus haut sur les extrêmes
-
-  // Option fanfare : un poil de rotation
-  const maxRot = 24
-  const rot = (i - center) * maxRot * (1 - p)
-
-  // Petit effet scale à l'arrivée
-  // Scale très petit au début, comme une émergence
-  const minScale = 0.04
-  const scale = minScale + (1 - minScale) * p
-
   return {
-    display: 'inline-block',
-    color: '#054886',
-    opacity: Math.max(0, Math.min(1, (p - 0.18) * 1.5)), // apparition plus tardive
-    transform: `translateX(${offsetX}px) translateY(${offsetY}px) rotate(${rot}deg) scale(${scale})`,
-    transition: 'transform 0.44s cubic-bezier(.23,1.29,.48,.99),opacity 0.21s linear',
-    willChange: 'transform, opacity',
-    pointerEvents: 'none',
+    transform: `translateX(${-400 * (1 - p)}px) rotate(${55 * (1 - p)}deg)`,
+    opacity: p > 0 ? Math.min(1, p * 1.3) : 0,
+    transition: t,
+    color: '#054886'
   }
-}
+})
 
+const line2Style = computed(() => {
+  const p = scrollProgress.value
+  return {
+    transform: `translateY(${200 * (1 - p)}px) rotate(${-20 * (1 - p)}deg)`,
+    opacity: p > 0 ? Math.min(1, p * 1.3) : 0,
+    transition: t,
+    color: '#054886'
+  }
+})
+
+const line3Style = computed(() => {
+  const p = scrollProgress.value
+  return {
+    transform: `translateX(${400 * (1 - p)}px) rotate(${-55 * (1 - p)}deg)`,
+    opacity: p > 0 ? Math.min(1, p * 1.3) : 0,
+    transition: t,
+    color: '#054886'
+  }
+})
 
 const subtitleStyle = computed(() => {
   const p = scrollProgress.value
@@ -141,34 +119,13 @@ const socialsStyle = computed(() => {
 .block-bienvenue {
   position: relative;
   overflow: hidden;
-  width: 100%;
-  max-width: none;
-  margin-left: 0;
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 600px;
 }
-@media (max-width: 768px) {
-  .block-bienvenue {
-    width: 100%;
-    max-width: 100%;
-    margin-left: 0;
-    border-radius: 0 0 18px 18px;
-  }
-}
-@media (max-width: 480px) {
-  .block-bienvenue {
-    width: 100%;
-    max-width: 100%;
-    margin-left: 0;
-    border-radius: 0;
-  }
-}
-html,body {
-  overflow-x: hidden;
-}
-
 
 .bienvenue-img {
   position: absolute;
@@ -193,10 +150,12 @@ html,body {
   align-items: center;
 }
 
-.hero-bienvenue-portal {
+.hero-bienvenue-wrapper {
   display: flex;
+  flex-direction: row;
   justify-content: center;
   align-items: center;
+  flex-wrap: nowrap;
   font-family: 'Playfair Display', serif;
   font-size: 80px;
   line-height: 1.3;
@@ -204,34 +163,13 @@ html,body {
   position: relative;
   width: 100%;
   white-space: nowrap;
-  user-select: none;
-  padding: 0 5vw;
-  box-sizing: border-box;
 }
 
-@media (max-width: 768px) {
-  .hero-bienvenue-portal {
-    font-size: clamp(24px, 8vw, 50px);
-    padding: 0 2vw;
-  }
-}
-@media (max-width: 480px) {
-  .hero-bienvenue-portal {
-    font-size: clamp(18px, 13vw, 32px);
-    padding: 0 1vw;
-  }
-}
-.hero-bienvenue-char {
-  display: inline-block;
+.hero-bienvenue-line {
+  white-space: pre;
+  letter-spacing: 0.1em;
   will-change: transform, opacity;
-  margin: 0 0.03em;
-  min-width: 0.55em;
-}
-@media (max-width: 480px) {
-  .hero-bienvenue-char {
-    min-width: 0.5em;
-    margin: 0 0.01em;
-  }
+  transform-origin: center center;
 }
 
 .hero-subtitle {
@@ -278,24 +216,8 @@ html,body {
   .hero-socials { margin-top: 16px; }
   .block-bienvenue { min-height: 400px; }
 }
-@container (max-width: 768px) {
-  .hero-bienvenue-wrapper {
-    font-size: clamp(24px, 6vw, 50px);
-    flex-wrap: nowrap;
-    justify-content: center;
-    line-height: 1.1;
-    white-space: nowrap;
-  }
-  .hero-subtitle { font-size: 16px; margin-top: 15px; }
-  .hero-socials { margin-top: 16px; }
-  .block-bienvenue { min-height: 400px; }
-}
 
 @media (max-width: 480px) {
-  .block-bienvenue { min-height: 320px; }
-  .hero-subtitle { font-size: 14px; }
-}
-@container (max-width: 480px) {
   .block-bienvenue { min-height: 320px; }
   .hero-subtitle { font-size: 14px; }
 }

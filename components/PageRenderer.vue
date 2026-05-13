@@ -12,7 +12,6 @@
         :props="block.props"
         :visibility="block.visibility"
         :is-triggered="isTriggered(block.id)"
-        :block-id="block.id"
       />
     </div>
   </div>
@@ -128,7 +127,6 @@ onUnmounted(() => {
 <style scoped>
 .page-renderer {
   width: 100%;
-  overflow-x: hidden;
 }
 .block-wrapper {
   /* Pas de contain: layout — ça casse les transitions GPU */
