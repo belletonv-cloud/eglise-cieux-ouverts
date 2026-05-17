@@ -1,5 +1,5 @@
 <template>
-  <footer class="site-footer" ref="footerRef">
+  <footer class="site-footer">
     <div class="footer-inner">
       <div class="footer-left">
         <h2 class="footer-title">
@@ -7,8 +7,8 @@
             v-for="(char, i) in titleChars" 
             :key="i" 
             class="shutter-char"
-            :class="[char === ' ' ? 'space' : '', { 'place-bold': i >= 10 && i <= 14, 'in-view': revealed }]"
-            :style="{ transitionDelay: char !== ' ' ? `${i * 0.05}s` : undefined }"
+            :class="[char === ' ' ? 'space' : '', { 'place-bold': i >= 10 && i <= 14 }]"
+            :style="getShutterStyle(i)"
           >
             {{ char === ' ' ? '&nbsp;' : char }}
           </span>
@@ -27,25 +27,18 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
-
-const footerRef = ref(null)
-const revealed = ref(!import.meta.client)
-
 const titleChars = "Il y a une place pour toi !".split('')
 
-onMounted(() => {
-  const check = () => {
-    if (!footerRef.value || revealed.value) return
-    const rect = footerRef.value.getBoundingClientRect()
-    if (rect.top < window.innerHeight) {
-      revealed.value = true
-    }
+function getShutterStyle(i) {
+  const total = titleChars.length
+  const step = 15 / total
+  const d = i * step
+  const e = d + 2
+  return {
+    '--shutter-d': `${d}%`,
+    '--shutter-e': `${e}%`,
   }
-  window.addEventListener('scroll', check, { passive: true })
-  check()
-  onUnmounted(() => window.removeEventListener('scroll', check))
-})
+}
 </script>
 
 <style>
@@ -64,6 +57,8 @@ onMounted(() => {
   color: white;
   position: relative;
   overflow: hidden;
+  view-timeline-name: --footer;
+  view-timeline-axis: block;
 }
 
   .footer-inner {
@@ -91,15 +86,29 @@ onMounted(() => {
 
 .shutter-char {
   display: inline-block;
-  overflow: hidden;
-  clip-path: inset(0 100% 0 0);
-  opacity: 0;
-  transition: clip-path 0.6s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 0.6s cubic-bezier(0.25, 0.1, 0.25, 1);
-}
-
-.shutter-char.in-view {
   clip-path: inset(0 0 0 0);
   opacity: 1;
+}
+
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .shutter-char {
+      overflow: hidden;
+      clip-path: inset(0 100% 0 0);
+      opacity: 0;
+      animation-name: reveal;
+      animation-timeline: --footer;
+      animation-range: cover var(--shutter-d) cover var(--shutter-e);
+      animation-fill-mode: both;
+    }
+  }
+}
+
+@keyframes reveal {
+  0%, 3% { clip-path: inset(0 100% 0 0); opacity: 0; }
+  6%, 25% { clip-path: inset(0 0 0 0); opacity: 1; }
+  28%, 50% { clip-path: inset(0 100% 0 0); opacity: 0; }
+  53%, 100% { clip-path: inset(0 0 0 0); opacity: 1; }
 }
 
 .space {

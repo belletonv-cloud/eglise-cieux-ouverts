@@ -70,7 +70,11 @@ function cleanBlock(block) {
   }
   // 2. Si le bloc est de type connu et a des defaults, on merge avec les defaults pour fallback SSR
   if (block && block.type && BLOCK_TYPES[block.type]) {
-    block.props = { ...BLOCK_TYPES[block.type].defaults, ...block.props }
+    const safe = {}
+    for (const [k, v] of Object.entries(block.props)) {
+      if (v !== '' && v !== null && v !== undefined) safe[k] = v
+    }
+    block.props = { ...BLOCK_TYPES[block.type].defaults, ...safe }
   }
 
   return block

@@ -15,6 +15,8 @@
 <script setup>
 import { computed } from 'vue'
 
+defineOptions({ inheritAttrs: false })
+
 const { visibility = {} } = defineProps({
   visibility: { type: Object, default: () => ({}) },
 })
