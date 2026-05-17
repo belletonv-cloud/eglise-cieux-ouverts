@@ -93,8 +93,8 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth'
 import { BLOCK_TYPES } from '~/utils/blockTypes.js'
 
 const props = defineProps({
@@ -112,8 +112,20 @@ const {
 } = useAdmin()
 
 const { $auth } = useNuxtApp()
-const user = computed(() => $auth.currentUser)
+const user = ref(null)
 const saving = ref(false)
+
+let unsubscribe = null
+
+onMounted(() => {
+  unsubscribe = onAuthStateChanged($auth, (u) => {
+    user.value = u
+  })
+})
+
+onUnmounted(() => {
+  if (unsubscribe) unsubscribe()
+})
 
 function getBlockLabel(type) {
   return BLOCK_TYPES[type]?.label || type
