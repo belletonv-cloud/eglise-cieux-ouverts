@@ -8,16 +8,27 @@
       <span class="admin-block-type">{{ getBlockLabel(activeBlock.type) }}</span>
     </div>
     <div class="admin-toolbar-right">
-      <button class="admin-btn" @click="saveChanges" :disabled="saving">
-        {{ saving ? 'Sauvegarde...' : 'Sauvegarder' }}
-      </button>
-      <button class="admin-btn admin-btn-secondary" @click="exitAdmin">
-        Quitter
-      </button>
+      <template v-if="user">
+        <span class="admin-user">{{ user.email }}</span>
+        <button class="admin-btn" @click="saveChanges" :disabled="saving">
+          {{ saving ? 'Sauvegarde...' : 'Sauvegarder' }}
+        </button>
+        <button class="admin-btn admin-btn-secondary" @click="signOutAndExit">
+          Quitter
+        </button>
+      </template>
+      <template v-else>
+        <button class="admin-btn admin-btn-login" @click="signInWithGoogle">
+          Se connecter avec Google
+        </button>
+        <button class="admin-btn admin-btn-secondary" @click="exitAdmin">
+          Annuler
+        </button>
+      </template>
     </div>
   </div>
 
-  <div class="admin-sidebar" v-if="activeBlock">
+  <div class="admin-sidebar" v-if="activeBlock && user">
     <div class="admin-sidebar-header">
       <h3>{{ getBlockLabel(activeBlock.type) }}</h3>
       <button class="admin-close-btn" @click="selectBlock(null)">✕</button>
@@ -82,13 +93,13 @@
 </template>
 
 <script setup>
+import { ref, computed } from 'vue'
+import { GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth'
 import { BLOCK_TYPES } from '~/utils/blockTypes.js'
 
 const props = defineProps({
   pageSlug: { type: String, default: '' },
 })
-
-const emit = defineEmits(['save', 'exit'])
 
 const {
   activeBlock,
@@ -97,8 +108,11 @@ const {
   moveBlock,
   removeBlock,
   exitAdmin,
+  localBlocks,
 } = useAdmin()
 
+const { $auth } = useNuxtApp()
+const user = computed(() => $auth.currentUser)
 const saving = ref(false)
 
 function getBlockLabel(type) {
@@ -119,12 +133,35 @@ function setPropValue(key, value) {
   updateBlock(activeBlock.value.id, { [key]: value })
 }
 
+async function signInWithGoogle() {
+  const provider = new GoogleAuthProvider()
+  try {
+    await signInWithPopup($auth, provider)
+  } catch (e) {
+    console.error('Login error:', e)
+    alert('Connexion échouée : ' + e.message)
+  }
+}
+
+async function signOutAndExit() {
+  try {
+    await signOut($auth)
+  } catch (e) {
+    console.error('Sign out error:', e)
+  }
+  exitAdmin()
+}
+
 async function saveChanges() {
+  if (!user.value) {
+    alert('Connectez-vous pour sauvegarder.')
+    return
+  }
   saving.value = true
   try {
     const { doc, setDoc } = await import('firebase/firestore')
     const { $db } = useNuxtApp()
-    const blocks = useAdmin().getBlocks()
+    const blocks = localBlocks.value
     await setDoc(doc($db, 'pages', props.pageSlug), { blocks })
     alert('Page sauvegardée !')
   } catch (e) {
@@ -175,6 +212,14 @@ async function saveChanges() {
   font-size: 0.9em;
   font-weight: 600;
 }
+.admin-user {
+  font-size: 0.8em;
+  opacity: 0.8;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .admin-btn {
   padding: 6px 16px;
   border: none;
@@ -191,6 +236,11 @@ async function saveChanges() {
   background: rgba(255,255,255,0.15);
 }
 .admin-btn-secondary:hover { background: rgba(255,255,255,0.25); }
+.admin-btn-login {
+  background: #fff;
+  color: #1a1a2e;
+}
+.admin-btn-login:hover { background: #f0f0f0; }
 
 .admin-sidebar {
   position: fixed;
