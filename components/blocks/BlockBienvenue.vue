@@ -46,11 +46,14 @@ const center = (wordArr.length - 1) / 2
 function getLetterVars(i) {
   const dist = Math.abs(i - center)
   const sign = i === center ? 0 : (i - center) / dist
-  const extreme = (i === 0 || i === wordArr.length - 1) ? 1.14 : 1
+  const extreme = (i === 0 || i === wordArr.length - 1) ? 1.0 : 1
   return {
     '--dist': dist,
     '--sign': sign,
     '--extreme': extreme,
+    '--spread-x': '80px',
+    '--spread-y': '55px',
+    '--spread-r': '15deg',
   }
 }
 </script>
@@ -130,9 +133,9 @@ function getLetterVars(i) {
   0% {
     opacity: 0;
     transform:
-      translateX(calc(120px * var(--dist) * var(--sign)))
-      translateY(calc(-95px * var(--dist) * var(--extreme)))
-      rotate(calc(24deg * var(--dist) * var(--sign)))
+      translateX(calc(var(--spread-x) * var(--dist) * var(--sign)))
+      translateY(calc(-1 * var(--spread-y) * var(--dist) * var(--extreme)))
+      rotate(calc(var(--spread-r) * var(--dist) * var(--sign)))
       scale(0.04);
   }
   100% {
@@ -209,6 +212,12 @@ function getLetterVars(i) {
 
 @media (max-width: 768px) {
   .block-bienvenue { min-height: 400px; }
+  .hero-bienvenue-portal { font-size: clamp(28px, 10vw, 50px); }
+  .hero-bienvenue-char {
+    --spread-x: 40px;
+    --spread-y: 30px;
+    --spread-r: 8deg;
+  }
   .hero-subtitle { font-size: 16px; margin-top: 15px; }
   .hero-socials { margin-top: 16px; }
 }

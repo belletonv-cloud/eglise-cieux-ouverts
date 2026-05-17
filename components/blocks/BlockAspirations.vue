@@ -152,8 +152,8 @@ function getCircleStyle(index) {
   .aspirations-viewport { height: auto; }
   .sticky-box { position: relative; top: auto; min-height: auto; padding: 50px 20px; }
   .aspirations-content { padding: 0; }
-  .aspirations-title { font-size: clamp(32px, 8vw, 48px); }
-  .aspirations-list li { font-size: 1.2rem; padding: 0.8rem 0; text-align: center; border-bottom: 1px solid; }
+  .aspirations-title { font-size: clamp(32px, 8vw, 48px); opacity: 1; transform: none; }
+  .aspirations-list li { font-size: 1.2rem; padding: 0.8rem 0; text-align: center; border-bottom: 1px solid; opacity: 1; transform: none; }
   .circle { display: none; }
 }
 .triggered {
