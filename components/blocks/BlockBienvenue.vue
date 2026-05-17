@@ -213,13 +213,13 @@ function getLetterVars(i) {
 @media (max-width: 768px) {
   .block-bienvenue { min-height: 400px; }
   .hero-bienvenue-portal {
-    font-size: clamp(24px, 9vw, 40px);
-    letter-spacing: 0.02em;
+    font-size: clamp(18px, 7vw, 36px);
+    letter-spacing: 0.01em;
   }
   .hero-bienvenue-char {
-    --spread-x: 40px;
-    --spread-y: 30px;
-    --spread-r: 8deg;
+    --spread-x: 30px;
+    --spread-y: 25px;
+    --spread-r: 6deg;
   }
   .hero-subtitle { font-size: 16px; margin-top: 15px; }
   .hero-socials { margin-top: 16px; }
@@ -228,7 +228,7 @@ function getLetterVars(i) {
 @media (max-width: 480px) {
   .block-bienvenue { min-height: 320px; }
   .hero-bienvenue-portal {
-    font-size: clamp(20px, 8vw, 32px);
+    font-size: clamp(14px, 6.5vw, 28px);
     letter-spacing: 0;
   }
   .hero-subtitle { font-size: 14px; }
