@@ -72,11 +72,7 @@ function cleanBlock(block) {
   if (block && block.type && BLOCK_TYPES[block.type]) {
     block.props = { ...BLOCK_TYPES[block.type].defaults, ...block.props }
   }
-  // 3. Optionnel : log (en dev uniquement)
-  if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'production') {
-    // eslint-disable-next-line no-console
-    console.log('[FIXED BLOCK]', block.type, JSON.stringify(block, null, 2))
-  }
+
   return block
 }
 
