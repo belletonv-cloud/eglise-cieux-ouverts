@@ -4,14 +4,14 @@
       v-for="block in visibleBlocks" 
       :key="block.id"
       class="block-wrapper"
-      :class="[getAnimClass(block.props), { triggered: isTriggered(block.id) }]"
+      :class="[getAnimClass(block), useTrigger(block) ? { triggered: isTriggered(block.id) } : '']"
       :ref="el => setWrapperRef(el, block.id)"
     >
       <component
         :is="blockComponent(block.type)"
         v-bind="block.props"
         :visibility="block.visibility"
-        :is-triggered="isTriggered(block.id)"
+        :is-triggered="useTrigger(block) ? isTriggered(block.id) : false"
         :preview-device="previewDevice"
       />
     </div>
@@ -91,10 +91,16 @@ const visibleBlocks = computed(() => {
   })
 })
 
-function getAnimClass(p) {
-  if (!p || !p.animation || p.animation === 'none') return ''
-  const anim = ANIMATIONS.find(a => a.id === p.animation)
+function getAnimClass(block) {
+  if (!block || !block.props || !block.props.animation || block.props.animation === 'none') return ''
+  // Blocs avec view-timeline interne : pas d'animation wrapper (conflit)
+  if (block.type === 'aspirations' || block.type === 'nousRejoindre') return ''
+  const anim = ANIMATIONS.find(a => a.id === block.props.animation)
   return anim ? `block-${anim.css}` : ''
+}
+
+function useTrigger(block) {
+  return block.type !== 'aspirations' && block.type !== 'nousRejoindre'
 }
 
 const triggeredBlocks = ref(new Set())
