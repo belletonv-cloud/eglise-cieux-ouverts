@@ -1,5 +1,5 @@
 <template>
-  <div class="aspirations-viewport" :class="[visibilityClasses, { triggered: isTriggered }]">
+  <div class="aspirations-viewport" :class="visibilityClasses">
     <div
       class="sticky-box"
       :style="{ background: backgroundGradient || backgroundColor, color: textColor }"
@@ -31,7 +31,6 @@ const {
   title = '',
   items = [],
   visibility = {},
-  isTriggered = false,
 } = defineProps({
   backgroundGradient: { type: String, default: '' },
   backgroundColor: { type: String, default: '#fff' },
@@ -39,7 +38,6 @@ const {
   title: { type: String, default: '' },
   items: { type: Array, default: () => [] },
   visibility: { type: Object, default: () => ({}) },
-  isTriggered: { type: Boolean, default: false },
 })
 
 const visibilityClasses = computed(() => ({

@@ -2,7 +2,7 @@
   <section
     class="block-nous-rejoindre"
     :style="{ background: backgroundGradient }"
-    :class="[visibilityClasses, { triggered: isTriggered }]"
+    :class="visibilityClasses"
   >
     <div class="circle circle-left"></div>
     <div class="circle circle-right"></div>
@@ -22,13 +22,11 @@ const {
   title = '',
   link = '/contact',
   visibility = {},
-  isTriggered = false
 } = defineProps({
   backgroundGradient: { type: String, default: '' },
   title: { type: String, default: '' },
   link: { type: String, default: '/contact' },
   visibility: { type: Object, default: () => ({}) },
-  isTriggered: { type: Boolean, default: false },
 })
 
 const visibilityClasses = computed(() => ({
