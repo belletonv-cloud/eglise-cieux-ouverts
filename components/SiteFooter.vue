@@ -30,7 +30,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 
 const footerRef = ref(null)
-const revealed = ref(false)
+const revealed = ref(!import.meta.client)
 
 const titleChars = "Il y a une place pour toi !".split('')
 

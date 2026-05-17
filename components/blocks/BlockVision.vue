@@ -2,7 +2,7 @@
   <section
     class="vision-section"
     :style="{ background: backgroundGradient, color: textColor }"
-    :class="[visibilityClasses, { 'is-triggered': isTriggered || isEditor }]"
+    :class="[visibilityClasses, { 'is-triggered': isTriggered || isEditor || isSsr }]"
     ref="sectionRef"
   >
     <div class="vision-content" :style="contentStyle">
@@ -37,6 +37,8 @@ const {
 
 const isEditor = inject('isEditor', false)
 
+const isSsr = !import.meta.client
+
 const visibilityClasses = computed(() => ({
   'hide-mobile': visibility.mobile === false,
   'hide-tablet': visibility.tablet === false,
@@ -53,7 +55,7 @@ const formattedQuote = computed(() => {
 })
 
 const sectionRef = ref(null)
-const scrollProgress = ref(0)
+const scrollProgress = ref(import.meta.client ? 0 : 1)
 
 const onScroll = () => {
   if (!sectionRef.value) return

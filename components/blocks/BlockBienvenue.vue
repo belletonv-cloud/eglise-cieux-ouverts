@@ -40,7 +40,7 @@ const visibilityClasses = computed(() => ({
 }))
 
 const sectionRef = ref(null)
-const scrollProgress = ref(0)
+const scrollProgress = ref(import.meta.client ? 0 : 1)
 const isEditor = inject('isEditor', false)
 
 const onScroll = () => {

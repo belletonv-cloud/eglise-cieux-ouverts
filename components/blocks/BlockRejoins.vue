@@ -54,7 +54,7 @@ const visibilityClasses = computed(() => ({
 }))
 
 const sectionRef = ref(null)
-const isVisible = ref(false)
+const isVisible = ref(!import.meta.client || isEditor)
 
 onMounted(() => {
   if (isEditor) {
