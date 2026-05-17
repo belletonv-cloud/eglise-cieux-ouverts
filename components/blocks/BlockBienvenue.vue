@@ -212,7 +212,10 @@ function getLetterVars(i) {
 
 @media (max-width: 768px) {
   .block-bienvenue { min-height: 400px; }
-  .hero-bienvenue-portal { font-size: clamp(28px, 10vw, 50px); }
+  .hero-bienvenue-portal {
+    font-size: clamp(24px, 9vw, 40px);
+    letter-spacing: 0.02em;
+  }
   .hero-bienvenue-char {
     --spread-x: 40px;
     --spread-y: 30px;
@@ -224,6 +227,10 @@ function getLetterVars(i) {
 
 @media (max-width: 480px) {
   .block-bienvenue { min-height: 320px; }
+  .hero-bienvenue-portal {
+    font-size: clamp(20px, 8vw, 32px);
+    letter-spacing: 0;
+  }
   .hero-subtitle { font-size: 14px; }
 }
 </style>

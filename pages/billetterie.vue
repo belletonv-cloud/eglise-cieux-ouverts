@@ -5,23 +5,20 @@
 <script setup>
 import { getDefaultBilletteriePage } from '~/utils/blockTypes.js'
 
-useHead({
-  title: 'Billetterie — Église Cieux Ouverts'
+useSeoMeta({
+  title: 'Billetterie — Église Cieux Ouverts Morlaix',
+  description: 'Réservez vos places pour nos événements.',
 })
 
-const blocks = ref(getDefaultBilletteriePage())
-const { $db } = useNuxtApp()
+const { data: pageData } = await useFetch('/api/pages/billetterie', {
+  key: 'page-billetterie',
+  server: true,
+})
 
-onMounted(async () => {
-  try {
-    if (!$db) return
-    const { doc, getDoc } = await import('firebase/firestore')
-    const snap = await getDoc(doc($db, 'pages', 'billetterie'))
-    if (snap.exists() && snap.data().blocks?.length) {
-      blocks.value = snap.data().blocks
-    }
-  } catch (e) {
-    console.error('Erreur chargement page billetterie:', e)
+const blocks = computed(() => {
+  if (pageData.value?.blocks?.length) {
+    return pageData.value.blocks
   }
+  return getDefaultBilletteriePage()
 })
 </script>

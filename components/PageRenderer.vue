@@ -1,11 +1,12 @@
 <template>
-  <div class="page-renderer" :class="{ 'preview-mode': previewDevice !== 'desktop' }">
+  <div class="page-renderer" :class="{ 'preview-mode': previewDevice !== 'desktop', 'admin-mode': isAdmin }">
     <div 
       v-for="block in visibleBlocks" 
       :key="block.id"
       class="block-wrapper"
-      :class="[getAnimClass(block), useTrigger(block) ? { triggered: isTriggered(block.id) } : '']"
+      :class="[getAnimClass(block), useTrigger(block) ? { triggered: isTriggered(block.id) } : '', { 'admin-selected': isAdmin && editingBlockId === block.id }]"
       :ref="el => setWrapperRef(el, block.id)"
+      @click="isAdmin ? selectBlock(block.id) : undefined"
     >
       <component
         :is="blockComponent(block.type)"
@@ -19,7 +20,7 @@
 </template>
 
 <script setup>
-import { onMounted, onUnmounted, ref, computed, watch, nextTick } from 'vue'
+import { onMounted, onUnmounted, ref, computed, watch, nextTick, inject } from 'vue'
 import { ANIMATIONS } from '~/utils/blockTypes.js'
 import BlockHero from '~/components/blocks/BlockHero.vue'
 import BlockBienvenue from '~/components/blocks/BlockBienvenue.vue'
@@ -34,6 +35,10 @@ import BlockActivities from '~/components/blocks/BlockActivities.vue'
 import BlockTextImage from '~/components/blocks/BlockTextImage.vue'
 import BlockGallery from '~/components/blocks/BlockGallery.vue'
 import BlockSpacer from '~/components/blocks/BlockSpacer.vue'
+
+const isAdmin = inject('isAdmin', ref(false))
+const editingBlockId = inject('editingBlockId', ref(null))
+const selectBlock = inject('selectBlock', () => {})
 
 const COMPONENTS = {
   hero: BlockHero,
@@ -162,5 +167,18 @@ onUnmounted(() => {
 }
 .block-wrapper {
   /* Pas de contain: layout — ça casse les transitions GPU */
+}
+.admin-mode .block-wrapper {
+  cursor: pointer;
+  position: relative;
+  transition: outline 0.15s;
+}
+.admin-mode .block-wrapper:hover {
+  outline: 2px dashed rgba(59, 130, 246, 0.5);
+  outline-offset: -2px;
+}
+.admin-mode .block-wrapper.admin-selected {
+  outline: 2px solid #3B82F6;
+  outline-offset: -2px;
 }
 </style>

@@ -5,23 +5,20 @@
 <script setup>
 import { getDefaultMessagesPage, normalizePageBlocks } from '~/utils/blockTypes.js'
 
-useHead({
-  title: 'Messages — Église Cieux Ouverts'
+useSeoMeta({
+  title: 'Messages — Église Cieux Ouverts Morlaix',
+  description: 'Retrouvez les messages et prédications de l\'Église Cieux Ouverts.',
 })
 
-const blocks = ref(getDefaultMessagesPage())
-const { $db } = useNuxtApp()
+const { data: pageData } = await useFetch('/api/pages/messages', {
+  key: 'page-messages',
+  server: true,
+})
 
-onMounted(async () => {
-  try {
-    if (!$db) return
-    const { doc, getDoc } = await import('firebase/firestore')
-    const snap = await getDoc(doc($db, 'pages', 'messages'))
-    if (snap.exists() && snap.data().blocks?.length) {
-      blocks.value = normalizePageBlocks('messages', snap.data().blocks)
-    }
-  } catch (e) {
-    console.error('Erreur chargement page messages:', e)
+const blocks = computed(() => {
+  if (pageData.value?.blocks?.length) {
+    return normalizePageBlocks('messages', pageData.value.blocks)
   }
+  return getDefaultMessagesPage()
 })
 </script>
