@@ -1,12 +1,12 @@
 <template>
   <section
     class="block-gallery"
-    :style="{ background: props.backgroundColor }"
+    :style="{ background: backgroundColor }"
     :class="visibilityClasses"
   >
     <div class="gallery-inner">
-      <h2 v-if="props.title" class="gallery-title" :style="{ color: props.textColor }">{{ props.title }}</h2>
-      <div class="gallery-grid" :style="{ gridTemplateColumns: `repeat(${props.columns ?? 3}, 1fr)` }">
+      <h2 v-if="title" class="gallery-title" :style="{ color: textColor }">{{ title }}</h2>
+      <div class="gallery-grid" :style="{ gridTemplateColumns: `repeat(${columns ?? 3}, 1fr)` }">
         <div
           v-for="(img, i) in normalizedImages"
           :key="i"
@@ -32,14 +32,21 @@
 </template>
 
 <script setup>
-const p = defineProps({
-  props: { type: Object, required: true },
+const { visibility = {} } = defineProps({
+  title: { type: String, default: '' },
+  textColor: { type: String, default: '#064886' },
+  images: { type: Array, default: () => [] },
+  columns: { type: Number, default: 3 },
+  backgroundColor: { type: String, default: '#ffffff' },
+  animation: { type: String, default: 'fadeIn' },
   visibility: { type: Object, default: () => ({}) },
+  isTriggered: { type: Boolean, default: false },
+  previewDevice: { type: String, default: 'desktop' },
 })
 const lightboxIndex = ref(null)
 
 const normalizedImages = computed(() => {
-  return (p.props.images || []).map((img, index) => {
+  return (images || []).map((img, index) => {
     if (typeof img === 'string') {
       return { src: img, alt: `Image ${index + 1}`, caption: '' }
     }
@@ -52,9 +59,9 @@ const normalizedImages = computed(() => {
 })
 
 const visibilityClasses = computed(() => ({
-  'hide-mobile': p.visibility.mobile === false,
-  'hide-tablet': p.visibility.tablet === false,
-  'hide-desktop': p.visibility.desktop === false,
+  'hide-mobile': visibility.mobile === false,
+  'hide-tablet': visibility.tablet === false,
+  'hide-desktop': visibility.desktop === false,
 }))
 
 function openLightbox(i) { lightboxIndex.value = i }

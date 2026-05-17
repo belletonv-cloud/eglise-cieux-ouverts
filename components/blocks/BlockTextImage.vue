@@ -1,27 +1,27 @@
 <template>
   <section
     class="block-textimage"
-    :style="{ background: props.backgroundColor, color: props.textColor }"
-    :class="[visibilityClasses, { 'reverse': props.reverse }, `style-${props.visualStyle || 'default'}`]"
+    :style="{ background: backgroundColor, color: textColor }"
+    :class="[visibilityClasses, { 'reverse': reverse }, `style-${visualStyle || 'default'}`]"
   >
     <div class="ti-inner">
       <div class="ti-text">
-        <h2 class="ti-title" :style="{ color: props.textColor }">{{ props.title }}</h2>
-        <p v-if="props.subtitle" class="ti-subtitle">{{ props.subtitle }}</p>
-        <div class="ti-body" v-html="props.body"></div>
-        <a v-if="props.ctaText" :href="props.ctaLink" class="ti-cta">{{ props.ctaText }}</a>
+        <h2 class="ti-title" :style="{ color: textColor }">{{ title }}</h2>
+        <p v-if="subtitle" class="ti-subtitle">{{ subtitle }}</p>
+        <div class="ti-body" v-html="body"></div>
+        <a v-if="ctaText" :href="ctaLink" class="ti-cta">{{ ctaText }}</a>
       </div>
       <div class="ti-image">
-        <div v-if="props.visualStyle === 'messagesLaptop'" class="ti-laptop-shell">
+        <div v-if="visualStyle === 'messagesLaptop'" class="ti-laptop-shell">
           <div class="ti-laptop-screen-frame">
             <div class="ti-laptop-content">
-              <img v-if="props.image" :src="props.image" :alt="props.title" class="ti-img" />
+              <img v-if="image" :src="image" :alt="title" class="ti-img" />
               <div v-else class="ti-img-placeholder">🖼️</div>
             </div>
           </div>
           <div class="ti-laptop-base"></div>
         </div>
-        <img v-else-if="props.image" :src="props.image" :alt="props.title" class="ti-img" />
+        <img v-else-if="image" :src="image" :alt="title" class="ti-img" />
         <div v-else class="ti-img-placeholder">🖼️</div>
       </div>
     </div>
@@ -29,14 +29,26 @@
 </template>
 
 <script setup>
-const p = defineProps({
-  props: { type: Object, required: true },
+const { visibility = {} } = defineProps({
+  title: { type: String, default: '' },
+  subtitle: { type: String, default: '' },
+  body: { type: String, default: '' },
+  image: { type: String, default: '' },
+  reverse: { type: Boolean, default: false },
+  visualStyle: { type: String, default: 'default' },
+  ctaText: { type: String, default: '' },
+  ctaLink: { type: String, default: '' },
+  backgroundColor: { type: String, default: '#ffffff' },
+  textColor: { type: String, default: '#1a1a2e' },
+  animation: { type: String, default: 'slideLeft' },
   visibility: { type: Object, default: () => ({}) },
+  isTriggered: { type: Boolean, default: false },
+  previewDevice: { type: String, default: 'desktop' },
 })
 const visibilityClasses = computed(() => ({
-  'hide-mobile': p.visibility.mobile === false,
-  'hide-tablet': p.visibility.tablet === false,
-  'hide-desktop': p.visibility.desktop === false,
+  'hide-mobile': visibility.mobile === false,
+  'hide-tablet': visibility.tablet === false,
+  'hide-desktop': visibility.desktop === false,
 }))
 </script>
 

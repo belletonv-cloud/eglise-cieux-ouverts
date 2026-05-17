@@ -1,15 +1,15 @@
 <template>
   <section
     class="block-nous-rejoindre"
-    :style="{ background: props.backgroundGradient }"
-    :class="[visibilityClasses]"
+    :style="{ background: backgroundGradient }"
+    :class="[visibilityClasses, { triggered: isTriggered }]"
   >
     <div class="circle circle-left"></div>
     <div class="circle circle-right"></div>
     <div class="circle circle-small"></div>
 
-    <NuxtLink :to="props.link || '/contact'" class="cta-link">
-      {{ props.title }}
+    <NuxtLink :to="link || '/contact'" class="cta-link">
+      {{ title }}
     </NuxtLink>
   </section>
 </template>
@@ -17,15 +17,24 @@
 <script setup>
 import { computed } from 'vue'
 
-const p = defineProps({
-  props: { type: Object, required: true },
+const {
+  backgroundGradient = '',
+  title = '',
+  link = '/contact',
+  visibility = {},
+  isTriggered = false
+} = defineProps({
+  backgroundGradient: { type: String, default: '' },
+  title: { type: String, default: '' },
+  link: { type: String, default: '/contact' },
   visibility: { type: Object, default: () => ({}) },
+  isTriggered: { type: Boolean, default: false },
 })
 
 const visibilityClasses = computed(() => ({
-  'hide-mobile': p.visibility.mobile === false,
-  'hide-tablet': p.visibility.tablet === false,
-  'hide-desktop': p.visibility.desktop === false,
+  'hide-mobile': visibility.mobile === false,
+  'hide-tablet': visibility.tablet === false,
+  'hide-desktop': visibility.desktop === false,
 }))
 </script>
 
@@ -111,6 +120,27 @@ const visibilityClasses = computed(() => ({
 @keyframes nr-cta {
   0%   { transform: translateY(0) scale(0.25); opacity: 0; }
   100% { transform: translateY(320px) scale(1); opacity: 1; }
+}
+
+.triggered .circle-left {
+  animation: none;
+  transform: translate(-50%, -50%) scale(1.2);
+  opacity: 1;
+}
+.triggered .circle-right {
+  animation: none;
+  transform: translate(-50%, -50%) scale(1.1);
+  opacity: 0.9;
+}
+.triggered .circle-small {
+  animation: none;
+  transform: translate(-50%, -50%) scale(1.1);
+  opacity: 1;
+}
+.triggered .cta-link {
+  animation: none;
+  transform: translateY(320px) scale(1);
+  opacity: 1;
 }
 
 @container (max-width: 768px) {

@@ -1,16 +1,29 @@
 <template>
-  <div class="full-width-image" :style="style"></div>
+  <div class="full-width-image" :style="style" :class="visibilityClasses"></div>
 </template>
 
 <script setup>
-const props = defineProps({
-  props: Object,
-  visibility: Object,
+const {
+  src = '',
+  height = 400,
+  visibility = {},
+  previewDevice = 'desktop',
+} = defineProps({
+  src: { type: String, default: '' },
+  height: { type: Number, default: 400 },
+  visibility: { type: Object, default: () => ({}) },
+  previewDevice: { type: String, default: 'desktop' },
 })
 
+const visibilityClasses = computed(() => ({
+  'hide-mobile': visibility.mobile === false,
+  'hide-tablet': visibility.tablet === false,
+  'hide-desktop': visibility.desktop === false,
+}))
+
 const style = computed(() => ({
-  backgroundImage: `url(${props.props.src})`,
-  height: `${props.props.height}px`,
+  backgroundImage: `url(${src})`,
+  height: `${height}px`,
 }))
 </script>
 
@@ -23,6 +36,11 @@ const style = computed(() => ({
 }
 
 @media (max-width: 768px) {
+  .full-width-image {
+    background-attachment: scroll;
+  }
+}
+@container (max-width: 768px) {
   .full-width-image {
     background-attachment: scroll;
   }

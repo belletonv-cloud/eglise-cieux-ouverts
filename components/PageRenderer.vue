@@ -9,9 +9,10 @@
     >
       <component
         :is="blockComponent(block.type)"
-        :props="block.props"
+        v-bind="block.props"
         :visibility="block.visibility"
         :is-triggered="isTriggered(block.id)"
+        :preview-device="previewDevice"
       />
     </div>
   </div>
@@ -59,8 +60,33 @@ function blockComponent(type) {
   return COMPONENTS[type] || BlockRichText
 }
 
+import { BLOCK_TYPES } from '~/utils/blockTypes.js'
+
+// Correction universelle SSR/no-JS : repair/flatten block props if broken/migrated badly
+function cleanBlock(block) {
+  // 1. Si double props (props.props), on aplatit
+  if (block && block.props && block.props.props && typeof block.props.props === 'object') {
+    block.props = { ...block.props.props }
+  }
+  // 2. Si le bloc est de type connu et a des defaults, on merge avec les defaults pour fallback SSR
+  if (block && block.type && BLOCK_TYPES[block.type]) {
+    block.props = { ...BLOCK_TYPES[block.type].defaults, ...block.props }
+  }
+  // 3. Optionnel : log (en dev uniquement)
+  if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'production') {
+    // eslint-disable-next-line no-console
+    console.log('[FIXED BLOCK]', block.type, JSON.stringify(block, null, 2))
+  }
+  return block
+}
+
+// Corrige TOUS les blocs juste avant de les rendre
+const fixedBlocks = computed(() => {
+  return props.blocks.map(cleanBlock)
+})
+
 const visibleBlocks = computed(() => {
-  return props.blocks.filter(block => {
+  return fixedBlocks.value.filter(block => {
     const v = block.visibility || {}
     if (props.previewDevice === 'mobile' && v.mobile === false) return false
     if (props.previewDevice === 'tablet' && v.tablet === false) return false

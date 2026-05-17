@@ -148,12 +148,56 @@ a:hover {
 }
 
 /* ─── Block Animations (Page Builder) ──────────────────────────────────────── */
+/* Two triggers: CSS scroll-driven (no JS) + .triggered class (IntersectionObserver) */
+
+@keyframes animFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes animSlideUp {
+  from { opacity: 0; transform: translateY(50px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes animSlideLeft {
+  from { opacity: 0; transform: translateX(-50px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes animZoom {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes animPortal {
+  from { opacity: 0; transform: perspective(1000px) rotateX(15deg) scale(0.95); }
+  to   { opacity: 1; transform: perspective(1000px) rotateX(0deg) scale(1); }
+}
+@keyframes animBounceIn {
+  0%   { opacity: 0; transform: scale(0.5); }
+  55%  { opacity: 1; transform: scale(1.05); }
+  75%  { transform: scale(0.97); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes animFlip {
+  from { opacity: 0; transform: perspective(800px) rotateY(80deg); }
+  to   { opacity: 1; transform: perspective(800px) rotateY(0deg); }
+}
+@keyframes animWaveIn {
+  0%   { opacity: 0; transform: translateX(-40px) skewX(-6deg); }
+  65%  { opacity: 1; transform: translateX(8px) skewX(2deg); }
+  100% { opacity: 1; transform: translateX(0) skewX(0); }
+}
 
 /* fadeIn */
 .block-anim-fadeIn {
   opacity: 0;
   will-change: opacity;
   transition: opacity 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+}
+@supports (animation-timeline: view()) {
+  .block-anim-fadeIn {
+    animation: animFadeIn 0.9s ease forwards;
+    animation-timeline: view();
+    animation-range: entry 0% entry 90%;
+  }
 }
 .block-anim-fadeIn.triggered {
   opacity: 1;
@@ -165,6 +209,13 @@ a:hover {
   transform: translateY(50px);
   will-change: opacity, transform;
   transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+@supports (animation-timeline: view()) {
+  .block-anim-slideUp {
+    animation: animSlideUp 0.8s ease forwards;
+    animation-timeline: view();
+    animation-range: entry 0% entry 90%;
+  }
 }
 .block-anim-slideUp.triggered {
   opacity: 1;
@@ -178,6 +229,13 @@ a:hover {
   will-change: opacity, transform;
   transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
+@supports (animation-timeline: view()) {
+  .block-anim-slideLeft {
+    animation: animSlideLeft 0.8s ease forwards;
+    animation-timeline: view();
+    animation-range: entry 0% entry 90%;
+  }
+}
 .block-anim-slideLeft.triggered {
   opacity: 1;
   transform: translateX(0);
@@ -189,6 +247,13 @@ a:hover {
   transform: scale(0.92);
   will-change: opacity, transform;
   transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+@supports (animation-timeline: view()) {
+  .block-anim-zoom {
+    animation: animZoom 0.8s ease forwards;
+    animation-timeline: view();
+    animation-range: entry 0% entry 90%;
+  }
 }
 .block-anim-zoom.triggered {
   opacity: 1;
@@ -202,24 +267,32 @@ a:hover {
   will-change: opacity, transform;
   transition: opacity 1s cubic-bezier(0.4, 0, 0.2, 1), transform 1s cubic-bezier(0.34, 1.2, 0.64, 1);
 }
+@supports (animation-timeline: view()) {
+  .block-anim-portal {
+    animation: animPortal 1s ease forwards;
+    animation-timeline: view();
+    animation-range: entry 0% entry 90%;
+  }
+}
 .block-anim-portal.triggered {
   opacity: 1;
   transform: perspective(1000px) rotateX(0deg) scale(1);
 }
 
 /* bounce */
-@keyframes bounceIn {
-  0%   { opacity: 0; transform: scale(0.5); }
-  55%  { opacity: 1; transform: scale(1.05); }
-  75%  { transform: scale(0.97); }
-  100% { opacity: 1; transform: scale(1); }
-}
 .block-anim-bounce {
   opacity: 0;
   will-change: opacity, transform;
 }
+@supports (animation-timeline: view()) {
+  .block-anim-bounce {
+    animation: animBounceIn 0.9s cubic-bezier(0.36, 0.07, 0.19, 0.97) forwards;
+    animation-timeline: view();
+    animation-range: entry 0% entry 90%;
+  }
+}
 .block-anim-bounce.triggered {
-  animation: bounceIn 0.9s cubic-bezier(0.36, 0.07, 0.19, 0.97) forwards;
+  animation: animBounceIn 0.9s cubic-bezier(0.36, 0.07, 0.19, 0.97) forwards;
 }
 
 /* flip */
@@ -229,21 +302,30 @@ a:hover {
   will-change: opacity, transform;
   transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.34, 1.2, 0.64, 1);
 }
+@supports (animation-timeline: view()) {
+  .block-anim-flip {
+    animation: animFlip 0.8s ease forwards;
+    animation-timeline: view();
+    animation-range: entry 0% entry 90%;
+  }
+}
 .block-anim-flip.triggered {
   opacity: 1;
   transform: perspective(800px) rotateY(0deg);
 }
 
 /* wave */
-@keyframes waveIn {
-  0%   { opacity: 0; transform: translateX(-40px) skewX(-6deg); }
-  65%  { opacity: 1; transform: translateX(8px) skewX(2deg); }
-  100% { opacity: 1; transform: translateX(0) skewX(0); }
-}
 .block-anim-wave {
   opacity: 0;
   will-change: opacity, transform;
 }
+@supports (animation-timeline: view()) {
+  .block-anim-wave {
+    animation: animWaveIn 0.85s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    animation-timeline: view();
+    animation-range: entry 0% entry 90%;
+  }
+}
 .block-anim-wave.triggered {
-  animation: waveIn 0.85s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: animWaveIn 0.85s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }

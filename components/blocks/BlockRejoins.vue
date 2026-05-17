@@ -1,20 +1,19 @@
 <template>
   <section
     class="block-rejoins"
-    :style="{ background: props.backgroundGradient || '#064886' }"
+    :style="{ background: backgroundGradient || '#064886' }"
     :class="[visibilityClasses, { 'is-visible': isVisible }]"
     ref="sectionRef"
   >
     <div class="rejoins-inner">
       <div class="rejoins-text-container">
-        <p class="rejoins-title">{{ props.title }}</p>
-        <p class="rejoins-subtitle">{{ props.subtitle }}</p>
-        <p class="rejoins-location">{{ props.location }}</p>
+        <p class="rejoins-title">{{ title }}</p>
+        <p class="rejoins-subtitle">{{ subtitle }}</p>
+        <p class="rejoins-location">{{ location }}</p>
       </div>
-
       <div class="rejoins-grid">
         <div
-          v-for="(h, i) in props.horaires"
+          v-for="(h, i) in horaires"
           :key="i"
           class="rejoins-horaire"
           :style="{ transitionDelay: (0.2 + i * 0.12) + 's' }"
@@ -28,19 +27,30 @@
 </template>
 
 <script setup>
-import { ref, computed, inject, onMounted } from 'vue'
+import { ref, computed, inject, onMounted, onUnmounted } from 'vue'
 
-const p = defineProps({
-  props: { type: Object, required: true },
+const {
+  backgroundGradient = '',
+  title = '',
+  subtitle = '',
+  location = '',
+  horaires = [],
+  visibility = {},
+} = defineProps({
+  backgroundGradient: { type: String, default: '' },
+  title: { type: String, default: '' },
+  subtitle: { type: String, default: '' },
+  location: { type: String, default: '' },
+  horaires: { type: Array, default: () => [] },
   visibility: { type: Object, default: () => ({}) },
 })
 
 const isEditor = inject('isEditor', false)
 
 const visibilityClasses = computed(() => ({
-  'hide-mobile': p.visibility.mobile === false,
-  'hide-tablet': p.visibility.tablet === false,
-  'hide-desktop': p.visibility.desktop === false,
+  'hide-mobile': visibility.mobile === false,
+  'hide-tablet': visibility.tablet === false,
+  'hide-desktop': visibility.desktop === false,
 }))
 
 const sectionRef = ref(null)
@@ -65,6 +75,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* Styles identiques, inchangés */
 .block-rejoins {
   container-type: inline-size;
   padding: 70px 24px;
@@ -73,7 +84,6 @@ onMounted(() => {
   position: relative;
   min-height: 600px;
 }
-
 .rejoins-inner {
   max-width: 1200px;
   margin: 0 auto;
@@ -82,8 +92,6 @@ onMounted(() => {
   justify-content: center;
   gap: 120px;
 }
-
-/* ── Text container ── */
 .rejoins-text-container {
   display: flex;
   flex-direction: column;
@@ -95,15 +103,12 @@ onMounted(() => {
               transform 0.9s cubic-bezier(0.16,1,0.3,1);
   transition-delay: 0s;
 }
-
-/* ── Grid ── */
 .rejoins-grid {
   display: flex;
   flex-direction: column;
   gap: 50px;
   align-items: flex-start;
 }
-
 .rejoins-horaire {
   display: flex;
   flex-direction: column;
@@ -114,14 +119,11 @@ onMounted(() => {
   transition: opacity 0.7s cubic-bezier(0.16,1,0.3,1),
               transform 0.7s cubic-bezier(0.16,1,0.3,1);
 }
-
-/* ── Triggered ── */
 .is-visible .rejoins-text-container,
 .is-visible .rejoins-horaire {
   opacity: 1;
   transform: none;
 }
-
 .rejoins-title {
   font-family: Helvetica, Arial, sans-serif;
   font-size: 75px;
@@ -131,7 +133,6 @@ onMounted(() => {
   margin: 0;
   color: white;
 }
-
 .rejoins-subtitle, .rejoins-location {
   font-family: 'Playfair Display', serif;
   font-size: 75px;
@@ -141,7 +142,6 @@ onMounted(() => {
   margin: 0;
   color: white;
 }
-
 .horaire-time {
   font-family: Helvetica, Arial, sans-serif;
   font-size: 75px;
@@ -149,7 +149,6 @@ onMounted(() => {
   line-height: 1;
   color: white;
 }
-
 .horaire-label {
   font-family: 'Playfair Display', serif;
   font-size: 30px;
@@ -159,7 +158,6 @@ onMounted(() => {
   letter-spacing: -0.3px;
   margin-top: 5px;
 }
-
 @container (max-width: 900px) {
   .rejoins-inner { flex-direction: column; text-align: center; gap: 60px; }
   .rejoins-grid { align-items: center; }
@@ -168,7 +166,6 @@ onMounted(() => {
   }
   .horaire-label { font-size: 24px; }
 }
-
 @container (max-width: 600px) {
   .block-rejoins { padding: 50px 20px; min-height: 400px; }
 }

@@ -1,6 +1,6 @@
 <template>
   <section class="block-activities" :class="[{ 'js-ready': isHydrated }, visibilityClasses]">
-    <template v-for="(item, i) in props.items" :key="i">
+    <template v-for="(item, i) in items" :key="i">
       <input type="checkbox" :id="`act-cb-${uid}-${i}`" class="act-cb" />
       <div class="act-css-modal">
         <label :for="`act-cb-${uid}-${i}`" class="act-css-bg"></label>
@@ -16,7 +16,7 @@
     <div class="activities-container">
       <div class="activity-slider">
         <div class="activity-track" ref="slider">
-          <div v-for="(item, i) in props.items" :key="i" class="activity-slide"
+          <div v-for="(item, i) in items" :key="i" class="activity-slide"
                :ref="el => { if (el) slideRefs[i] = el }">
             <img :src="item.image" :alt="item.title" class="activity-main-img" />
             <label class="activity-info-overlay" :for="`act-cb-${uid}-${i}`"
@@ -47,7 +47,7 @@
       </Teleport>
 
       <div class="activity-thumbnails">
-        <label v-for="(item, i) in props.items" :key="i"
+        <label v-for="(item, i) in items" :key="i"
                class="thumbnail-wrap" :class="{ 'is-active': currentIndex === i }"
                :for="`act-cb-${uid}-${i}`"
                @click.prevent="openThumbnailModal(i)">
@@ -61,8 +61,11 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 
-const p = defineProps({
-  props: { type: Object, required: true },
+const {
+  items = [],
+  visibility = {}
+} = defineProps({
+  items: { type: Array, default: () => [] },
   visibility: { type: Object, default: () => ({}) },
 })
 
@@ -74,8 +77,8 @@ const slideRefs = ref([])
 const slider = ref(null)
 
 const activeItem = computed(() => {
-  if (!p.props.items || !p.props.items.length) return {}
-  return p.props.items[currentIndex.value]
+  if (!items || !items.length) return {}
+  return items[currentIndex.value]
 })
 
 function getShortDesc(desc) {
@@ -85,14 +88,14 @@ function getShortDesc(desc) {
 }
 
 const visibilityClasses = computed(() => ({
-  'hide-mobile': p.visibility.mobile === false,
-  'hide-tablet': p.visibility.tablet === false,
-  'hide-desktop': p.visibility.desktop === false,
+  'hide-mobile': visibility.mobile === false,
+  'hide-tablet': visibility.tablet === false,
+  'hide-desktop': visibility.desktop === false,
 }))
 
 function scrollToSlide(index) {
-  if (!p.props.items || !p.props.items.length) return
-  const len = p.props.items.length
+  if (!items || !items.length) return
+  const len = items.length
   const target = ((index % len) + len) % len
   currentIndex.value = target
   const el = slideRefs.value[target]

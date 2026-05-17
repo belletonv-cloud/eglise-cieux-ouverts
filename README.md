@@ -1,75 +1,64 @@
-# Nuxt Minimal Starter
+# Eglise Cieux Ouverts – Admin Builder
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+## Fonctionnalités principales
 
-## Setup
+- **Builder admin moderne** façon Wix (Vue3/Nuxt3)
+- Sidebar collapsible, CRUD pages/blocs, drag-&-drop, undo/redo "temps réel"
+- Responsive preview (devices), thème dark/light, animations, accessibilité
+- **Persistance Cloud** : Firestore, par admin (multi-session)
 
-Make sure to install dependencies:
+---
 
-```bash
-# npm
-npm install
+## Installation
 
-# pnpm
-pnpm install
+1. **Cloner le repo** et installer les dépendances
+   ```bash
+   git clone ...
+   cd eglise-cieux-ouverts
+   npm install
+   ```
+2. **Configurer les secrets Firebase**
+   - Crée `.env` à la racine :
+     ```ini
+     PUBLIC_FIREBASE_API_KEY=XXX
+     PUBLIC_FIREBASE_AUTH_DOMAIN=XXX
+     PUBLIC_FIREBASE_PROJECT_ID=XXX
+     ```
+   - Les valeurs sont dispo dans [console.firebase.google.com](https://console.firebase.google.com)
+3. **Démarrer**
+   ```bash
+   npm run dev
+   ```
 
-# yarn
-yarn install
+---
 
-# bun
-bun install
+## Fonctionnement de la persistance Firestore (cloud-sync)
+
+- Modifications structurelles (pages/blocs/ordre) => instantanément sauvegardées pour chaque admin connecté (doc : `adminBuilder/{userId}`)
+- Restauration automatique à la reconnexion/session suivante
+- Undo/redo local (avec historique optionnellement persistant)
+
+```js
+// pages/admin/index.vue (extrait)
+import { useFirestoreSync } from '~/composables/useFirestoreSync'
+const userId = 'ADMIN_UID_ICI' // à remplacer par l’uid Firebase connecté
+override, pas de pseudonyme
+const { load, save } = useFirestoreSync(userId)
+onMounted(load)
+watch(() => [...store.pages, ...store.blocks], save, { deep: true })
 ```
 
-## Development Server
+- Sécurise tes rules Firestore (accès seulement à son doc) !
 
-Start the development server on `http://localhost:3000`:
 
-```bash
-# npm
-npm run dev
+---
 
-# pnpm
-pnpm dev
+## Recommandé : organisation des fichiers
 
-# yarn
-yarn dev
+- `/pages/admin/index.vue`  ← builder principal
+- `/composables/useFirestoreSync.js` ← sync cloud
+- `/lib/firebase.js`  ← config Firebase
 
-# bun
-bun run dev
-```
+---
 
-## Production
-
-Build the application for production:
-
-```bash
-# npm
-npm run build
-
-# pnpm
-pnpm build
-
-# yarn
-yarn build
-
-# bun
-bun run build
-```
-
-Locally preview production build:
-
-```bash
-# npm
-npm run preview
-
-# pnpm
-pnpm preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
-```
-
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+Licence MIT

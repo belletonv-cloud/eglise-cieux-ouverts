@@ -15,15 +15,14 @@
 <script setup>
 import { computed } from 'vue'
 
-const p = defineProps({
-  props: { type: Object, required: true },
+const { visibility = {} } = defineProps({
   visibility: { type: Object, default: () => ({}) },
 })
 
 const visibilityClasses = computed(() => ({
-  'hide-mobile': p.visibility.mobile === false,
-  'hide-tablet': p.visibility.tablet === false,
-  'hide-desktop': p.visibility.desktop === false,
+  'hide-mobile': visibility.mobile === false,
+  'hide-tablet': visibility.tablet === false,
+  'hide-desktop': visibility.desktop === false,
 }))
 </script>
 
