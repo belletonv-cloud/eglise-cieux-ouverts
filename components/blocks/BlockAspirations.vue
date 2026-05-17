@@ -31,7 +31,7 @@ const {
   title = '',
   items = [],
   visibility = {},
-  isTriggered = false
+  isTriggered = false,
 } = defineProps({
   backgroundGradient: { type: String, default: '' },
   backgroundColor: { type: String, default: '#fff' },

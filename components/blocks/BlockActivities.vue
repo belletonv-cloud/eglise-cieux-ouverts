@@ -1,24 +1,11 @@
 <template>
   <section class="block-activities" :class="[{ 'js-ready': isHydrated }, visibilityClasses]">
-    <template v-for="(item, i) in items" :key="i">
-      <input type="checkbox" :id="`act-cb-${uid}-${i}`" class="act-cb" />
-      <div class="act-css-modal">
-        <label :for="`act-cb-${uid}-${i}`" class="act-css-bg"></label>
-        <div class="modal-content">
-          <label :for="`act-cb-${uid}-${i}`" class="modal-close">&times;</label>
-          <img :src="item.image" :alt="item.title" class="modal-img" />
-          <h3 class="modal-title">{{ item.title }}</h3>
-          <div class="modal-body" v-html="item.description?.replace(/\n/g, '<br>')"></div>
-        </div>
-      </div>
-    </template>
-
     <div class="activities-container">
       <div class="activity-slider">
         <div class="activity-track" ref="slider">
           <div v-for="(item, i) in items" :key="i" class="activity-slide"
                :ref="el => { if (el) slideRefs[i] = el }">
-            <img :src="item.image" :alt="item.title" class="activity-main-img" />
+            <img :src="item.image" :alt="item.title" class="activity-main-img" loading="lazy" />
             <label class="activity-info-overlay" :for="`act-cb-${uid}-${i}`"
                    @click.prevent="openSlideModal(i)">
               <div class="overlay-text">
@@ -51,10 +38,23 @@
                class="thumbnail-wrap" :class="{ 'is-active': currentIndex === i }"
                :for="`act-cb-${uid}-${i}`"
                @click.prevent="openThumbnailModal(i)">
-          <img :src="item.image" :alt="item.title" class="thumbnail-img" />
+          <img :src="item.image" :alt="item.title" class="thumbnail-img" loading="lazy" />
         </label>
       </div>
     </div>
+
+    <template v-for="(item, i) in items" :key="i">
+      <input type="checkbox" :id="`act-cb-${uid}-${i}`" class="act-cb" />
+      <div class="act-css-modal">
+        <label :for="`act-cb-${uid}-${i}`" class="act-css-bg"></label>
+        <div class="modal-content">
+          <label :for="`act-cb-${uid}-${i}`" class="modal-close">&times;</label>
+          <img :src="item.image" :alt="item.title" class="modal-img" loading="lazy" />
+          <h3 class="modal-title">{{ item.title }}</h3>
+          <div class="modal-body" v-html="item.description?.replace(/\n/g, '<br>')"></div>
+        </div>
+      </div>
+    </template>
   </section>
 </template>
 
@@ -159,17 +159,13 @@ onMounted(() => {
   inset: 0;
   z-index: 2000;
   background: rgba(0,0,0,0.6);
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: center;
   padding: 24px;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s ease;
 }
 .act-cb:checked + .act-css-modal {
-  opacity: 1;
-  pointer-events: auto;
+  display: flex;
 }
 .act-css-bg {
   position: absolute;
