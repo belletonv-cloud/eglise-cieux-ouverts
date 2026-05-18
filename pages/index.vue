@@ -1,7 +1,6 @@
 <template>
   <div>
     <PageRenderer :blocks="blocks" />
-    <AdminToolbar v-if="isAdminMode" :page-slug="'accueil'" />
   </div>
 </template>
 

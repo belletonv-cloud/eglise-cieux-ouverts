@@ -10,15 +10,28 @@ useSeoMeta({
   description: 'Contactez l\'Église Cieux Ouverts à Morlaix. 2 rue Jean Monnet, 29600 Morlaix.',
 })
 
+const { isAdminMode, enterAdmin, localBlocks } = useAdmin()
+
 const { data: pageData } = await useFetch('/api/pages/contact', {
   key: 'page-contact',
   server: true,
 })
 
 const blocks = computed(() => {
+  if (isAdminMode.value && localBlocks.value.length) {
+    return localBlocks.value
+  }
   if (pageData.value?.blocks?.length) {
     return normalizePageBlocks('contact', pageData.value.blocks)
   }
   return getDefaultContactPage()
 })
+
+watch(() => isAdminMode.value, (val) => {
+  if (val && pageData.value?.blocks?.length) {
+    enterAdmin(normalizePageBlocks('contact', pageData.value.blocks))
+  } else if (val) {
+    enterAdmin(getDefaultContactPage())
+  }
+}, { immediate: true })
 </script>

@@ -3,15 +3,16 @@
     <SiteHeader />
     <slot />
     <SiteFooter />
+    <AdminToolbar v-if="isAdminMode" :page-slug="currentPageSlug" />
   </div>
 </template>
 
-<style>
-#app-root {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: transparent;
-  color: var(--text-dark);
-}
-</style>
+<script setup>
+const { isAdminMode } = useAdmin()
+
+const route = useRoute()
+const currentPageSlug = computed(() => {
+  const path = route.path.replace('/', '')
+  return path === '' ? 'accueil' : path
+})
+</script>
