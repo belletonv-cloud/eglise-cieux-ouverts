@@ -8,6 +8,9 @@ export default defineNuxtConfig({
     firebaseClientEmail: process.env.NUXT_FIREBASE_CLIENT_EMAIL || '',
     firebasePrivateKey: process.env.NUXT_FIREBASE_PRIVATE_KEY || '',
     resendApiKey: process.env.NUXT_RESEND_API_KEY || '',
+    public: {
+      apiUrl: process.env.PUBLIC_API_URL || 'https://eglise-app.belletonv.workers.dev',
+    },
   },
   app: {
     head: {
