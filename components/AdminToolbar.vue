@@ -55,12 +55,12 @@
           rows="4"
         />
         <select
-          v-else-if="field.type === 'select'"
+          v-else-if="field.type === 'select' || field.type === 'animation'"
           :value="getPropValue(field.key)"
           @change="setPropValue(field.key, $event.target.value)"
           class="admin-input"
         >
-          <option v-for="opt in field.options" :key="opt" :value="opt">{{ opt }}</option>
+          <option v-for="opt in (field.type === 'animation' ? ANIMATIONS : field.options)" :key="opt.id || opt" :value="opt.id || opt">{{ opt.label || opt }}</option>
         </select>
         <label v-else-if="field.type === 'boolean'" class="admin-checkbox">
           <input
@@ -95,7 +95,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth'
-import { BLOCK_TYPES } from '~/utils/blockTypes.js'
+import { BLOCK_TYPES, ANIMATIONS } from '~/utils/blockTypes.js'
 
 const props = defineProps({
   pageSlug: { type: String, default: '' },

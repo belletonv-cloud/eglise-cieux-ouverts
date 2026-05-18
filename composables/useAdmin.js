@@ -25,9 +25,10 @@ export function useAdmin() {
   }
 
   function updateBlock(id, props) {
-    const block = localBlocks.value.find(b => b.id === id)
-    if (block) {
-      block.props = { ...block.props, ...props }
+    const idx = localBlocks.value.findIndex(b => b.id === id)
+    if (idx >= 0) {
+      const block = localBlocks.value[idx]
+      localBlocks.value[idx] = { ...block, props: { ...block.props, ...props } }
     }
   }
 
