@@ -9,13 +9,9 @@
 </template>
 
 <script setup>
-const { isAdminMode } = useAdmin()
-
-if (isAdminMode.value) {
-  navigateTo('/', { replace: true })
-} else {
-  navigateTo('/?admin=true', { replace: true })
-}
+onMounted(() => {
+  window.location.replace('/?admin=true')
+})
 </script>
 
 <style scoped>
