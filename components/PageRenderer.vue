@@ -58,8 +58,9 @@ const COMPONENTS = {
 
 const props = defineProps({
   blocks: { type: Array, default: () => [] },
-  previewDevice: { type: String, default: 'desktop' },
 })
+
+const previewDevice = inject('previewDevice', ref('desktop'))
 
 function blockComponent(type) {
   return COMPONENTS[type] || BlockRichText

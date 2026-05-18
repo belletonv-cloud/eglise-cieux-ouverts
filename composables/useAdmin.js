@@ -3,6 +3,7 @@ import { ref, computed, provide } from 'vue'
 const isAdminMode = ref(false)
 const editingBlockId = ref(null)
 const localBlocks = ref([])
+const previewDevice = ref('desktop')
 
 export function useAdmin() {
   const activeBlock = computed(() =>
@@ -64,12 +65,14 @@ export function useAdmin() {
   provide('isAdmin', isAdminMode)
   provide('editingBlockId', editingBlockId)
   provide('selectBlock', selectBlock)
+  provide('previewDevice', previewDevice)
 
   return {
     isAdminMode,
     editingBlockId,
     activeBlock,
     localBlocks,
+    previewDevice,
     enterAdmin,
     exitAdmin,
     selectBlock,

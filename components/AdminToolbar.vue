@@ -2,10 +2,45 @@
   <div class="admin-toolbar">
     <div class="admin-toolbar-left">
       <span class="admin-badge">Mode édition</span>
-      <span class="admin-page-label">{{ pageSlug }}</span>
+      <select class="admin-page-select" :value="pageSlug" @change="navigateToPage($event.target.value)">
+        <option value="accueil">Accueil</option>
+        <option value="contact">Contact</option>
+        <option value="messages">Messages</option>
+        <option value="photos">Photos</option>
+        <option value="billetterie">Billetterie</option>
+        <option value="agenda">Agenda</option>
+      </select>
     </div>
-    <div class="admin-toolbar-center" v-if="activeBlock">
-      <span class="admin-block-type">{{ getBlockLabel(activeBlock.type) }}</span>
+    <div class="admin-toolbar-center">
+      <div class="device-toggle" v-if="activeBlock">
+        <span class="admin-block-type">{{ getBlockLabel(activeBlock.type) }}</span>
+      </div>
+      <div class="device-toggle" v-else>
+        <button
+          class="device-btn"
+          :class="{ active: previewDevice === 'desktop' }"
+          @click="previewDevice = 'desktop'"
+          title="Desktop"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        </button>
+        <button
+          class="device-btn"
+          :class="{ active: previewDevice === 'tablet' }"
+          @click="previewDevice = 'tablet'"
+          title="Tablet"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
+        </button>
+        <button
+          class="device-btn"
+          :class="{ active: previewDevice === 'mobile' }"
+          @click="previewDevice = 'mobile'"
+          title="Mobile"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
+        </button>
+      </div>
     </div>
     <div class="admin-toolbar-right">
       <template v-if="user">
@@ -19,10 +54,10 @@
       </template>
       <template v-else>
         <button class="admin-btn admin-btn-login" @click="signInWithGoogle">
-          Se connecter avec Google
+          Se connecter
         </button>
         <button class="admin-btn admin-btn-secondary" @click="exitAdmin">
-          Annuler
+          ✕
         </button>
       </template>
     </div>
@@ -93,7 +128,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, inject } from 'vue'
 import { GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth'
 import { BLOCK_TYPES, ANIMATIONS } from '~/utils/blockTypes.js'
 
@@ -109,6 +144,7 @@ const {
   removeBlock,
   exitAdmin,
   localBlocks,
+  previewDevice,
 } = useAdmin()
 
 const { $auth } = useNuxtApp()
@@ -143,6 +179,10 @@ function getPropValue(key) {
 function setPropValue(key, value) {
   if (!activeBlock.value) return
   updateBlock(activeBlock.value.id, { [key]: value })
+}
+
+function navigateToPage(slug) {
+  window.location.href = `/${slug === 'accueil' ? '' : slug}?admin=true`
 }
 
 async function signInWithGoogle() {
@@ -196,18 +236,19 @@ async function saveChanges() {
   color: white;
   display: flex;
   align-items: center;
-  padding: 0 16px;
+  padding: 0 12px;
   z-index: 10000;
-  gap: 16px;
+  gap: 12px;
 }
 .admin-toolbar-left, .admin-toolbar-right {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 .admin-toolbar-center {
   flex: 1;
-  text-align: center;
+  display: flex;
+  justify-content: center;
 }
 .admin-badge {
   background: #EF4B54;
@@ -215,25 +256,66 @@ async function saveChanges() {
   border-radius: 4px;
   font-size: 0.8em;
   font-weight: 700;
+  white-space: nowrap;
 }
-.admin-page-label {
+.admin-page-select {
+  background: rgba(255,255,255,0.1);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 6px;
+  padding: 4px 8px;
   font-size: 0.85em;
-  opacity: 0.7;
+  cursor: pointer;
+  outline: none;
+}
+.admin-page-select option {
+  background: #1a1a2e;
+  color: white;
+}
+.admin-page-select:hover {
+  background: rgba(255,255,255,0.15);
 }
 .admin-block-type {
   font-size: 0.9em;
   font-weight: 600;
 }
+.device-toggle {
+  display: flex;
+  gap: 4px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 8px;
+  padding: 3px;
+}
+.device-btn {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.5);
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+.device-btn:hover {
+  color: rgba(255,255,255,0.8);
+  background: rgba(255,255,255,0.1);
+}
+.device-btn.active {
+  color: white;
+  background: rgba(255,255,255,0.2);
+}
 .admin-user {
   font-size: 0.8em;
   opacity: 0.8;
-  max-width: 200px;
+  max-width: 150px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .admin-btn {
-  padding: 6px 16px;
+  padding: 6px 14px;
   border: none;
   border-radius: 6px;
   font-size: 0.85em;
@@ -241,6 +323,7 @@ async function saveChanges() {
   cursor: pointer;
   background: #3B82F6;
   color: white;
+  white-space: nowrap;
 }
 .admin-btn:hover { background: #2563eb; }
 .admin-btn:disabled { opacity: 0.5; cursor: not-allowed; }

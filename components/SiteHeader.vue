@@ -53,7 +53,7 @@ const isScrolled = ref(false)
 const route = useRoute()
 
 const isAdmin = computed(() => route.path.startsWith('/admin'))
-const { hasEvenements } = useEvenements()
+const { hasEvenements } = useChurchEvents()
 const showBilletterie = computed(() => isAdmin.value || hasEvenements.value)
 
 function toggleMenu() {
