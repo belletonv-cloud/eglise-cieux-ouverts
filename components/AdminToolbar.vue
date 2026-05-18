@@ -182,7 +182,12 @@ function setPropValue(key, value) {
 }
 
 function navigateToPage(slug) {
-  window.location.href = `/${slug === 'accueil' ? '' : slug}?admin=true`
+  const href = slug === 'accueil' ? '/?admin=true' : `/${slug}?admin=true`
+  if (window.location.pathname === (slug === 'accueil' ? '/' : `/${slug}`)) {
+    window.location.href = href
+  } else {
+    window.location.href = href
+  }
 }
 
 async function signInWithGoogle() {

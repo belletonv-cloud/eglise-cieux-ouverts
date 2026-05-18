@@ -1,21 +1,19 @@
 <template>
-  <div class="page-renderer" :class="{ 'preview-mode': previewDevice !== 'desktop', 'admin-mode': isAdmin }">
-    <div class="preview-frame" :class="`preview-${previewDevice}`">
-      <div 
-        v-for="block in visibleBlocks" 
-        :key="block.id"
-        class="block-wrapper"
-        :class="[getAnimClass(block), useTrigger(block) ? { triggered: isTriggered(block.id) } : '', { 'admin-selected': isAdmin && editingBlockId === block.id }]"
-        :ref="el => setWrapperRef(el, block.id)"
-        @click="isAdmin ? selectBlock(block.id) : undefined"
-      >
-        <component
-          :is="blockComponent(block.type)"
-          v-bind="block.props"
-          :visibility="block.visibility"
-          :is-triggered="useTrigger(block) ? isTriggered(block.id) : false"
-        />
-      </div>
+  <div class="page-renderer" :class="{ 'admin-mode': isAdmin }">
+    <div 
+      v-for="block in visibleBlocks" 
+      :key="block.id"
+      class="block-wrapper"
+      :class="[getAnimClass(block), useTrigger(block) ? { triggered: isTriggered(block.id) } : '', { 'admin-selected': isAdmin && editingBlockId === block.id }]"
+      :ref="el => setWrapperRef(el, block.id)"
+      @click="isAdmin ? selectBlock(block.id) : undefined"
+    >
+      <component
+        :is="blockComponent(block.type)"
+        v-bind="block.props"
+        :visibility="block.visibility"
+        :is-triggered="useTrigger(block) ? isTriggered(block.id) : false"
+      />
     </div>
   </div>
 </template>
@@ -166,24 +164,6 @@ onUnmounted(() => {
 <style scoped>
 .page-renderer {
   width: 100%;
-}
-.preview-frame {
-  margin: 0 auto;
-  transition: max-width 0.3s ease;
-}
-.preview-frame.preview-tablet {
-  max-width: 768px;
-  border-left: 1px solid #eee;
-  border-right: 1px solid #eee;
-}
-.preview-frame.preview-mobile {
-  max-width: 375px;
-  border-left: 1px solid #eee;
-  border-right: 1px solid #eee;
-}
-.page-renderer.preview-mode {
-  background: #f5f5f5;
-  padding: 16px 0;
 }
 .block-wrapper {
   /* Pas de contain: layout — ça casse les transitions GPU */
