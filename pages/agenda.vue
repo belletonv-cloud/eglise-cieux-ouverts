@@ -129,7 +129,7 @@ useSeoMeta({
   description: "Tous les événements à venir à l'Église Cieux Ouverts de Morlaix.",
 })
 
-const { evenements, loading } = useEvenements()
+const { evenements, loading } = useChurchEvents()
 const currentDate = ref(new Date())
 const currentView = ref('month')
 

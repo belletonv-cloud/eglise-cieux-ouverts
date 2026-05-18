@@ -1,13 +1,5 @@
-import { onAuthStateChanged } from 'firebase/auth'
-
-export default defineNuxtPlugin((nuxtApp) => {
-  const route = useRoute()
-  const { isAdminMode, enterAdmin, exitAdmin } = useAdmin()
-  const { $auth } = useNuxtApp()
-
-  if (route.query.admin === 'true' && import.meta.client) {
-    enterAdmin([])
-  }
+export default defineNuxtPlugin(() => {
+  const { isAdminMode, exitAdmin } = useAdmin()
 
   if (import.meta.client) {
     window.addEventListener('keydown', (e) => {

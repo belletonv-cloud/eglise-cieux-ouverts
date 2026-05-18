@@ -8,11 +8,21 @@
 </template>
 
 <script setup>
-const { isAdminMode } = useAdmin()
+const { isAdminMode, enterAdmin } = useAdmin()
 
 const route = useRoute()
 const currentPageSlug = computed(() => {
   const path = route.path.replace('/', '')
   return path === '' ? 'accueil' : path
+})
+
+if (import.meta.client && route.query.admin === 'true' && !isAdminMode.value) {
+  enterAdmin([])
+}
+
+watch(() => route.query.admin, (val) => {
+  if (val === 'true' && !isAdminMode.value) {
+    enterAdmin([])
+  }
 })
 </script>
