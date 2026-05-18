@@ -32,7 +32,7 @@
 </template>
 
 <script setup>
-const { visibility = {} } = defineProps({
+const { visibility = {}, images = [] } = defineProps({
   title: { type: String, default: '' },
   textColor: { type: String, default: '#064886' },
   images: { type: Array, default: () => [] },

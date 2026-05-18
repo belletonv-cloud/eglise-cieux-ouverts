@@ -8,7 +8,7 @@
 </template>
 
 <script setup>
-const { isAdminMode, enterAdmin } = useAdmin()
+const { isAdminMode, enterAdmin, previewDevice } = useAdmin()
 
 const route = useRoute()
 const currentPageSlug = computed(() => {
@@ -25,4 +25,6 @@ watch(() => route.query.admin, (val) => {
     enterAdmin([])
   }
 })
+
+provide('previewDevice', previewDevice)
 </script>
