@@ -436,3 +436,60 @@ test.describe('Navigation et intégrité visuelle en mode admin', () => {
     await expect(toolbar).toBeVisible()
   })
 })
+  test('la navigation client-side via lien Accueil ne désynchronise pas le sélecteur', async ({ page }) => {
+    // D'abord charger la page Contact en mode admin
+    await page.goto('/contact?admin=true')
+    await page.waitForTimeout(2000)
+
+    // Vérifier que le sélecteur affiche "Contact"
+    const select = page.locator('.admin-page-select')
+    await expect(select).toHaveValue('contact')
+
+    // Cliquer sur le lien "Accueil" dans le header (client-side navigation via NuxtLink)
+    const accueilLink = page.locator('.nav-desktop a[href="/"]')
+    await accueilLink.click()
+    await page.waitForTimeout(2000)
+
+    // Vérifier que l'URL est bien /?admin=true
+    await expect(page).toHaveURL(/^\/(\?admin=true)?$/)
+
+    // Vérifier que le sélecteur s'est mis à jour vers "Accueil"
+    await expect(select).toHaveValue('accueil')
+
+    // Vérifier que la barre admin est toujours visible et que le header est bien décalé
+    const toolbar = page.locator('.admin-toolbar')
+    await expect(toolbar).toBeVisible()
+
+    const siteHeader = page.locator('.site-header')
+    await expect(siteHeader).toBeVisible()
+
+    // Vérifier que le site-header est décalé de 48px (offset admin toolbar)
+    const headerTop = await siteHeader.evaluate(el => parseInt(window.getComputedStyle(el).top) || 0)
+    expect(headerTop).toBeGreaterThanOrEqual(48)
+
+    // Vérifier que les blocs sont bien chargés (pas de page blanche)
+    const blocks = page.locator('.block-wrapper')
+    const blockCount = await blocks.count()
+    expect(blockCount).toBeGreaterThan(0)
+  })
+
+  test('navigation client-side en mode admin préserve l\\'offset du header', async ({ page }) => {
+    await page.goto('/messages?admin=true')
+    await page.waitForTimeout(2000)
+
+    // Vérifier que la toolbar admin a bien poussé le header vers le bas
+    const siteHeader = page.locator('.site-header')
+    const headerTopBefore = await siteHeader.evaluate(el => parseInt(window.getComputedStyle(el).top) || 0)
+    expect(headerTopBefore).toBeGreaterThanOrEqual(48)
+
+    // Naviguer vers Accueil via NuxtLink
+    const accueilLink = page.locator('.nav-desktop a[href="/"]')
+    await accueilLink.click()
+    await page.waitForTimeout(2000)
+
+    // Vérifier que l'offset est toujours appliqué
+    const headerTopAfter = await siteHeader.evaluate(el => parseInt(window.getComputedStyle(el).top) || 0)
+    expect(headerTopAfter).toBeGreaterThanOrEqual(48)
+  })
+})
+

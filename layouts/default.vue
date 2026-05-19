@@ -1,5 +1,5 @@
 <template>
-  <div id="app-root" :class="{ 'admin-mode': isAdminMode, 'is-preview': isPreviewMode }">
+  <div id="app-root" :class="{ 'admin-mode': isAdminMode, 'is-preview': isPreviewMode }" :style="{ '--admin-offset': isAdminMode ? '48px' : '0px' }">
     <div class="admin-preview-frame" :class="`preview-${previewDevice}`">
       <template v-if="previewDevice === 'desktop' || !isAdminMode">
         <SiteHeader />
@@ -20,7 +20,7 @@
 </template>
 
 <script setup>
-const { isAdminMode, enterAdmin, previewDevice } = useAdmin()
+const { isAdminMode, enterAdmin, exitAdmin, previewDevice } = useAdmin()
 
 const route = useRoute()
 const currentPageSlug = computed(() => {
@@ -42,13 +42,16 @@ const previewUrl = computed(() => {
   return window.location.pathname + '?' + params.toString()
 })
 
+// Don't enter admin with empty blocks — let the page component initialize its own blocks
 if (import.meta.client && route.query.admin === 'true' && !isAdminMode.value && !isPreviewMode.value) {
-  enterAdmin([])
+  isAdminMode.value = true
 }
 
 watch(() => route.query.admin, (val) => {
   if (val === 'true' && !isAdminMode.value && !isPreviewMode.value) {
-    enterAdmin([])
+    isAdminMode.value = true
+  } else if (val !== 'true' && isAdminMode.value) {
+    exitAdmin()
   }
 })
 </script>
@@ -65,7 +68,7 @@ watch(() => route.query.admin, (val) => {
   background: #f5f5f5;
 }
 #app-root.admin-mode .site-header {
-  top: 48px;
+  top: var(--admin-offset, 48px);
 }
 #app-root.is-preview {
   background: #f5f5f5;
@@ -79,7 +82,7 @@ watch(() => route.query.admin, (val) => {
   transition: max-width 0.3s ease;
 }
 #app-root.admin-mode .admin-preview-frame {
-  padding-top: 48px;
+  padding-top: var(--admin-offset, 48px);
 }
 #app-root.admin-mode .block-main-hero {
   margin-top: 0 !important;

@@ -27,11 +27,22 @@ const blocks = computed(() => {
   return getDefaultBilletteriePage()
 })
 
-watch(() => isAdminMode.value, (val) => {
-  if (val && pageData.value?.blocks?.length) {
+function initAdminBlocks() {
+  if (!isAdminMode.value) return
+  if (pageData.value?.blocks?.length) {
     enterAdmin(pageData.value.blocks)
-  } else if (val) {
+  } else {
     enterAdmin(getDefaultBilletteriePage())
   }
+}
+
+watch(() => isAdminMode.value, () => {
+  initAdminBlocks()
 }, { immediate: true })
+
+watch(pageData, () => {
+  if (isAdminMode.value) {
+    initAdminBlocks()
+  }
+})
 </script>

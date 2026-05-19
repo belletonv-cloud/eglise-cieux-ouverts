@@ -338,3 +338,19 @@ onUnmounted(() => {
   }
 }
 </style>
+
+<style>
+/* Global fallback: ensure site header is offset below admin toolbar when in admin mode */
+#app-root.admin-mode .site-header {
+  top: var(--admin-offset, 48px) !important;
+}
+/* Also offset the spacer to prevent content from snapping up */
+#app-root.admin-mode .header-spacer {
+  height: calc(76px + var(--admin-offset, 48px));
+}
+@media (max-width: 768px) {
+  #app-root.admin-mode .header-spacer {
+    height: calc(56px + var(--admin-offset, 48px));
+  }
+}
+</style>

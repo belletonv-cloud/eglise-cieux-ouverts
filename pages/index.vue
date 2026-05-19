@@ -24,11 +24,24 @@ const blocks = computed(() => {
   return getDefaultHomePage()
 })
 
-watch(() => isAdminMode.value, (val) => {
-  if (val && pageData.value?.blocks?.length) {
+function initAdminBlocks() {
+  if (!isAdminMode.value) return
+  if (pageData.value?.blocks?.length) {
     enterAdmin(pageData.value.blocks)
-  } else if (val) {
+  } else {
     enterAdmin(getDefaultHomePage())
   }
+}
+
+// Watch admin mode changes (initial load + toggling)
+watch(() => isAdminMode.value, () => {
+  initAdminBlocks()
 }, { immediate: true })
+
+// Also watch pageData to catch late-arriving data after client-side navigation
+watch(pageData, () => {
+  if (isAdminMode.value) {
+    initAdminBlocks()
+  }
+})
 </script>

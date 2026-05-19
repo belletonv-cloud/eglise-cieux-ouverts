@@ -183,9 +183,11 @@ function setPropValue(key, value) {
 
 function navigateToPage(slug) {
   const href = slug === 'accueil' ? '/?admin=true' : `/${slug}?admin=true`
-  if (window.location.pathname === (slug === 'accueil' ? '/' : `/${slug}`)) {
-    window.location.href = href
-  } else {
+  const currentPath = window.location.pathname === '/' ? 'accueil' : window.location.pathname.replace('/', '')
+  const targetSlug = slug === 'accueil' ? '/' : `/${slug}`
+  const currentSlug = slug === 'accueil' ? '/' : `/${currentPath}`
+  // Only do full reload if navigating to a different page, to avoid full page reload on same page
+  if (currentSlug !== targetSlug) {
     window.location.href = href
   }
 }

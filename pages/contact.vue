@@ -27,11 +27,22 @@ const blocks = computed(() => {
   return getDefaultContactPage()
 })
 
-watch(() => isAdminMode.value, (val) => {
-  if (val && pageData.value?.blocks?.length) {
+function initAdminBlocks() {
+  if (!isAdminMode.value) return
+  if (pageData.value?.blocks?.length) {
     enterAdmin(normalizePageBlocks('contact', pageData.value.blocks))
-  } else if (val) {
+  } else {
     enterAdmin(getDefaultContactPage())
   }
+}
+
+watch(() => isAdminMode.value, () => {
+  initAdminBlocks()
 }, { immediate: true })
+
+watch(pageData, () => {
+  if (isAdminMode.value) {
+    initAdminBlocks()
+  }
+})
 </script>
