@@ -13,7 +13,7 @@ export function useChurchEvents(options = {}) {
   async function loadEvenements() {
     loading.value = true
     try {
-      const res = await fetch(`${apiUrl}/api/church-events`)
+      const res = await fetch(`${apiUrl}/api/church-events?include_exceptions=1`)
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const allEvents = await res.json()
 
@@ -66,7 +66,7 @@ export function useChurchEvents(options = {}) {
     while (count < maxCount) {
       const dateStr = d.toISOString().slice(0, 10)
 
-      // Vérifier les exceptions (annulé ou déplacé)
+      // Vérifier les exceptions (annulé ou déplacé) — maintenant chargées depuis l'API
       const cancelled = isException(ev, dateStr, 'cancelled')
       const moved = getException(ev, dateStr, 'moved')
 

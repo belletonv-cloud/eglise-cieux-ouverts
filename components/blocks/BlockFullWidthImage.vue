@@ -40,9 +40,4 @@ const style = computed(() => ({
     background-attachment: scroll;
   }
 }
-@container (max-width: 768px) {
-  .full-width-image {
-    background-attachment: scroll;
-  }
-}
 </style>

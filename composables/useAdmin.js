@@ -12,7 +12,9 @@ export function useAdmin() {
 
   function enterAdmin(blocks) {
     isAdminMode.value = true
-    localBlocks.value = JSON.parse(JSON.stringify(blocks))
+    if (blocks && blocks.length) {
+      localBlocks.value = JSON.parse(JSON.stringify(blocks))
+    }
   }
 
   function exitAdmin() {

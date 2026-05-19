@@ -72,7 +72,4 @@ onMounted(() => {
 @media (max-width: 768px) {
   .richtext-inner { padding: 0 16px; }
 }
-@container (max-width: 768px) {
-  .richtext-inner { padding: 0 16px; }
-}
 </style>

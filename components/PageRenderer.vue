@@ -168,6 +168,13 @@ onUnmounted(() => {
 .block-wrapper {
   /* Pas de contain: layout — ça casse les transitions GPU */
 }
+.admin-selected {
+  outline: 2px solid #3B82F6;
+  outline-offset: -2px;
+}
+</style>
+
+<style>
 .admin-mode .block-wrapper {
   cursor: pointer;
   position: relative;
@@ -175,10 +182,6 @@ onUnmounted(() => {
 }
 .admin-mode .block-wrapper:hover {
   outline: 2px dashed rgba(59, 130, 246, 0.5);
-  outline-offset: -2px;
-}
-.admin-mode .block-wrapper.admin-selected {
-  outline: 2px solid #3B82F6;
   outline-offset: -2px;
 }
 </style>
