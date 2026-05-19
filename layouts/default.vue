@@ -78,6 +78,9 @@ watch(() => route.query.admin, (val) => {
   width: 100%;
   transition: max-width 0.3s ease;
 }
+#app-root.admin-mode .admin-preview-frame {
+  padding-top: 48px;
+}
 .admin-preview-frame.preview-tablet {
   max-width: 100%;
 }
