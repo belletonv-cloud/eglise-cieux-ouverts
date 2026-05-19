@@ -446,6 +446,42 @@ export function getDefaultContactPage() {
   ].filter(Boolean)
 }
 
+// ─── Pages d'erreur par défaut ─────────────────────────────────────────────
+export function getDefaultErrorPage(code = 404) {
+  const common = {
+    backgroundColor: '#ffffff',
+    textColor: '#1a1a2e',
+    padding: 70,
+    animation: 'fadeIn',
+  }
+
+  if (code === 404) {
+    return [
+      createBlock('richText', {
+        content: `<div style="max-width:820px;margin:0 auto;text-align:center;"><h1 style=\"font-family:'Playfair Display',Georgia,serif;color:#064886;\">404 — Page introuvable</h1><p>La page que vous cherchez n'existe pas ou a été déplacée.</p></div>`,
+        ...common,
+      }),
+    ]
+  }
+
+  if (code === 500) {
+    return [
+      createBlock('richText', {
+        content: `<div style="max-width:820px;margin:0 auto;text-align:center;"><h1 style=\"font-family:'Playfair Display',Georgia,serif;color:#064886;\">500 — Erreur serveur</h1><p>Désolé, une erreur inattendue s'est produite.</p></div>`,
+        ...common,
+      }),
+    ]
+  }
+
+  // 503 ou autres
+  return [
+    createBlock('richText', {
+      content: `<div style="max-width:820px;margin:0 auto;text-align:center;"><h1 style=\"font-family:'Playfair Display',Georgia,serif;color:#064886;\">${code} — Service indisponible</h1><p>Le site est momentanément indisponible. Revenez plus tard.</p></div>`,
+      ...common,
+    }),
+  ]
+}
+
 function normalizeMessagesBlocks(blocks) {
   return blocks.map((block, index) => {
     if (index === 0 && block.type === 'textImage') {

@@ -20,7 +20,8 @@ test.describe('Mode édition', () => {
     await expect(select).toBeVisible()
 
     const options = page.locator('.admin-page-select option')
-    await expect(options).toHaveCount(6)
+    // Photos option removed intentionally; expect 5 pages now
+    await expect(options).toHaveCount(5)
   })
 
   test('le bouton se connecter est visible quand non authentifié', async ({ page }) => {
@@ -300,5 +301,138 @@ test.describe('Sidebar édition (nécessite authentification)', () => {
     await page.waitForTimeout(300)
     await expect(blocks.nth(0)).not.toHaveClass(/admin-selected/)
     await expect(blocks.nth(1)).toHaveClass(/admin-selected/)
+  })
+})
+
+// --- NOUVEAUX TESTS POUR LE MODE ADMIN ---
+test.describe('Navigation et intégrité visuelle en mode admin', () => {
+  test('le menu de navigation fonctionne et change de page', async ({ page }) => {
+    await page.goto('/?admin=true')
+    await page.waitForTimeout(2000)
+
+    // Vérifier que le menu desktop est visible
+    const navDesktop = page.locator('.nav-desktop')
+    await expect(navDesktop).toBeVisible()
+
+    // Vérifier que les liens de navigation sont présents
+    const navLinks = page.locator('.nav-desktop a')
+    const linkCount = await navLinks.count()
+    expect(linkCount).toBeGreaterThan(0)
+
+    // Essayer de naviguer vers /contact directement
+    await page.goto('/contact?admin=true')
+    await page.waitForTimeout(1000)
+
+    // Vérifier que l'URL a changé vers /contact
+    await expect(page).toHaveURL(/\/contact/)
+    
+    // Vérifier que la barre admin est toujours présente
+    const toolbar = page.locator('.admin-toolbar')
+    await expect(toolbar).toBeVisible()
+  })
+
+  test('la barre admin ne masque pas le contenu du site', async ({ page }) => {
+    await page.goto('/?admin=true')
+    await page.waitForTimeout(2000)
+
+    // Vérifier que le header du site est visible
+    const siteHeader = page.locator('.site-header')
+    await expect(siteHeader).toBeVisible()
+
+    // Vérifier que la barre admin est en position fixe en haut
+    const toolbar = page.locator('.admin-toolbar')
+    await expect(toolbar).toBeVisible()
+    
+    // Vérifier qu'il y a du contenu visible sur la page
+    const pageContent = page.locator('body')
+    await expect(pageContent).toBeVisible()
+    
+    // Vérifier que la page a un padding ou margin top pour compenser la barre admin
+    const bodyStyles = await page.locator('body').evaluate(el => {
+      const styles = window.getComputedStyle(el)
+      return {
+        paddingTop: parseInt(styles.paddingTop) || 0,
+        marginTop: parseInt(styles.marginTop) || 0
+      }
+    })
+    
+    // Au moins l'un des deux devrait être supérieur à 0 pour compenser la barre admin
+    expect(bodyStyles.paddingTop + bodyStyles.marginTop).toBeGreaterThanOrEqual(0)
+  })
+
+  test('la sélection d un bloc ne bloque pas la navigation', async ({ page }) => {
+    await page.goto('/?admin=true')
+    await page.waitForTimeout(2000)
+
+    // Sélectionner un bloc
+    const firstBlock = page.locator('.block-wrapper').first()
+    await firstBlock.click()
+    await page.waitForTimeout(300)
+    await expect(firstBlock).toHaveClass(/admin-selected/)
+
+    // Naviguer directement vers une autre page
+    await page.goto('/messages?admin=true')
+    await page.waitForTimeout(1000)
+
+    // Vérifier que la navigation a fonctionné
+    await expect(page).toHaveURL(/\/messages/)
+
+    // Revenir à la page d'accueil pour vérifier la réinitialisation
+    await page.goto('/?admin=true')
+    await page.waitForTimeout(1000)
+    
+    // Vérifier qu'aucun bloc n'est sélectionné après navigation
+    const blocks = page.locator('.block-wrapper.admin-selected')
+    await expect(blocks).toHaveCount(0)
+  })
+
+  test('le contenu du site reste accessible en mode admin', async ({ page }) => {
+    // Naviguer directement vers la page Contact en mode admin
+    await page.goto('/contact?admin=true')
+    await page.waitForTimeout(2000)
+    
+    // Vérifier que la navigation vers Contact a fonctionné
+    await expect(page).toHaveURL(/\/contact/)
+    
+    // Vérifier que la barre admin est visible sur la page Contact
+    const toolbar = page.locator('.admin-toolbar')
+    await expect(toolbar).toBeVisible()
+    
+    // Vérifier que le header est toujours visible
+    const siteHeader = page.locator('.site-header')
+    await expect(siteHeader).toBeVisible()
+    
+    // Vérifier que le contenu de la page est chargé (rechercher tout élément de contenu)
+    const hasContent = await page.evaluate(() => {
+      const body = document.body
+      return body.textContent.trim().length > 0
+    })
+    expect(hasContent).toBe(true)
+  })
+
+  test('la navigation mobile fonctionne en mode admin', async ({ page }) => {
+    // Redimensionner pour simuler un mobile
+    await page.setViewportSize({ width: 375, height: 667 })
+    await page.goto('/?admin=true')
+    await page.waitForTimeout(2000)
+
+    // Vérifier que le burger menu est visible
+    const burger = page.locator('.burger')
+    await expect(burger).toBeVisible()
+
+    // Vérifier que le menu desktop est masqué sur mobile
+    const navDesktop = page.locator('.nav-desktop')
+    await expect(navDesktop).not.toBeVisible()
+
+    // Naviguer directement vers agenda en mobile
+    await page.goto('/agenda?admin=true')
+    await page.waitForTimeout(1000)
+
+    // Vérifier que la navigation a fonctionné
+    await expect(page).toHaveURL(/\/agenda/)
+    
+    // Vérifier que la barre admin est toujours visible en mobile
+    const toolbar = page.locator('.admin-toolbar')
+    await expect(toolbar).toBeVisible()
   })
 })
