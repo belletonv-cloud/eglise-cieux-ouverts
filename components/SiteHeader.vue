@@ -1,5 +1,5 @@
 <template>
-  <header class="site-header" :class="{ scrolled: isScrolled, 'menu-open': menuOpen }">
+  <header class="site-header" :class="{ scrolled: isScrolled, 'menu-open': menuOpen }" :style="headerStyle">
     <div class="header-inner">
       <NuxtLink to="/" class="brand">
         <img src="/logo-nav.png" alt="Cieux Ouverts" class="logo" />
@@ -46,15 +46,19 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, inject } from 'vue'
 
 const menuOpen = ref(false)
 const isScrolled = ref(false)
 const route = useRoute()
 
-const isAdmin = computed(() => route.path.startsWith('/admin'))
+const isAdminRoute = computed(() => route.path.startsWith('/admin'))
+const adminMode = inject('isAdmin', ref(false))
+const headerStyle = computed(() => ({
+  top: adminMode.value ? '48px' : '0px'
+}))
 const { hasEvenements } = useChurchEvents()
-const showBilletterie = computed(() => isAdmin.value || hasEvenements.value)
+const showBilletterie = computed(() => isAdminRoute.value || hasEvenements.value)
 
 function toggleMenu() {
   menuOpen.value = !menuOpen.value
