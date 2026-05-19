@@ -67,9 +67,6 @@ watch(() => route.query.admin, (val) => {
 #app-root.admin-mode .site-header {
   top: 48px;
 }
-#app-root.admin-mode .header-spacer {
-  height: 76px;
-}
 #app-root.is-preview {
   background: #f5f5f5;
 }
@@ -83,12 +80,6 @@ watch(() => route.query.admin, (val) => {
 }
 #app-root.admin-mode .admin-preview-frame {
   padding-top: 48px;
-}
-#app-root.admin-mode .block-main-hero {
-  margin-top: 0 !important;
-}
-#app-root.admin-mode .block-main-hero {
-  margin-top: 0;
 }
 .admin-preview-frame.preview-tablet {
   max-width: 100%;
