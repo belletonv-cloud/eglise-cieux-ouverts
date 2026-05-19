@@ -4,11 +4,10 @@
       <span class="admin-badge">Mode édition</span>
       <select class="admin-page-select" :value="pageSlug" @change="navigateToPage($event.target.value)">
         <option value="accueil">Accueil</option>
-        <option value="contact">Contact</option>
         <option value="messages">Messages</option>
-        <option value="photos">Photos</option>
         <option value="billetterie">Billetterie</option>
         <option value="agenda">Agenda</option>
+        <option value="contact">Contact</option>
       </select>
     </div>
     <div class="admin-toolbar-center">
@@ -43,6 +42,7 @@
       </div>
     </div>
     <div class="admin-toolbar-right">
+      <NuxtLink to="/admin" class="admin-btn admin-btn-manage" title="Gérer événements et admins">⚙️</NuxtLink>
       <template v-if="user">
         <span class="admin-user">{{ user.email }}</span>
         <button class="admin-btn" @click="saveChanges" :disabled="saving">
@@ -341,6 +341,13 @@ async function saveChanges() {
   color: #1a1a2e;
 }
 .admin-btn-login:hover { background: #f0f0f0; }
+.admin-btn-manage {
+  background: rgba(255,255,255,0.15);
+  padding: 6px 10px;
+  text-decoration: none;
+  font-size: 1em;
+}
+.admin-btn-manage:hover { background: rgba(255,255,255,0.25); }
 
 .admin-sidebar {
   position: fixed;
