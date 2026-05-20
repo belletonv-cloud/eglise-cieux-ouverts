@@ -6,11 +6,21 @@
       </NuxtLink>
 
       <nav class="nav-desktop">
-        <NuxtLink to="/" exact-active-class="active">Accueil</NuxtLink>
-        <NuxtLink to="/messages" active-class="active">Messages</NuxtLink>
-        <NuxtLink to="/agenda" active-class="active">Agenda</NuxtLink>
-        <NuxtLink v-if="showBilletterie" to="/billetterie" active-class="active">Billetterie Événements</NuxtLink>
-        <NuxtLink to="/contact" active-class="active">Contact</NuxtLink>
+        <template v-for="item in navItems" :key="item.id">
+          <NuxtLink v-if="item.visible !== false || adminMode"
+            :to="adminMode ? '#' : item.to"
+            :active-class="adminMode ? '' : 'active'"
+            :exact-active-class="adminMode ? '' : undefined"
+            @click.prevent="onNavClick($event, item)"
+          >{{ item.label }}</NuxtLink>
+          <!-- Sub-items -->
+          <div v-if="item.children?.length && (adminMode || item.visible !== false)" class="nav-dropdown">
+            <NuxtLink v-for="sub in item.children" :key="sub.id"
+              :to="adminMode ? '#' : sub.to"
+              @click.prevent="onNavClick($event, sub)"
+            >{{ sub.label }}</NuxtLink>
+          </div>
+        </template>
         <div class="nav-desktop-socials">
           <a href="https://www.instagram.com/eglise_cieux_ouverts/" target="_blank" rel="noopener" aria-label="Instagram">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
@@ -27,11 +37,18 @@
     </div>
 
     <nav class="nav-mobile">
-      <NuxtLink @click="closeMenu" to="/" exact-active-class="active">Accueil</NuxtLink>
-      <NuxtLink @click="closeMenu" to="/messages" active-class="active">Messages</NuxtLink>
-      <NuxtLink @click="closeMenu" to="/agenda" active-class="active">Agenda</NuxtLink>
-      <NuxtLink @click="closeMenu" v-if="showBilletterie" to="/billetterie" active-class="active">Billetterie Événements</NuxtLink>
-      <NuxtLink @click="closeMenu" to="/contact" active-class="active">Contact</NuxtLink>
+      <template v-for="item in navItems" :key="item.id">
+        <NuxtLink v-if="item.visible !== false || adminMode"
+          :to="adminMode ? '#' : item.to"
+          @click.prevent="onNavClick($event, item)"
+        >{{ item.label }}</NuxtLink>
+        <NuxtLink v-for="sub in (item.children || [])" :key="sub.id"
+          v-if="sub.visible !== false || adminMode"
+          :to="adminMode ? '#' : sub.to"
+          @click.prevent="onNavClick($event, sub)"
+          class="sub-link"
+        >— {{ sub.label }}</NuxtLink>
+      </template>
       <div class="nav-mobile-socials">
         <a href="https://www.instagram.com/eglise_cieux_ouverts/" target="_blank" rel="noopener" aria-label="Instagram">
           <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
@@ -60,9 +77,26 @@ const headerStyle = computed(() => ({
 const { hasEvenements } = useChurchEvents()
 const showBilletterie = computed(() => isAdminRoute.value || hasEvenements.value)
 
+// Menu editor integration — intercept clicks in admin mode
+const { menuItems: _m, menuEditorOpen, openMenuEditor, getVisibleItems, getMenuItems } = useMenuEditor()
+const navItems = computed(() => adminMode.value ? getMenuItems() : getVisibleItems())
+
+function onNavClick(e, item) {
+  if (adminMode.value) {
+    e.preventDefault()
+    openMenuEditor(item.id)
+  } else {
+    closeMenu()
+  }
+}
+
 function toggleMenu() {
-  menuOpen.value = !menuOpen.value
-  document.body.style.overflow = menuOpen.value ? 'hidden' : ''
+  if (adminMode.value) {
+    openMenuEditor()
+  } else {
+    menuOpen.value = !menuOpen.value
+    document.body.style.overflow = menuOpen.value ? 'hidden' : ''
+  }
 }
 
 function closeMenu() {
@@ -76,9 +110,7 @@ function onScroll() {
   isScrolled.value = window.scrollY > 20
 }
 
-watch(() => route.fullPath, () => {
-  closeMenu()
-})
+watch(() => route.fullPath, () => { closeMenu() })
 
 onMounted(() => {
   window.addEventListener('scroll', onScroll)
@@ -242,6 +274,11 @@ onUnmounted(() => {
   text-decoration: none;
   border-bottom: 2px solid #EF4B54;
   font-weight: 600;
+}
+.nav-mobile a.sub-link {
+  padding-left: 32px;
+  font-size: 0.9em;
+  color: #555;
 }
 
 .header-spacer { height: 76px; }

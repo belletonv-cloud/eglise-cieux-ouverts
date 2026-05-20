@@ -222,7 +222,10 @@ async function saveChanges() {
     const { $db } = useNuxtApp()
     const blocks = localBlocks.value
     await setDoc(doc($db, 'pages', props.pageSlug), { blocks })
-    alert('Page sauvegardée !')
+    // Also persist menu changes
+    const { saveMenuToFirestore } = useMenuEditor()
+    await saveMenuToFirestore()
+    alert('Page et menu sauvegardés !')
   } catch (e) {
     console.error('Save error:', e)
     alert('Erreur lors de la sauvegarde : ' + e.message)

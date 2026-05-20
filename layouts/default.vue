@@ -16,11 +16,13 @@
       </div>
     </div>
     <AdminToolbar v-if="isAdminMode && !isPreviewMode" :page-slug="currentPageSlug" />
+    <MenuEditor v-if="isAdminMode" />
   </div>
 </template>
 
 <script setup>
 const { isAdminMode, enterAdmin, exitAdmin, previewDevice } = useAdmin()
+const { loadMenuFromFirestore, saveMenuToFirestore } = useMenuEditor()
 
 const route = useRoute()
 const currentPageSlug = computed(() => {
@@ -54,6 +56,11 @@ watch(() => route.query.admin, (val) => {
     exitAdmin()
   }
 })
+
+// Load menu from Firestore when entering admin mode
+watch(isAdminMode, (val) => {
+  if (val && import.meta.client) loadMenuFromFirestore()
+}, { immediate: true })
 </script>
 
 <style>
@@ -96,11 +103,11 @@ watch(() => route.query.admin, (val) => {
 .device-iframe-wrap {
   display: flex;
   justify-content: center;
-  padding-top: 20px;
+  padding-top: 68px; /* 48px toolbar + 20px spacing */
   overflow-x: auto;
 }
 .device-iframe {
-  height: calc(100vh - 68px);
+  height: calc(100vh - 88px); /* 48px toolbar + 20px padding + 20px bottom */
   border: 1px solid #ddd;
   border-radius: 12px;
   background: white;
