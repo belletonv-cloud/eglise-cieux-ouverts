@@ -10,6 +10,12 @@ export default defineNuxtConfig({
     resendApiKey: process.env.NUXT_RESEND_API_KEY || '',
     public: {
       apiUrl: process.env.PUBLIC_API_URL || 'https://eglise-app.belletonv.workers.dev',
+      firebaseApiKey: process.env.PUBLIC_FIREBASE_API_KEY || '',
+      firebaseAuthDomain: process.env.PUBLIC_FIREBASE_AUTH_DOMAIN || '',
+      firebaseProjectId: process.env.PUBLIC_FIREBASE_PROJECT_ID || '',
+      firebaseStorageBucket: process.env.PUBLIC_FIREBASE_STORAGE_BUCKET || '',
+      firebaseMessagingSenderId: process.env.PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '',
+      firebaseAppId: process.env.PUBLIC_FIREBASE_APP_ID || '',
     },
   },
   app: {
@@ -28,6 +34,7 @@ export default defineNuxtConfig({
 
     }
   },
+  plugins: ['~/plugins/adminMode.client.ts'],
   css: [
     '~/assets/css/main.css'
   ],
