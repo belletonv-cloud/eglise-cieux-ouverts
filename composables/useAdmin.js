@@ -21,6 +21,13 @@ export function useAdmin() {
     isAdminMode.value = false
     editingBlockId.value = null
     localBlocks.value = []
+    if (import.meta.client) {
+      const { pathname, search, hash } = window.location
+      const params = new URLSearchParams(search)
+      params.delete('admin')
+      const newSearch = params.toString()
+      window.history.replaceState(null, '', pathname + (newSearch ? '?' + newSearch : '') + hash)
+    }
   }
 
   function selectBlock(id) {

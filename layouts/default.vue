@@ -82,7 +82,7 @@ watch(() => route.query.admin, (val) => {
   transition: max-width 0.3s ease;
 }
 #app-root.admin-mode .admin-preview-frame {
-  padding-top: var(--admin-offset, 48px);
+  /* header-spacer already accounts for the admin toolbar offset */
 }
 #app-root.admin-mode .block-main-hero {
   margin-top: 0 !important;

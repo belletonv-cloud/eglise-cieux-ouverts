@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
 
   try {
     const accessToken = await getAccessToken(clientEmail, privateKey)
-    const doc = await getFirestoreDoc(accessToken, projectId, 'pages', slug)
+    const doc = await getFirestoreDoc(projectId, accessToken, 'pages', slug)
 
     if (!doc) {
       return { blocks: null }

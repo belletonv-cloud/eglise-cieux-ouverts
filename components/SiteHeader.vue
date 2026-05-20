@@ -9,7 +9,7 @@
         <NuxtLink to="/" exact-active-class="active">Accueil</NuxtLink>
         <NuxtLink to="/messages" active-class="active">Messages</NuxtLink>
         <NuxtLink to="/agenda" active-class="active">Agenda</NuxtLink>
-        <NuxtLink v-if="showBilletterie" to="/billetterie" active-class="active">Billetterie Évènements</NuxtLink>
+        <NuxtLink v-if="showBilletterie" to="/billetterie" active-class="active">Billetterie Événements</NuxtLink>
         <NuxtLink to="/contact" active-class="active">Contact</NuxtLink>
         <div class="nav-desktop-socials">
           <a href="https://www.instagram.com/eglise_cieux_ouverts/" target="_blank" rel="noopener" aria-label="Instagram">
@@ -30,7 +30,7 @@
       <NuxtLink @click="closeMenu" to="/" exact-active-class="active">Accueil</NuxtLink>
       <NuxtLink @click="closeMenu" to="/messages" active-class="active">Messages</NuxtLink>
       <NuxtLink @click="closeMenu" to="/agenda" active-class="active">Agenda</NuxtLink>
-      <NuxtLink @click="closeMenu" v-if="showBilletterie" to="/billetterie" active-class="active">Billetterie Évènements</NuxtLink>
+      <NuxtLink @click="closeMenu" v-if="showBilletterie" to="/billetterie" active-class="active">Billetterie Événements</NuxtLink>
       <NuxtLink @click="closeMenu" to="/contact" active-class="active">Contact</NuxtLink>
       <div class="nav-mobile-socials">
         <a href="https://www.instagram.com/eglise_cieux_ouverts/" target="_blank" rel="noopener" aria-label="Instagram">
