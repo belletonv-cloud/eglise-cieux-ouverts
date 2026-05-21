@@ -5,12 +5,12 @@ export default defineEventHandler(async (event) => {
   const privateKey = process.env.NUXT_FIREBASE_PRIVATE_KEY || config.firebasePrivateKey
 
   if (!projectId || !clientEmail || !privateKey) {
-    throw createError({ statusCode: 503, statusMessage: 'Configuration Firestore incomplète.' })
+    throw createError({ statusCode: 503, message: 'Configuration Firestore incomplète.' })
   }
 
   const slug = getRouterParam(event, 'slug')
   if (!slug) {
-    throw createError({ statusCode: 400, statusMessage: 'Slug manquant.' })
+    throw createError({ statusCode: 400, message: 'Slug manquant.' })
   }
 
   try {
@@ -25,6 +25,6 @@ export default defineEventHandler(async (event) => {
     return { blocks: parsed?.blocks || null }
   } catch (err) {
     console.error('Page API error:', err)
-    throw createError({ statusCode: 500, statusMessage: 'Erreur lors du chargement de la page.' })
+    throw createError({ statusCode: 500, message: 'Erreur lors du chargement de la page.' })
   }
 })

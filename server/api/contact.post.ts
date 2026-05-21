@@ -40,7 +40,7 @@ export default defineEventHandler(async (event) => {
   if (!rateCheck.allowed) {
     throw createError({
       statusCode: 429,
-      statusMessage: `Trop de requêtes. Réessayez dans ${rateCheck.resetIn} secondes.`
+      message: `Trop de requêtes. Réessayez dans ${rateCheck.resetIn} secondes.`
     })
   }
   
@@ -59,19 +59,19 @@ export default defineEventHandler(async (event) => {
   const newsletter = Boolean(body?.newsletter)
   
   if (!prenom || !nom || !email || !message) {
-    throw createError({ statusCode: 400, statusMessage: 'Champs obligatoires manquants.' })
+    throw createError({ statusCode: 400, message: 'Champs obligatoires manquants.' })
   }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    throw createError({ statusCode: 400, statusMessage: 'Email invalide.' })
+    throw createError({ statusCode: 400, message: 'Email invalide.' })
   }
   if (message.length < 10) {
-    throw createError({ statusCode: 400, statusMessage: 'Message trop court.' })
+    throw createError({ statusCode: 400, message: 'Message trop court.' })
   }
   if (website) {
-    throw createError({ statusCode: 400, statusMessage: 'Envoi bloqué.' })
+    throw createError({ statusCode: 400, message: 'Envoi bloqué.' })
   }
   if (!firebaseClientEmail || !firebasePrivateKey || !firebaseProjectId) {
-    throw createError({ statusCode: 503, statusMessage: 'Configuration serveur contact incomplète.' })
+    throw createError({ statusCode: 503, message: 'Configuration serveur contact incomplète.' })
   }
   
   try {
@@ -150,6 +150,6 @@ export default defineEventHandler(async (event) => {
     return { ok: true }
   } catch (err) {
     console.error('Contact API error:', err)
-    throw createError({ statusCode: 500, statusMessage: err.message || 'Server Error' })
+    throw createError({ statusCode: 500, message: err.message || 'Server Error' })
   }
 })

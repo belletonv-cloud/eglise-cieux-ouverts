@@ -1,5 +1,6 @@
 <template>
-  <div class="admin-toolbar">
+  <ClientOnly>
+    <div class="admin-toolbar">
     <div class="admin-toolbar-left">
       <span class="admin-badge">Mode édition</span>
       <select class="admin-page-select" :value="pageSlug" @change="navigateToPage($event.target.value)">
@@ -124,7 +125,11 @@
         <button class="admin-action-btn admin-action-danger" @click="removeBlock(activeBlock.id)" title="Supprimer">🗑</button>
       </div>
     </div>
-  </div>
+    </div>
+    <template #fallback>
+      <!-- Empty fallback to avoid SSR mismatch -->
+    </template>
+  </ClientOnly>
 </template>
 
 <script setup>

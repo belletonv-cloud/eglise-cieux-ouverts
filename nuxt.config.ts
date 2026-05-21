@@ -1,44 +1,26 @@
-// https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  compatibilityDate: '2024-04-03',
-  devtools: { enabled: true },
-  ssr: true,
-  runtimeConfig: {
-    firebaseProjectId: process.env.NUXT_FIREBASE_PROJECT_ID || '',
-    firebaseClientEmail: process.env.NUXT_FIREBASE_CLIENT_EMAIL || '',
-    firebasePrivateKey: process.env.NUXT_FIREBASE_PRIVATE_KEY || '',
-    resendApiKey: process.env.NUXT_RESEND_API_KEY || '',
-    public: {
-      apiUrl: process.env.PUBLIC_API_URL || 'https://eglise-app.belletonv.workers.dev',
-      firebaseApiKey: process.env.PUBLIC_FIREBASE_API_KEY || '',
-      firebaseAuthDomain: process.env.PUBLIC_FIREBASE_AUTH_DOMAIN || '',
-      firebaseProjectId: process.env.PUBLIC_FIREBASE_PROJECT_ID || '',
-      firebaseStorageBucket: process.env.PUBLIC_FIREBASE_STORAGE_BUCKET || '',
-      firebaseMessagingSenderId: process.env.PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '',
-      firebaseAppId: process.env.PUBLIC_FIREBASE_APP_ID || '',
-    },
-  },
-  app: {
-    head: {
-      title: 'Église Cieux Ouverts — Morlaix',
-      meta: [
-        { charset: 'utf-8' },
-        { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      ],
-      link: [
-        { rel: 'icon', type: 'image/jpeg', href: '/favicon.jpg' },
-        { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
-        { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
-        { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;700;800&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700;1,900&display=swap' }
-      ],
-
-    }
-  },
-  plugins: ['~/plugins/adminMode.client.ts'],
-  css: [
-    '~/assets/css/main.css'
-  ],
   nitro: {
     preset: 'cloudflare-pages'
+  },
+  typescript: {
+    typeCheck: false,
+    strict: false,
+    shim: false,
+    noImplicitAny: false
+  },
+  components: [
+    { path: '~/components', global: true },
+    { path: '~/components/editor', global: true }
+  ],
+  runtimeConfig: {
+    public: {
+      FIREBASE_API_KEY: process.env.NUXT_PUBLIC_FIREBASE_API_KEY,
+      FIREBASE_AUTH_DOMAIN: process.env.NUXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+      FIREBASE_PROJECT_ID: process.env.NUXT_PUBLIC_FIREBASE_PROJECT_ID,
+      FIREBASE_STORAGE_BUCKET: process.env.NUXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+      FIREBASE_MESSAGING_SENDER_ID: process.env.NUXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+      FIREBASE_APP_ID: process.env.NUXT_PUBLIC_FIREBASE_APP_ID,
+      apiUrl: process.env.PUBLIC_API_URL || process.env.NUXT_PUBLIC_API_URL
+    }
   }
 })

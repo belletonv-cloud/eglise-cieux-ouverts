@@ -110,9 +110,9 @@ export function useChurchEvents(options = {}) {
       source: ev.source || null,
       image_url: ev.image_url || null,
       repeat_period: ev.repeat_period || null,
-      lien: null,
-      billetterie: null,
-      emoji: null,
+      lien: ev.lien || ev.link || null,
+      billetterie: ev.billetterie || ev.ticket_url || null,
+      emoji: ev.emoji || null,
     }
   }
 

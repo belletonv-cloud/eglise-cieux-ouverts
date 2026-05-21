@@ -57,9 +57,20 @@ h1, h2, h3 {
   line-height: 1.3;
 }
 
-a {
-  color: var(--primary-purple);
+a, .nav-admin-link {
+  color: var(--primary-blue);
   text-decoration: none;
+  transition: color 0.2s;
+}
+
+a:hover, .nav-admin-link:hover {
+  color: #EF4B54;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.nav-admin-link.dimmed {
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 a:hover {

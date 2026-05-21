@@ -1,53 +1,56 @@
 <template>
-  <Transition name="panel-slide">
-    <div v-if="menuEditorOpen" class="menu-editor-overlay" @click.self="closeMenuEditor">
-      <div class="menu-editor-panel">
-        <div class="menu-editor-header">
-          <h3>📋 Gestion du menu</h3>
-          <div class="menu-editor-header-actions">
-            <button class="btn-icon" @click="resetToDefault" title="Réinitialiser">↺</button>
-            <button class="btn-icon" @click="closeMenuEditor" title="Fermer">✕</button>
-          </div>
-        </div>
-        <div class="menu-editor-hint">
-          En mode édition, les liens du menu sont éditables. Cliquez sur un item pour le modifier.
-        </div>
-        <div class="menu-editor-list">
-          <div v-for="(item, idx) in menuItems" :key="item.id"
-            class="menu-editor-item" :class="{ active: editingMenuItemId === item.id, hidden: !item.visible }">
-            <div class="menu-item-row" @click="selectMenuItem(item.id)">
-              <span class="drag-handle">⋮⋮</span>
-              <span class="menu-item-label" :class="{ dimmed: !item.visible }">{{ item.label }}</span>
-              <span class="menu-item-to">{{ item.to }}</span>
-              <div class="menu-item-actions" @click.stop>
-                <button :class="['btn-mini', item.visible ? 'btn-eye' : 'btn-eye-off']"
-                  @click="toggleMenuItemVisibility(item.id)">{{ item.visible ? '👁' : '👁‍🗨' }}</button>
-                <button class="btn-mini" @click="moveMenuItem(item.id, -1)" :disabled="idx===0">↑</button>
-                <button class="btn-mini" @click="moveMenuItem(item.id, 1)" :disabled="idx===menuItems.length-1">↓</button>
-                <button class="btn-mini btn-danger" @click="removeMenuItem(item.id)">🗑</button>
-              </div>
+  <ClientOnly>
+    <Transition name="panel-slide">
+      <div v-if="menuEditorOpen" class="menu-editor-overlay" @click.self="closeMenuEditor">
+        <div class="menu-editor-panel">
+          <div class="menu-editor-header">
+            <h3>📋 Gestion du menu</h3>
+            <div class="menu-editor-header-actions">
+              <button class="btn-icon" @click="resetToDefault" title="Réinitialiser">↺</button>
+              <button class="btn-icon" @click="closeMenuEditor" title="Fermer">✕</button>
             </div>
-            <div v-if="editingMenuItemId === item.id" class="menu-item-edit">
-              <label>Libellé</label>
-              <input v-model="editLabel" @input="applyEdit(item.id)" class="input-sm" />
-              <label>Lien (URL ou chemin)</label>
-              <input v-model="editTo" @input="applyEdit(item.id)" class="input-sm" />
-              <div v-if="item.children?.length" class="sub-items">
-                <div v-for="sub in item.children" :key="sub.id" class="sub-item">
-                  <span>{{ sub.label }}</span>
-                  <button class="btn-mini btn-danger" @click="removeMenuItem(sub.id)">🗑</button>
+          </div>
+          <div class="menu-editor-hint">
+            En mode édition, les liens du menu sont éditables. Cliquez sur un item pour le modifier.
+          </div>
+          <div class="menu-editor-list">
+            <div v-for="(item, idx) in menuItems" :key="item.id"
+              class="menu-editor-item" :class="{ active: editingMenuItemId === item.id, hidden: !item.visible }">
+              <div class="menu-item-row" @click="selectMenuItem(item.id)">
+                <span class="drag-handle">⋮⋮</span>
+                <span class="menu-item-label" :class="{ dimmed: !item.visible }">{{ item.label }}</span>
+                <span class="menu-item-to">{{ item.to }}</span>
+                <div class="menu-item-actions" @click.stop>
+                  <button :class="['btn-mini', item.visible ? 'btn-eye' : 'btn-eye-off']"
+                    @click="toggleMenuItemVisibility(item.id)">{{ item.visible ? '👁' : '👁‍🗨' }}</button>
+                  <button class="btn-mini" @click="moveMenuItem(item.id, -1)" :disabled="idx===0">↑</button>
+                  <button class="btn-mini" @click="moveMenuItem(item.id, 1)" :disabled="idx===menuItems.length-1">↓</button>
+                  <button class="btn-mini btn-danger" @click="removeMenuItem(item.id)">🗑</button>
                 </div>
               </div>
-              <button class="btn-sm" @click="addSubMenuItem(item.id)">+ Ajouter un sous-menu</button>
+              <div v-if="editingMenuItemId === item.id" class="menu-item-edit">
+                <label>Libellé</label>
+                <input v-model="editLabel" @input="applyEdit(item.id)" class="input-sm" />
+                <label>Lien (URL ou chemin)</label>
+                <input v-model="editTo" @input="applyEdit(item.id)" class="input-sm" />
+                <div v-if="item.children?.length" class="sub-items">
+                  <div v-for="sub in item.children" :key="sub.id" class="sub-item">
+                    <span>{{ sub.label }}</span>
+                    <button class="btn-mini btn-danger" @click="removeMenuItem(sub.id)">🗑</button>
+                  </div>
+                </div>
+                <button class="btn-sm" @click="addSubMenuItem(item.id)">+ Ajouter un sous-menu</button>
+              </div>
             </div>
           </div>
-        </div>
-        <div class="menu-editor-footer">
-          <button class="btn-add" @click="addMenuItem()">+ Ajouter un lien</button>
+          <div class="menu-editor-footer">
+            <button class="btn-add" @click="addMenuItem()">+ Ajouter un lien</button>
+          </div>
         </div>
       </div>
-    </div>
-  </Transition>
+    </Transition>
+    <template #fallback></template>
+  </ClientOnly>
 </template>
 
 <script setup>

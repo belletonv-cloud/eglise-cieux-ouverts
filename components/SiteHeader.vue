@@ -7,19 +7,27 @@
 
       <nav class="nav-desktop">
         <template v-for="item in navItems" :key="item.id">
-          <NuxtLink v-if="item.visible !== false || adminMode"
-            :to="adminMode ? '#' : item.to"
-            :active-class="adminMode ? '' : 'active'"
-            :exact-active-class="adminMode ? '' : undefined"
-            @click.prevent="onNavClick($event, item)"
+          <NuxtLink v-if="!adminMode && item.visible !== false"
+            :to="item.to"
+            active-class="active"
+            @click="closeMenu"
           >{{ item.label }}</NuxtLink>
+          <a v-if="adminMode && (item.visible !== false || true)"
+            href="#"
+            class="nav-admin-link"
+            :class="{ dimmed: !item.visible }"
+            @click.prevent="onNavClick($event, item)"
+          >{{ item.label }}</a>
           <!-- Sub-items -->
-          <div v-if="item.children?.length && (adminMode || item.visible !== false)" class="nav-dropdown">
-            <NuxtLink v-for="sub in item.children" :key="sub.id"
-              :to="adminMode ? '#' : sub.to"
-              @click.prevent="onNavClick($event, sub)"
+          <template v-if="item.children?.length">
+            <NuxtLink v-if="!adminMode" v-for="sub in item.children" :key="sub.id"
+              :to="sub.to" @click="closeMenu"
             >{{ sub.label }}</NuxtLink>
-          </div>
+            <a v-if="adminMode" v-for="sub in item.children" :key="sub.id"
+              href="#" class="nav-admin-link sub-link"
+              @click.prevent="onNavClick($event, sub)"
+            >{{ sub.label }}</a>
+          </template>
         </template>
         <div class="nav-desktop-socials">
           <a href="https://www.instagram.com/eglise_cieux_ouverts/" target="_blank" rel="noopener" aria-label="Instagram">
@@ -38,16 +46,21 @@
 
     <nav class="nav-mobile">
       <template v-for="item in navItems" :key="item.id">
-        <NuxtLink v-if="item.visible !== false || adminMode"
-          :to="adminMode ? '#' : item.to"
-          @click.prevent="onNavClick($event, item)"
+        <NuxtLink v-if="!adminMode && item.visible !== false"
+          :to="item.to" @click="closeMenu"
         >{{ item.label }}</NuxtLink>
-        <NuxtLink v-for="sub in (item.children || [])" :key="sub.id"
-          v-if="sub.visible !== false || adminMode"
-          :to="adminMode ? '#' : sub.to"
-          @click.prevent="onNavClick($event, sub)"
-          class="sub-link"
-        >— {{ sub.label }}</NuxtLink>
+        <a v-if="adminMode" href="#" class="nav-admin-link"
+          :class="{ dimmed: !item.visible }"
+          @click.prevent="onNavClick($event, item)"
+        >{{ item.label }}</a>
+        <template v-for="sub in (item.children || [])" :key="sub.id">
+          <NuxtLink v-if="!adminMode && sub.visible !== false"
+            :to="sub.to" @click="closeMenu" class="sub-link"
+          >— {{ sub.label }}</NuxtLink>
+          <a v-if="adminMode" href="#" class="nav-admin-link sub-link"
+            @click.prevent="onNavClick($event, sub)"
+          >— {{ sub.label }}</a>
+        </template>
       </template>
       <div class="nav-mobile-socials">
         <a href="https://www.instagram.com/eglise_cieux_ouverts/" target="_blank" rel="noopener" aria-label="Instagram">
@@ -64,6 +77,7 @@
 
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted, inject } from 'vue'
+import MenuEditor from '~/components/editor/MenuEditor.vue'
 
 const menuOpen = ref(false)
 const isScrolled = ref(false)
@@ -176,7 +190,7 @@ onUnmounted(() => {
   flex: 1;
 }
 
-.nav-desktop a {
+.nav-desktop a, .nav-admin-link {
   padding: 8px 16px;
   font-weight: 500;
   color: #064886;
@@ -186,16 +200,20 @@ onUnmounted(() => {
   font-family: Helvetica, Arial, sans-serif;
 }
 
-.nav-desktop a:hover {
+.nav-desktop a:hover, .nav-admin-link:hover {
   text-decoration: underline;
   text-underline-offset: 4px;
 }
 
-.nav-desktop a.active {
+.nav-desktop a.active, .nav-admin-link.active {
   color: #EF4B54;
   text-decoration: none;
   border-bottom: 2px solid #EF4B54;
   font-weight: 600;
+}
+.nav-admin-link.dimmed {
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 .nav-desktop-socials {
@@ -254,7 +272,7 @@ onUnmounted(() => {
 
 .site-header.menu-open .nav-mobile { display: flex; }
 
-.nav-mobile a {
+.nav-mobile a, .nav-mobile .nav-admin-link {
   padding: 12px 16px;
   border-radius: 10px;
   font-weight: 500;
@@ -264,18 +282,22 @@ onUnmounted(() => {
   font-family: Helvetica, Arial, sans-serif;
 }
 
-.nav-mobile a:hover {
+.nav-mobile a:hover, .nav-mobile .nav-admin-link:hover {
   text-decoration: underline;
   text-underline-offset: 4px;
 }
 
-.nav-mobile a.active {
+.nav-mobile a.active, .nav-mobile .nav-admin-link.active {
   color: #EF4B54;
   text-decoration: none;
   border-bottom: 2px solid #EF4B54;
   font-weight: 600;
 }
-.nav-mobile a.sub-link {
+.nav-mobile .nav-admin-link.dimmed {
+  opacity: 0.5;
+  pointer-events: none;
+}
+.nav-mobile a.sub-link, .nav-mobile .nav-admin-link.sub-link {
   padding-left: 32px;
   font-size: 0.9em;
   color: #555;
