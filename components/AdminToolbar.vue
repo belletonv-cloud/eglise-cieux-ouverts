@@ -130,84 +130,6 @@
     </div>
   </div>
 </template>
-      <template v-else>
-        <button class="admin-btn admin-btn-login" @click="signInWithGoogle">
-          Se connecter
-        </button>
-        <button class="admin-btn admin-btn-secondary" @click="exitAdmin">
-          ✕
-        </button>
-      </template>
-    </div>
-  </div>
-
-  <div class="admin-sidebar" v-if="activeBlock && user">
-    <div class="admin-sidebar-header">
-      <h3>{{ getBlockLabel(activeBlock.type) }}</h3>
-      <button class="admin-close-btn" @click="selectBlock(null)">✕</button>
-    </div>
-    <div class="admin-sidebar-body">
-      <div
-        v-for="field in getBlockSchema(activeBlock.type)"
-        :key="field.key"
-        class="admin-field"
-      >
-        <label>{{ field.label }}</label>
-        <input
-          v-if="field.type === 'text' || field.type === 'color' || field.type === 'image'"
-          :type="field.type === 'color' ? 'color' : 'text'"
-          :value="getPropValue(field.key)"
-          @input="setPropValue(field.key, $event.target.value)"
-          class="admin-input"
-        />
-        <textarea
-          v-else-if="field.type === 'textarea' || field.type === 'richtext'"
-          :value="getPropValue(field.key)"
-          @input="setPropValue(field.key, $event.target.value)"
-          class="admin-input admin-textarea"
-          rows="4"
-        />
-        <select
-          v-else-if="field.type === 'select' || field.type === 'animation'"
-          :value="getPropValue(field.key)"
-          @change="setPropValue(field.key, $event.target.value)"
-          class="admin-input"
-        >
-          <option v-for="opt in (field.type === 'animation' ? ANIMATIONS : field.options)" :key="opt.id || opt" :value="opt.id || opt">{{ opt.label || opt }}</option>
-        </select>
-        <label v-else-if="field.type === 'boolean'" class="admin-checkbox">
-          <input
-            type="checkbox"
-            :checked="getPropValue(field.key)"
-            @change="setPropValue(field.key, $event.target.checked)"
-          />
-          <span>{{ field.label }}</span>
-        </label>
-        <input
-          v-else-if="field.type === 'number'"
-          type="number"
-          :min="field.min"
-          :max="field.max"
-          :value="getPropValue(field.key)"
-          @input="setPropValue(field.key, parseInt($event.target.value))"
-          class="admin-input"
-        />
-        <span v-else class="admin-unsupported">Type "{{ field.type }}" non supporté</span>
-      </div>
-    </div>
-    <div class="admin-sidebar-footer">
-      <div class="admin-block-actions">
-        <button class="admin-action-btn" @click="moveBlock(activeBlock.id, -1)" title="Monter">↑</button>
-        <button class="admin-action-btn" @click="moveBlock(activeBlock.id, 1)" title="Descendre">↓</button>
-        <button class="admin-action-btn admin-action-danger" @click="removeBlock(activeBlock.id)" title="Supprimer">🗑</button>
-      </div>
-    </div>
-    </div>
-    <template #fallback>
-      <!-- Empty fallback to avoid SSR mismatch -->
-    </template>
-  </ClientOnly>
-</template>
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, inject } from 'vue'
@@ -532,5 +454,21 @@ async function saveChanges() {
 .admin-loading {
   font-size: 0.8em;
   opacity: 0.6;
+}
+</style>
+
+<style>
+/* Global fallback: ensure site header is offset below admin toolbar when in admin mode */
+#app-root.admin-mode .site-header {
+  top: var(--admin-offset, 48px) !important;
+}
+/* Also offset the spacer to prevent content from snapping up */
+#app-root.admin-mode .header-spacer {
+  height: calc(76px + var(--admin-offset, 48px));
+}
+@media (max-width: 768px) {
+  #app-root.admin-mode .header-spacer {
+    height: calc(56px + var(--admin-offset, 48px));
+  }
 }
 </style>
