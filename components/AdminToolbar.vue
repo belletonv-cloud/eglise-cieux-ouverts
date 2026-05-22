@@ -1,13 +1,11 @@
 <template>
-  <ClientOnly>
-    <div class="admin-toolbar">
+  <div class="admin-toolbar">
     <div class="admin-toolbar-left">
       <span class="admin-badge">Mode édition</span>
       <select class="admin-page-select" :value="pageSlug" @change="navigateToPage($event.target.value)">
         <option value="accueil">Accueil</option>
         <option value="contact">Contact</option>
         <option value="messages">Messages</option>
-        <option value="photos">Photos</option>
         <option value="billetterie">Billetterie</option>
         <option value="agenda">Agenda</option>
       </select>
@@ -23,7 +21,7 @@
           @click="previewDevice = 'desktop'"
           title="Desktop"
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="17"/></svg>
         </button>
         <button
           class="device-btn"
@@ -44,15 +42,94 @@
       </div>
     </div>
     <div class="admin-toolbar-right">
-      <template v-if="user">
-        <span class="admin-user">{{ user.email }}</span>
-        <button class="admin-btn" @click="saveChanges" :disabled="saving">
-          {{ saving ? 'Sauvegarde...' : 'Sauvegarder' }}
-        </button>
-        <button class="admin-btn admin-btn-secondary" @click="signOutAndExit">
-          Quitter
-        </button>
-      </template>
+      <ClientOnly>
+        <template v-if="user">
+          <span class="admin-user">{{ user.email }}</span>
+          <button class="admin-btn" @click="saveChanges" :disabled="saving">
+            {{ saving ? 'Sauvegarde...' : 'Sauvegarder' }}
+          </button>
+          <button class="admin-btn admin-btn-secondary" @click="signOutAndExit">
+            Quitter
+          </button>
+        </template>
+        <template v-else>
+          <button class="admin-btn admin-btn-login" @click="signInWithGoogle">
+            Se connecter
+          </button>
+          <button class="admin-btn admin-btn-secondary" @click="exitAdmin">
+            ✕
+          </button>
+        </template>
+        <template #fallback>
+          <span class="admin-loading">Chargement...</span>
+        </template>
+      </ClientOnly>
+    </div>
+  </div>
+
+  <div class="admin-sidebar" v-if="activeBlock && user">
+    <div class="admin-sidebar-header">
+      <h3>{{ getBlockLabel(activeBlock.type) }}</h3>
+      <button class="admin-close-btn" @click="selectBlock(null)">✕</button>
+    </div>
+    <div class="admin-sidebar-body">
+      <div
+        v-for="field in getBlockSchema(activeBlock.type)"
+        :key="field.key"
+        class="admin-field"
+      >
+        <label>{{ field.label }}</label>
+        <input
+          v-if="field.type === 'text' || field.type === 'color' || field.type === 'image'"
+          :type="field.type === 'color' ? 'color' : 'text'"
+          :value="getPropValue(field.key)"
+          @input="setPropValue(field.key, $event.target.value)"
+          class="admin-input"
+        />
+        <textarea
+          v-else-if="field.type === 'textarea' || field.type === 'richtext'"
+          :value="getPropValue(field.key)"
+          @input="setPropValue(field.key, $event.target.value)"
+          class="admin-input admin-textarea"
+          rows="4"
+        />
+        <select
+          v-else-if="field.type === 'select' || field.type === 'animation'"
+          :value="getPropValue(field.key)"
+          @change="setPropValue(field.key, $event.target.value)"
+          class="admin-input"
+        >
+          <option v-for="opt in (field.type === 'animation' ? ANIMATIONS : field.options)" :key="opt.id || opt" :value="opt.id || opt">{{ opt.label || opt }}</option>
+        </select>
+        <label v-else-if="field.type === 'boolean'" class="admin-checkbox">
+          <input
+            type="checkbox"
+            :checked="getPropValue(field.key)"
+            @change="setPropValue(field.key, $event.target.checked)"
+          />
+          <span>{{ field.label }}</span>
+        </label>
+        <input
+          v-else-if="field.type === 'number'"
+          type="number"
+          :min="field.min"
+          :max="field.max"
+          :value="getPropValue(field.key)"
+          @input="setPropValue(field.key, parseInt($event.target.value))"
+          class="admin-input"
+        />
+        <span v-else class="admin-unsupported">Type "{{ field.type }}" non supporté</span>
+      </div>
+    </div>
+    <div class="admin-sidebar-footer">
+      <div class="admin-block-actions">
+        <button class="admin-action-btn" @click="moveBlock(activeBlock.id, -1)" title="Monter">↑</button>
+        <button class="admin-action-btn" @click="moveBlock(activeBlock.id, 1)" title="Descendre">↓</button>
+        <button class="admin-action-btn admin-action-danger" @click="removeBlock(activeBlock.id)" title="Supprimer">🗑</button>
+      </div>
+    </div>
+  </div>
+</template>
       <template v-else>
         <button class="admin-btn admin-btn-login" @click="signInWithGoogle">
           Se connecter
@@ -452,4 +529,8 @@ async function saveChanges() {
 }
 .admin-action-btn:hover { background: #f5f5f5; }
 .admin-action-danger:hover { background: #fee; border-color: #EF4B54; }
+.admin-loading {
+  font-size: 0.8em;
+  opacity: 0.6;
+}
 </style>
