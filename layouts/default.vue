@@ -1,5 +1,5 @@
 <template>
-  <div id="app-root" :class="{ 'admin-mode': isAdminMode, 'is-preview': isPreviewMode }" :style="{ '--admin-offset': isAdminMode ? '48px' : '0px' }">
+  <div id="app-root" :class="{ 'admin-mode': isAdminMode && isMounted, 'is-preview': isPreviewMode }" :style="{ '--admin-offset': (isAdminMode && isMounted) ? '48px' : '0px' }">
     <div class="admin-preview-frame" :class="`preview-${previewDevice}`">
       <template v-if="previewDevice === 'desktop' || !isAdminMode">
         <SiteHeader />
@@ -15,13 +15,14 @@
         />
       </div>
     </div>
-    <AdminToolbar v-if="isAdminMode && !isPreviewMode" :page-slug="currentPageSlug" />
-    <MenuEditor v-if="isAdminMode" />
+    <AdminToolbar v-if="isMounted && isAdminMode && !isPreviewMode" :page-slug="currentPageSlug" />
+    <MenuEditor v-if="isMounted && isAdminMode" />
   </div>
 </template>
 
 <script setup>
 const { isAdminMode, enterAdmin, exitAdmin, previewDevice } = useAdmin()
+const isMounted = ref(false)
 const { loadMenuFromFirestore, saveMenuToFirestore } = useMenuEditor()
 
 const route = useRoute()
@@ -61,6 +62,10 @@ watch(() => route.query.admin, (val) => {
 watch(isAdminMode, (val) => {
   if (val && import.meta.client) loadMenuFromFirestore()
 }, { immediate: true })
+
+onMounted(() => {
+  isMounted.value = true
+})
 </script>
 
 <style>
