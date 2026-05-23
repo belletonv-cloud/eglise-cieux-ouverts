@@ -185,44 +185,63 @@ onMounted(() => {
   document.addEventListener('replay-animation', replayHandler)
 })
 
-watch(() => props.blocks, async () => {
-  await nextTick()
-  if (isEditor) {
-    const allIds = (props.blocks || []).map(b => b.id).filter(Boolean)
-    triggeredBlocks.value = new Set(allIds)
-    return
+// Watch only the block id list instead of deeply watching the whole structure to avoid
+// triggering on unrelated nested mutations which can cause reactive churn.
+watch(() => (props.blocks || []).map(b => b.id).join(','), async () => {
+  try {
+    await nextTick()
+    if (isEditor) {
+      const allIds = (props.blocks || []).map(b => b.id).filter(Boolean)
+      triggeredBlocks.value = new Set(allIds)
+      return
+    }
+    observeElements()
+  } catch (err) {
+    // Surface watcher errors for easier debugging
+    console.error('PageRenderer: error in blocks watcher', err)
   }
-  observeElements()
-}, { deep: true })
+}, { deep: false })
 
 // When a block's animation prop changes, reset its triggered state so the new animation
-// can run again on next intersection/scroll.
-watch(fixedBlocks, (newBlocks, oldBlocks) => {
-  const oldMap = lastAnimations.value || {}
-  const newMap = {}
-  for (const b of newBlocks) {
-    newMap[b.id] = b.props?.animation
-    const prev = oldMap[b.id]
-    const now = b.props?.animation
-    if (prev !== undefined && prev !== now) {
-      // reset trigger for this block
-      triggeredBlocks.value.delete(b.id)
-      // re-observe the element so intersection observer can trigger again
-      const el = wrapperRefs.value[b.id]
-      if (el && observer) {
-        try { observer.observe(el) } catch (e) {}
-      }
-      // If in admin mode, replay the animation immediately by re-adding the trigger
-      if (isAdmin && isAdmin.value) {
-        // give the browser a moment to apply the class removal
-        setTimeout(() => {
-          triggeredBlocks.value = new Set([...(triggeredBlocks.value || []), b.id])
-        }, 40)
+// can run again on next intersection/scroll. Watch only the animation values to avoid
+// deep watching of the entire blocks tree which can cause reactive churn.
+let suppressAnimationWatcher = false
+watch(() => fixedBlocks.value.map(b => ({ id: b.id, anim: b.props?.animation })), (newArr, oldArr) => {
+  if (suppressAnimationWatcher) return
+  try {
+    const oldMap = lastAnimations.value || {}
+    const newMap = {}
+    for (const b of newArr) {
+      newMap[b.id] = b.anim
+      const prev = oldMap[b.id]
+      const now = b.anim
+      if (prev !== undefined && prev !== now) {
+        // reset trigger for this block
+        triggeredBlocks.value.delete(b.id)
+        // re-observe the element so intersection observer can trigger again
+        const el = wrapperRefs.value[b.id]
+        if (el && observer) {
+          try { observer.observe(el) } catch (e) { console.error(e) }
+        }
+        // If in admin mode, replay the animation immediately by re-adding the trigger
+        if (isAdmin && isAdmin.value) {
+          suppressAnimationWatcher = true
+          setTimeout(() => {
+            try {
+              triggeredBlocks.value = new Set([...(triggeredBlocks.value || []), b.id])
+            } finally {
+              // re-enable after a small delay to avoid reentrancy
+              setTimeout(() => { suppressAnimationWatcher = false }, 30)
+            }
+          }, 40)
+        }
       }
     }
+    lastAnimations.value = newMap
+  } catch (err) {
+    console.error('PageRenderer: error in animation watcher', err)
   }
-  lastAnimations.value = newMap
-}, { deep: true })
+}, { deep: false })
 
 function observeElements() {
   if (!observer) return
