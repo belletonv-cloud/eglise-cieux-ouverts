@@ -208,10 +208,12 @@ onUnmounted(() => {
 })
 
 function getBlockLabel(type) {
+  if (!type) return ''
   return BLOCK_TYPES[type]?.label || type
 }
 
 function getBlockSchema(type) {
+  if (!type) return []
   return BLOCK_TYPES[type]?.schema || []
 }
 
