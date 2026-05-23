@@ -74,6 +74,10 @@
       <h3>{{ getBlockLabel(activeBlock.type) }}</h3>
       <button class="admin-close-btn" @click="selectBlock(null)">✕</button>
     </div>
+    <div v-if="activeBlock && user" style="padding:0 16px 12px; border-bottom:1px solid #eee; display:flex; gap:8px; align-items:center;">
+      <button class="admin-btn" @click.prevent="replayAnimation(activeBlock.id)">Rejouer l'animation</button>
+      <small style="color:#666; font-size:0.88em;">Si l'animation est scroll-driven, je scrollerai vers le bloc.</small>
+    </div>
     <div class="admin-sidebar-body">
         <div
           v-for="field in getBlockSchema(activeBlock.type)"
@@ -274,6 +278,13 @@ function toggleAdminImagesList(key) {
 function selectAdminUploaded(url, key) {
   setPropValue(key, url)
   showAdminImagesList.value = false
+}
+
+function replayAnimation(blockId) {
+  // dispatch global event handled by PageRenderer
+  try {
+    document.dispatchEvent(new CustomEvent('replay-animation', { detail: { id: blockId } }))
+  } catch (e) {}
 }
 
 function navigateToPage(slug) {
