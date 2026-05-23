@@ -70,20 +70,28 @@ import { BLOCK_TYPES } from '~/utils/blockTypes.js'
 
 // Correction universelle SSR/no-JS : repair/flatten block props if broken/migrated badly
 function cleanBlock(block) {
-  // 1. Si double props (props.props), on aplatit
-  if (block && block.props && block.props.props && typeof block.props.props === 'object') {
-    block.props = { ...block.props.props }
+  if (!block) return block
+  // Work on a shallow copy to avoid mutating the original prop objects
+  const copy = { ...block }
+  // Normalize props: if nested props.props exists, flatten it
+  let propsSrc = copy.props
+  if (propsSrc && propsSrc.props && typeof propsSrc.props === 'object') {
+    propsSrc = { ...propsSrc.props }
   }
-  // 2. Si le bloc est de type connu et a des defaults, on merge avec les defaults pour fallback SSR
-  if (block && block.type && BLOCK_TYPES[block.type]) {
+  propsSrc = propsSrc || {}
+
+  // Merge with defaults for known block types, keeping only meaningful values
+  if (copy.type && BLOCK_TYPES[copy.type]) {
     const safe = {}
-    for (const [k, v] of Object.entries(block.props)) {
+    for (const [k, v] of Object.entries(propsSrc)) {
       if (v !== '' && v !== null && v !== undefined) safe[k] = v
     }
-    block.props = { ...BLOCK_TYPES[block.type].defaults, ...safe }
+    copy.props = { ...BLOCK_TYPES[copy.type].defaults, ...safe }
+  } else {
+    copy.props = { ...propsSrc }
   }
 
-  return block
+  return copy
 }
 
 // Corrige TOUS les blocs juste avant de les rendre
