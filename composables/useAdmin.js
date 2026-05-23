@@ -72,6 +72,7 @@ export function useAdmin() {
   }
 
   provide('isAdmin', isAdminMode)
+  provide('isEditor', isAdminMode)
   provide('editingBlockId', editingBlockId)
   provide('selectBlock', selectBlock)
   provide('previewDevice', previewDevice)

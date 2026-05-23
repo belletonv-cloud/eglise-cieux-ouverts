@@ -20,8 +20,7 @@ test.describe('Mode édition', () => {
     await expect(select).toBeVisible()
 
     const options = page.locator('.admin-page-select option')
-    // Photos option removed intentionally; expect 5 pages now
-    await expect(options).toHaveCount(5)
+    await expect(options).toHaveCount(6)
   })
 
   test('le bouton se connecter est visible quand non authentifié', async ({ page }) => {

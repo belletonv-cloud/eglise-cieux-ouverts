@@ -36,6 +36,7 @@ import BlockGallery from '~/components/blocks/BlockGallery.vue'
 import BlockSpacer from '~/components/blocks/BlockSpacer.vue'
 
 const isAdmin = inject('isAdmin', ref(false))
+const isEditor = inject('isEditor', ref(false))
 const editingBlockId = inject('editingBlockId', ref(null))
 const selectBlock = inject('selectBlock', () => {})
 
@@ -125,7 +126,15 @@ function setWrapperRef(el, id) {
 
 let observer = null
 
+// En mode édition, pré-initialiser tous les IDs comme déclenchés
+if (isEditor) {
+  const allIds = (props.blocks || []).map(b => b.id).filter(Boolean)
+  triggeredBlocks.value = new Set(allIds)
+}
+
 onMounted(() => {
+  if (isEditor) return
+
   observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
@@ -143,6 +152,11 @@ onMounted(() => {
 
 watch(() => props.blocks, async () => {
   await nextTick()
+  if (isEditor) {
+    const allIds = (props.blocks || []).map(b => b.id).filter(Boolean)
+    triggeredBlocks.value = new Set(allIds)
+    return
+  }
   observeElements()
 }, { deep: true })
 

@@ -7,7 +7,7 @@
 
       <nav class="nav-desktop">
         <template v-for="item in navItems" :key="item.id">
-          <NuxtLink v-if="!adminMode && item.visible !== false"
+          <NuxtLink v-if="!adminMode && item.visible !== false && (item.id !== 'billetterie' || showBilletterie)"
             :to="item.to"
             active-class="active"
             @click="closeMenu"
@@ -46,7 +46,7 @@
 
     <nav class="nav-mobile">
       <template v-for="item in navItems" :key="item.id">
-        <NuxtLink v-if="!adminMode && item.visible !== false"
+        <NuxtLink v-if="!adminMode && item.visible !== false && (item.id !== 'billetterie' || showBilletterie)"
           :to="item.to" @click="closeMenu"
         >{{ item.label }}</NuxtLink>
         <a v-if="adminMode" href="#" class="nav-admin-link"

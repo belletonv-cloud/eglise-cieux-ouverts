@@ -4,6 +4,7 @@
       <span class="admin-badge">Mode édition</span>
       <select class="admin-page-select" :value="pageSlug" @change="navigateToPage($event.target.value)">
         <option value="accueil">Accueil</option>
+        <option value="photos">Photos</option>
         <option value="contact">Contact</option>
         <option value="messages">Messages</option>
         <option value="billetterie">Billetterie</option>
@@ -67,6 +68,7 @@
     </div>
   </div>
 
+  <div class="admin-sidebar-overlay" v-if="activeBlock && user" @click="selectBlock(null)"></div>
   <div class="admin-sidebar" v-if="activeBlock && user">
     <div class="admin-sidebar-header">
       <h3>{{ getBlockLabel(activeBlock.type) }}</h3>
@@ -351,6 +353,13 @@ async function saveChanges() {
 }
 .admin-btn-login:hover { background: #f0f0f0; }
 
+.admin-sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.3);
+  z-index: 9998;
+  top: 48px;
+}
 .admin-sidebar {
   position: fixed;
   top: 48px;
