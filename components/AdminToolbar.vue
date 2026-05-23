@@ -298,6 +298,7 @@ async function navigateToPage(slug) {
     console.debug('navigateToPage: already on target with admin — no navigation', targetPath)
     return
   }
+  console.debug('navigateToPage:', { slug, targetPath, currentPath, routeQuery: route.query, isAdminMode: isAdminMode?.value })
 
   const newQuery = { ...route.query, admin: 'true' }
   // Always do client-side navigation to preserve admin-mode layout and offsets
@@ -313,6 +314,7 @@ async function navigateToPage(slug) {
   try {
     await router.push({ path: targetPath, query: newQuery })
     try { window.scrollTo(0, 0) } catch (e) {}
+    console.debug('navigateToPage: navigation done to', targetPath)
   } catch (err) {
     console.error('navigateToPage: router.push failed', err)
   }
