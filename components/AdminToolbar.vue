@@ -287,11 +287,12 @@ function replayAnimation(blockId) {
   } catch (e) {}
 }
 
-function navigateToPage(slug) {
+async function navigateToPage(slug) {
   // Use client-side navigation so the admin layout/offset is preserved
   const targetPath = slug === 'accueil' ? '/' : `/${slug}`
   const currentPath = route.path || window.location.pathname
   const currentAdmin = route.query?.admin === 'true' || route.query?.admin === '1'
+
   // If already on the same path and admin param is set, skip navigation
   if (currentPath === targetPath && currentAdmin) {
     console.debug('navigateToPage: already on target with admin — no navigation', targetPath)
@@ -306,11 +307,15 @@ function navigateToPage(slug) {
     const root = document.getElementById('app-root') || document.getElementById('__nuxt')
     if (root && !root.classList.contains('admin-mode')) root.classList.add('admin-mode')
   } catch (e) {
-    // ignore
+    console.warn('navigateToPage: could not set admin-mode class', e)
   }
 
-  router.push({ path: targetPath, query: newQuery }).catch(() => {})
-  try { window.scrollTo(0, 0) } catch (e) {}
+  try {
+    await router.push({ path: targetPath, query: newQuery })
+    try { window.scrollTo(0, 0) } catch (e) {}
+  } catch (err) {
+    console.error('navigateToPage: router.push failed', err)
+  }
 }
 
 async function signInWithGoogle() {
