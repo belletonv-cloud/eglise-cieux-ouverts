@@ -279,12 +279,16 @@ function navigateToPage(slug) {
   // Use client-side navigation so the admin layout/offset is preserved
   const targetPath = slug === 'accueil' ? '/' : `/${slug}`
   const currentPath = route.path || window.location.pathname
-  if (currentPath === targetPath) return
+  const currentAdmin = route.query?.admin === 'true' || route.query?.admin === '1'
+  // If already on the same path and admin param is set, skip navigation
+  if (currentPath === targetPath && currentAdmin) {
+    console.debug('navigateToPage: already on target with admin — no navigation', targetPath)
+    return
+  }
 
   const newQuery = { ...route.query, admin: 'true' }
+  // Always do client-side navigation to preserve admin-mode layout and offsets
   router.push({ path: targetPath, query: newQuery }).catch(() => {})
-  // ensure we're at the top of the page after navigation to avoid content hidden under the toolbar
-  // (Nuxt/router may handle scrollBehavior, but enforce a quick reset here)
   try { window.scrollTo(0, 0) } catch (e) {}
 }
 
