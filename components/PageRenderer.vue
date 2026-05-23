@@ -180,6 +180,13 @@ watch(fixedBlocks, (newBlocks, oldBlocks) => {
       if (el && observer) {
         try { observer.observe(el) } catch (e) {}
       }
+      // If in admin mode, replay the animation immediately by re-adding the trigger
+      if (isAdmin && isAdmin.value) {
+        // give the browser a moment to apply the class removal
+        setTimeout(() => {
+          triggeredBlocks.value = new Set([...(triggeredBlocks.value || []), b.id])
+        }, 40)
+      }
     }
   }
   lastAnimations.value = newMap
