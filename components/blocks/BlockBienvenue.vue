@@ -1,7 +1,7 @@
 <template>
   <section
     class="block-bienvenue"
-    :class="visibilityClasses"
+    :class="[visibilityClasses, { 'admin-animate': isAdmin }]"
   >
     <img src="https://static.wixstatic.com/media/d65230_c609095100164117aabdd3b55d9cdf56~mv2.png/v1/fill/w_1920,h_515,al_c,q_90,usm_0.66_1.00_0.01,enc_avif,quality_auto/d65230_c609095100164117aabdd3b55d9cdf56~mv2.png" alt="Foule Croix" class="bienvenue-img" />
     
@@ -28,11 +28,15 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, inject, ref } from 'vue'
 
-const { visibility = {} } = defineProps({
+const props = defineProps({
   visibility: { type: Object, default: () => ({}) },
 })
+
+const { visibility = {} } = props
+
+const isAdmin = inject('isAdmin', ref(false))
 
 const visibilityClasses = computed(() => ({
   'hide-mobile': visibility.mobile === false,
@@ -127,6 +131,31 @@ function getLetterVars(i) {
       animation-fill-mode: both;
     }
   }
+}
+
+/* Fallback: in admin mode or when admin-animate class is present, trigger standard animations immediately */
+.admin-animate .hero-bienvenue-char {
+  opacity: 0;
+  animation-name: bienvenue-fan;
+  animation-duration: 0.8s;
+  animation-fill-mode: both;
+  animation-timing-function: cubic-bezier(0.2,0.8,0.2,1);
+  /* stagger by distance */
+  animation-delay: calc(0.04s * var(--dist));
+}
+
+.admin-animate .hero-subtitle {
+  opacity: 0;
+  transform: translateY(30px);
+  animation: subtitle-in 0.5s ease both;
+  animation-delay: 0.5s;
+}
+
+.admin-animate .hero-socials {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: socials-in 0.5s ease both;
+  animation-delay: 0.65s;
 }
 
 @keyframes bienvenue-fan {
