@@ -169,6 +169,7 @@ const router = useRouter()
 const route = useRoute()
 
 const {
+  isAdminMode,
   activeBlock,
   selectBlock,
   updateBlock,
@@ -288,6 +289,15 @@ function navigateToPage(slug) {
 
   const newQuery = { ...route.query, admin: 'true' }
   // Always do client-side navigation to preserve admin-mode layout and offsets
+  // Ensure admin mode is applied immediately so layout (header spacer) updates
+  try {
+    if (isAdminMode) isAdminMode.value = true
+    const root = document.getElementById('app-root') || document.getElementById('__nuxt')
+    if (root && !root.classList.contains('admin-mode')) root.classList.add('admin-mode')
+  } catch (e) {
+    // ignore
+  }
+
   router.push({ path: targetPath, query: newQuery }).catch(() => {})
   try { window.scrollTo(0, 0) } catch (e) {}
 }
