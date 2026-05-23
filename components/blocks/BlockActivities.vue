@@ -63,13 +63,9 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 
 const {
   items = [],
-  visibility = {}
+  visibility = {},
+  blockId = null
 } = defineProps({
-  items: { type: Array, default: () => [] },
-  visibility: { type: Object, default: () => ({}) },
-})
-
-const props = defineProps({
   items: { type: Array, default: () => [] },
   visibility: { type: Object, default: () => ({}) },
   // optional deterministic id supplied by PageRenderer to avoid SSR/client mismatch
@@ -77,7 +73,7 @@ const props = defineProps({
 })
 
 // deterministic uid to avoid SSR/client mismatch when generating ids
-const uid = props.blockId ? String(props.blockId) : Math.random().toString(36).slice(2, 8)
+const uid = blockId ? String(blockId) : Math.random().toString(36).slice(2, 8)
 const isHydrated = ref(false)
 const modalOpen = ref(false)
 const currentIndex = ref(0)
