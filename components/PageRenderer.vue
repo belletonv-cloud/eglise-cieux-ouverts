@@ -115,6 +115,7 @@ function useTrigger(block) {
 
 const triggeredBlocks = ref(new Set())
 const wrapperRefs = ref({})
+const lastAnimations = ref({})
 
 function isTriggered(id) {
   return triggeredBlocks.value.has(id)
@@ -148,6 +149,8 @@ onMounted(() => {
   }, { threshold: 0.05, rootMargin: '0px 0px 0px 0px' })
 
   observeElements()
+  // initialize lastAnimations map
+  lastAnimations.value = Object.fromEntries((fixedBlocks.value || []).map(b => [b.id, b.props?.animation]))
 })
 
 watch(() => props.blocks, async () => {
@@ -158,6 +161,28 @@ watch(() => props.blocks, async () => {
     return
   }
   observeElements()
+}, { deep: true })
+
+// When a block's animation prop changes, reset its triggered state so the new animation
+// can run again on next intersection/scroll.
+watch(fixedBlocks, (newBlocks, oldBlocks) => {
+  const oldMap = lastAnimations.value || {}
+  const newMap = {}
+  for (const b of newBlocks) {
+    newMap[b.id] = b.props?.animation
+    const prev = oldMap[b.id]
+    const now = b.props?.animation
+    if (prev !== undefined && prev !== now) {
+      // reset trigger for this block
+      triggeredBlocks.value.delete(b.id)
+      // re-observe the element so intersection observer can trigger again
+      const el = wrapperRefs.value[b.id]
+      if (el && observer) {
+        try { observer.observe(el) } catch (e) {}
+      }
+    }
+  }
+  lastAnimations.value = newMap
 }, { deep: true })
 
 function observeElements() {
