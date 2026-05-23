@@ -3,7 +3,7 @@
  * In edit mode, clicking a menu item opens the editor instead of navigating.
  * Persisted to Firestore: settings/menu → { menuItems }
  */
-import { ref, provide, watch } from 'vue'
+import { ref, provide, watch, inject, computed } from 'vue'
 
 const DEFAULT_MENU_ITEMS = [
   { id: 'accueil', label: 'Accueil', to: '/', visible: true, children: [] },
@@ -14,6 +14,8 @@ const DEFAULT_MENU_ITEMS = [
   { id: 'contact', label: 'Contact', to: '/contact', visible: true, children: [] },
 ]
 
+const MENU_EDITOR_KEY = Symbol('menu-editor')
+
 const menuItems = ref(JSON.parse(JSON.stringify(DEFAULT_MENU_ITEMS)))
 const editingMenuItemId = ref(null)
 const menuEditorOpen = ref(false)
@@ -22,6 +24,9 @@ const menuSaving = ref(false)
 let _menuEditorOpen = menuEditorOpen // alias for provide reactivity
 
 export function useMenuEditor() {
+  // If an ancestor provided a menu editor instance, reuse it (singleton behavior).
+  const existing = inject(MENU_EDITOR_KEY, null)
+  if (existing) return existing
   const activeMenuItem = computed(() => {
     if (!editingMenuItemId.value) return null
     return findItemById(menuItems.value, editingMenuItemId.value)
@@ -183,11 +188,7 @@ export function useMenuEditor() {
     _saveTimer = setTimeout(() => saveMenuToFirestore().catch(() => {}), 800)
   }, { deep: true })
 
-  provide('menuItems', menuItems)
-  provide('menuEditorOpen', menuEditorOpen)
-  provide('editingMenuItemId', editingMenuItemId)
-
-  return {
+  const api = {
     menuItems,
     editingMenuItemId,
     menuEditorOpen,
@@ -211,4 +212,12 @@ export function useMenuEditor() {
     getMenuItems,
     resetToDefault,
   }
+
+  // Provide a symbol-keyed singleton API and keep legacy keys for compatibility.
+  provide(MENU_EDITOR_KEY, api)
+  provide('menuItems', menuItems)
+  provide('menuEditorOpen', menuEditorOpen)
+  provide('editingMenuItemId', editingMenuItemId)
+
+  return api
 }
