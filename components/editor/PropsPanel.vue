@@ -87,21 +87,39 @@
             <span class="toggle-slider"></span>
           </label>
 
-          <!-- Image -->
+  <!-- Image -->
           <div v-else-if="field.type === 'image'" class="field-image-wrap">
-            <input
-              type="text"
-              class="field-input"
-              placeholder="/chemin/image.jpg"
-              :value="localBlock.props[field.key]"
-              @input="updateProp(field.key, $event.target.value)"
-            />
-            <img
-              v-if="localBlock.props[field.key]"
-              :src="localBlock.props[field.key]"
-              class="field-image-preview"
-              alt="preview"
-            />
+            <div class="image-uploader">
+              <input
+                type="text"
+                class="field-input"
+                placeholder="/chemin/image.jpg"
+                :value="localBlock.props[field.key]"
+                @input="updateProp(field.key, $event.target.value)"
+              />
+
+              <div class="uploader-controls">
+                <input ref="fileInput" type="file" accept="image/*" class="file-input" @change="onFileSelected" />
+                <button class="btn-upload" @click.prevent="triggerFileSelect(field.key)">Téléverser</button>
+                <button v-if="uploadedImages.length" class="btn-open-list" @click.prevent="toggleImagesList(field.key)">Images uploadées ({{ uploadedImages.length }})</button>
+              </div>
+
+              <img
+                v-if="localBlock.props[field.key]"
+                :src="localBlock.props[field.key]"
+                class="field-image-preview"
+                alt="preview"
+              />
+
+              <div v-if="showImagesList" class="uploaded-list">
+                <div v-if="imagesLoading" class="images-loading">Chargement...</div>
+                <div v-else class="uploaded-grid">
+                  <div v-for="(u, i) in uploadedImages" :key="i" class="uploaded-item">
+                    <img :src="u" @click="selectUploaded(u, field.key)" alt="img" />
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- Select -->
@@ -257,6 +275,74 @@ function addImageItem(key) {
 function updateImageItem(key, idx, value) {
   localBlock.value.props[key][idx] = value
   emit('update', JSON.parse(JSON.stringify(localBlock.value)))
+}
+
+// Image upload state & helpers
+const fileInput = ref(null)
+const uploadedImages = ref([])
+const showImagesList = ref(false)
+const imagesLoading = ref(false)
+
+function triggerFileSelect() {
+  if (key) currentImageFieldKey.value = key
+  if (fileInput.value) fileInput.value.click()
+}
+
+async function onFileSelected(e) {
+  const file = e.target.files && e.target.files[0]
+  if (!file) return
+  // upload to Firebase Storage (client-only)
+  if (!import.meta.client) return
+  imagesLoading.value = true
+  try {
+    const { getStorage, ref: storageRef, uploadBytes, getDownloadURL, listAll } = await import('firebase/storage')
+    const { $db } = useNuxtApp() // ensure nuxt plugin loaded
+    const storage = getStorage()
+    const path = `uploads/${Date.now()}_${file.name}`
+    const r = storageRef(storage, path)
+    await uploadBytes(r, file)
+    const url = await getDownloadURL(r)
+    // set the field value to uploaded URL
+    updateProp(currentImageFieldKey.value, url)
+    // refresh list
+    await loadUploadedImages()
+  } catch (err) {
+    console.error('Upload error', err)
+    alert('Erreur lors du téléversement : ' + (err.message || err))
+  } finally {
+    imagesLoading.value = false
+  }
+}
+
+const currentImageFieldKey = ref('')
+
+function selectUploaded(url, key) {
+  updateProp(key, url)
+  showImagesList.value = false
+}
+
+function toggleImagesList() {
+  if (key) currentImageFieldKey.value = key
+  showImagesList.value = !showImagesList.value
+  if (showImagesList.value) loadUploadedImages()
+}
+
+async function loadUploadedImages() {
+  if (!import.meta.client) return
+  imagesLoading.value = true
+  try {
+    const { getStorage, ref: storageRef, listAll, getDownloadURL } = await import('firebase/storage')
+    const storage = getStorage()
+    const listRef = storageRef(storage, 'uploads')
+    const res = await listAll(listRef)
+    const urls = await Promise.all(res.items.map(i => getDownloadURL(i)))
+    uploadedImages.value = urls
+  } catch (err) {
+    console.error('Error loading images', err)
+    uploadedImages.value = []
+  } finally {
+    imagesLoading.value = false
+  }
 }
 </script>
 
@@ -450,6 +536,20 @@ function updateImageItem(key, idx, value) {
   border-radius: 6px;
   margin-top: 4px;
 }
+
+.image-uploader .uploader-controls {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  align-items: center;
+}
+.file-input { display: none; }
+.btn-upload, .btn-open-list { padding: 6px 10px; background: #064886; color: white; border: none; border-radius: 6px; cursor: pointer; }
+.btn-open-list { background: #2d2d3f; }
+.uploaded-list { margin-top: 8px; }
+.uploaded-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.uploaded-item img { width: 100%; height: 56px; object-fit: cover; border-radius: 6px; cursor: pointer; border: 1px solid #2d2d3f; }
+.images-loading { color: #999; font-size: 0.9em; }
 
 /* Animations */
 .field-animations {
