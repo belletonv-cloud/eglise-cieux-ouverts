@@ -126,6 +126,7 @@ function setWrapperRef(el, id) {
 }
 
 let observer = null
+let replayHandler = null
 
 // En mode édition, pré-initialiser tous les IDs comme déclenchés
 if (isEditor) {
@@ -151,6 +152,29 @@ onMounted(() => {
   observeElements()
   // initialize lastAnimations map
   lastAnimations.value = Object.fromEntries((fixedBlocks.value || []).map(b => [b.id, b.props?.animation]))
+
+  // listen for manual replay requests from admin UI
+  replayHandler = (e) => {
+    const id = e?.detail?.id
+    if (!id) return
+    const el = wrapperRefs.value[id]
+    // reset trigger
+    triggeredBlocks.value.delete(id)
+    if (el && observer) {
+      try { observer.unobserve(el) } catch (err) {}
+      try { observer.observe(el) } catch (err) {}
+    }
+    if (isAdmin && isAdmin.value) {
+      // replay immediately in admin
+      setTimeout(() => {
+        triggeredBlocks.value = new Set([...(triggeredBlocks.value || []), id])
+      }, 40)
+    } else {
+      // scroll into view to trigger scroll-based animations
+      try { el?.scrollIntoView({ behavior: 'smooth', block: 'center' }) } catch (err) {}
+    }
+  }
+  document.addEventListener('replay-animation', replayHandler)
 })
 
 watch(() => props.blocks, async () => {
@@ -204,6 +228,7 @@ function observeElements() {
 
 onUnmounted(() => {
   if (observer) observer.disconnect()
+  if (replayHandler) document.removeEventListener('replay-animation', replayHandler)
 })
 </script>
 
