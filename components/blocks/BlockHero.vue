@@ -2,12 +2,19 @@
   <section
     class="block-main-hero"
     :class="visibilityClasses"
+    :style="{ minHeight: (height ? height + 'px' : undefined), height: (height ? height + 'px' : 'auto') }"
   >
-    <img src="https://static.wixstatic.com/media/d65230_b70cb082138448849de83ccab78d3ed7~mv2.png/v1/fill/w_1920,h_1141,al_c,q_95,usm_0.66_1.00_0.01,enc_avif,quality_auto/d65230_b70cb082138448849de83ccab78d3ed7~mv2.png" alt="Sky background" class="hero-bg" />
-    
+    <img :src="image" alt="Hero background" class="hero-bg" />
+    <div v-if="overlay" class="hero-overlay" :style="{ background: overlayColor }" />
+
     <div class="hero-content">
-      <img src="https://static.wixstatic.com/media/d65230_556da516fccc4add9424fa0586c62330~mv2.png/v1/crop/x_154,y_2,w_411,h_85/fill/w_575,h_88,fp_0.50_0.50,lg_1,q_85,enc_avif,quality_auto/(NEW)%20Cieux%20Ouverts-01-NL.png" alt="Cieux Ouverts" class="hero-name" />
-      <img src="https://static.wixstatic.com/media/d65230_e393fcbc29d74d8694d53aa88bba03c5~mv2.png/v1/crop/x_0,y_0,w_232,h_132/fill/w_150,h_85,fp_0.50_0.50,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/g149-8.png" alt="Logo" class="hero-logo" />
+      <template v-if="overlayText">
+        <h1 class="hero-title" :style="{ color: textColor }">{{ overlayText }}</h1>
+      </template>
+      <template v-else>
+        <img src="https://static.wixstatic.com/media/d65230_556da516fccc4add9424fa0586c62330~mv2.png/v1/crop/x_154,y_2,w_411,h_85/fill/w_575,h_88,fp_0.50_0.50,lg_1,q_85,enc_avif,quality_auto/(NEW)%20Cieux%20Ouverts-01-NL.png" alt="Cieux Ouverts" class="hero-name" />
+        <img src="https://static.wixstatic.com/media/d65230_e393fcbc29d74d8694d53aa88bba03c5~mv2.png/v1/crop/x_0,y_0,w_232,h_132/fill/w_150,h_85,fp_0.50_0.50,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/g149-8.png" alt="Logo" class="hero-logo" />
+      </template>
     </div>
   </section>
 </template>
@@ -17,9 +24,18 @@ import { computed } from 'vue'
 
 defineOptions({ inheritAttrs: false })
 
-const { visibility = {} } = defineProps({
+const props = defineProps({
   visibility: { type: Object, default: () => ({}) },
+  image: { type: String, default: '/foule-croix.png' },
+  height: { type: [Number, String], default: 700 },
+  overlay: { type: Boolean, default: false },
+  overlayColor: { type: String, default: 'rgba(0,0,0,0.3)' },
+  overlayText: { type: String, default: '' },
+  textColor: { type: String, default: '#064886' },
+  showButton: { type: Boolean, default: false },
 })
+
+const { visibility = {} } = props
 
 const visibilityClasses = computed(() => ({
   'hide-mobile': visibility.mobile === false,
@@ -63,6 +79,12 @@ const visibilityClasses = computed(() => ({
   opacity: 0;
   animation: hero-in 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
+
+/* If admin mode, show content immediately for editing */
+.admin-mode .block-main-hero .hero-content { opacity: 1; animation: none; }
+
+.hero-overlay { position: absolute; inset: 0; z-index: 0; }
+.hero-title { font-family: 'Playfair Display', serif; font-size: 3.2rem; margin: 0; text-align: center; }
 
 @keyframes hero-in {
   0%   { opacity: 0; transform: translateY(80px); }
