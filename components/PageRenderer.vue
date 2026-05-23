@@ -1,5 +1,5 @@
 <template>
-  <div class="page-renderer" :class="{ 'admin-mode': isAdmin }">
+  <div class="page-renderer" :class="{ 'admin-mode': isAdmin && isMounted }">
     <div 
       v-for="block in visibleBlocks" 
       :key="block.id"
@@ -13,6 +13,7 @@
         v-bind="block.props"
         :visibility="block.visibility"
         :is-triggered="useTrigger(block) ? isTriggered(block.id) : false"
+        :block-id="block.id"
       />
     </div>
   </div>
@@ -135,6 +136,7 @@ function setWrapperRef(el, id) {
 
 let observer = null
 let replayHandler = null
+const isMounted = ref(false)
 
 // En mode édition, pré-initialiser tous les IDs comme déclenchés
 if (isEditor) {
@@ -143,6 +145,7 @@ if (isEditor) {
 }
 
 onMounted(() => {
+  isMounted.value = true
   if (isEditor) return
 
   observer = new IntersectionObserver((entries) => {
