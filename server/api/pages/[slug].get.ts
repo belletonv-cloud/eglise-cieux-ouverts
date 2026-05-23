@@ -5,7 +5,11 @@ export default defineEventHandler(async (event) => {
   const privateKey = process.env.NUXT_FIREBASE_PRIVATE_KEY || config.firebasePrivateKey
 
   if (!projectId || !clientEmail || !privateKey) {
-    throw createError({ statusCode: 503, message: 'Configuration Firestore incomplète.' })
+    // In development or environments where Firebase is not configured,
+    // do not fail the whole SSR: return a safe fallback so pages can render.
+    // Keep a server-side log to help the developer notice the missing config.
+    console.warn('Firestore configuration incomplete. Returning fallback { blocks: null } for page API.')
+    return { blocks: null }
   }
 
   const slug = getRouterParam(event, 'slug')
