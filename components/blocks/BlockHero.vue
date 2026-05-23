@@ -12,8 +12,8 @@
         <h1 class="hero-title" :style="{ color: textColor }">{{ overlayText }}</h1>
       </template>
       <template v-else>
-        <img src="https://static.wixstatic.com/media/d65230_556da516fccc4add9424fa0586c62330~mv2.png/v1/crop/x_154,y_2,w_411,h_85/fill/w_575,h_88,fp_0.50_0.50,lg_1,q_85,enc_avif,quality_auto/(NEW)%20Cieux%20Ouverts-01-NL.png" alt="Cieux Ouverts" class="hero-name" />
-        <img src="https://static.wixstatic.com/media/d65230_e393fcbc29d74d8694d53aa88bba03c5~mv2.png/v1/crop/x_0,y_0,w_232,h_132/fill/w_150,h_85,fp_0.50_0.50,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/g149-8.png" alt="Logo" class="hero-logo" />
+        <img :src="nameImage" alt="Cieux Ouverts" class="hero-name" />
+        <img :src="logoImage" alt="Logo" class="hero-logo" />
       </template>
     </div>
   </section>
@@ -27,6 +27,8 @@ defineOptions({ inheritAttrs: false })
 const props = defineProps({
   visibility: { type: Object, default: () => ({}) },
   image: { type: String, default: '/foule-croix.png' },
+  nameImage: { type: String, default: '' },
+  logoImage: { type: String, default: '' },
   height: { type: [Number, String], default: 700 },
   overlay: { type: Boolean, default: false },
   overlayColor: { type: String, default: 'rgba(0,0,0,0.3)' },

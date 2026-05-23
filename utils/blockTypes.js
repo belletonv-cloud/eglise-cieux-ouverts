@@ -34,9 +34,13 @@ export const BLOCK_TYPES = {
       overlayText: '',
       textColor: '#064886',
       showButton: false,
+      nameImage: 'https://static.wixstatic.com/media/d65230_556da516fccc4add9424fa0586c62330~mv2.png/v1/crop/x_154,y_2,w_411,h_85/fill/w_575,h_88,fp_0.50_0.50,lg_1,q_85,enc_avif,quality_auto/(NEW)%20Cieux%20Ouverts-01-NL.png',
+      logoImage: 'https://static.wixstatic.com/media/d65230_e393fcbc29d74d8694d53aa88bba03c5~mv2.png/v1/crop/x_0,y_0,w_232,h_132/fill/w_150,h_85,fp_0.50_0.50,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/g149-8.png',
     },
     schema: [
       { key: 'image',        label: 'Image',           type: 'image' },
+      { key: 'nameImage',    label: 'Image titre',     type: 'image' },
+      { key: 'logoImage',    label: 'Image logo',      type: 'image' },
       { key: 'height',       label: 'Hauteur (px)',    type: 'number', min: 200, max: 900 },
       { key: 'overlay',      label: 'Overlay sombre',  type: 'boolean' },
       { key: 'overlayColor', label: 'Couleur overlay', type: 'color' },
