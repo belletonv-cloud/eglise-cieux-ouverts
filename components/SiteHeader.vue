@@ -7,26 +7,19 @@
 
       <nav class="nav-desktop">
         <template v-for="item in navItems" :key="item.id">
-          <NuxtLink v-if="!adminMode && item.visible !== false && (item.id !== 'billetterie' || showBilletterie)"
+          <!-- Always render NuxtLink to keep SSR/CSR markup consistent. Click handler prevents navigation in admin mode. -->
+          <NuxtLink
             :to="item.to"
             active-class="active"
-            @click="closeMenu"
+            :class="{ 'nav-admin-link': isMounted && adminMode, 'dimmed': isMounted && adminMode && !item.visible }"
+            @click="onNavClick($event, item)"
           >{{ item.label }}</NuxtLink>
-          <a v-if="adminMode && (item.visible !== false || true)"
-            href="#"
-            class="nav-admin-link"
-            :class="{ dimmed: !item.visible }"
-            @click.prevent="onNavClick($event, item)"
-          >{{ item.label }}</a>
-          <!-- Sub-items -->
           <template v-if="item.children?.length">
-            <NuxtLink v-if="!adminMode" v-for="sub in item.children" :key="sub.id"
-              :to="sub.to" @click="closeMenu"
+            <NuxtLink v-for="sub in item.children" :key="sub.id"
+              :to="sub.to"
+              class="sub-link"
+              @click="onNavClick($event, sub)"
             >{{ sub.label }}</NuxtLink>
-            <a v-if="adminMode" v-for="sub in item.children" :key="sub.id"
-              href="#" class="nav-admin-link sub-link"
-              @click.prevent="onNavClick($event, sub)"
-            >{{ sub.label }}</a>
           </template>
         </template>
         <div class="nav-desktop-socials">
@@ -45,11 +38,11 @@
     </div>
 
     <nav class="nav-mobile">
-      <template v-for="item in navItems" :key="item.id">
-        <NuxtLink v-if="!adminMode && item.visible !== false && (item.id !== 'billetterie' || showBilletterie)"
+        <template v-for="item in navItems" :key="item.id">
+        <NuxtLink v-if="!isMounted || (!adminMode && item.visible !== false && (item.id !== 'billetterie' || showBilletterie))"
           :to="item.to" @click="closeMenu"
         >{{ item.label }}</NuxtLink>
-        <a v-if="adminMode" href="#" class="nav-admin-link"
+        <a v-if="isMounted && adminMode" href="#" class="nav-admin-link"
           :class="{ dimmed: !item.visible }"
           @click.prevent="onNavClick($event, item)"
         >{{ item.label }}</a>
@@ -85,8 +78,10 @@ const route = useRoute()
 
 const isAdminRoute = computed(() => route.path.startsWith('/admin'))
 const adminMode = inject('isAdmin', ref(false))
+const isMounted = ref(false)
 const headerStyle = computed(() => ({
-  top: adminMode.value ? '48px' : '0px'
+  // keep SSR output stable: only apply admin offset after client mount
+  top: (isMounted.value && adminMode.value) ? '48px' : '0px'
 }))
 const { hasEvenements } = useChurchEvents()
 const showBilletterie = computed(() => isAdminRoute.value || hasEvenements.value)
@@ -97,7 +92,12 @@ const navItems = computed(() => adminMode.value ? getMenuItems() : getVisibleIte
 
 function onNavClick(e, item) {
   if (adminMode.value) {
+    // Prevent the router-link navigation and any other handlers from firing.
+    // Use stopImmediatePropagation to ensure NuxtLink/router don't navigate.
     e.preventDefault()
+    if (e.stopImmediatePropagation) e.stopImmediatePropagation()
+    if (e.stopPropagation) e.stopPropagation()
+    // open the editor for this menu item
     openMenuEditor(item.id)
   } else {
     closeMenu()
@@ -127,6 +127,7 @@ function onScroll() {
 watch(() => route.fullPath, () => { closeMenu() })
 
 onMounted(() => {
+  isMounted.value = true
   window.addEventListener('scroll', onScroll)
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeMenu()
