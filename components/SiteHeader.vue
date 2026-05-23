@@ -7,19 +7,32 @@
 
       <nav class="nav-desktop">
         <template v-for="item in navItems" :key="item.id">
-          <!-- Always render NuxtLink to keep SSR/CSR markup consistent. Click handler prevents navigation in admin mode. -->
-          <NuxtLink
-            :to="item.to"
-            active-class="active"
+          <!-- Render NuxtLink on SSR (isMounted=false) or when not in admin mode.
+               When admin mode is active on the client, render plain anchors that
+               prevent navigation and open the menu editor. This mirrors the
+               mobile behaviour and keeps SSR output stable. -->
+          <NuxtLink v-if="!isMounted || !adminMode" :to="item.to" active-class="active"
             :class="{ 'nav-admin-link': isMounted && adminMode, 'dimmed': isMounted && adminMode && !item.visible }"
-            @click="onNavClick($event, item)"
+            @click="!adminMode && closeMenu"
           >{{ item.label }}</NuxtLink>
+          <a v-else href="#" class="nav-admin-link"
+            :class="{ dimmed: !item.visible }"
+            @click.prevent="onNavClick($event, item)"
+          >{{ item.label }}</a>
+
           <template v-if="item.children?.length">
-            <NuxtLink v-for="sub in item.children" :key="sub.id"
-              :to="sub.to"
-              class="sub-link"
-              @click="onNavClick($event, sub)"
-            >{{ sub.label }}</NuxtLink>
+            <template v-if="!isMounted || !adminMode">
+              <NuxtLink v-for="sub in item.children" :key="sub.id"
+                :to="sub.to"
+                class="sub-link"
+                @click="closeMenu"
+              >{{ sub.label }}</NuxtLink>
+            </template>
+            <template v-else>
+              <a v-for="sub in item.children" :key="sub.id" href="#" class="sub-link nav-admin-link"
+                @click.prevent="onNavClick($event, sub)"
+              >{{ sub.label }}</a>
+            </template>
           </template>
         </template>
         <div class="nav-desktop-socials">
