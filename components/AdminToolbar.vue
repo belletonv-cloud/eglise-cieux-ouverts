@@ -142,6 +142,9 @@ const props = defineProps({
   pageSlug: { type: String, default: '' },
 })
 
+const router = useRouter()
+const route = useRoute()
+
 const {
   activeBlock,
   selectBlock,
@@ -188,14 +191,16 @@ function setPropValue(key, value) {
 }
 
 function navigateToPage(slug) {
-  const href = slug === 'accueil' ? '/?admin=true' : `/${slug}?admin=true`
-  const currentPath = window.location.pathname === '/' ? 'accueil' : window.location.pathname.replace('/', '')
-  const targetSlug = slug === 'accueil' ? '/' : `/${slug}`
-  const currentSlug = slug === 'accueil' ? '/' : `/${currentPath}`
-  // Only do full reload if navigating to a different page, to avoid full page reload on same page
-  if (currentSlug !== targetSlug) {
-    window.location.href = href
-  }
+  // Use client-side navigation so the admin layout/offset is preserved
+  const targetPath = slug === 'accueil' ? '/' : `/${slug}`
+  const currentPath = route.path || window.location.pathname
+  if (currentPath === targetPath) return
+
+  const newQuery = { ...route.query, admin: 'true' }
+  router.push({ path: targetPath, query: newQuery }).catch(() => {})
+  // ensure we're at the top of the page after navigation to avoid content hidden under the toolbar
+  // (Nuxt/router may handle scrollBehavior, but enforce a quick reset here)
+  try { window.scrollTo(0, 0) } catch (e) {}
 }
 
 async function signInWithGoogle() {
