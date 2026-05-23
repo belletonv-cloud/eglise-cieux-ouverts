@@ -75,19 +75,42 @@
       <button class="admin-close-btn" @click="selectBlock(null)">✕</button>
     </div>
     <div class="admin-sidebar-body">
-      <div
-        v-for="field in getBlockSchema(activeBlock.type)"
-        :key="field.key"
-        class="admin-field"
-      >
-        <label>{{ field.label }}</label>
-        <input
-          v-if="field.type === 'text' || field.type === 'color' || field.type === 'image'"
-          :type="field.type === 'color' ? 'color' : 'text'"
-          :value="getPropValue(field.key)"
-          @input="setPropValue(field.key, $event.target.value)"
-          class="admin-input"
-        />
+        <div
+          v-for="field in getBlockSchema(activeBlock.type)"
+          :key="field.key"
+          class="admin-field"
+        >
+          <label>{{ field.label }}</label>
+          <input
+            v-if="field.type === 'text' || field.type === 'color'"
+            :type="field.type === 'color' ? 'color' : 'text'"
+            :value="getPropValue(field.key)"
+            @input="setPropValue(field.key, $event.target.value)"
+            class="admin-input"
+          />
+          <div v-else-if="field.type === 'image'" class="admin-image-field">
+            <input
+              type="text"
+              class="admin-input"
+              placeholder="/chemin/image.jpg"
+              :value="getPropValue(field.key)"
+              @input="setPropValue(field.key, $event.target.value)"
+            />
+            <div class="uploader-controls">
+              <input ref="adminFileInput" type="file" accept="image/*" class="file-input" @change="onAdminFileSelected" />
+              <button class="admin-btn" @click.prevent="triggerAdminFileSelect(field.key)">Téléverser</button>
+              <button v-if="uploadedImages.length" class="admin-btn admin-btn-secondary" @click.prevent="toggleAdminImagesList(field.key)">Images uploadées ({{ uploadedImages.length }})</button>
+            </div>
+            <img v-if="getPropValue(field.key)" :src="getPropValue(field.key)" class="admin-image-preview" />
+            <div v-if="showAdminImagesList" class="admin-uploaded-list">
+              <div v-if="imagesLoading" class="images-loading">Chargement...</div>
+              <div v-else class="admin-uploaded-grid">
+                <div v-for="(u, i) in uploadedImages" :key="i" class="admin-uploaded-item">
+                  <img :src="u" @click="selectAdminUploaded(u, field.key)" alt="img" />
+                </div>
+              </div>
+            </div>
+          </div>
         <textarea
           v-else-if="field.type === 'textarea' || field.type === 'richtext'"
           :value="getPropValue(field.key)"
@@ -160,6 +183,13 @@ const { $auth } = useNuxtApp()
 const user = ref(null)
 const saving = ref(false)
 
+// Image uploader state for admin sidebar
+const adminFileInput = ref(null)
+const uploadedImages = ref([])
+const showAdminImagesList = ref(false)
+const imagesLoading = ref(false)
+const currentAdminImageKey = ref('')
+
 let unsubscribe = null
 
 onMounted(() => {
@@ -188,6 +218,61 @@ function getPropValue(key) {
 function setPropValue(key, value) {
   if (!activeBlock.value) return
   updateBlock(activeBlock.value.id, { [key]: value })
+}
+
+function triggerAdminFileSelect(key) {
+  currentAdminImageKey.value = key
+  if (adminFileInput.value) adminFileInput.value.click()
+}
+
+async function onAdminFileSelected(e) {
+  const file = e.target.files && e.target.files[0]
+  if (!file || !import.meta.client) return
+  imagesLoading.value = true
+  try {
+    const { getStorage, ref: storageRef, uploadBytes, getDownloadURL } = await import('firebase/storage')
+    const storage = getStorage()
+    const path = `uploads/${Date.now()}_${file.name}`
+    const r = storageRef(storage, path)
+    await uploadBytes(r, file)
+    const url = await getDownloadURL(r)
+    if (currentAdminImageKey.value) setPropValue(currentAdminImageKey.value, url)
+    await loadAdminUploadedImages()
+  } catch (err) {
+    console.error('Upload error', err)
+    alert('Erreur lors du téléversement : ' + (err.message || err))
+  } finally {
+    imagesLoading.value = false
+  }
+}
+
+async function loadAdminUploadedImages() {
+  if (!import.meta.client) return
+  imagesLoading.value = true
+  try {
+    const { getStorage, ref: storageRef, listAll, getDownloadURL } = await import('firebase/storage')
+    const storage = getStorage()
+    const listRef = storageRef(storage, 'uploads')
+    const res = await listAll(listRef)
+    const urls = await Promise.all(res.items.map(i => getDownloadURL(i)))
+    uploadedImages.value = urls
+  } catch (err) {
+    console.error('Error loading images', err)
+    uploadedImages.value = []
+  } finally {
+    imagesLoading.value = false
+  }
+}
+
+function toggleAdminImagesList(key) {
+  if (key) currentAdminImageKey.value = key
+  showAdminImagesList.value = !showAdminImagesList.value
+  if (showAdminImagesList.value) loadAdminUploadedImages()
+}
+
+function selectAdminUploaded(url, key) {
+  setPropValue(key, url)
+  showAdminImagesList.value = false
 }
 
 function navigateToPage(slug) {
@@ -469,6 +554,12 @@ async function saveChanges() {
   font-size: 0.8em;
   opacity: 0.6;
 }
+.admin-image-preview { width:100%; max-height:120px; object-fit:cover; border-radius:6px; margin-top:8px; }
+.uploader-controls { display:flex; gap:8px; margin-top:8px; align-items:center; }
+.file-input { display:none; }
+.admin-uploaded-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-top:8px; }
+.admin-uploaded-item img { width:100%; height:56px; object-fit:cover; border-radius:6px; cursor:pointer; border:1px solid #2d2d3f; }
+.images-loading { color:#666; font-size:0.9em; margin-top:8px; }
 </style>
 
 <style>
