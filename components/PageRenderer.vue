@@ -12,7 +12,7 @@
         <template #default>
           <component
             :is="blockComponent(block.type)"
-            v-bind="block.props"
+            v-bind="sanitizeProps(block.props)"
             :visibility="block.visibility"
             :is-triggered="useTrigger(block) ? isTriggered(block.id) : false"
             :block-id="block.id"
@@ -69,6 +69,24 @@ function blockComponent(type) {
   // tree when a resolver returns a loader or a component directly.
   const comp = resolveBlockComponent(type)
   return defineAsyncComponent(() => Promise.resolve(comp))
+}
+
+function sanitizeProps(obj) {
+  if (!obj || typeof obj !== 'object') return obj
+  const out = Array.isArray(obj) ? [] : {}
+  for (const [k, v] of Object.entries(obj)) {
+    // detect a thenable / promise
+    if (v && typeof v === 'object' && typeof (v as any).then === 'function') {
+      // Replace promise values with null to avoid "[object Promise]" in SSR
+      // and log a warning for debugging.
+      // eslint-disable-next-line no-console
+      console.warn(`PageRenderer: replaced Promise prop for key=${k}`)
+      out[k] = null
+      continue
+    }
+    out[k] = v
+  }
+  return out
 }
 
 setTimeout(() => {
