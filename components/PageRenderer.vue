@@ -8,20 +8,26 @@
       :ref="el => setWrapperRef(el, block.id)"
       @click="isAdmin ? selectBlock(block.id) : undefined"
     >
-      <Suspense>
-        <template #default>
-          <component
-            :is="blockComponent(block.type)"
-            v-bind="sanitizeProps(block.props)"
-            :visibility="block.visibility"
-            :is-triggered="useTrigger(block) ? isTriggered(block.id) : false"
-            :block-id="block.id"
-          />
-        </template>
-        <template #fallback>
-          <!-- fallback empty during async component load (SSR will wait) -->
-        </template>
-      </Suspense>
+      <template v-if="isMounted">
+        <Suspense>
+          <template #default>
+            <component
+              :is="blockComponent(block.type)"
+              v-bind="sanitizeProps(block.props)"
+              :visibility="block.visibility"
+              :is-triggered="useTrigger(block) ? isTriggered(block.id) : false"
+              :block-id="block.id"
+            />
+          </template>
+          <template #fallback>
+            <!-- fallback empty during async component load (SSR will wait) -->
+          </template>
+        </Suspense>
+      </template>
+      <template v-else>
+        <!-- Server-rendered placeholder to keep SSR stable and avoid Promise leakage -->
+        <div class="block-server-placeholder" aria-hidden="true"></div>
+      </template>
     </div>
   </div>
 </template>
