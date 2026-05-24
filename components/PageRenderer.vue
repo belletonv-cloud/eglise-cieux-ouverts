@@ -1,278 +1,100 @@
 <template>
   <div class="page-renderer" :class="{ 'admin-mode': isAdmin && isMounted }">
-    <div 
-      v-for="block in visibleBlocks" 
+    <div
+      v-for="block in visibleBlocks"
       :key="block.id"
       class="block-wrapper"
       :class="[getAnimClass(block), useTrigger(block) ? { triggered: isTriggered(block.id) } : '', { 'admin-selected': isAdmin && editingBlockId === block.id }]"
       :ref="el => setWrapperRef(el, block.id)"
       @click="isAdmin ? selectBlock(block.id) : undefined"
     >
-      <component
-        :is="blockComponent(block.type)"
-        v-bind="block.props"
-        :visibility="block.visibility"
-        :is-triggered="useTrigger(block) ? isTriggered(block.id) : false"
-        :block-id="block.id"
-      />
+      <Suspense>
+        <template #default>
+          <component
+            :is="blockComponent(block.type)"
+            v-bind="block.props"
+            :visibility="block.visibility"
+            :is-triggered="useTrigger(block) ? isTriggered(block.id) : false"
+            :block-id="block.id"
+          />
+        </template>
+        <template #fallback>
+          <!-- fallback empty during async component load (SSR will wait) -->
+        </template>
+      </Suspense>
     </div>
   </div>
 </template>
 
 <script setup>
-import { onMounted, onUnmounted, ref, computed, watch, nextTick, inject } from 'vue'
-import { ANIMATIONS } from '~/utils/blockTypes.js'
-import BlockHero from '~/components/blocks/BlockHero.vue'
-import BlockBienvenue from '~/components/blocks/BlockBienvenue.vue'
-import BlockRejoins from '~/components/blocks/BlockRejoins.vue'
-import BlockAspirations from '~/components/blocks/BlockAspirations.vue'
-import BlockContact from '~/components/blocks/BlockContact.vue'
-import BlockRichText from '~/components/blocks/BlockRichText.vue'
-import BlockFullWidthImage from '~/components/blocks/BlockFullWidthImage.vue'
-import BlockVision from '~/components/blocks/BlockVision.vue'
-import BlockNousRejoindre from '~/components/blocks/BlockNousRejoindre.vue'
-import BlockActivities from '~/components/blocks/BlockActivities.vue'
-import BlockTextImage from '~/components/blocks/BlockTextImage.vue'
-import BlockGallery from '~/components/blocks/BlockGallery.vue'
-import BlockSpacer from '~/components/blocks/BlockSpacer.vue'
+import { ref, computed, watch, nextTick, inject } from 'vue'
+import { normalizeBlock, getAnimClass, filterByVisibility, shouldUseTrigger } from '~/lib/blocks/renderer'
+import { resolveBlockComponent } from '~/lib/blocks/component-registry'
+import { useBlockAnimation } from '~/composables/useBlockAnimation'
 
 const isAdmin = inject('isAdmin', ref(false))
 const isEditor = inject('isEditor', ref(false))
 const editingBlockId = inject('editingBlockId', ref(null))
 const selectBlock = inject('selectBlock', () => {})
-
-const COMPONENTS = {
-  hero: BlockHero,
-  bienvenue: BlockBienvenue,
-  rejoins: BlockRejoins,
-  aspirations: BlockAspirations,
-  contact: BlockContact,
-  richText: BlockRichText,
-  fullWidthImage: BlockFullWidthImage,
-  vision: BlockVision,
-  nousRejoindre: BlockNousRejoindre,
-  activities: BlockActivities,
-  textImage: BlockTextImage,
-  gallery: BlockGallery,
-  spacer: BlockSpacer,
-}
+const previewDevice = inject('previewDevice', ref('desktop'))
 
 const props = defineProps({
   blocks: { type: Array, default: () => [] },
 })
 
-const previewDevice = inject('previewDevice', ref('desktop'))
+const {
+  triggeredBlocks,
+  isTriggered,
+  setWrapperRef,
+  setup,
+  handleBlocksChange,
+  handleAnimationChange,
+} = useBlockAnimation(isAdmin)
 
-function blockComponent(type) {
-  return COMPONENTS[type] || BlockRichText
-}
+const isMounted = ref(false)
 
-import { BLOCK_TYPES } from '~/utils/blockTypes.js'
+const useTrigger = shouldUseTrigger
 
-// Correction universelle SSR/no-JS : repair/flatten block props if broken/migrated badly
-function cleanBlock(block) {
-  if (!block) return block
-  // Work on a shallow copy to avoid mutating the original prop objects
-  const copy = { ...block }
-  // Normalize props: if nested props.props exists, flatten it
-  let propsSrc = copy.props
-  if (propsSrc && propsSrc.props && typeof propsSrc.props === 'object') {
-    propsSrc = { ...propsSrc.props }
-  }
-  propsSrc = propsSrc || {}
-
-  // Merge with defaults for known block types, keeping only meaningful values
-  if (copy.type && BLOCK_TYPES[copy.type]) {
-    const safe = {}
-    for (const [k, v] of Object.entries(propsSrc)) {
-      if (v !== '' && v !== null && v !== undefined) safe[k] = v
-    }
-    copy.props = { ...BLOCK_TYPES[copy.type].defaults, ...safe }
-  } else {
-    copy.props = { ...propsSrc }
-  }
-
-  return copy
-}
-
-// Corrige TOUS les blocs juste avant de les rendre
 const fixedBlocks = computed(() => {
-  return props.blocks.map(cleanBlock)
+  return (props.blocks || []).map(normalizeBlock)
 })
 
 const visibleBlocks = computed(() => {
-  return fixedBlocks.value.filter(block => {
-    const v = block.visibility || {}
-    if (props.previewDevice === 'mobile' && v.mobile === false) return false
-    if (props.previewDevice === 'tablet' && v.tablet === false) return false
-    if (props.previewDevice === 'desktop' && v.desktop === false) return false
-    return true
-  })
+  return filterByVisibility(fixedBlocks.value, previewDevice.value || 'desktop')
 })
 
-function getAnimClass(block) {
-  if (!block || !block.props || !block.props.animation || block.props.animation === 'none') return ''
-  // Blocs avec view-timeline interne : pas d'animation wrapper (conflit)
-  if (block.type === 'aspirations' || block.type === 'nousRejoindre') return ''
-  const anim = ANIMATIONS.find(a => a.id === block.props.animation)
-  return anim ? `block-${anim.css}` : ''
+function blockComponent(type) {
+  return resolveBlockComponent(type)
 }
 
-function useTrigger(block) {
-  return block.type !== 'aspirations' && block.type !== 'nousRejoindre'
-}
-
-const triggeredBlocks = ref(new Set())
-const wrapperRefs = ref({})
-const lastAnimations = ref({})
-
-function isTriggered(id) {
-  return triggeredBlocks.value.has(id)
-}
-
-function setWrapperRef(el, id) {
-  if (el) wrapperRefs.value[id] = el
-}
-
-let observer = null
-let replayHandler = null
-const isMounted = ref(false)
-
-// En mode édition, pré-initialiser tous les IDs comme déclenchés
-if (isEditor) {
-  const allIds = (props.blocks || []).map(b => b.id).filter(Boolean)
-  triggeredBlocks.value = new Set(allIds)
-}
-
-onMounted(() => {
+setTimeout(() => {
   isMounted.value = true
-  if (isEditor) return
+  setup(props.blocks || [])
+}, 0)
 
-  observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        const id = entry.target.dataset.blockId
-        if (id) {
-          triggeredBlocks.value = new Set([...triggeredBlocks.value, id])
-          observer.unobserve(entry.target)
-        }
-      }
-    })
-  }, { threshold: 0.05, rootMargin: '0px 0px 0px 0px' })
-
-  observeElements()
-  // initialize lastAnimations map
-  lastAnimations.value = Object.fromEntries((fixedBlocks.value || []).map(b => [b.id, b.props?.animation]))
-
-  // listen for manual replay requests from admin UI
-  replayHandler = (e) => {
-    const id = e?.detail?.id
-    if (!id) return
-    const el = wrapperRefs.value[id]
-    // reset trigger
-    triggeredBlocks.value.delete(id)
-    if (el && observer) {
-      try { observer.unobserve(el) } catch (err) {}
-      try { observer.observe(el) } catch (err) {}
-    }
-    if (isAdmin && isAdmin.value) {
-      // replay immediately in admin
-      setTimeout(() => {
-        triggeredBlocks.value = new Set([...(triggeredBlocks.value || []), id])
-      }, 40)
-    } else {
-      // scroll into view to trigger scroll-based animations
-      try { el?.scrollIntoView({ behavior: 'smooth', block: 'center' }) } catch (err) {}
-    }
-  }
-  document.addEventListener('replay-animation', replayHandler)
-})
-
-// Watch only the block id list instead of deeply watching the whole structure to avoid
-// triggering on unrelated nested mutations which can cause reactive churn.
 watch(() => (props.blocks || []).map(b => b.id).join(','), async () => {
   try {
     await nextTick()
-    if (isEditor) {
-      const allIds = (props.blocks || []).map(b => b.id).filter(Boolean)
-      triggeredBlocks.value = new Set(allIds)
-      return
-    }
-    observeElements()
+    handleBlocksChange(props.blocks || [])
   } catch (err) {
-    // Surface watcher errors for easier debugging
     console.error('PageRenderer: error in blocks watcher', err)
   }
 }, { deep: false })
 
-// When a block's animation prop changes, reset its triggered state so the new animation
-// can run again on next intersection/scroll. Watch only the animation values to avoid
-// deep watching of the entire blocks tree which can cause reactive churn.
 let suppressAnimationWatcher = false
-watch(() => fixedBlocks.value.map(b => ({ id: b.id, anim: b.props?.animation })), (newArr, oldArr) => {
+watch(() => fixedBlocks.value.map(b => ({ id: b.id, anim: b.props?.animation })), (newArr) => {
   if (suppressAnimationWatcher) return
   try {
-    const oldMap = lastAnimations.value || {}
-    const newMap = {}
-    for (const b of newArr) {
-      newMap[b.id] = b.anim
-      const prev = oldMap[b.id]
-      const now = b.anim
-      if (prev !== undefined && prev !== now) {
-        // reset trigger for this block
-        triggeredBlocks.value.delete(b.id)
-        // re-observe the element so intersection observer can trigger again
-        const el = wrapperRefs.value[b.id]
-        if (el && observer) {
-          try { observer.observe(el) } catch (e) { console.error(e) }
-        }
-        // If in admin mode, replay the animation immediately by re-adding the trigger
-        if (isAdmin && isAdmin.value) {
-          suppressAnimationWatcher = true
-          setTimeout(() => {
-            try {
-              triggeredBlocks.value = new Set([...(triggeredBlocks.value || []), b.id])
-            } finally {
-              // re-enable after a small delay to avoid reentrancy
-              setTimeout(() => { suppressAnimationWatcher = false }, 30)
-            }
-          }, 40)
-        }
-      }
-    }
-    lastAnimations.value = newMap
+    handleAnimationChange(fixedBlocks.value)
   } catch (err) {
     console.error('PageRenderer: error in animation watcher', err)
   }
 }, { deep: false })
-
-function observeElements() {
-  if (!observer) return
-  for (const [id, el] of Object.entries(wrapperRefs.value)) {
-    if (el) {
-      el.dataset.blockId = id
-      observer.observe(el)
-    }
-  }
-}
-
-onUnmounted(() => {
-  if (observer) observer.disconnect()
-  if (replayHandler) document.removeEventListener('replay-animation', replayHandler)
-})
 </script>
 
 <style scoped>
-.page-renderer {
-  width: 100%;
-}
-.block-wrapper {
-  /* Pas de contain: layout — ça casse les transitions GPU */
-}
-.admin-selected {
-  outline: 2px solid #3B82F6;
-  outline-offset: -2px;
-}
+.page-renderer { width: 100%; }
+.admin-selected { outline: 2px solid #3B82F6; outline-offset: -2px; }
 </style>
 
 <style>

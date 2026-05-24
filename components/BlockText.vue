@@ -6,7 +6,7 @@
 </template>
 
 <script setup>
-import { ref, watch, defineProps, defineEmits } from 'vue'
+import { ref, watch } from 'vue'
 const { modelValue, isTriggered, editable } = defineProps({
   modelValue: { type: String, default: '' },
   isTriggered: Boolean,

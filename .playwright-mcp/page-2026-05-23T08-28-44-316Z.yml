@@ -1,0 +1,130 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e4]:
+    - generic [ref=e6]:
+      - heading "🚀 Église App" [level=1] [ref=e7]
+      - paragraph [ref=e8]:
+        - text: Découvrez toutes les fonctionnalités de l'application de gestion d'église.
+        - text: Inspiré de
+        - strong [ref=e9]: Planning Center
+        - text: ","
+        - strong [ref=e10]: Music Stand
+        - text: et plus encore.
+      - button "▶ Commencer la visite guidée" [ref=e11] [cursor=pointer]
+      - button "🚀 Accéder directement au Dashboard" [ref=e12] [cursor=pointer]
+    - generic [ref=e13]:
+      - heading "Tout ce que vous pouvez faire" [level=2] [ref=e14]
+      - generic [ref=e15]:
+        - generic [ref=e16]:
+          - generic [ref=e17]: 📊
+          - heading "Dashboard" [level=3] [ref=e18]
+          - paragraph [ref=e19]: "Vue d'ensemble : membres, services à venir, confirmations"
+        - generic [ref=e20]:
+          - generic [ref=e21]: 📅
+          - heading "Planning des services" [level=3] [ref=e22]
+          - paragraph [ref=e23]: Plans, ordres de culte, templates réutilisables
+        - generic [ref=e24]:
+          - generic [ref=e25]: 🎵
+          - heading "Music Stand" [level=3] [ref=e26]
+          - paragraph [ref=e27]: ChordPro, transposition, métronome, auto-scroll
+        - generic [ref=e28]:
+          - generic [ref=e29]: 👥
+          - heading "Gestion des membres" [level=3] [ref=e30]
+          - paragraph [ref=e31]: CRUD, rôles, permissions RBAC, annuaire
+        - generic [ref=e32]:
+          - generic [ref=e33]: 🎪
+          - heading "Équipes & bénévolat" [level=3] [ref=e34]
+          - paragraph [ref=e35]: Teams, positions, scheduling, conflits
+        - generic [ref=e36]:
+          - generic [ref=e37]: ✅
+          - heading "Check-in" [level=3] [ref=e38]
+          - paragraph [ref=e39]: QR code, check-in manuel, statistiques
+        - generic [ref=e40]:
+          - generic [ref=e41]: 🏠
+          - heading "Groupes de maison" [level=3] [ref=e42]
+          - paragraph [ref=e43]: Groupes, leaders, réunions, membres
+        - generic [ref=e44]:
+          - generic [ref=e45]: 📧
+          - heading "Emails" [level=3] [ref=e46]
+          - paragraph [ref=e47]: Templates, envoi en masse, variables
+    - generic [ref=e48]:
+      - heading "Comparaison avec Planning Center" [level=2] [ref=e49]
+      - table [ref=e51]:
+        - rowgroup [ref=e52]:
+          - row "Fonctionnalité Planning Center Église App" [ref=e53]:
+            - columnheader "Fonctionnalité" [ref=e54]
+            - columnheader "Planning Center" [ref=e55]
+            - columnheader "Église App" [ref=e56]
+        - rowgroup [ref=e57]:
+          - row "Base de membres ✅ People ✅" [ref=e58]:
+            - cell "Base de membres" [ref=e59]
+            - cell "✅ People" [ref=e60]
+            - cell "✅" [ref=e61]
+          - row "Planning de services ✅ Services ✅" [ref=e62]:
+            - cell "Planning de services" [ref=e63]
+            - cell "✅ Services" [ref=e64]
+            - cell "✅" [ref=e65]
+          - row "Templates de service ✅ ✅" [ref=e66]:
+            - cell "Templates de service" [ref=e67]
+            - cell "✅" [ref=e68]
+            - cell "✅" [ref=e69]
+          - row "Scheduling bénévoles ✅ ✅" [ref=e70]:
+            - cell "Scheduling bénévoles" [ref=e71]
+            - cell "✅" [ref=e72]
+            - cell "✅" [ref=e73]
+          - row "Music Stand ✅ (add-on) ✅" [ref=e74]:
+            - cell "Music Stand" [ref=e75]
+            - cell "✅ (add-on)" [ref=e76]
+            - cell "✅" [ref=e77]
+          - row "Transposition ✅ ✅" [ref=e78]:
+            - cell "Transposition" [ref=e79]
+            - cell "✅" [ref=e80]
+            - cell "✅" [ref=e81]
+          - row "Métronome ✅ ✅" [ref=e82]:
+            - cell "Métronome" [ref=e83]
+            - cell "✅" [ref=e84]
+            - cell "✅" [ref=e85]
+          - row "Annotations ✅ ✅" [ref=e86]:
+            - cell "Annotations" [ref=e87]
+            - cell "✅" [ref=e88]
+            - cell "✅" [ref=e89]
+          - row "Check-in ✅ Check-Ins ✅" [ref=e90]:
+            - cell "Check-in" [ref=e91]
+            - cell "✅ Check-Ins" [ref=e92]
+            - cell "✅" [ref=e93]
+          - row "Groupes ✅ Groups ✅" [ref=e94]:
+            - cell "Groupes" [ref=e95]
+            - cell "✅ Groups" [ref=e96]
+            - cell "✅" [ref=e97]
+          - row "Emails ✅ ✅" [ref=e98]:
+            - cell "Emails" [ref=e99]
+            - cell "✅" [ref=e100]
+            - cell "✅" [ref=e101]
+          - row "Webhooks ⚠️ API ✅" [ref=e102]:
+            - cell "Webhooks" [ref=e103]
+            - cell "⚠️ API" [ref=e104]
+            - cell "✅" [ref=e105]
+          - row "Sondages ❌ ✅" [ref=e106]:
+            - cell "Sondages" [ref=e107]
+            - cell "❌" [ref=e108]
+            - cell "✅" [ref=e109]
+          - row "PWA Offline ❌ ✅" [ref=e110]:
+            - cell "PWA Offline" [ref=e111]
+            - cell "❌" [ref=e112]
+            - cell "✅" [ref=e113]
+          - row "i18n ❌ ✅ FR/EN" [ref=e114]:
+            - cell "i18n" [ref=e115]
+            - cell "❌" [ref=e116]
+            - cell "✅ FR/EN" [ref=e117]
+          - row "Sync PCO N/A ✅" [ref=e118]:
+            - cell "Sync PCO" [ref=e119]
+            - cell "N/A" [ref=e120]
+            - cell "✅" [ref=e121]
+          - row "Prix $25-250+/mois Gratuit" [ref=e122]:
+            - cell "Prix" [ref=e123]
+            - cell "$25-250+/mois" [ref=e124]
+            - cell "Gratuit" [ref=e125]
+  - generic [ref=e126]:
+    - generic "Toggle devtools panel" [ref=e127] [cursor=pointer]:
+      - img [ref=e128]
+    - generic "Toggle Component Inspector" [ref=e133] [cursor=pointer]:
+      - img [ref=e134]

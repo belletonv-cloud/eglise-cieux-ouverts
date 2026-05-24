@@ -1,6 +1,8 @@
 export default defineNuxtConfig({
-  nitro: {
-    preset: 'cloudflare-pages'
+  // Nuxt experimental flags
+  experimental: {
+    // Disable the app manifest to avoid resolving the virtual `#app-manifest` import in dev
+    appManifest: false
   },
   typescript: {
     typeCheck: false,

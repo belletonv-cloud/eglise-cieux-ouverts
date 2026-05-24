@@ -3,7 +3,6 @@
  * Chaque bloc a : type, label, icône, props par défaut, schema de propriétés éditables
  */
 
-import BlockActivities from '~/components/blocks/BlockActivities.vue'
 export const ANIMATIONS = [
   { id: 'none',      label: 'Aucune',         css: '' },
   { id: 'fadeIn',    label: 'Apparition',     css: 'anim-fadeIn' },
@@ -26,6 +25,8 @@ export const BLOCK_TYPES = {
   hero: {
     label: 'Hero (bannière)',
     icon: '🖼️',
+    category: 'hero',
+    animations: 'wrapper',
     defaults: {
       image: '/foule-croix.png',
       height: 700,
@@ -53,6 +54,8 @@ export const BLOCK_TYPES = {
   bienvenue: {
     label: 'Bienvenue (lettres)',
     icon: '✨',
+    category: 'content',
+    animations: 'wrapper',
     defaults: {
       title: 'BIENVENUE',
       subtitle: "à l'Église Cieux Ouverts à Morlaix",
@@ -74,6 +77,8 @@ export const BLOCK_TYPES = {
   activities: {
     label: 'Grille d\'activités',
     icon: '🗂️',
+    category: 'content',
+    animations: 'wrapper',
     defaults: {
       items: [
         {
@@ -126,6 +131,8 @@ export const BLOCK_TYPES = {
   textImage: {
     label: 'Texte + Image',
     icon: '📝',
+    category: 'content',
+    animations: 'wrapper',
     defaults: {
       title: 'Titre de la section',
       subtitle: '',
@@ -157,6 +164,8 @@ export const BLOCK_TYPES = {
   rejoins: {
     label: 'Rejoins-nous',
     icon: '🤝',
+    category: 'content',
+    animations: 'wrapper',
     defaults: {
       title: 'Rejoins-nous',
       subtitle: 'Chaque dimanche',
@@ -173,6 +182,7 @@ export const BLOCK_TYPES = {
       { key: 'subtitle',           label: 'Sous-titre',      type: 'text' },
       { key: 'location',           label: 'Lieu',            type: 'text' },
       { key: 'backgroundGradient', label: 'Fond (CSS)',      type: 'text' },
+      { key: 'horaires',           label: 'Horaires',        type: 'array' },
       { key: 'animation',          label: 'Animation',       type: 'animation' },
     ]
   },
@@ -180,6 +190,8 @@ export const BLOCK_TYPES = {
   aspirations: {
     label: 'Nos aspirations',
     icon: '🌟',
+    category: 'content',
+    animations: 'internal',
     defaults: {
       title: 'Nos aspirations',
       items: [
@@ -194,6 +206,7 @@ export const BLOCK_TYPES = {
     },
     schema: [
       { key: 'title',           label: 'Titre',             type: 'text' },
+      { key: 'items',           label: 'Aspirations',       type: 'array' },
       { key: 'backgroundColor', label: 'Fond',              type: 'color' },
       { key: 'textColor',       label: 'Couleur texte',     type: 'color' },
       { key: 'animation',       label: 'Animation citation',type: 'animation' },
@@ -203,6 +216,8 @@ export const BLOCK_TYPES = {
   contact: {
     label: 'Formulaire contact',
     icon: '✉️',
+    category: 'content',
+    animations: 'wrapper',
     defaults: {
       title: 'Tu veux nous contacter ?',
       addressTitle: '',
@@ -233,6 +248,8 @@ export const BLOCK_TYPES = {
   nousRejoindre: {
     label: 'Nous rejoindre (Cercle)',
     icon: '⚪',
+    category: 'content',
+    animations: 'internal',
     defaults: {
       title: 'Nous rejoindre',
       link: '/contact',
@@ -248,6 +265,8 @@ export const BLOCK_TYPES = {
   richText: {
     label: 'Texte riche',
     icon: '📄',
+    category: 'content',
+    animations: 'wrapper',
     defaults: {
       content: 'Écrivez votre texte ici...',
       backgroundColor: '#ffffff',
@@ -271,6 +290,8 @@ export const BLOCK_TYPES = {
   gallery: {
     label: 'Galerie photos',
     icon: '🖼️',
+    category: 'media',
+    animations: 'wrapper',
     defaults: {
       title: '',
       textColor: '#064886',
@@ -292,6 +313,8 @@ export const BLOCK_TYPES = {
   spacer: {
     label: 'Espace vide',
     icon: '↕️',
+    category: 'layout',
+    animations: 'none',
     defaults: {
       height: 60,
       backgroundColor: 'transparent',
@@ -305,6 +328,8 @@ export const BLOCK_TYPES = {
   vision: {
     label: 'Vision (citation)',
     icon: '🎯',
+    category: 'content',
+    animations: 'wrapper',
     defaults: {
       label: 'Ce qui nous anime',
       quote: 'Voir la gloire, le royaume et la volonté de Dieu\\nse manifester sur la terre comme aux Cieux',
@@ -328,6 +353,8 @@ export const BLOCK_TYPES = {
   fullWidthImage: {
     label: 'Image pleine largeur',
     icon: '🌆',
+    category: 'media',
+    animations: 'wrapper',
     defaults: {
       src: '',
       alt: 'Image pleine largeur',

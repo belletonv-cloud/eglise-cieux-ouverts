@@ -45,9 +45,129 @@ Déployé sur Cloudflare Pages.
 - **Persistance Firestore** : pas de sync automatique des blocs
 - **Accent incohérent** : "Billetterie Évènements" vs "Événements"
 
-## Conventions
+## WIX-like Architecture Schema-Driven
 
-- `npx nuxi dev` → développement local
-- `npx nuxi build` → build statique
-- Variables d'env dans `.env`
-- Le dossier `app/` a été supprimé (stale scaffolding)
+### Architecture
+```
+lib/blocks/types.ts            → Types TS (BlockSchema, FieldSchema, etc.)
+lib/blocks/registry.ts         → Registry central des blocs + validation
+lib/blocks/editor-auto.ts      → Utilitaires d'édition auto-générée
+lib/blocks/renderer.ts         → Utilitaires de rendu (normalisation, filtrage, animations)
+
+components/editor/AutoEditor.vue        → Éditeur auto-généré depuis le schema
+components/editor/fields/*.vue           → 11 composants de champ (un par type)
+components/editor/AdminBlockPreview.vue  → Miniature pour la palette d'ajout
+
+tests/schema-driven/all-blocks.spec.ts   → Runner dynamique (scanne tous les blocs)
+tests/schema-driven/hero.spec.ts         → Tests complets BlockHero
+tests/schema-driven/text-image.spec.ts   → Tests complets BlockTextImage
+tests/schema-driven/schema-test-helper.ts → Helpers de test réutilisables
+
+scripts/add-block.ts                     → CLI pour générer un nouveau bloc
+scripts/generate-tests.ts                → Générateur de tests depuis les schemas
+```
+
+### Principe : Schema-Driven
+Chaque bloc = une entrée dans `BLOCK_TYPES` avec :
+- `type` : identifiant unique kebab-case
+- `label` : nom affiché
+- `icon` : emoji
+- `category` : `'content' | 'layout' | 'media' | 'hero'`
+- `animations` : `'wrapper' | 'internal' | 'none'` (détermine si le wrapper anime le bloc)
+- `defaults` : valeurs par défaut de toutes les props
+- `schema` : tableau de champs, chaque champ = `{ key, label, type, min?, max?, options?, placeholder? }`
+
+Types de champ supportés : `text | textarea | richtext | number | color | boolean | select | animation | image | array | images`
+
+### BlockRegistry validation
+Le `BlockRegistry` valide automatiquement à l'enregistrement :
+- Type unique
+- Category valide
+- Animation strategy valide
+- Tous les champs ont des labels
+- Tous les champs ont des defaults
+- Les types de champs sont valides
+- Les champs `select` ont des options
+- Les champs `number` ont min/max
+- Pas de clés dupliquées
+
+### Animation strategy (schema-driven)
+| Strategy | Comportement | Blocs concernés |
+|---|---|---|
+| `wrapper` | Animation gérée par PageRenderer (wrapper + IntersectionObserver) | hero, bienvenue, textImage, etc. |
+| `internal` | Le bloc gère sa propre animation (scroll-driven CSS) | aspirations, nousRejoindre |
+| `none` | Pas d'animation | spacer |
+
+### Ajouter un nouveau bloc (3 étapes)
+```bash
+# Étape 1 : Générer le squelette
+npx tsx scripts/add-block.ts monBloc
+
+# Cela crée :
+#   components/blocks/BlockMonBloc.vue
+#   tests/schema-driven/mon-bloc.spec.ts
+#   + affiche le snippet schema à copier
+
+# Étape 2 : Copier le schema dans utils/blockTypes.js
+#   (inclure category + animations)
+
+# Étape 3 : Enregistrer dans PageRenderer.vue
+#   import BlockMonBloc from '~/components/blocks/BlockMonBloc.vue'
+#   Ajouter 'monBloc': BlockMonBloc, dans COMPONENTS
+
+# Étape 4 : Enregistrer dans lib/blocks/renderer.ts
+#   Ajouter dans getBlockComponentName() la map des composants
+```
+
+### Tests
+- `npx playwright test` → exécute tous les tests (playwright + schema-driven)
+- `npx playwright test tests/schema-driven/` → exécute les tests schema-driven uniquement
+- `all-blocks.spec.ts` teste TOUS les blocs dynamiquement en 9 sections :
+  1. Schema integrity (types uniques, labels, defaults, contraintes)
+  2. Admin rendering (sélection, classes d'animation, sidebar)
+  3. SSR sans JavaScript (toutes les pages, pas de 500)
+  4. Hydration (pas d'erreurs console)
+  5. Animation system (classes CSS, événement replay, pre-trigger admin)
+  6. Responsive device preview (iframe 768px, 375px)
+  7. Admin mode UI integrity (Escape, toolbar, classes)
+  8. Accessibility basics (headings, alt attributes, lang="fr")
+  9. Cross-block integration (types de champs, catégories)
+- Les helpers dans `schema-test-helper.ts` fournissent `editField`, `toggleField`, `selectField`, `selectAnimation`
+- `validateSchema()` valide les champs, types, defaults, unicité
+- Les tests doivent marcher sans authentification Firebase
+
+### AutoEditor (remplace la sidebar inline)
+`AutoEditor.vue` prend un `schema` + `modelValue` en entrée et génère automatiquement :
+- `FieldText.vue` pour type 'text' (avec placeholder)
+- `FieldColor.vue` pour type 'color'
+- `FieldNumber.vue` pour type 'number' (range slider)
+- etc. (11 types supportés)
+
+**AdminToolbar.vue utilise AutoEditor** dans sa sidebar d'édition.
+
+### Centralisation du rendu
+Toutes les fonctions de rendu sont centralisées dans `lib/blocks/renderer.ts` :
+- `normalizeBlock()` → normalise les props (flatten props.props, merge defaults)
+- `filterByVisibility()` → filtre par device (desktop/tablet/mobile)
+- `getAnimClass()` → classe CSS d'animation (utilise animation strategy)
+- `shouldUseTrigger()` → si le bloc utilise le trigger IntersectionObserver
+
+`PageRenderer.vue` appelle ces fonctions au lieu de les dupliquer.
+
+### Conventions de test
+- Toujours tester : validité du schema (types, champs, defaults), rendu SSR, rendu admin, sélection
+- Utiliser `validateSchema()` dans les tests de chaque bloc
+- Vérifier SSR sans JavaScript explicitement
+- Vérifier l'absence d'erreurs console avec JavaScript
+- Les tests de sidebar nécessitent auth — ne pas les forcer sans Firebase mock
+
+### Scripts CLI
+```bash
+# Ajouter un nouveau bloc
+npx tsx scripts/add-block.ts monBloc
+# → génère composant + tests + instructions schema
+
+# Générer des tests automatisés pour tous les blocs
+npx tsx scripts/generate-tests.ts
+# → génère tests/schema-driven/generated/generated-tests.spec.ts
+```

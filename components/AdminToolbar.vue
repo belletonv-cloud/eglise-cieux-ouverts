@@ -79,75 +79,26 @@
       <small style="color:#666; font-size:0.88em;">Si l'animation est scroll-driven, je scrollerai vers le bloc.</small>
     </div>
     <div class="admin-sidebar-body">
-        <div
-          v-for="field in getBlockSchema(activeBlock.type)"
-          :key="field.key"
-          class="admin-field"
-        >
-          <label>{{ field.label }}</label>
-          <input
-            v-if="field.type === 'text' || field.type === 'color'"
-            :type="field.type === 'color' ? 'color' : 'text'"
-            :value="getPropValue(field.key)"
-            @input="setPropValue(field.key, $event.target.value)"
-            class="admin-input"
-          />
-          <div v-else-if="field.type === 'image'" class="admin-image-field">
-            <input
-              type="text"
-              class="admin-input"
-              placeholder="/chemin/image.jpg"
-              :value="getPropValue(field.key)"
-              @input="setPropValue(field.key, $event.target.value)"
-            />
-            <div class="uploader-controls">
-              <input ref="adminFileInput" type="file" accept="image/*" class="file-input" @change="onAdminFileSelected" />
-              <button class="admin-btn" @click.prevent="triggerAdminFileSelect(field.key)">Téléverser</button>
-              <button v-if="uploadedImages.length" class="admin-btn admin-btn-secondary" @click.prevent="toggleAdminImagesList(field.key)">Images uploadées ({{ uploadedImages.length }})</button>
-            </div>
-            <img v-if="getPropValue(field.key)" :src="getPropValue(field.key)" class="admin-image-preview" />
-            <div v-if="showAdminImagesList" class="admin-uploaded-list">
-              <div v-if="imagesLoading" class="images-loading">Chargement...</div>
-              <div v-else class="admin-uploaded-grid">
-                <div v-for="(u, i) in uploadedImages" :key="i" class="admin-uploaded-item">
-                  <img :src="u" @click="selectAdminUploaded(u, field.key)" alt="img" />
-                </div>
-              </div>
+      <AutoEditor
+        :schema="getBlockSchema(activeBlock.type)"
+        :model-value="activeBlock"
+        @update="onAutoUpdate"
+      />
+      <div v-if="hasImageFields" class="admin-image-section">
+        <p class="admin-image-section-label">Images</p>
+        <div class="uploader-controls">
+          <input ref="adminFileInput" type="file" accept="image/*" class="file-input" @change="onAdminFileSelected" />
+          <button class="admin-btn" @click.prevent="adminFileInput?.click()">Téléverser une image</button>
+          <button v-if="uploadedImages.length" class="admin-btn admin-btn-secondary" @click.prevent="toggleAdminImagesList()">Images uploadées ({{ uploadedImages.length }})</button>
+        </div>
+        <div v-if="showAdminImagesList" class="admin-uploaded-list">
+          <div v-if="imagesLoading" class="images-loading">Chargement...</div>
+          <div v-else class="admin-uploaded-grid">
+            <div v-for="(u, i) in uploadedImages" :key="i" class="admin-uploaded-item">
+              <img :src="u" @click="selectAdminUploaded(u)" alt="img" />
             </div>
           </div>
-        <textarea
-          v-else-if="field.type === 'textarea' || field.type === 'richtext'"
-          :value="getPropValue(field.key)"
-          @input="setPropValue(field.key, $event.target.value)"
-          class="admin-input admin-textarea"
-          rows="4"
-        />
-        <select
-          v-else-if="field.type === 'select' || field.type === 'animation'"
-          :value="getPropValue(field.key)"
-          @change="setPropValue(field.key, $event.target.value)"
-          class="admin-input"
-        >
-          <option v-for="opt in (field.type === 'animation' ? ANIMATIONS : field.options)" :key="opt.id || opt" :value="opt.id || opt">{{ opt.label || opt }}</option>
-        </select>
-        <label v-else-if="field.type === 'boolean'" class="admin-checkbox">
-          <input
-            type="checkbox"
-            :checked="getPropValue(field.key)"
-            @change="setPropValue(field.key, $event.target.checked)"
-          />
-          <span>{{ field.label }}</span>
-        </label>
-        <input
-          v-else-if="field.type === 'number'"
-          type="number"
-          :min="field.min"
-          :max="field.max"
-          :value="getPropValue(field.key)"
-          @input="setPropValue(field.key, parseInt($event.target.value))"
-          class="admin-input"
-        />
-        <span v-else class="admin-unsupported">Type "{{ field.type }}" non supporté</span>
+        </div>
       </div>
     </div>
     <div class="admin-sidebar-footer">
@@ -188,13 +139,6 @@ const { $auth } = useNuxtApp()
 const user = ref(null)
 const saving = ref(false)
 
-// Image uploader state for admin sidebar
-const adminFileInput = ref(null)
-const uploadedImages = ref([])
-const showAdminImagesList = ref(false)
-const imagesLoading = ref(false)
-const currentAdminImageKey = ref('')
-
 let unsubscribe = null
 
 onMounted(() => {
@@ -217,19 +161,20 @@ function getBlockSchema(type) {
   return BLOCK_TYPES[type]?.schema || []
 }
 
-function getPropValue(key) {
-  if (!activeBlock.value) return ''
-  return activeBlock.value.props?.[key] ?? ''
-}
+const hasImageFields = computed(() => {
+  if (!activeBlock.value) return false
+  const schema = getBlockSchema(activeBlock.value.type)
+  return schema.some(f => f.type === 'image' || f.type === 'images')
+})
 
-function setPropValue(key, value) {
-  if (!activeBlock.value) return
-  updateBlock(activeBlock.value.id, { [key]: value })
-}
+// Image upload state
+const adminFileInput = ref(null)
+const uploadedImages = ref([])
+const showAdminImagesList = ref(false)
+const imagesLoading = ref(false)
 
-function triggerAdminFileSelect(key) {
-  currentAdminImageKey.value = key
-  if (adminFileInput.value) adminFileInput.value.click()
+function onAutoUpdate(block) {
+  updateBlock(block.id, block.props)
 }
 
 async function onAdminFileSelected(e) {
@@ -243,7 +188,9 @@ async function onAdminFileSelected(e) {
     const r = storageRef(storage, path)
     await uploadBytes(r, file)
     const url = await getDownloadURL(r)
-    if (currentAdminImageKey.value) setPropValue(currentAdminImageKey.value, url)
+    if (activeBlock.value) {
+      updateBlock(activeBlock.value.id, { [fieldKeysWithImages.value[0]]: url })
+    }
     await loadAdminUploadedImages()
   } catch (err) {
     console.error('Upload error', err)
@@ -252,6 +199,12 @@ async function onAdminFileSelected(e) {
     imagesLoading.value = false
   }
 }
+
+const fieldKeysWithImages = computed(() => {
+  if (!activeBlock.value) return []
+  const schema = getBlockSchema(activeBlock.value.type)
+  return schema.filter(f => f.type === 'image').map(f => f.key)
+})
 
 async function loadAdminUploadedImages() {
   if (!import.meta.client) return
@@ -271,14 +224,15 @@ async function loadAdminUploadedImages() {
   }
 }
 
-function toggleAdminImagesList(key) {
-  if (key) currentAdminImageKey.value = key
+function toggleAdminImagesList() {
   showAdminImagesList.value = !showAdminImagesList.value
   if (showAdminImagesList.value) loadAdminUploadedImages()
 }
 
-function selectAdminUploaded(url, key) {
-  setPropValue(key, url)
+function selectAdminUploaded(url) {
+  if (activeBlock.value && fieldKeysWithImages.value.length > 0) {
+    updateBlock(activeBlock.value.id, { [fieldKeysWithImages.value[0]]: url })
+  }
   showAdminImagesList.value = false
 }
 
@@ -564,6 +518,19 @@ async function saveChanges() {
   font-size: 0.8em;
   color: #888;
   font-style: italic;
+}
+.admin-image-section {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid #eee;
+}
+.admin-image-section-label {
+  font-size: 0.72em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #7c7c9a;
+  margin-bottom: 8px;
 }
 .admin-sidebar-footer {
   padding: 12px 16px;

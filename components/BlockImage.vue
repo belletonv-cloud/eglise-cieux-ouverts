@@ -6,7 +6,7 @@
 </template>
 
 <script setup>
-import { ref, defineProps, defineEmits } from 'vue'
+import { ref } from 'vue'
 const { src, editable } = defineProps({
   src: { type: String, default: '' },
   editable: Boolean

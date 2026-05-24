@@ -71,11 +71,10 @@ export function useAdmin() {
     return localBlocks.value
   }
 
-  provide('isAdmin', isAdminMode)
-  provide('isEditor', isAdminMode)
-  provide('editingBlockId', editingBlockId)
-  provide('selectBlock', selectBlock)
-  provide('previewDevice', previewDevice)
+  // Do not call provide here — providing should occur inside a component's setup
+  // (layouts/default.vue supplies the provided values). This avoids "provide() can only
+  // be used inside setup()" warnings when the composable is imported/used outside
+  // of a component setup context (plugins, middleware, etc.).
 
   return {
     isAdminMode,
