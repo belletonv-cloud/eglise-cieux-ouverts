@@ -1,3 +1,12 @@
+// Build-time sanity check: when running in CI / Pages environments, fail the
+// build early if the public Firebase API key is missing. This prevents silent
+// deployments where the client bundle can't initialize Firebase and causes
+// a degraded production site.
+const isCI = Boolean(process.env.CI || process.env.GITHUB_ACTIONS || process.env.PAGES_BRANCH || process.env.PAGES || process.env.CF_PAGES)
+if (isCI && !process.env.NUXT_PUBLIC_FIREBASE_API_KEY) {
+  throw new Error('Missing NUXT_PUBLIC_FIREBASE_API_KEY in environment. Please set NUXT_PUBLIC_FIREBASE_API_KEY in your Pages environment variables before deploying.')
+}
+
 export default defineNuxtConfig({
   // Nuxt experimental flags
   experimental: {
