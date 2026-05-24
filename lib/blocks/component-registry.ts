@@ -28,34 +28,22 @@ export function getBlockCssSelector(type: string): string {
   return map[type] || `block-${kebabCase(type)}`
 }
 
-import BlockHero from '~/components/blocks/BlockHero.vue'
-import BlockBienvenue from '~/components/blocks/BlockBienvenue.vue'
-import BlockActivities from '~/components/blocks/BlockActivities.vue'
-import BlockTextImage from '~/components/blocks/BlockTextImage.vue'
-import BlockRejoins from '~/components/blocks/BlockRejoins.vue'
-import BlockAspirations from '~/components/blocks/BlockAspirations.vue'
-import BlockContact from '~/components/blocks/BlockContact.vue'
-import BlockNousRejoindre from '~/components/blocks/BlockNousRejoindre.vue'
-import BlockRichText from '~/components/blocks/BlockRichText.vue'
-import BlockGallery from '~/components/blocks/BlockGallery.vue'
-import BlockSpacer from '~/components/blocks/BlockSpacer.vue'
-import BlockFullWidthImage from '~/components/blocks/BlockFullWidthImage.vue'
-import BlockVision from '~/components/blocks/BlockVision.vue'
-
-export const BLOCK_MAP = {
-  hero: BlockHero,
-  bienvenue: BlockBienvenue,
-  activities: BlockActivities,
-  textImage: BlockTextImage,
-  rejoins: BlockRejoins,
-  aspirations: BlockAspirations,
-  contact: BlockContact,
-  nousRejoindre: BlockNousRejoindre,
-  richText: BlockRichText,
-  gallery: BlockGallery,
-  spacer: BlockSpacer,
-  fullWidthImage: BlockFullWidthImage,
-  vision: BlockVision,
+// Use dynamic import loaders to avoid importing Vue SFCs at module load time.
+// This keeps the module Node-friendly for tests (no static .vue imports).
+export const BLOCK_MAP: Record<string, () => Promise<any>> = {
+  hero: () => import('../../components/blocks/BlockHero.vue'),
+  bienvenue: () => import('../../components/blocks/BlockBienvenue.vue'),
+  activities: () => import('../../components/blocks/BlockActivities.vue'),
+  textImage: () => import('../../components/blocks/BlockTextImage.vue'),
+  rejoins: () => import('../../components/blocks/BlockRejoins.vue'),
+  aspirations: () => import('../../components/blocks/BlockAspirations.vue'),
+  contact: () => import('../../components/blocks/BlockContact.vue'),
+  nousRejoindre: () => import('../../components/blocks/BlockNousRejoindre.vue'),
+  richText: () => import('../../components/blocks/BlockRichText.vue'),
+  gallery: () => import('../../components/blocks/BlockGallery.vue'),
+  spacer: () => import('../../components/blocks/BlockSpacer.vue'),
+  fullWidthImage: () => import('../../components/blocks/BlockFullWidthImage.vue'),
+  vision: () => import('../../components/blocks/BlockVision.vue'),
 }
 
 export function getBlockTypes(): string[] {
@@ -63,5 +51,7 @@ export function getBlockTypes(): string[] {
 }
 
 export function resolveBlockComponent(type: string) {
+  // Return the loader function if present; consumers may call it to get a Promise
+  // resolving to the component, or use it as an async component factory.
   return BLOCK_MAP[type] || BLOCK_MAP.richText
 }
