@@ -27,7 +27,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, nextTick, inject } from 'vue'
+import { ref, computed, watch, nextTick, inject, defineAsyncComponent } from 'vue'
 import { normalizeBlock, getAnimClass, filterByVisibility, shouldUseTrigger } from '~/lib/blocks/renderer'
 import { resolveBlockComponent } from '~/lib/blocks/component-registry'
 import { useBlockAnimation } from '~/composables/useBlockAnimation'
@@ -64,7 +64,11 @@ const visibleBlocks = computed(() => {
 })
 
 function blockComponent(type) {
-  return resolveBlockComponent(type)
+  // Always return an async component wrapper. This ensures Suspense behaves
+  // predictably and prevents Promise objects from leaking into the render
+  // tree when a resolver returns a loader or a component directly.
+  const comp = resolveBlockComponent(type)
+  return defineAsyncComponent(() => Promise.resolve(comp))
 }
 
 setTimeout(() => {

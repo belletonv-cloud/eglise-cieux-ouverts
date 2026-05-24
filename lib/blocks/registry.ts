@@ -128,7 +128,10 @@ class BlockRegistry {
       }
       const entry: RegistryEntry = {
         ...schema,
-        loader: () => resolveBlockComponent(type)(),
+        // resolveBlockComponent returns a component (synchronous) from
+        // our BLOCK_MAP. Keep the loader contract (returns a Promise)
+        // for consumers that await component loading.
+        loader: () => Promise.resolve(resolveBlockComponent(type)),
       }
       this.entries.set(type, entry)
     }
