@@ -25,6 +25,7 @@ opencode.json
 .env.*
 !.env.example
 .wrangler
+.wrangler/tmp
 test-results
 
 # Backup / debug artifacts

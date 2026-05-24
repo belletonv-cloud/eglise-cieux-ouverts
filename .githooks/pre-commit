@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# Simple pre-commit hook: scan staged files for private key patterns and fail.
+set -euo pipefail
+
+STAGED=$(git diff --cached --name-only --diff-filter=ACM)
+if [ -z "$STAGED" ]; then
+  exit 0
+fi
+
+PATTERNS=("-----BEGIN PRIVATE KEY-----" "NUXT_FIREBASE_PRIVATE_KEY" "private_key\"\s*:\s*\"")
+
+for file in $STAGED; do
+  # Only check text files that exist
+  if [ ! -f "$file" ]; then
+    continue
+  fi
+  for p in "${PATTERNS[@]}"; do
+    if rg -n --hidden -S --no-ignore-vcs -e "$p" "$file" >/dev/null 2>&1; then
+      echo "ERROR: Potential secret found in staged file: $file"
+      rg -n --hidden -S --no-ignore-vcs -e "$p" "$file"
+      echo "Abort commit. Remove secrets from the file or unstage it."
+      exit 1
+    fi
+  done
+done
+
+exit 0
