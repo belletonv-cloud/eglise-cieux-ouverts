@@ -73,8 +73,13 @@ function blockComponent(type) {
   // Always return an async component wrapper. This ensures Suspense behaves
   // predictably and prevents Promise objects from leaking into the render
   // tree when a resolver returns a loader or a component directly.
-  const comp = resolveBlockComponent(type)
-  return defineAsyncComponent(() => Promise.resolve(comp))
+  const loader = resolveBlockComponent(type)
+  // If resolveBlockComponent returns a loader (function), call it to get
+  // the actual component module. Otherwise, wrap the value in a promise.
+  if (typeof loader === 'function') {
+    return defineAsyncComponent(() => loader())
+  }
+  return defineAsyncComponent(() => Promise.resolve(loader))
 }
 
 function sanitizeProps(obj) {
