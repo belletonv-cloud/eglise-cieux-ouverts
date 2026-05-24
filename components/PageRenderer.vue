@@ -83,21 +83,25 @@ function blockComponent(type) {
 }
 
 function sanitizeProps(obj) {
-  if (!obj || typeof obj !== 'object') return obj
-  const out = Array.isArray(obj) ? [] : {}
-  for (const [k, v] of Object.entries(obj)) {
-    // detect a thenable / promise
-    if (v && typeof v === 'object' && typeof (v as any).then === 'function') {
-      // Replace promise values with null to avoid "[object Promise]" in SSR
-      // and log a warning for debugging.
+  // Deep-clone while replacing any thenable/promise with null.
+  function clean(value) {
+    if (!value || typeof value !== 'object') return value
+    if (typeof (value as any).then === 'function') {
       // eslint-disable-next-line no-console
-      console.warn(`PageRenderer: replaced Promise prop for key=${k}`)
-      out[k] = null
-      continue
+      console.warn('PageRenderer: replaced Promise-like value in props')
+      return null
     }
-    out[k] = v
+    if (Array.isArray(value)) {
+      return value.map(v => clean(v))
+    }
+    const res = {}
+    for (const [k, v] of Object.entries(value)) {
+      res[k] = clean(v)
+    }
+    return res
   }
-  return out
+
+  return clean(obj)
 }
 
 setTimeout(() => {
