@@ -2,7 +2,7 @@
 
 export default defineNuxtPlugin((nuxtApp) => {
   const config = useRuntimeConfig()
-  if (!config.TEST_ENV) return
+  if (!config.TEST_ENV) return // Uses PW_TEST via runtimeConfig, set by Playwright automatically.
 
   const fakeUser = {
     uid: 'cli-test',

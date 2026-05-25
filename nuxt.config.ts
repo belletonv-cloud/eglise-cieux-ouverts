@@ -26,7 +26,7 @@ export default defineNuxtConfig({
     { path: '~/components/editor', global: true }
   ],
   runtimeConfig: {
-    TEST_ENV: process.env.TEST_ENV === 'true',
+    TEST_ENV: !!process.env.PW_TEST,
     public: {
       FIREBASE_API_KEY: process.env.NUXT_PUBLIC_FIREBASE_API_KEY,
       FIREBASE_AUTH_DOMAIN: process.env.NUXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
