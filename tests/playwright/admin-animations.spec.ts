@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from './fixtures/admin-fixtures'
 
 test.describe('Animations des blocs en mode admin', () => {
   test('les classes CSS block-anim-* sont appliquées selon le type d animation', async ({ page }) => {

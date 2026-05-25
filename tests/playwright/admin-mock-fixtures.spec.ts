@@ -1,9 +1,8 @@
-import { expect } from '@playwright/test'
-import { test } from './fixtures/admin-fixtures'
+import { test, expect } from './fixtures/admin-fixtures'
 
 test.describe('Admin E2E robustes (fixtures)', () => {
   test.beforeEach(async ({ resetMock }) => {
-    await resetMock
+    await resetMock()
   })
 
   test('Toolbar mock, avatar, drag, undo/redo 100% mock', async ({ adminLogin }) => {

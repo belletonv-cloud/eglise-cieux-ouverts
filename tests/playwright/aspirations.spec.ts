@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from './fixtures/admin-fixtures'
 
 test.describe('Aspirations animation', () => {
   test('SSR content without JavaScript', async ({ browser }) => {

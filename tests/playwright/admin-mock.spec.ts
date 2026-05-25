@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from './fixtures/admin-fixtures'
 
 test.describe('Admin mode avec mocks CI', () => {
   test('Tout l’admin fonctionne avec les mocks (Cloudflare)', async ({ page }) => {

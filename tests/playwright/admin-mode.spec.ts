@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from './fixtures/admin-fixtures'
 
 test.describe('Mode édition', () => {
   test('la toolbar admin est visible avec ?admin=true', async ({ page }) => {
