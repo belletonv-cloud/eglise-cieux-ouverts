@@ -1,4 +1,4 @@
-import { test, expect } from './fixtures/admin-fixtures'
+import { test, expect } from './fixtures/global'
 
 test.describe('Admin mode avec mocks CI', () => {
   test('Tout l’admin fonctionne avec les mocks (Cloudflare)', async ({ page }) => {

@@ -1,4 +1,4 @@
-import { test, expect } from './fixtures/admin-fixtures'
+import { test, expect } from './fixtures/global'
 
 test.describe('Admin E2E robustes (fixtures)', () => {
   test.beforeEach(async ({ resetMock }) => {

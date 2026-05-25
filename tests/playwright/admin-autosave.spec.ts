@@ -1,4 +1,4 @@
-import { test, expect } from './fixtures/admin-fixtures'
+import { test, expect } from './fixtures/global'
 
 test.describe('Admin auto-save E2E', () => {
   test.beforeEach(async ({ resetMock }) => {

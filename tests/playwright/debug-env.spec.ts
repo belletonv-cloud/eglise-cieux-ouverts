@@ -1,4 +1,4 @@
-import { test, expect } from './fixtures/admin-fixtures'
+import { test, expect } from './fixtures/global'
 test('Playwright: PW_TEST visible côté server + config', async ({ request }) => {
   const res = await request.get('/api/debug-env')
   expect(res.ok()).toBeTruthy()
