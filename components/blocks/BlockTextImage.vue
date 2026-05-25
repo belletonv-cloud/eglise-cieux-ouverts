@@ -1,6 +1,6 @@
 <template>
   <section
-    class="block-text-img block-draggable block-textimage"
+    class="block-text-img block-draggable block-textimage" :data-block-id="id"
     :style="{ background: backgroundColor, color: textColor }"
     :class="[visibilityClasses, { 'reverse': reverse }, `style-${visualStyle || 'default'}`]"
   >

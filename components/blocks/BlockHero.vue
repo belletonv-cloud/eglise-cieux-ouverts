@@ -1,6 +1,6 @@
 <template>
   <section
-    class="block-hero block-draggable block-main-hero"
+    class="block-hero block-draggable block-main-hero" :data-block-id="props.id"
     :class="visibilityClasses"
     :style="{ minHeight: (height ? height + 'px' : undefined), height: (height ? height + 'px' : 'auto') }"
   >
