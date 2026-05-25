@@ -1,9 +1,7 @@
-import { resetMock } from '~/server/utils/firestore-mock.js'
+import { resetMock } from '../utils/firestore-mock.js';
+import { defineEventHandler } from 'h3';
 
 export default defineEventHandler(() => {
-  resetMock()
-  return {
-    ok: true,
-    message: 'Firestore mock reset successfully',
-  }
-})
+  resetMock && resetMock();
+  return { ok: true };
+});
