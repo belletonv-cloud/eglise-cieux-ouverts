@@ -6,8 +6,9 @@ export const test = base.extend({
     await use(page)
   },
   resetMock: async ({ request }, use) => {
-    await request.post('/api/reset-mock')
-    await use(request)
+    await use(async () => {
+      await request.post('/api/reset-mock')
+    })
   },
   getSnapshot: async ({ page }, use) => {
     async function getSnapshotFn() {
@@ -63,5 +64,13 @@ export const test = base.extend({
       await page.keyboard.press('Control+Shift+Z')
     }
     await use(redoFn)
+  },
+  waitForAutosave: async ({ page }, use) => {
+    async function waitForAutosaveFn() {
+      // Attend le feedback visuel (classe ou texte)
+      await page.waitForSelector('.auto-saved', { timeout: 4000 })
+      await page.locator('.auto-saved').waitFor({state: 'visible'})
+    }
+    await use(waitForAutosaveFn)
   },
 })
