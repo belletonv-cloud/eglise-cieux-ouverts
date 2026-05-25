@@ -10,10 +10,8 @@ export default defineConfig({
     headless: true,
   },
   webServer: {
-    command: 'npx nuxt preview --port 3001',
+    command: 'npm run dev -- --port=3001',
     port: 3001,
-    // Give Nuxt preview more time to start
-    timeout: 120000,
     reuseExistingServer: !process.env.CI,
   },
 })
