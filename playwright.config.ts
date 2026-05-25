@@ -10,8 +10,9 @@ export default defineConfig({
     headless: true,
   },
   webServer: {
-    command: 'npm run dev -- --port=3001',
+    command: 'npm run preview -- --port=3001',
     port: 3001,
     reuseExistingServer: !process.env.CI,
+    timeout: 180000
   },
 })
