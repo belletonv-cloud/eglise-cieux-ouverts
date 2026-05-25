@@ -1,6 +1,6 @@
 <template>
   <div
-    class="block-spacer"
+    class="block-spacer block-draggable"
     :style="{ height: height + 'px', background: backgroundColor || 'transparent' }"
     :class="visibilityClasses"
   ></div>

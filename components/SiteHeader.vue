@@ -52,7 +52,7 @@
 
     <nav class="nav-mobile">
         <template v-for="item in navItems" :key="item.id">
-        <NuxtLink v-if="!isMounted || (!adminMode && item.visible !== false && (item.id !== 'billetterie' || showBilletterie))"
+        <NuxtLink v-if="!isMounted || (!adminMode && item.visible !== false && (item.id !== 'event-list' || showBilletterie))"
           :to="item.to" @click="closeMenu"
         >{{ item.label }}</NuxtLink>
         <a v-if="isMounted && adminMode" href="#" class="nav-admin-link"

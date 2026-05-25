@@ -4,10 +4,9 @@
       <span class="admin-badge">Mode édition</span>
       <select class="admin-page-select" :value="pageSlug" @change="navigateToPage($event.target.value)">
         <option value="accueil">Accueil</option>
-        <option value="photos">Photos</option>
         <option value="contact">Contact</option>
         <option value="messages">Messages</option>
-        <option value="billetterie">Billetterie</option>
+        <option value="event-list">Événements</option>
         <option value="agenda">Agenda</option>
       </select>
     </div>
@@ -43,9 +42,15 @@
       </div>
     </div>
     <div class="admin-toolbar-right">
+      <div class="undo-redo-group">
+        <button class="admin-icon-btn" @click="undo" :disabled="!canUndo()" title="Annuler (Ctrl+Z)">↩</button>
+        <button class="admin-icon-btn" @click="redo" :disabled="!canRedo()" title="Rétablir (Ctrl+Shift+Z)">↪</button>
+      </div>
       <ClientOnly>
         <template v-if="user">
-          <span class="admin-user">{{ user.email }}</span>
+          <span class="admin-save-status" v-if="saveStatus">{{ saveStatus }}</span>
+          <img v-if="user.photoURL" :src="user.photoURL" class="admin-avatar" alt="Photo profil" />
+          <span v-else class="admin-user">{{ user.email }}</span>
           <button class="admin-btn" @click="saveChanges" :disabled="saving">
             {{ saving ? 'Sauvegarde...' : 'Sauvegarder' }}
           </button>
@@ -133,23 +138,69 @@ const {
   exitAdmin,
   localBlocks,
   previewDevice,
+  undo,
+  redo,
+  canUndo,
+  canRedo,
 } = useAdmin()
 
 const { $auth } = useNuxtApp()
 const user = ref(null)
 const saving = ref(false)
+const saveStatus = ref('')
 
 let unsubscribe = null
+let autoSaveTimer = null
 
 onMounted(() => {
   unsubscribe = onAuthStateChanged($auth, (u) => {
     user.value = u
   })
+
+  // Keyboard shortcuts for undo/redo
+  const handler = (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey) {
+      e.preventDefault()
+      undo()
+    }
+    if ((e.metaKey || e.ctrlKey) && e.key === 'z' && e.shiftKey) {
+      e.preventDefault()
+      redo()
+    }
+  }
+  document.addEventListener('keydown', handler)
+  onUnmounted(() => {
+    document.removeEventListener('keydown', handler)
+  })
 })
 
 onUnmounted(() => {
   if (unsubscribe) unsubscribe()
+  clearTimeout(autoSaveTimer)
 })
+
+// Auto-save Firestore with debounce
+watch(localBlocks, () => {
+  if (!user.value || !import.meta.client) return
+  clearTimeout(autoSaveTimer)
+  autoSaveTimer = setTimeout(() => {
+    autoSave()
+  }, 3000)
+}, { deep: true })
+
+async function autoSave() {
+  if (!user.value) return
+  try {
+    const { doc, setDoc } = await import('firebase/firestore')
+    const { $db } = useNuxtApp()
+    await setDoc(doc($db, 'pages', props.pageSlug), { blocks: localBlocks.value })
+    saveStatus.value = 'Auto-sauvegardé'
+    setTimeout(() => { saveStatus.value = '' }, 2000)
+  } catch (e) {
+    saveStatus.value = 'Erreur auto-save'
+    setTimeout(() => { saveStatus.value = '' }, 3000)
+  }
+}
 
 function getBlockLabel(type) {
   if (!type) return ''
@@ -251,10 +302,10 @@ async function navigateToPage(slug) {
 
   // If already on the same path and admin param is set, skip navigation
   if (currentPath === targetPath && currentAdmin) {
-    console.debug('navigateToPage: already on target with admin — no navigation', targetPath)
+    if (import.meta.env.DEV) console.debug('navigateToPage: already on target with admin — no navigation', targetPath)
     return
   }
-  console.debug('navigateToPage:', { slug, targetPath, currentPath, routeQuery: route.query, isAdminMode: isAdminMode?.value })
+  if (import.meta.env.DEV) console.debug('navigateToPage:', { slug, targetPath, currentPath, routeQuery: route.query, isAdminMode: isAdminMode?.value })
 
   const newQuery = { ...route.query, admin: 'true' }
   // Always do client-side navigation to preserve admin-mode layout and offsets
@@ -270,7 +321,7 @@ async function navigateToPage(slug) {
   try {
     await router.push({ path: targetPath, query: newQuery })
     try { window.scrollTo(0, 0) } catch (e) {}
-    console.debug('navigateToPage: navigation done to', targetPath)
+    if (import.meta.env.DEV) console.debug('navigateToPage: navigation done to', targetPath)
   } catch (err) {
     console.error('navigateToPage: router.push failed', err)
   }
@@ -407,6 +458,46 @@ async function saveChanges() {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.undo-redo-group {
+  display: flex;
+  gap: 2px;
+  margin-right: 8px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 6px;
+  padding: 2px;
+}
+.admin-icon-btn {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.7);
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1em;
+  transition: all 0.15s;
+}
+.admin-icon-btn:hover {
+  color: white;
+  background: rgba(255,255,255,0.15);
+}
+.admin-icon-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+.admin-save-status {
+  font-size: 0.75em;
+  color: rgba(255,255,255,0.6);
+  margin-right: 8px;
+  white-space: nowrap;
+}
+.admin-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(255,255,255,0.3);
+  flex-shrink: 0;
 }
 .admin-btn {
   padding: 6px 14px;

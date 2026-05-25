@@ -1,0 +1,97 @@
+- generic [ref=e3]:
+  - region "top of page"
+  - generic [ref=e10]:
+    - group:
+      - banner:
+        - generic [ref=e15]:
+          - group:
+            - generic [ref=e18]:
+              - group:
+                - link "Logo cieux ouverts" [ref=e20] [cursor=pointer]:
+                  - /url: https://www.cieuxouverts.bzh
+                  - img "Logo cieux ouverts" [ref=e24]
+                - navigation "Site" [ref=e27]:
+                  - list [ref=e28]:
+                    - listitem [ref=e29]:
+                      - link "Accueil" [ref=e32] [cursor=pointer]:
+                        - /url: https://www.cieuxouverts.bzh
+                        - generic [ref=e33]: Accueil
+                    - listitem [ref=e34]:
+                      - link "Messages" [ref=e37] [cursor=pointer]:
+                        - /url: https://www.cieuxouverts.bzh/messages
+                        - generic [ref=e38]: Messages
+                    - listitem [ref=e39]:
+                      - link "Agenda" [ref=e42] [cursor=pointer]:
+                        - /url: https://www.cieuxouverts.bzh/agenda
+                        - generic [ref=e43]: Agenda
+                    - listitem [ref=e44]:
+                      - link "Billeterie Evènements" [ref=e47] [cursor=pointer]:
+                        - /url: https://www.cieuxouverts.bzh/event-list
+                        - generic [ref=e48]: Billeterie Evènements
+                    - listitem [ref=e49]:
+                      - link "Contact" [ref=e52] [cursor=pointer]:
+                        - /url: https://www.cieuxouverts.bzh/contact
+                        - generic [ref=e53]: Contact
+      - main:
+        - generic [ref=e54]:
+          - group:
+            - generic [ref=e58]:
+              - group:
+                - heading "Nos messages" [level=1] [ref=e61]
+        - generic [ref=e62]:
+          - generic [ref=e66]:
+            - group:
+              - generic [ref=e68]:
+                - group:
+                  - heading "Cieux Ouverts est aussi en ligne !" [level=2] [ref=e71]
+                  - generic [ref=e72]:
+                    - paragraph [ref=e73]:
+                      - text: 📢 Besoin d’un boost spirituel dans la semaine ?
+                      - text: Les messages partagés à l’église ne sont pas faits pour s’arrêter au dimanche !
+                    - paragraph [ref=e74]: "📺 Replonge dans la parole sur notre chaîne YouTube :"
+                    - list [ref=e75]:
+                      - listitem [ref=e76]:
+                        - paragraph [ref=e77]: (Re)découvre les messages qui t’ont touché.
+                      - listitem [ref=e78]:
+                        - paragraph [ref=e79]: Laisse Dieu te parler à nouveau ou même d’une nouvelle manière.
+                      - listitem [ref=e80]:
+                        - paragraph [ref=e81]: Partage-les avec tes proches pour semer l’espoir autour de toi.
+                    - paragraph [ref=e82]: Que ce soit pour approfondir, pour réentendre une parole qui t’a marqué, ou simplement pour rester connecté(e) dans la semaine, ces moments sont là pour toi.
+                    - paragraph [ref=e83]: Abonne-toi dès maintenant pour ne rien manquer et garde la flamme allumée ! 🔥
+                  - link "Notre Chaîne Youtube" [ref=e85] [cursor=pointer]:
+                    - /url: https://www.youtube.com/@cieuxouverts
+                    - generic [ref=e87]: Notre Chaîne Youtube
+          - generic [ref=e90]:
+            - group:
+              - generic [ref=e95]:
+                - group:
+                  - generic [ref=e97]:
+                    - group:
+                      - img "2.png" [ref=e103]
+                  - paragraph [ref=e109]:
+                    - link "Concernant l'accessibilité" [ref=e111] [cursor=pointer]:
+                      - /url: https://www.cieuxouverts.bzh/accessibility-statement
+        - generic [ref=e112]:
+          - group:
+            - generic [ref=e116]:
+              - group:
+                - generic "Les bonnes résolutions échouent souvent parce qu'elles sont superficielles et temporaires. Cette vidéo t'encourage à abandonner ces résolutions passagères pour construire des habitudes spirituelles durables, comme la prière, la lecture des Écritures et la persévérance. La transformation intérieure est plus puissante que les performances extérieures. Jésus lui-même nous enseigne que la vraie stabilité vient d’une relation quotidienne avec Dieu. Pour 2025, ne cherche pas à faire plus, cherche à devenir davantage une personne enracinée dans la foi. Video Player" [ref=e119]
+      - contentinfo:
+        - generic [ref=e124]:
+          - group:
+            - generic [ref=e127]:
+              - group:
+                - paragraph [ref=e129]:
+                  - generic [ref=e130]: Il y a une
+                  - text: place pour toi !
+            - generic [ref=e133]:
+              - group:
+                - generic [ref=e134]:
+                  - paragraph [ref=e137]:
+                    - link "contact@cieuxouverts.bzh" [ref=e138] [cursor=pointer]:
+                      - /url: mailto:contact@cieuxouverts.bzh
+                  - paragraph [ref=e140]:
+                    - generic [ref=e141]: Rdv chaque dimanche | 10H
+                  - paragraph [ref=e143]:
+                    - generic [ref=e144]: 2 rue Jean Monnet | 29600 Morlaix, Bretagne
+  - region "bottom of page"

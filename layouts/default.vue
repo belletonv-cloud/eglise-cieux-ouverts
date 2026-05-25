@@ -21,7 +21,23 @@
 </template>
 
 <script setup>
-const { isAdminMode, enterAdmin, exitAdmin, previewDevice } = useAdmin()
+import { provide, ref, onMounted, computed } from 'vue'
+
+useSeoMeta({
+  ogSiteName: 'Église Cieux Ouverts — Morlaix',
+  ogLocale: 'fr_FR',
+  ogType: 'website',
+})
+
+const { isAdminMode, enterAdmin, exitAdmin, previewDevice, editingBlockId, selectBlock } = useAdmin()
+
+// Provide the admin composable values to child components that use inject()
+provide('isAdmin', isAdminMode)
+provide('editingBlockId', editingBlockId)
+provide('selectBlock', selectBlock)
+provide('previewDevice', previewDevice)
+// legacy flag used by some components
+provide('isEditor', ref(false))
 const isMounted = ref(false)
 const { loadMenuFromFirestore, saveMenuToFirestore } = useMenuEditor()
 
@@ -47,12 +63,18 @@ const previewUrl = computed(() => {
 
 // Don't enter admin with empty blocks — let the page component initialize its own blocks
 if (import.meta.client && route.query.admin === 'true' && !isAdminMode.value && !isPreviewMode.value) {
-  isAdminMode.value = true
+  const nuxtApp = useNuxtApp()
+  if (nuxtApp.$auth?.currentUser) {
+    isAdminMode.value = true
+  }
 }
 
 watch(() => route.query.admin, (val) => {
   if (val === 'true' && !isAdminMode.value && !isPreviewMode.value) {
-    isAdminMode.value = true
+    const nuxtApp = useNuxtApp()
+    if (nuxtApp.$auth?.currentUser) {
+      isAdminMode.value = true
+    }
   } else if (val !== 'true' && isAdminMode.value) {
     exitAdmin()
   }

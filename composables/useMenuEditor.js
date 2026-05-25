@@ -9,8 +9,8 @@ const DEFAULT_MENU_ITEMS = [
   { id: 'accueil', label: 'Accueil', to: '/', visible: true, children: [] },
   { id: 'messages', label: 'Messages', to: '/messages', visible: true, children: [] },
   { id: 'agenda', label: 'Agenda', to: '/agenda', visible: true, children: [] },
-  { id: 'photos', label: 'Photos', to: '/photos', visible: true, children: [] },
-  { id: 'billetterie', label: 'Billetterie Événements', to: '/billetterie', visible: true, children: [] },
+  { id: 'photos', label: 'Photos', to: '/photos', visible: false, children: [] },
+  { id: 'event-list', label: 'Événements', to: '/event-list', visible: true, children: [] },
   { id: 'contact', label: 'Contact', to: '/contact', visible: true, children: [] },
 ]
 

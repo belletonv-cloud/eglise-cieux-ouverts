@@ -282,16 +282,16 @@ test.describe('3. SSR rendering (no JavaScript)', () => {
     await context.close()
   })
 
-  test('photos page renders gallery without JS', async ({ browser }) => {
+  test('event-list page renders billetterie block without JS', async ({ browser }) => {
     const context = await browser.newContext({ javaScriptEnabled: false })
     const page = await context.newPage()
-    await page.goto('/photos')
-    await expect(page.locator('.block-gallery')).toBeVisible({ timeout: 10000 })
+    await page.goto('/event-list')
+    await expect(page.locator('.block-richtext')).toBeVisible({ timeout: 10000 })
     await context.close()
   })
 
   test('no 500 errors on any page without JS', async ({ browser }) => {
-    const pages = ['/', '/contact', '/messages', '/photos', '/billetterie', '/agenda']
+    const pages = ['/', '/contact', '/messages', '/event-list', '/agenda']
     const context = await browser.newContext({ javaScriptEnabled: false })
     for (const path of pages) {
       const page = await context.newPage()
@@ -340,7 +340,7 @@ test.describe('4. Hydration and JS runtime', () => {
   })
 
   test('all pages load without JS errors', async ({ page }) => {
-    const pages = ['/', '/contact', '/messages', '/photos', '/billetterie', '/agenda']
+    const pages = ['/', '/contact', '/messages', '/event-list', '/agenda']
     for (const path of pages) {
       const errors: string[] = []
       page.on('pageerror', err => errors.push(err.message))

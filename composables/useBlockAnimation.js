@@ -1,5 +1,6 @@
-import { ref, onMounted, onUnmounted, nextTick } from 'vue'
-import { getAnimationStrategy, getAnimClass, shouldUseTrigger } from '~/lib/blocks/renderer'
+import { ref, onMounted, onUnmounted } from 'vue'
+
+const SUPPORTS_SCROLL_TIMELINE = typeof CSS !== 'undefined' && CSS.supports && CSS.supports('animation-timeline: view()')
 
 export function useBlockAnimation(isAdmin) {
   const triggeredBlocks = ref(new Set())
@@ -7,6 +8,7 @@ export function useBlockAnimation(isAdmin) {
   const lastAnimations = ref({})
   let observer = null
   let replayHandler = null
+  const fallbackObservers = new Map()
 
   function isTriggered(id) {
     return triggeredBlocks.value.has(id)
@@ -31,9 +33,35 @@ export function useBlockAnimation(isAdmin) {
     triggeredBlocks.value = new Set(allIds)
   }
 
+  function setupFallbackObservers(blocks) {
+    if (SUPPORTS_SCROLL_TIMELINE) return
+    const internalTypes = ['aspirations', 'bienvenue', 'nousRejoindre']
+    for (const block of blocks || []) {
+      if (internalTypes.includes(block.type)) {
+        const el = wrapperRefs.value[block.id]
+        if (el && !fallbackObservers.has(block.id)) {
+          const fbObserver = new IntersectionObserver(([entry]) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('triggered')
+              fbObserver.unobserve(entry.target)
+            }
+          }, { threshold: 0.1 })
+          fbObserver.observe(el)
+          fallbackObservers.set(block.id, fbObserver)
+        }
+      }
+    }
+  }
+
   function replayBlockAnimation(id) {
     const el = wrapperRefs.value[id]
     triggeredBlocks.value.delete(id)
+    if (el && el.classList) {
+      const animClasses = Array.from(el.classList).filter(c => c.startsWith('block-anim-'))
+      animClasses.forEach(c => el.classList.remove(c))
+      void el.offsetHeight
+      animClasses.forEach(c => el.classList.add(c))
+    }
     if (el && observer) {
       try { observer.unobserve(el) } catch (err) {}
       try { observer.observe(el) } catch (err) {}
@@ -63,10 +91,11 @@ export function useBlockAnimation(isAdmin) {
           }
         }
       })
-    }, { threshold: 0.05, rootMargin: '0px 0px 0px 0px' })
+    }, { threshold: 0.05, rootMargin: '0px 0px -40px 0px' })
 
     onMounted(() => {
       observeElements()
+      setupFallbackObservers(blocks)
       lastAnimations.value = Object.fromEntries((blocks || []).map(b => [b.id, b.props?.animation]))
 
       replayHandler = (e) => {
@@ -80,6 +109,8 @@ export function useBlockAnimation(isAdmin) {
     onUnmounted(() => {
       if (observer) observer.disconnect()
       if (replayHandler) document.removeEventListener('replay-animation', replayHandler)
+      for (const [, obs] of fallbackObservers) obs.disconnect()
+      fallbackObservers.clear()
     })
   }
 
@@ -90,6 +121,7 @@ export function useBlockAnimation(isAdmin) {
       return
     }
     observeElements()
+    setupFallbackObservers(blocks)
   }
 
   function handleAnimationChange(fixedBlocks) {
@@ -102,6 +134,11 @@ export function useBlockAnimation(isAdmin) {
       if (prev !== undefined && prev !== now) {
         triggeredBlocks.value.delete(b.id)
         const el = wrapperRefs.value[b.id]
+        if (el && el.classList) {
+          el.classList.remove(`block-anim-${prev}`, 'triggered')
+          void el.offsetHeight
+          el.classList.add(`block-anim-${now}`)
+        }
         if (el && observer) {
           try { observer.observe(el) } catch (e) { console.error(e) }
         }

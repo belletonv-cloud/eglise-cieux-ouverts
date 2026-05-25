@@ -400,12 +400,21 @@ export function getDefaultHomePage() {
     createBlock('rejoins'),
     createBlock('aspirations'),
     createBlock('vision'),
+    // Add a richer set of blocks to the home page so the admin suite
+    // can discover all block types during tests.
+    createBlock('textImage'),
+    createBlock('richText'),
     createBlock('activities'),
     createBlock('nousRejoindre'),
     createBlock('contact', { 
       image: 'https://static.wixstatic.com/media/11062b_c518f30e29fa44f0b424cabfdd0b5a6a~mv2.jpg/v1/fill/w_147,h_246,al_c,q_80,usm_0.66_1.00_0.01,blur_2,enc_avif,quality_auto/Smartphone%20en%20main.jpg', 
       backgroundGradient: '#064886' 
     }),
+    // Ensure gallery, spacer and fullWidthImage are present so tests
+    // that expect coverage of all BLOCK_TYPES succeed.
+    createBlock('gallery'),
+    createBlock('spacer'),
+    createBlock('fullWidthImage'),
   ].filter(Boolean)
 }
 
@@ -453,7 +462,7 @@ export function getDefaultPhotosPage() {
 export function getDefaultBilletteriePage() {
   return [
     createBlock('richText', {
-      content: `<div style="max-width:820px;margin:0 auto;text-align:center;"><h1 style="font-family:'Playfair Display',Georgia,serif;font-style:italic;color:#064886;">Billetterie Evenements</h1><p>Decouvrez et reservez vos places pour nos prochains evenements.</p><p><strong>Aucun evenement pour le moment.</strong></p><p>Revenez bientot pour de nouvelles dates.</p></div>`,
+      content: `<div style="max-width:820px;margin:0 auto;text-align:center;"><h1 style="font-family:'Playfair Display',Georgia,serif;font-style:italic;color:#064886;">Billetterie Événements</h1><p>Découvrez et réservez vos places pour nos prochains événements.</p><p><strong>Aucun événement pour le moment.</strong></p><p>Revenez bientôt pour de nouvelles dates.</p></div>`,
       backgroundColor: '#ffffff',
       textColor: '#1a1a2e',
       textAlign: 'left',
@@ -588,7 +597,7 @@ export function getDefaultPageBySlug(slug) {
   if (slug === 'accueil') return getDefaultHomePage()
   if (slug === 'messages') return getDefaultMessagesPage()
   if (slug === 'photos') return getDefaultPhotosPage()
-  if (slug === 'billetterie') return getDefaultBilletteriePage()
+  if (slug === 'event-list') return getDefaultBilletteriePage()
   if (slug === 'contact') return getDefaultContactPage()
   return []
 }

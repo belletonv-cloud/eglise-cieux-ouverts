@@ -1,5 +1,5 @@
 <template>
-  <div class="auto-editor">
+  <div class="sidebar-autoeditor auto-editor">
     <EditorFieldError
       v-for="field in schema"
       :key="field.key"

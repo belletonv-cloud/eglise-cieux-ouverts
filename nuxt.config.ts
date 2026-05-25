@@ -8,10 +8,12 @@ if (isCI && !process.env.NUXT_PUBLIC_FIREBASE_API_KEY) {
 }
 
 export default defineNuxtConfig({
-  // Nuxt experimental flags
+  css: ['~/assets/css/main.css'],
   experimental: {
-    // Disable the app manifest to avoid resolving the virtual `#app-manifest` import in dev
     appManifest: false
+  },
+  app: {
+    pageTransition: { name: 'page', mode: 'out-in' },
   },
   typescript: {
     typeCheck: false,
@@ -24,6 +26,7 @@ export default defineNuxtConfig({
     { path: '~/components/editor', global: true }
   ],
   runtimeConfig: {
+    TEST_ENV: process.env.TEST_ENV === 'true',
     public: {
       FIREBASE_API_KEY: process.env.NUXT_PUBLIC_FIREBASE_API_KEY,
       FIREBASE_AUTH_DOMAIN: process.env.NUXT_PUBLIC_FIREBASE_AUTH_DOMAIN,

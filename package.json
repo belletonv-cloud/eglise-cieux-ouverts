@@ -17,8 +17,7 @@
     "pinia": "^3.0.4",
     "vue": "^3.4.0",
     "vue-draggable-plus": "^0.6.1",
-    "vue-router": "^4.3.0",
-    "vuedraggable": "^4.1.0"
+    "vue-router": "^4.3.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.35.0",

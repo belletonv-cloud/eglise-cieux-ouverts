@@ -55,8 +55,7 @@
           <NuxtLink to="/?admin=true">Accueil</NuxtLink>
           <NuxtLink to="/contact?admin=true">Contact</NuxtLink>
           <NuxtLink to="/messages?admin=true">Messages</NuxtLink>
-          <NuxtLink to="/photos?admin=true">Photos</NuxtLink>
-          <NuxtLink to="/billetterie?admin=true">Billetterie</NuxtLink>
+          <NuxtLink to="/event-list?admin=true">Événements</NuxtLink>
         </div>
       </div>
     </div>

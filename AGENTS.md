@@ -41,9 +41,9 @@ Déployé sur Cloudflare Pages.
 
 ## ⚠️ Problèmes connus
 
-- **Drag-and-drop** : mentionné dans le README mais pas implémenté
-- **Persistance Firestore** : pas de sync automatique des blocs
-- **Accent incohérent** : "Billetterie Évènements" vs "Événements"
+- **Drag-and-drop** : implémenté via `vue-draggable-plus` dans `PageRenderer.vue` (admin mode seulement)
+- **Persistance Firestore** : auto-save avec debounce 3s dans `AdminToolbar.vue` (quand l'utilisateur est connecté)
+- **Accent incohérent** : corrigé ("Événements" partout sauf `useChurchEvents.js` qui conserve `evenements` pour les noms de variables)
 
 ## WIX-like Architecture Schema-Driven
 
@@ -153,6 +153,40 @@ Toutes les fonctions de rendu sont centralisées dans `lib/blocks/renderer.ts` :
 - `shouldUseTrigger()` → si le bloc utilise le trigger IntersectionObserver
 
 `PageRenderer.vue` appelle ces fonctions au lieu de les dupliquer.
+
+## Nouvelles fonctionnalités (ajoutées en mai 2026)
+
+### Undo/Redo
+- Implémenté dans `composables/useAdmin.js` via piles `undoStack`/`redoStack` (50 entrées max)
+- `pushHistory()` est appelée automatiquement dans chaque fonction de modification (`updateBlock`, `moveBlock`, `removeBlock`, `addBlock`, `reorderBlocks`, `setBlocks`)
+- Exposé via `undo()`, `redo()`, `canUndo()`, `canRedo()`
+- Raccourcis clavier : Ctrl+Z (undo), Ctrl+Shift+Z (redo)
+- Boutons dans `AdminToolbar.vue` (barre admin en haut)
+
+### Drag-and-drop (admin mode)
+- Utilise `vue-draggable-plus` (v0.6.1, import `VueDraggable`)
+- Actif seulement quand `isAdmin && isMounted` dans `PageRenderer.vue`
+- Drag handle (⠿) visible au survol du bloc en admin
+- Ghost class `.block-ghost` pendant le drag (opacité réduite + contour bleu)
+- Animation de 200ms entre positions
+- V-model lié à `sortableBlocks` computed (getter=visibleBlocks, setter=reorderBlocks)
+
+### Auto-save Firestore
+- Debounce 3s dans `AdminToolbar.vue` (watch deep sur `localBlocks`)
+- Appelle Firestore `setDoc` sur `pages/{pageSlug}` avec les blocs
+- Affichage "Auto-sauvegardé" pendant 2s après save
+- Désactivé si utilisateur non connecté
+
+### Safari animation fallback
+- Détection via `CSS.supports('animation-timeline: view()')` dans `useBlockAnimation.js`
+- Fallback IntersectionObserver universel si non supporté
+- Classes `.triggered` ajoutées quand le bloc entre dans le viewport
+- Même comportement que le scroll-driven natif (opacity + translateY)
+
+### Transitions de page
+- Configurées dans `nuxt.config.ts` : `pageTransition: { name: 'page', mode: 'out-in' }`
+- CSS dans `assets/css/main.css` : `.page-enter-active`, `.page-leave-active`, etc.
+- Opacity + translateY sur 300ms ease
 
 ### Conventions de test
 - Toujours tester : validité du schema (types, champs, defaults), rendu SSR, rendu admin, sélection

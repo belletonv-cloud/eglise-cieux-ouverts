@@ -1,19 +1,29 @@
 <template>
   <div class="page-renderer" :class="{ 'admin-mode': isAdmin && isMounted }">
-      <div
-      v-for="block in visibleBlocks"
-      :key="block.id"
-      class="block-wrapper"
-      :class="[getAnimClass(block), useTrigger(block) ? { triggered: isTriggered(block.id) } : '', { 'admin-selected': isSelected(block) }]"
-      :ref="el => setWrapperRef(el, block.id)"
-      :data-promise-count="countThenables(block)"
-      :data-block-id="block.id"
-      :data-block-type="block.type"
-      @click.capture="isAdmin && wrapperClick(block.id)"
+    <VueDraggable
+      v-if="isMounted && isAdmin"
+      v-model="sortableBlocks"
+      :animation="200"
+      handle=".drag-handle"
+      :group="{ name: 'blocks' }"
+      ghost-class="block-ghost"
+      tag="div"
+      class="drag-container"
+      @change="onDragChange"
+      item-key="id"
     >
-      <template v-if="isMounted">
-        <Suspense>
-          <template #default>
+      <template #item="{ element: block }">
+        <div
+          class="block-wrapper"
+          :class="[getAnimClass(block), useTrigger(block) ? { triggered: isTriggered(block.id) } : '', { 'admin-selected': isSelected(block), 'draggable': isAdmin }]"
+          :ref="el => setWrapperRef(el, block.id)"
+          :data-block-id="block.id"
+          :data-block-type="block.type"
+          @click.capture="wrapperClick(block.id)"
+        >
+          <div v-if="isAdmin" class="drag-handle" @click.stop title="Déplacer">⠿</div>
+          <Suspense>
+            <template #default>
               <component
                 :is="blockComponent(block.type)"
                 v-bind="sanitizeProps(block.props, block.id)"
@@ -22,25 +32,53 @@
                 :block-id="block.id"
                 @click.capture="wrapperClick(block.id)"
               />
-          </template>
-          <template #fallback>
-            <!-- fallback empty during async component load (SSR will wait) -->
-          </template>
-        </Suspense>
+            </template>
+            <template #fallback></template>
+          </Suspense>
+        </div>
       </template>
-      <template v-else>
-        <!-- Server-rendered placeholder to keep SSR stable and avoid Promise leakage -->
-        <div class="block-server-placeholder" aria-hidden="true"></div>
-      </template>
-    </div>
+    </VueDraggable>
+    <template v-else>
+      <div
+        v-for="block in visibleBlocks"
+        :key="block.id"
+        class="block-wrapper"
+        :class="[getAnimClass(block), useTrigger(block) ? { triggered: isTriggered(block.id) } : '', { 'admin-selected': isSelected(block) }]"
+        :ref="el => setWrapperRef(el, block.id)"
+        :data-block-id="block.id"
+        :data-block-type="block.type"
+        @click.capture="isAdmin && wrapperClick(block.id)"
+      >
+        <template v-if="isMounted">
+          <Suspense>
+            <template #default>
+              <component
+                :is="blockComponent(block.type)"
+                v-bind="sanitizeProps(block.props, block.id)"
+                :visibility="block.visibility"
+                :is-triggered="useTrigger(block) ? isTriggered(block.id) : false"
+                :block-id="block.id"
+                @click.capture="wrapperClick(block.id)"
+              />
+            </template>
+            <template #fallback></template>
+          </Suspense>
+        </template>
+        <template v-else>
+          <div class="block-server-placeholder" aria-hidden="true"></div>
+        </template>
+      </div>
+    </template>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, watch, nextTick, inject, defineAsyncComponent } from 'vue'
+import { ref, computed, watch, nextTick, inject, defineAsyncComponent, onMounted, onUnmounted } from 'vue'
+import { VueDraggable } from 'vue-draggable-plus'
 import { normalizeBlock, getAnimClass, filterByVisibility, shouldUseTrigger } from '~/lib/blocks/renderer'
 import { resolveBlockComponent } from '~/lib/blocks/component-registry'
 import { useBlockAnimation } from '~/composables/useBlockAnimation'
+import { useAdmin } from '~/composables/useAdmin'
 
   const isAdmin = inject('isAdmin', ref(false))
   const isEditor = inject('isEditor', ref(false))
@@ -54,6 +92,23 @@ const previewDevice = inject('previewDevice', ref('desktop'))
 const props = defineProps({
   blocks: { type: Array, default: () => [] },
 })
+
+const { reorderBlocks } = useAdmin()
+
+const sortableBlocks = computed({
+  get: () => visibleBlocks.value,
+  set: (val) => {
+    if (isAdmin && isAdmin.value) {
+      reorderBlocks(val)
+    }
+  }
+})
+
+function onDragChange() {
+  if (editingBlockId && editingBlockId.value) {
+    document.querySelectorAll('.admin-selected').forEach(el => el.classList.remove('admin-selected'))
+  }
+}
 
 const {
   triggeredBlocks,
@@ -177,8 +232,9 @@ function countThenables(block) {
 // capture-phase listener on `document` that finds the nearest `.block-wrapper`
 // and calls selectBlock with its data-block-id. This is only active on the
 // client and only when admin mode is enabled.
-  if (typeof window !== 'undefined' && import.meta?.client) {
-    const docClickHandler = (ev) => {
+let docClickHandler, docPointerHandler
+if (typeof window !== 'undefined' && import.meta?.client) {
+  docClickHandler = (ev) => {
     try {
       if (!isAdmin || !isAdmin.value) return
       const target = ev.target
@@ -188,10 +244,8 @@ function countThenables(block) {
         const bid = wrapper.getAttribute('data-block-id')
         if (bid) {
           try { if (import.meta.env.DEV) console.debug('PageRenderer.docClick: found wrapper', { id: bid }) } catch (e) {}
-          // Update the reactive state
           try { selectBlock(bid) } catch (e) { console.error('PageRenderer.docClick: selectBlock failed', e) }
           try { if (editingBlockId) editingBlockId.value = bid } catch (e) {}
-          // Update DOM immediately so Playwright sees the selection without waiting
           try {
             document.querySelectorAll('.block-wrapper.admin-selected').forEach(el => el.classList.remove('admin-selected'))
             wrapper.classList.add('admin-selected')
@@ -203,8 +257,7 @@ function countThenables(block) {
     }
   }
 
-  document.addEventListener('click', docClickHandler, true)
-  const docPointerHandler = (ev) => {
+  docPointerHandler = (ev) => {
     try {
       if (!isAdmin || !isAdmin.value) return
       const target = ev.target
@@ -226,13 +279,19 @@ function countThenables(block) {
       console.error('PageRenderer: doc pointer handler failed', e)
     }
   }
-  document.addEventListener('pointerdown', docPointerHandler, true)
-  // Cleanup on unload
-  try { window.addEventListener('beforeunload', () => {
-    document.removeEventListener('click', docClickHandler, true)
-    document.removeEventListener('pointerdown', docPointerHandler, true)
-  }) } catch (e) {}
 }
+
+onMounted(() => {
+  if (docClickHandler && docPointerHandler) {
+    document.addEventListener('click', docClickHandler, true)
+    document.addEventListener('pointerdown', docPointerHandler, true)
+  }
+})
+
+onUnmounted(() => {
+  if (docClickHandler) document.removeEventListener('click', docClickHandler, true)
+  if (docPointerHandler) document.removeEventListener('pointerdown', docPointerHandler, true)
+})
 
 // Click wrapper handler that logs and forwards to selectBlock
 function wrapperClick(id) {
@@ -312,6 +371,26 @@ watch(() => fixedBlocks.value.map(b => ({ id: b.id, anim: b.props?.animation }))
 <style scoped>
 .page-renderer { width: 100%; }
 .admin-selected { outline: 2px solid #3B82F6; outline-offset: -2px; }
+.drag-container { width: 100%; }
+.drag-handle {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  z-index: 100;
+  cursor: grab;
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 18px;
+  line-height: 1;
+  color: #3B82F6;
+  opacity: 0;
+  transition: opacity 0.15s;
+  user-select: none;
+}
+.block-wrapper:hover .drag-handle { opacity: 1; }
+.drag-handle:active { cursor: grabbing; }
 </style>
 
 <style>
@@ -323,5 +402,14 @@ watch(() => fixedBlocks.value.map(b => ({ id: b.id, anim: b.props?.animation }))
 .admin-mode .block-wrapper:hover {
   outline: 2px dashed rgba(59, 130, 246, 0.5);
   outline-offset: -2px;
+}
+.admin-mode .block-wrapper.draggable {
+  padding-top: 4px;
+}
+.block-ghost {
+  opacity: 0.4;
+  outline: 2px dashed #3B82F6;
+  outline-offset: -2px;
+  background: rgba(59, 130, 246, 0.05);
 }
 </style>

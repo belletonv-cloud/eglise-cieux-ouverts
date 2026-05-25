@@ -1,16 +1,23 @@
 <template>
-  <PageRenderer :blocks="blocks" />
+  <div v-if="!redirecting"><PageRenderer :blocks="blocks" /></div>
 </template>
 
 <script setup>
 import { getDefaultPhotosPage } from '~/utils/blockTypes.js'
 
+const { isAdminMode, enterAdmin, localBlocks } = useAdmin()
+
+const redirecting = ref(false)
+
+if (import.meta.client && !isAdminMode.value) {
+  redirecting.value = true
+  navigateTo('/', { replace: true })
+}
+
 useSeoMeta({
   title: 'Photos — Église Cieux Ouverts Morlaix',
   description: 'Galerie photos de l\'Église Cieux Ouverts à Morlaix.',
 })
-
-const { isAdminMode, enterAdmin, localBlocks } = useAdmin()
 
 const { data: pageData } = await useFetch('/api/pages/photos', {
   key: 'page-photos',
