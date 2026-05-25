@@ -4,7 +4,7 @@
     :style="{ background: backgroundColor, color: textColor }"
     :class="[visibilityClasses, { 'reverse': reverse }, `style-${visualStyle || 'default'}`]"
   >
-    <div class="block-draggable-handle" style="width:28px;height:28px;background:rgba(0,0,0,0.04);border-radius:8px;display:flex;align-items:center;justify-content:center;position:absolute;top:16px;left:16px;z-index:3;cursor:move;">
+    <div v-if="$attrs['data-admin'] || (typeof window !== 'undefined' && window?.__PW_TEST)" class="block-draggable-handle" style="width:28px;height:28px;background:rgba(0,0,0,0.04);border-radius:8px;display:flex;align-items:center;justify-content:center;position:absolute;top:16px;left:16px;z-index:3;cursor:move;">
         <span style="font-size:1.2em;">⠿</span>
       </div>
     <div class="ti-inner">

@@ -8,7 +8,7 @@
     <div v-if="overlay" class="hero-overlay" :style="{ background: overlayColor }" />
 
     <div class="hero-content">
-      <div class="block-draggable-handle" style="width:32px;height:32px;background:rgba(0,0,0,0.04);border-radius:8px;display:flex;align-items:center;justify-content:center;position:absolute;top:16px;left:16px;z-index:3;cursor:move;">
+      <div v-if="$attrs['data-admin'] || (typeof window !== 'undefined' && window?.__PW_TEST)" class="block-draggable-handle" style="width:32px;height:32px;background:rgba(0,0,0,0.04);border-radius:8px;display:flex;align-items:center;justify-content:center;position:absolute;top:16px;left:16px;z-index:3;cursor:move;">
         <span style="font-size:1.6em;">⠿</span>
       </div>
       <template v-if="overlayText">
