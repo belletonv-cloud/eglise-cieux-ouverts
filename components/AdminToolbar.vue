@@ -48,7 +48,8 @@
       </div>
       <ClientOnly>
         <template v-if="user">
-          <span class="admin-save-status" v-if="saveStatus">{{ saveStatus }}</span>
+           <span class="admin-save-status auto-saved" v-if="saveStatus && saveStatus === 'Auto-sauvegardé'">Auto-sauvegardé</span>
+           <span class="admin-save-status" v-else-if="saveStatus">{{ saveStatus }}</span>
           <img v-if="user.photoURL" :src="user.photoURL" class="admin-avatar" alt="Photo profil" />
           <span v-else class="admin-user">{{ user.email }}</span>
           <button class="admin-btn" @click="saveChanges" :disabled="saving">

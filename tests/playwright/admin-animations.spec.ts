@@ -1,9 +1,44 @@
 import { test, expect } from './fixtures/global'
 
 test.describe('Animations des blocs en mode admin', () => {
+  test.beforeEach(async ({ page }) => {
+    page.on('console', msg => console.log('CONSOLE:', msg.text()))
+    page.on('pageerror', err => console.log('PAGEERROR:', err.message))
+    page.on('requestfailed', req => console.log('FAILED:', req.url(), req.failure()))
+  })
   test('les classes CSS block-anim-* sont appliquées selon le type d animation', async ({ page }) => {
     await page.goto('/?admin=true')
+    // === DIAGNOSTIC AUTOMATIQUE ADMIN/UI ===
+    await page.waitForLoadState('domcontentloaded')
+    // 1) adminEnabled
+    const adminEnabled = await page.evaluate(() => {
+      return window.__adminEnabled ?? false
+    })
+    console.log('adminEnabled =', adminEnabled)
+    // 2) toolbar visible ?
+    const toolbarNode = await page.$('.admin-toolbar')
+    let toolbar = 'absente'
+    if (toolbarNode) {
+      const visible = await toolbarNode.evaluate(n => {
+        const s = window.getComputedStyle(n)
+        return s && s.display !== 'none' && s.visibility !== 'hidden'
+      })
+      toolbar = visible ? 'visible' : 'absente'
+    }
+    console.log('toolbar =', toolbar)
+    // 3) classes du premier bloc
+    const firstBlock = await page.$('.block-wrapper')
+    const firstBlockClasses = firstBlock
+      ? await firstBlock.getAttribute('class')
+      : 'absent'
+    console.log('firstBlockClasses =', firstBlockClasses)
     await page.waitForTimeout(3000)
+
+    // dump complet DOM et screenshot pour debug complet
+    console.log('=== PAGE CONTENT START ===')
+    console.log(await page.content())
+    console.log('=== PAGE CONTENT END ===')
+    await page.screenshot({ path: 'debug-before-fail.png', fullPage: true })
 
     expect(await page.locator('.block-wrapper.block-anim-portal').count()).toBeGreaterThanOrEqual(1)
     expect(await page.locator('.block-wrapper.block-anim-slideLeft').count()).toBeGreaterThanOrEqual(1)

@@ -1,7 +1,0 @@
-- generic [ref=e5]:
-  - 'heading "ERREUR : PAGE INTROUVABLE" [level=2] [ref=e6]'
-  - heading "404" [level=1] [ref=e7]
-  - generic [ref=e9]: Cette page est introuvable.
-  - link "Aller à la page d'accueil" [ref=e10] [cursor=pointer]:
-    - /url: //www.cieuxouverts.bzh
-    - button "Aller à la page d'accueil" [ref=e11]

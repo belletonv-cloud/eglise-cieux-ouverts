@@ -1,9 +1,0 @@
-- generic [ref=e4]:
-  - heading "Connexion - Église App" [level=2] [ref=e5]
-  - generic [ref=e6]:
-    - textbox "Email" [ref=e7]
-    - textbox "Mot de passe" [ref=e8]
-    - button "Se connecter avec Email" [ref=e9] [cursor=pointer]
-    - button "Se connecter avec Google" [ref=e10] [cursor=pointer]
-    - generic [ref=e11]: ou
-    - button "🕊️ Démo connectée" [ref=e12] [cursor=pointer]

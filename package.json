@@ -2,13 +2,18 @@
   "name": "eglise-cieux-ouverts",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=18 <21"
+  },
+  "engineStrict": true,
   "scripts": {
     "dev": "nuxt dev",
     "build": "nuxt build",
     "test:e2e": "playwright test",
     "test:admin": "playwright test --config=playwright.admin.config.ts",
     "preview": "nuxt preview",
-    "deploy": "nuxt build && wrangler pages deploy dist --project-name eglise-cieux-ouverts"
+    "deploy": "nuxt build && wrangler pages deploy dist --project-name eglise-cieux-ouverts",
+    "preview:local": "NITRO_PORT=3001 NITRO_HOST=0.0.0.0 npx nuxi preview"
   },
   "dependencies": {
     "@vueuse/core": "^14.3.0",
@@ -22,6 +27,6 @@
   "devDependencies": {
     "@playwright/test": "^1.35.0",
     "playwright": "^1.35.0",
-    "wrangler": "^3.80.0"
+    "wrangler": "^4.94.0"
   }
 }

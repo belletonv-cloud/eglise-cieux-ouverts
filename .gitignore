@@ -31,3 +31,12 @@ test-results
 # Backup / debug artifacts
 package.json.save
 scripts/
+
+# Playwright MCP artifacts
+.playwright-mcp/
+
+# Debug screenshots
+debug-*.png
+
+# Standalone Node.js binaries
+node-v*.tar.gz

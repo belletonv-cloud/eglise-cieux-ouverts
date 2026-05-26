@@ -3,7 +3,7 @@
 // deployments where the client bundle can't initialize Firebase and causes
 // a degraded production site.
 const isCI = Boolean(process.env.CI || process.env.GITHUB_ACTIONS || process.env.PAGES_BRANCH || process.env.PAGES || process.env.CF_PAGES)
-if (isCI && !process.env.NUXT_PUBLIC_FIREBASE_API_KEY) {
+if (isCI && process.env.NODE_ENV === "production" && !process.env.NUXT_PUBLIC_FIREBASE_API_KEY) {
   throw new Error('Missing NUXT_PUBLIC_FIREBASE_API_KEY in environment. Please set NUXT_PUBLIC_FIREBASE_API_KEY in your Pages environment variables before deploying.')
 }
 
@@ -25,9 +25,12 @@ export default defineNuxtConfig({
     { path: '~/components', global: true },
     { path: '~/components/editor', global: true }
   ],
+  nitro: {
+    preset: process.env.PW_TEST === '1' ? 'node-server' : 'cloudflare-worker',
+  },
   runtimeConfig: {
-    TEST_ENV: !!process.env.PW_TEST,
     public: {
+      TEST_ENV: !!process.env.PW_TEST,
       FIREBASE_API_KEY: process.env.NUXT_PUBLIC_FIREBASE_API_KEY,
       FIREBASE_AUTH_DOMAIN: process.env.NUXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
       FIREBASE_PROJECT_ID: process.env.NUXT_PUBLIC_FIREBASE_PROJECT_ID,

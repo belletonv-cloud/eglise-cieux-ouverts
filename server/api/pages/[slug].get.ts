@@ -5,11 +5,15 @@ export default defineEventHandler(async (event) => {
   const privateKey = process.env.NUXT_FIREBASE_PRIVATE_KEY || config.firebasePrivateKey
 
   if (!projectId || !clientEmail || !privateKey) {
-    // In development or environments where Firebase is not configured,
-    // do not fail the whole SSR: return a safe fallback so pages can render.
-    // Keep a server-side log to help the developer notice the missing config.
-    console.warn('Firestore configuration incomplete. Returning fallback { blocks: null } for page API.')
-    return { blocks: null }
+    // En CI, TEST_ENV ou local : renvoie TOUJOURS la RAM du mock si Firestore est absent
+    const isTest = process.env.NODE_ENV === 'test' || process.env.PW_TEST === '1' || process.env.TEST_ENV === '1'
+    if (isTest) {
+      const { getPageDoc } = await import('~/server/utils/firestore-mock.js')
+      const slug = getRouterParam(event, 'slug') || 'accueil'
+      return await getPageDoc(slug)
+    }
+    // Sinon, fallback neutre/jamais cassant pour prod/dev
+    return { blocks: [] }
   }
 
   const slug = getRouterParam(event, 'slug')
@@ -22,7 +26,8 @@ export default defineEventHandler(async (event) => {
     const doc = await getFirestoreDoc(projectId, accessToken, 'pages', slug)
 
     if (!doc) {
-      return { blocks: null }
+      // Jamais de null pour blocks ! ⇒ fallback neutre, UI toujours fonctionnelle
+      return { blocks: [] }
     }
 
     const parsed = parseFirestoreDoc(doc)

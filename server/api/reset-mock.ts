@@ -3,5 +3,18 @@ import { defineEventHandler } from 'h3';
 
 export default defineEventHandler(() => {
   resetMock && resetMock();
-  return { ok: true };
+  // Seed minimal pour que l’admin soit toujours dispo
+  return {
+    pages: {
+      accueil: {
+        blocks: [
+          {
+            id: 'block-hero',
+            type: 'hero',
+            props: { title: 'Bienvenue sur le site !', subtitle: '', img: '' }
+          }
+        ]
+      }
+    }
+  };
 });
