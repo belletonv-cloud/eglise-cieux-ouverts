@@ -16,7 +16,7 @@ Déployé sur Cloudflare Pages.
 - **Backend/DB** : Firebase Firestore (persistance cloud)
 - **Auth** : Firebase Auth (admin)
 - **UI** : CSS personnalisé (assets/css/main.css), polices Nunito/Playfair Display
-- **Tests** : Playwright (E2E)
+- **Tests** : Playwright (E2E) — sanity ✅, aspirations ❌, admin-mock ❌ (voir `tests/playwright/STATUT_E2E_ADMIN.md`)
 - **Déploiement** : Cloudflare Pages (via `wrangler`)
 
 ## Déploiement (CI/CD)

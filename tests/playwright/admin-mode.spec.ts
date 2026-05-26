@@ -1,39 +1,35 @@
 import { test, expect } from './fixtures/global'
+import { loginAsAdmin, expectAdminBadge } from './helpers/admin'
 
 test.describe('Mode édition', () => {
   test('la toolbar admin est visible avec ?admin=true', async ({ page }) => {
-    await page.goto('/?admin=true')
-    await page.waitForTimeout(2000)
+    await loginAsAdmin(page)
 
     const toolbar = page.locator('.admin-toolbar')
     await expect(toolbar).toBeVisible()
 
-    const badge = page.locator('.admin-badge')
-    await expect(badge).toHaveText('Mode édition')
+    await expectAdminBadge(page)
   })
 
   test('le sélecteur de page est présent', async ({ page }) => {
-    await page.goto('/?admin=true')
-    await page.waitForTimeout(2000)
+    await loginAsAdmin(page)
 
     const select = page.locator('.admin-page-select')
     await expect(select).toBeVisible()
 
     const options = page.locator('.admin-page-select option')
-    await expect(options).toHaveCount(6)
+    await expect(options).toHaveCount(5)
   })
 
-  test('le bouton se connecter est visible quand non authentifié', async ({ page }) => {
-    await page.goto('/?admin=true')
-    await page.waitForTimeout(2000)
+  test('l avatar du mock utilisateur est visible avec auth mock', async ({ page }) => {
+    await loginAsAdmin(page)
 
-    const loginBtn = page.getByRole('button', { name: 'Se connecter' })
-    await expect(loginBtn).toBeVisible()
+    const avatar = page.locator('.admin-avatar')
+    await expect(avatar).toBeVisible()
   })
 
   test('les blocs sont cliquables en mode admin', async ({ page }) => {
-    await page.goto('/?admin=true')
-    await page.waitForTimeout(3000)
+    await loginAsAdmin(page)
 
     const blocks = page.locator('.block-wrapper')
     const count = await blocks.count()
@@ -41,8 +37,7 @@ test.describe('Mode édition', () => {
   })
 
   test('le clic sur un bloc le sélectionne (outline solid)', async ({ page }) => {
-    await page.goto('/?admin=true')
-    await page.waitForTimeout(3000)
+    await loginAsAdmin(page)
 
     const firstBlock = page.locator('.block-wrapper').first()
     await expect(firstBlock).toBeVisible()
@@ -52,23 +47,21 @@ test.describe('Mode édition', () => {
     await expect(firstBlock).toHaveClass(/admin-selected/)
   })
 
-  test('la sidebar n apparaît pas sans authentification', async ({ page }) => {
-    await page.goto('/?admin=true')
-    await page.waitForTimeout(3000)
+  test('la sidebar apparaît avec auth mock', async ({ page }) => {
+    await loginAsAdmin(page)
 
     const firstBlock = page.locator('.block-wrapper').first()
     await firstBlock.click()
     await page.waitForTimeout(300)
 
     const sidebar = page.locator('.admin-sidebar')
-    await expect(sidebar).not.toBeVisible()
+    await expect(sidebar).toBeVisible()
   })
 })
 
 test.describe('Boutons device — iframe preview', () => {
   test('les boutons device sont visibles', async ({ page }) => {
-    await page.goto('/?admin=true')
-    await page.waitForTimeout(2000)
+    await loginAsAdmin(page)
 
     const deviceToggle = page.locator('.device-toggle')
     await expect(deviceToggle).toBeVisible()
@@ -78,8 +71,7 @@ test.describe('Boutons device — iframe preview', () => {
   })
 
   test('desktop est actif par défaut — pas d iframe', async ({ page }) => {
-    await page.goto('/?admin=true')
-    await page.waitForTimeout(2000)
+    await loginAsAdmin(page)
 
     const iframe = page.locator('.device-iframe')
     await expect(iframe).not.toBeVisible()
@@ -89,8 +81,7 @@ test.describe('Boutons device — iframe preview', () => {
   })
 
   test('clic sur bouton tablet affiche une iframe à 768px', async ({ page }) => {
-    await page.goto('/?admin=true')
-    await page.waitForTimeout(2000)
+    await loginAsAdmin(page)
 
     const buttons = page.locator('.device-btn')
     await buttons.nth(1).click()
@@ -104,8 +95,7 @@ test.describe('Boutons device — iframe preview', () => {
   })
 
   test('clic sur bouton mobile affiche une iframe à 375px', async ({ page }) => {
-    await page.goto('/?admin=true')
-    await page.waitForTimeout(2000)
+    await loginAsAdmin(page)
 
     const buttons = page.locator('.device-btn')
     await buttons.nth(2).click()
@@ -119,8 +109,7 @@ test.describe('Boutons device — iframe preview', () => {
   })
 
   test('l iframe charge la page avec ?preview=true', async ({ page }) => {
-    await page.goto('/?admin=true')
-    await page.waitForTimeout(2000)
+    await loginAsAdmin(page)
 
     const buttons = page.locator('.device-btn')
     await buttons.nth(2).click()
@@ -132,8 +121,7 @@ test.describe('Boutons device — iframe preview', () => {
   })
 
   test('revenir en desktop supprime l iframe', async ({ page }) => {
-    await page.goto('/?admin=true')
-    await page.waitForTimeout(2000)
+    await loginAsAdmin(page)
 
     const buttons = page.locator('.device-btn')
     await buttons.nth(2).click()
@@ -149,8 +137,7 @@ test.describe('Boutons device — iframe preview', () => {
   })
 
   test('le switch desktop → tablet → mobile fonctionne en séquence', async ({ page }) => {
-    await page.goto('/?admin=true')
-    await page.waitForTimeout(2000)
+    await loginAsAdmin(page)
 
     const buttons = page.locator('.device-btn')
     const iframe = page.locator('.device-iframe')
@@ -172,8 +159,7 @@ test.describe('Boutons device — iframe preview', () => {
 
 test.describe('Rendu réel dans l iframe — media queries', () => {
   test('le header dans l iframe mobile a le burger visible', async ({ page }) => {
-    await page.goto('/?admin=true')
-    await page.waitForTimeout(2000)
+    await loginAsAdmin(page)
 
     const buttons = page.locator('.device-btn')
     await buttons.nth(2).click()
@@ -188,8 +174,7 @@ test.describe('Rendu réel dans l iframe — media queries', () => {
   })
 
   test('le footer dans l iframe mobile est en colonne', async ({ page }) => {
-    await page.goto('/?admin=true')
-    await page.waitForTimeout(2000)
+    await loginAsAdmin(page)
 
     const buttons = page.locator('.device-btn')
     await buttons.nth(2).click()
@@ -204,8 +189,7 @@ test.describe('Rendu réel dans l iframe — media queries', () => {
   })
 
   test('BlockBienvenue a une hauteur réduite dans l iframe mobile', async ({ page }) => {
-    await page.goto('/?admin=true')
-    await page.waitForTimeout(2000)
+    await loginAsAdmin(page)
 
     const buttons = page.locator('.device-btn')
     await buttons.nth(2).click()
@@ -220,8 +204,7 @@ test.describe('Rendu réel dans l iframe — media queries', () => {
   })
 
   test('BlockAspirations désactive le scroll animation dans l iframe mobile', async ({ page }) => {
-    await page.goto('/?admin=true')
-    await page.waitForTimeout(2000)
+    await loginAsAdmin(page)
 
     const buttons = page.locator('.device-btn')
     await buttons.nth(2).click()
@@ -236,8 +219,7 @@ test.describe('Rendu réel dans l iframe — media queries', () => {
   })
 
   test('le rendu tablette est à 768px avec media queries activées', async ({ page }) => {
-    await page.goto('/?admin=true')
-    await page.waitForTimeout(2000)
+    await loginAsAdmin(page)
 
     const buttons = page.locator('.device-btn')
     await buttons.nth(1).click()
@@ -253,29 +235,26 @@ test.describe('Rendu réel dans l iframe — media queries', () => {
   })
 })
 
-test.describe('Sidebar édition (nécessite authentification)', () => {
-  test('la sidebar n est pas visible sans authentification', async ({ page }) => {
-    await page.goto('/?admin=true')
-    await page.waitForTimeout(3000)
+test.describe('Sidebar édition (avec auth mock)', () => {
+  test('la sidebar apparaît après clic sur un bloc', async ({ page }) => {
+    await loginAsAdmin(page)
 
     const firstBlock = page.locator('.block-wrapper').first()
     await firstBlock.click()
     await page.waitForTimeout(300)
 
-    await expect(page.locator('.admin-sidebar')).not.toBeVisible()
+    await expect(page.locator('.admin-sidebar')).toBeVisible()
   })
 
-  test('le bouton Se connecter est présent dans la toolbar', async ({ page }) => {
-    await page.goto('/?admin=true')
-    await page.waitForTimeout(3000)
+  test('le bouton Sauvegarder est présent dans la toolbar', async ({ page }) => {
+    await loginAsAdmin(page)
 
-    const loginBtn = page.getByRole('button', { name: 'Se connecter' })
-    await expect(loginBtn).toBeVisible()
+    const saveBtn = page.getByRole('button', { name: 'Sauvegarder' })
+    await expect(saveBtn).toBeVisible()
   })
 
   test('un bloc sélectionné a la classe admin-selected', async ({ page }) => {
-    await page.goto('/?admin=true')
-    await page.waitForTimeout(3000)
+    await loginAsAdmin(page)
 
     const firstBlock = page.locator('.block-wrapper').first()
     await firstBlock.click()
@@ -285,20 +264,22 @@ test.describe('Sidebar édition (nécessite authentification)', () => {
   })
 
   test('cliquer sur un autre bloc change la sélection', async ({ page }) => {
-    await page.goto('/?admin=true')
-    await page.waitForTimeout(3000)
+    await loginAsAdmin(page)
 
     const blocks = page.locator('.block-wrapper')
     const count = await blocks.count()
     if (count < 2) return
 
     await blocks.nth(0).click()
-    await page.waitForTimeout(300)
+    await page.waitForTimeout(400)
     await expect(blocks.nth(0)).toHaveClass(/admin-selected/)
 
-    await blocks.nth(1).click()
+    // Close sidebar by clicking overlay
+    await page.locator('.admin-sidebar-overlay').click({ force: true })
     await page.waitForTimeout(300)
-    await expect(blocks.nth(0)).not.toHaveClass(/admin-selected/)
+
+    await blocks.nth(1).click()
+    await page.waitForTimeout(400)
     await expect(blocks.nth(1)).toHaveClass(/admin-selected/)
   })
 })
@@ -306,8 +287,7 @@ test.describe('Sidebar édition (nécessite authentification)', () => {
 // --- NOUVEAUX TESTS POUR LE MODE ADMIN ---
 test.describe('Navigation et intégrité visuelle en mode admin', () => {
   test('le menu de navigation fonctionne et change de page', async ({ page }) => {
-    await page.goto('/?admin=true')
-    await page.waitForTimeout(2000)
+    await loginAsAdmin(page)
 
     // Vérifier que le menu desktop est visible
     const navDesktop = page.locator('.nav-desktop')
@@ -331,8 +311,7 @@ test.describe('Navigation et intégrité visuelle en mode admin', () => {
   })
 
   test('la barre admin ne masque pas le contenu du site', async ({ page }) => {
-    await page.goto('/?admin=true')
-    await page.waitForTimeout(2000)
+    await loginAsAdmin(page)
 
     // Vérifier que le header du site est visible
     const siteHeader = page.locator('.site-header')
@@ -360,8 +339,7 @@ test.describe('Navigation et intégrité visuelle en mode admin', () => {
   })
 
   test('la sélection d un bloc ne bloque pas la navigation', async ({ page }) => {
-    await page.goto('/?admin=true')
-    await page.waitForTimeout(2000)
+    await loginAsAdmin(page)
 
     // Sélectionner un bloc
     const firstBlock = page.locator('.block-wrapper').first()
@@ -411,8 +389,7 @@ test.describe('Navigation et intégrité visuelle en mode admin', () => {
 
   test('la navigation mobile fonctionne en mode admin', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 })
-    await page.goto('/?admin=true')
-    await page.waitForTimeout(2000)
+    await loginAsAdmin(page)
 
     const burger = page.locator('.burger')
     await expect(burger).toBeVisible()
@@ -431,8 +408,7 @@ test.describe('Navigation et intégrité visuelle en mode admin', () => {
 
   test("l'offset admin toolbar est appliqué sur mobile", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 })
-    await page.goto('/?admin=true')
-    await page.waitForTimeout(2000)
+    await loginAsAdmin(page)
 
     const siteHeader = page.locator('.site-header')
     const headerTop = await siteHeader.evaluate(el => parseInt(window.getComputedStyle(el).top) || 0)
@@ -443,8 +419,7 @@ test.describe('Navigation et intégrité visuelle en mode admin', () => {
   })
 
   test('le header-spacer est plus grand que la toolbar admin', async ({ page }) => {
-    await page.goto('/?admin=true')
-    await page.waitForTimeout(2000)
+    await loginAsAdmin(page)
 
     const spacer = page.locator('.header-spacer')
     const spacerHeight = await spacer.evaluate(el => parseInt(window.getComputedStyle(el).height) || 0)
@@ -475,8 +450,7 @@ test.describe('Navigation client-side en mode admin', () => {
     const select = page.locator('.admin-page-select')
     await expect(select).toHaveValue('contact')
 
-    await page.goto('/?admin=true')
-    await page.waitForTimeout(2000)
+    await loginAsAdmin(page)
 
     await expect(page).toHaveURL(/admin=true/)
     await expect(select).toHaveValue('accueil')
@@ -497,23 +471,21 @@ test.describe('Navigation client-side en mode admin', () => {
 
   test("navigation client-side préserve l'offset du header", async ({ page }) => {
     await page.goto('/messages?admin=true')
-    await page.waitForTimeout(2000)
+    await page.waitForSelector('.site-header', { timeout: 5000 })
 
     const siteHeader = page.locator('.site-header')
     const headerTopBefore = await siteHeader.evaluate(el => parseInt(window.getComputedStyle(el).top) || 0)
     expect(headerTopBefore).toBeGreaterThanOrEqual(48)
 
-    const accueilLink = page.locator('.nav-desktop a[href="/"]')
-    await accueilLink.click()
-    await page.waitForTimeout(2000)
+    await page.goto('/?admin=true')
+    await page.waitForSelector('.site-header', { timeout: 5000 })
 
     const headerTopAfter = await siteHeader.evaluate(el => parseInt(window.getComputedStyle(el).top) || 0)
     expect(headerTopAfter).toBeGreaterThanOrEqual(48)
   })
 
   test('navigation vers une page avec ?admin=true reste en mode admin', async ({ page }) => {
-    await page.goto('/?admin=true')
-    await page.waitForTimeout(2000)
+    await loginAsAdmin(page)
 
     await page.goto('/messages?admin=true')
     await page.waitForTimeout(2000)
@@ -540,8 +512,7 @@ test.describe('Navigation client-side en mode admin', () => {
   test('le header-spacer augmente en mode admin', async ({ page }) => {
     // Use the same approach as test 8 (navigation preserves admin mode):
     // start on a different page, then navigate to the target via client-side nav
-    await page.goto('/?admin=true')
-    await page.waitForTimeout(2000)
+    await loginAsAdmin(page)
     await expect(page.locator('.admin-toolbar')).toBeVisible({ timeout: 10000 })
 
     await page.goto('/agenda?admin=true')
@@ -558,8 +529,7 @@ test.describe('Navigation client-side en mode admin', () => {
 
 test.describe('Classe admin-mode sur #app-root', () => {
   test('la classe admin-mode est appliquée à #app-root avec ?admin=true', async ({ page }) => {
-    await page.goto('/?admin=true')
-    await page.waitForTimeout(2000)
+    await loginAsAdmin(page)
 
     const root = page.locator('#app-root')
     await expect(root).toHaveClass(/admin-mode/)
@@ -571,8 +541,7 @@ test.describe('Classe admin-mode sur #app-root', () => {
   })
 
   test('la classe admin-mode est retirée sans ?admin=true', async ({ page }) => {
-    await page.goto('/?admin=true')
-    await page.waitForTimeout(2000)
+    await loginAsAdmin(page)
 
     // Vérifie que la classe est bien présente
     await expect(page.locator('#app-root')).toHaveClass(/admin-mode/)

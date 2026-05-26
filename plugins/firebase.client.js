@@ -2,7 +2,7 @@ import { initializeApp } from 'firebase/app'
 import { getFirestore } from 'firebase/firestore'
 import { getAuth } from 'firebase/auth'
 
-export default defineNuxtPlugin(() => {
+export default defineNuxtPlugin((nuxtApp) => {
   const config = useRuntimeConfig()
   const { public: { FIREBASE_API_KEY, FIREBASE_AUTH_DOMAIN, FIREBASE_PROJECT_ID, FIREBASE_STORAGE_BUCKET, FIREBASE_MESSAGING_SENDER_ID, FIREBASE_APP_ID } } = config
 
@@ -18,7 +18,7 @@ export default defineNuxtPlugin(() => {
     return {
       provide: {
         db: null,
-        auth: null,
+        ...(nuxtApp.$auth ? {} : { auth: null }),
       },
     }
   }
@@ -40,7 +40,7 @@ export default defineNuxtPlugin(() => {
     return {
       provide: {
         db,
-        auth,
+        ...(nuxtApp.$auth ? {} : { auth }),
       },
     }
   } catch (err) {
@@ -51,7 +51,7 @@ export default defineNuxtPlugin(() => {
     return {
       provide: {
         db: null,
-        auth: null,
+        ...(nuxtApp.$auth ? {} : { auth: null }),
       },
     }
   }

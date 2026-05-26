@@ -10,33 +10,33 @@
       tag="div"
       class="drag-container"
       @change="onDragChange"
-      item-key="id"
     >
-      <template #item="{ element: block }">
-        <div
-          class="block-wrapper"
-          :class="[getAnimClass(block), useTrigger(block) ? { triggered: isTriggered(block.id) } : '', { 'admin-selected': isSelected(block), 'draggable': isAdmin }]"
-          :ref="el => setWrapperRef(el, block.id)"
-          :data-block-id="block.id"
-          :data-block-type="block.type"
-          @click.capture="wrapperClick(block.id)"
-        >
-          <div v-if="isAdmin" class="drag-handle" @click.stop title="Déplacer">⠿</div>
-          <Suspense>
-            <template #default>
-              <component
-                :is="blockComponent(block.type)"
-                v-bind="sanitizeProps(block.props, block.id)"
-                :visibility="block.visibility"
-                :is-triggered="useTrigger(block) ? isTriggered(block.id) : false"
-                :block-id="block.id"
-                @click.capture="wrapperClick(block.id)"
-              />
-            </template>
-            <template #fallback></template>
-          </Suspense>
-        </div>
-      </template>
+      <div
+        v-for="block in sortableBlocks"
+        :key="block.id"
+        class="block-wrapper"
+        :class="[getAnimClass(block), useTrigger(block) ? { triggered: isTriggered(block.id) } : '', { 'admin-selected': isSelected(block), 'draggable': isAdmin }]"
+        :ref="el => setWrapperRef(el, block.id)"
+        :data-block-id="block.id"
+        :data-block-type="block.type"
+        @click.capture="wrapperClick(block.id)"
+      >
+        <div v-if="isAdmin" class="drag-handle" @click.stop title="Déplacer">⠿</div>
+        <Suspense>
+          <template #default>
+            <component
+              :is="blockComponent(block.type)"
+              v-bind="sanitizeProps(block.props, block.id)"
+              :data-admin="isAdmin || undefined"
+              :visibility="block.visibility"
+              :is-triggered="useTrigger(block) ? isTriggered(block.id) : false"
+              :block-id="block.id"
+              @click.capture="wrapperClick(block.id)"
+            />
+          </template>
+          <template #fallback></template>
+        </Suspense>
+      </div>
     </VueDraggable>
     <template v-else>
       <div
@@ -55,6 +55,7 @@
               <component
                 :is="blockComponent(block.type)"
                 v-bind="sanitizeProps(block.props, block.id)"
+                :data-admin="isAdmin || undefined"
                 :visibility="block.visibility"
                 :is-triggered="useTrigger(block) ? isTriggered(block.id) : false"
                 :block-id="block.id"

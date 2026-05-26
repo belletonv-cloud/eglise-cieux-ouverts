@@ -8,15 +8,15 @@ let PAGES = {
         id: 'block-hero',
         type: 'hero',
         props: {
-          title: 'Événements à venir',
-          subtitle: 'Voici nos prochains rendez-vous !',
+          overlayText: 'Événements à venir',
+          overlay: true,
         },
       },
       {
         id: 'block-text-img',
         type: 'textImage',
         props: {
-          text: 'Un texte de présentation avec un Drag & Drop possible.',
+          title: 'Un texte de présentation avec un Drag & Drop possible.',
           image: '/test-img.gif',
         },
       },
@@ -32,7 +32,23 @@ let PAGES = {
       {
         id: 'bloc-acc-01',
         type: 'textImage',
-        props: { text: 'Accueil : test admin.', image: '/test.png' },
+        props: { title: 'Accueil : test admin.', image: '/test.png' },
+      },
+      {
+        id: 'bloc-bienvenue',
+        type: 'bienvenue',
+        props: {
+          title: 'BIENVENUE',
+          subtitle: "à l'Église Cieux Ouverts à Morlaix",
+          backgroundColor: '#ffffff',
+          textColor: '#1a1a2e',
+          fontSize: 7,
+        },
+      },
+      {
+        id: 'bloc-aspirations',
+        type: 'aspirations',
+        props: {},
       },
     ],
   },
@@ -51,15 +67,15 @@ export function resetMock() {
           id: 'block-hero',
           type: 'hero',
           props: {
-            title: 'Événements à venir',
-            subtitle: 'Voici nos prochains rendez-vous !',
+            overlayText: 'Événements à venir',
+            overlay: true,
           },
         },
         {
           id: 'block-text-img',
           type: 'textImage',
           props: {
-            text: 'Un texte de présentation avec un Drag & Drop possible.',
+            title: 'Un texte de présentation avec un Drag & Drop possible.',
             image: '/test-img.gif',
           },
         },
@@ -75,11 +91,31 @@ export function resetMock() {
         {
           id: 'bloc-acc-01',
           type: 'textImage',
-          props: { text: 'Accueil : test admin.', image: '/test.png' },
+          props: { title: 'Accueil : test admin.', image: '/test.png' },
+        },
+        {
+          id: 'bloc-bienvenue',
+          type: 'bienvenue',
+          props: {
+            title: 'BIENVENUE',
+            subtitle: "à l'Église Cieux Ouverts à Morlaix",
+            backgroundColor: '#ffffff',
+            textColor: '#1a1a2e',
+            fontSize: 7,
+          },
+        },
+        {
+          id: 'bloc-aspirations',
+          type: 'aspirations',
+          props: {},
         },
       ],
     },
   }
+}
+
+export function getPages() {
+  return PAGES
 }
 
 // Permet d’enregistrer un nouvel état de page (écrase pour test undo/redo)
