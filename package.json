@@ -3,23 +3,28 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": ">=18 <21"
+    "node": ">=20"
   },
-  "engineStrict": true,
+  "engineStrict": false,
   "scripts": {
+    "preinstall": "node -e \"if (!/^22\\./.test(process.versions.node)) { console.error('❌ Node 22.x.x requis. Utilisez nvm, volta, ou nodenv.'); process.exit(1); }\"",
     "dev": "nuxt dev",
     "build": "nuxt build",
-    "test:e2e": "playwright test",
+    "build:e2e": "PW_TEST=1 nuxt build",
+    "test:e2e": "npm run build:e2e && playwright test",
+    "test:e2e:quick": "playwright test",
     "test:admin": "playwright test --config=playwright.admin.config.ts",
     "preview": "nuxt preview",
+    "preview:local": "PW_TEST=1 NITRO_PORT=3001 NITRO_HOST=0.0.0.0 node .output/server/index.mjs",
     "deploy": "nuxt build && wrangler pages deploy dist --project-name eglise-cieux-ouverts",
-    "preview:local": "NITRO_PORT=3001 NITRO_HOST=0.0.0.0 npx nuxi preview"
+    "cf:dev": "npm run build && npx wrangler dev .output/server/index.mjs --site .output/public"
   },
   "dependencies": {
     "@vueuse/core": "^14.3.0",
     "firebase": "^12.12.1",
     "nuxt": "3.20.0",
     "pinia": "^3.0.4",
+    "swiper": "^11.2.10",
     "vue": "^3.4.0",
     "vue-draggable-plus": "^0.6.1",
     "vue-router": "^4.3.0"
@@ -28,5 +33,8 @@
     "@playwright/test": "^1.35.0",
     "playwright": "^1.35.0",
     "wrangler": "^4.94.0"
+  },
+  "volta": {
+    "node": "22.22.3"
   }
 }

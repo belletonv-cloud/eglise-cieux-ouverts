@@ -8,7 +8,7 @@ if (isCI && process.env.NODE_ENV === "production" && !process.env.NUXT_PUBLIC_FI
 }
 
 export default defineNuxtConfig({
-  css: ['~/assets/css/main.css'],
+  css: ['~/assets/css/main.css', '~/assets/css/event-modal.css'],
   experimental: {
     appManifest: false
   },
@@ -27,6 +27,20 @@ export default defineNuxtConfig({
   ],
   nitro: {
     preset: process.env.PW_TEST === '1' ? 'node-server' : 'cloudflare-worker',
+  },
+  hooks: {
+    'build:before': async () => {
+      const { mkdirSync } = await import('node:fs')
+      mkdirSync('.nuxt/dist/server', { recursive: true })
+    }
+  },
+  watchers: {
+    chokidar: {
+      ignored: /(^|[/\\])\.opencode([/\\]|$)/
+    }
+  },
+  vite: {
+    server: { watch: { ignored: ['**/.opencode/**'] } }
   },
   runtimeConfig: {
     public: {
