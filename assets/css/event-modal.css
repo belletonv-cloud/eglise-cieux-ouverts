@@ -1,0 +1,15 @@
+.event-modal-info {
+  width: 100%; max-width: 610px; margin: 0 auto; margin-bottom: 18px;
+}
+.event-modal-meta {
+  display: flex; gap: 18px; padding: 6px 0 10px; font-size: 1.07em; color: #118e8e; flex-wrap: wrap; align-items: center;
+}
+.event-modal-desc { padding: 7px 0 6px 0; color: #333; font-size: 1em; }
+.event-modal-links { display: flex; gap: 10px; margin: 14px 0 0 0; flex-wrap: wrap; }
+.event-modal-links .btn-event { padding: 8px 18px; background: #064886; color: white; font-size: 1em; font-weight: 600; border-radius: 6px; text-decoration: none; transition: background 0.2s; }
+.event-modal-links .btn-event:hover { background: #053870; }
+.event-modal-links .btn-event-outline { background: transparent; border: 2px solid #064886; color: #064886; }
+.event-modal-links .btn-event-outline:hover { background: #064886; color: white; }
+@media (max-width:700px){
+  .event-modal-info { max-width:97vw }
+}
