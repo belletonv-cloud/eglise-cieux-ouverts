@@ -12,7 +12,7 @@ test.describe('Aspirations animation', () => {
 
     // BlockBienvenue — text must be visible (opacity 1 in SSR)
     await expect(page.locator('.block-bienvenue')).toBeVisible()
-    await expect(page.locator('.hero-bienvenue-line').first()).toBeVisible()
+    await expect(page.locator('.hero-bienvenue-char').first()).toBeVisible()
 
     // BlockRejoins — must have .is-visible class (content visible)
     await expect(page.locator('.block-rejoins.is-visible')).toBeVisible()
@@ -22,8 +22,8 @@ test.describe('Aspirations animation', () => {
     await expect(page.locator('.vision-label')).toBeVisible()
     await expect(page.locator('.vision-quote')).toBeVisible()
 
-    // Footer "Il y a une place pour toi !" — shutter chars must have in-view class
-    await expect(page.locator('.shutter-char.in-view').first()).toBeVisible()
+    // Footer "Il y a une place pour toi !" — shutter chars must be visible in SSR (no-JS fallback CSS)
+    await expect(page.locator('.shutter-char').first()).toBeVisible()
     await expect(page.locator('.footer-title')).toBeVisible()
     // Verify the text (spaces are &nbsp; = non-breaking \xa0)
     const footerText = await page.locator('.footer-title').innerText()

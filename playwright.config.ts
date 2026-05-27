@@ -10,8 +10,8 @@ export default defineConfig({
     headless: true,
   },
   webServer: {
-    command: 'PW_TEST=1 NITRO_PORT=3001 NITRO_HOST=0.0.0.0 npx nuxi preview',
-    port: 3001,
+    command: 'PW_TEST=1 NITRO_PORT=3001 NITRO_HOST=0.0.0.0 node .output/server/index.mjs',
+    url: 'http://localhost:3001',
     reuseExistingServer: true,
     timeout: 300000,
   },

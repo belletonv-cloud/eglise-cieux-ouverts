@@ -327,6 +327,7 @@ test.describe('Fallback animations sans JavaScript', () => {
     const page = await context.newPage()
     await page.goto('/')
 
+
     await expect(page.locator('.block-main-hero')).toBeVisible({ timeout: 10000 })
     await expect(page.locator('.hero-content')).toBeVisible()
     await context.close()
