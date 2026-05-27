@@ -30,24 +30,43 @@ let PAGES = {
   accueil: {
     blocks: [
       {
-        id: 'bloc-acc-01',
-        type: 'textImage',
-        props: { title: 'Accueil : test admin.', image: '/test.png' },
+        id: 'bloc-hero',
+        type: 'hero',
+        props: {},
       },
       {
         id: 'bloc-bienvenue',
         type: 'bienvenue',
-        props: {
-          title: 'BIENVENUE',
-          subtitle: "à l'Église Cieux Ouverts à Morlaix",
-          backgroundColor: '#ffffff',
-          textColor: '#1a1a2e',
-          fontSize: 7,
-        },
+        props: {},
+      },
+      {
+        id: 'bloc-rejoins',
+        type: 'rejoins',
+        props: {},
       },
       {
         id: 'bloc-aspirations',
         type: 'aspirations',
+        props: {},
+      },
+      {
+        id: 'bloc-vision',
+        type: 'vision',
+        props: {},
+      },
+      {
+        id: 'bloc-activities',
+        type: 'activities',
+        props: {},
+      },
+      {
+        id: 'bloc-nousRejoindre',
+        type: 'nousRejoindre',
+        props: {},
+      },
+      {
+        id: 'bloc-contact',
+        type: 'contact',
         props: {},
       },
     ],
@@ -60,6 +79,16 @@ export function getPageDoc(slug) {
 }
 
 export function resetMock() {
+  const accueilBlocks = [
+    { id: 'bloc-hero', type: 'hero', props: {} },
+    { id: 'bloc-bienvenue', type: 'bienvenue', props: {} },
+    { id: 'bloc-rejoins', type: 'rejoins', props: {} },
+    { id: 'bloc-aspirations', type: 'aspirations', props: {} },
+    { id: 'bloc-vision', type: 'vision', props: {} },
+    { id: 'bloc-activities', type: 'activities', props: {} },
+    { id: 'bloc-nousRejoindre', type: 'nousRejoindre', props: {} },
+    { id: 'bloc-contact', type: 'contact', props: {} },
+  ]
   PAGES = {
     'event-list': {
       blocks: [
@@ -86,31 +115,7 @@ export function resetMock() {
         },
       ],
     },
-    accueil: {
-      blocks: [
-        {
-          id: 'bloc-acc-01',
-          type: 'textImage',
-          props: { title: 'Accueil : test admin.', image: '/test.png' },
-        },
-        {
-          id: 'bloc-bienvenue',
-          type: 'bienvenue',
-          props: {
-            title: 'BIENVENUE',
-            subtitle: "à l'Église Cieux Ouverts à Morlaix",
-            backgroundColor: '#ffffff',
-            textColor: '#1a1a2e',
-            fontSize: 7,
-          },
-        },
-        {
-          id: 'bloc-aspirations',
-          type: 'aspirations',
-          props: {},
-        },
-      ],
-    },
+    accueil: { blocks: accueilBlocks },
   }
 }
 

@@ -5,14 +5,14 @@ export default defineEventHandler(async (event) => {
   const privateKey = process.env.NUXT_FIREBASE_PRIVATE_KEY || config.firebasePrivateKey
 
   if (!projectId || !clientEmail || !privateKey) {
-    // En CI, TEST_ENV ou local : renvoie TOUJOURS la RAM du mock si Firestore est absent
+    // En CI, TEST_ENV ou local : renvoie la RAM du mock si Firestore absent
     const isTest = process.env.NODE_ENV === 'test' || process.env.PW_TEST === '1' || process.env.TEST_ENV === '1'
     if (isTest) {
-      const { getPageDoc } = await import('~/server/utils/firestore-mock.js')
+      const { getPageDoc } = await import('../../utils/firestore-mock.js')
       const slug = getRouterParam(event, 'slug') || 'accueil'
       return await getPageDoc(slug)
     }
-    // Sinon, fallback neutre/jamais cassant pour prod/dev
+    // Sinon, fallback neutre → le frontend utilise getDefaultHomePage() etc.
     return { blocks: [] }
   }
 
