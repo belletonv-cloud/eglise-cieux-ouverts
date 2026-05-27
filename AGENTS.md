@@ -39,11 +39,46 @@ Déployé sur Cloudflare Pages.
 - `public/` — Assets statiques (favicons, logos, images)
 - `tests/` — Tests
 
-## ⚠️ Problèmes connus
+## Node.js — version unique
 
-- **Drag-and-drop** : implémenté via `vue-draggable-plus` dans `PageRenderer.vue` (admin mode seulement)
-- **Persistance Firestore** : auto-save avec debounce 3s dans `AdminToolbar.vue` (quand l'utilisateur est connecté)
-- **Accent incohérent** : corrigé ("Événements" partout sauf `useChurchEvents.js` qui conserve `evenements` pour les noms de variables)
+**Node 22 uniquement.** Plus de jonglage entre versions.
+
+Tout fonctionne sur Node 22 : `nuxt dev`, `nuxt build`, les tests Playwright, le déploiement Wrangler/Cloudflare.
+
+| Fichier | Version | Rôle |
+|---|---|---|
+| `package.json` → `volta.node` | `22.22.3` | Volta auto-switch |
+| `.nvmrc` | `22` | `nvm use` |
+| `.node-version` | `22` | nodenv/fnm |
+
+### Commandes
+
+```bash
+npm run dev       # dev local
+npm run test:e2e  # build + tests Playwright
+npm run deploy    # build + wrangler
+```
+
+Si votre manager de version ne switch pas automatiquement vers Node 22 :
+```bash
+nvm use 22
+# ou
+volta pin node@22
+```
+
+## ✅ Fonctionnalités clés
+
+- **Drag-and-drop** : réordonnancement des blocs via `vue-draggable-plus` (admin mode)
+- **Undo/Redo** : historique local 50 entrées, boutons toolbar + Ctrl+Z / Ctrl+Shift+Z
+- **Persistance Firestore** : auto-save avec debounce 3s, sauvegarde manuelle
+- **Fallback animations Safari** : détection `animation-timeline` + IntersectionObserver
+- **Transitions de page** : opacity + translateY configurées dans Nuxt
+
+## ⚠️ Points d'attention
+
+- **Images Wix externes** : certaines images utilisent encore `static.wixstatic.com` (dépendance externe)
+- **Bloc Vidéo manquant** : pas encore de type `hero.video` ou embed YouTube dédié
+- **Tests admin** : nécessitent mock Firebase (non fait)
 
 ## WIX-like Architecture Schema-Driven
 
@@ -155,6 +190,17 @@ Toutes les fonctions de rendu sont centralisées dans `lib/blocks/renderer.ts` :
 `PageRenderer.vue` appelle ces fonctions au lieu de les dupliquer.
 
 ## Nouvelles fonctionnalités (ajoutées en mai 2026)
+
+### Fallback /event-list (SPA + SSR)
+- `pages/event-list.vue` utilise `useLazyFetch` (pas `await useAsyncData`) pour éviter le blocage SPA
+- Le fallback `getDefaultBilletteriePage()` s'affiche immédiatement si `blocks` est vide
+- Même comportement en SSR et en navigation SPA (clic lien)
+- Test E2E : `tests/playwright/event-list-fallback.spec.ts` (3 scénarios)
+
+### Playwright — serveur de test sans Wrangler
+- `playwright.config.ts` utilise `node .output/server/index.mjs` (standalone, pas de Wrangler)
+- Fonctionne sur Node 22 (standardisé)
+- Actif uniquement avec `PW_TEST=1` (preset `node-server`)
 
 ### Undo/Redo
 - Implémenté dans `composables/useAdmin.js` via piles `undoStack`/`redoStack` (50 entrées max)

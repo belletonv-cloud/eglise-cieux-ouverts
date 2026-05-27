@@ -26,18 +26,20 @@
 
 | Problème | Priorité | Détail |
 |----------|----------|--------|
-| **Drag-and-drop réel** | Haute | Mentionné dans README/AGENTS.md mais pas implémenté. `vue-draggable-plus` installé mais non utilisé |
-| **Undo/redo** | Haute | Mentionné dans README comme "temps réel" mais pas implémenté |
-| **Persistance Firestore des blocs** | Haute | Sauvegarde manuelle (bouton "Sauvegarder") — pas de sync automatique multi-session |
-| **Animations scroll-driven non supportées Safari** | Haute | `animation-timeline` non supporté par Safari (16% des users). Aucun fallback JS |
-| **Bloc hero Wix manquant** | Moyenne | Le site Wix a une animation de lettres "BIENVENUE" en hero + vidéo de fond possible |
-| **Accent incohérent** | Basse | "Billetterie Évènements" vs "Événements" |
 | **Images Wix externes** | Moyenne | Nombreuses images chargées depuis static.wixstatic.com (dépendance externe) |
 | **Police Wix externe** | Basse | `wfont_9e41cf_58d674eb74ea449ba1ce06533c9a9704` depuis Wix |
 | **Logo SVG Instagram/Facebook dupliqué** | Basse | SVG inline répété 3× dans le code |
-| **CSS dupliqué** | Basse | `assets/css/main.css` et `assets/style.css` ont les mêmes variables/tons |
 | **Bloc Video manquant** | Moyenne | Le site Wix a une section embedded YouTube |
 | **Pas de page "admin" complète** | Basse | `/admin` est une page d'info, pas un vrai dashboard |
+
+✅ **Déjà implémenté** (docs mises à jour) :
+- **Drag-and-drop** : `vue-draggable-plus` actif dans PageRenderer.vue, handles visibles au survol
+- **Undo/redo** : historique 50 entrées dans useAdmin.js, boutons toolbar + Ctrl+Z/Ctrl+Shift+Z
+- **Persistance Firestore** : auto-save 3s (debounce) + sauvegarde manuelle
+- **Fallback animations Safari** : détection CSS + IntersectionObserver dans useBlockAnimation.js
+- **Transitions de page** : configurées dans nuxt.config.ts + CSS dans main.css
+- **CSS dupliqué** : `assets/style.css` supprimé
+- **Accent incohérent** : corrigé (seul `useChurchEvents.js` garde `evenements` en nom de variable)
 
 ## 2. Analyse Comparative avec le Site Wix
 
@@ -286,10 +288,10 @@ Le plugin Firebase importe `firebase/auth`, `firebase/firestore`, `firebase/stor
 5. ✅ Formulaire contact : test E2E
 
 ### Phase 2 — Fonctionnalités manquantes (3-5 jours)
-1. 🔲 Drag-and-drop réel des blocs (vue-draggable-plus)
-2. 🔲 Undo/redo system
-3. 🔲 Auto-save Firestore avec debounce
-4. 🔲 Transitions de page Nuxt (layout transition)
+1. ✅ Drag-and-drop réel des blocs (vue-draggable-plus)
+2. ✅ Undo/redo system
+3. ✅ Auto-save Firestore avec debounce
+4. ✅ Transitions de page Nuxt (layout transition)
 5. 🔲 Bloc Vidéo (embed YouTube/Vimeo)
 6. 🔲 Bouton "Faire un don" sticky
 
@@ -305,6 +307,29 @@ Le plugin Firebase importe `firebase/auth`, `firebase/firestore`, `firebase/stor
 1. 🔲 CI/CD avec tests Playwright automatisés
 2. 🔲 Monitoring des erreurs console
 3. 🔲 Mise à jour dépendances (Nuxt 3.20 → latest)
+
+---
+
+## [BUG RETRO] Fallback /event-list — Navigation SSR/SPA
+
+**Problème original** :
+Après navigation vers l'agenda puis retour sur d'autres pages (notamment `/event-list`), la page restait parfois blanche, vide, ou cassée (data fetch « tardif », erreur d'hydratation, ou rendu bloqué).
+
+**Cause racine** :
+- Le fetch asynchrone (`await useAsyncData`) bloquait parfois le rendu SPA/client tant que la requête n'était pas résolue, provoquant un « trou » blanc.
+- Pas de fallback synchrone immédiat, donc mauvaise UX sur navigations rapides (bug nuxt/vue).
+
+**Fix/apport** :
+- Passage à `useLazyFetch` (non bloquant, SSR/SPA-safe).
+- Fallback synchrone via `getDefaultBilletteriePage()` : la page est toujours entièrement rendue, même avant que les données Firestore arrivent.
+- Rendu des blocks par une computed prioritaire : mode admin > données > fallback par défaut.
+- Test Playwright `event-list-fallback.spec.ts` vérifie :
+  - SSR (reload direct)
+  - Navigation SPA après agenda
+  - Clic menu SPA
+- Impossible de reproduire le bug (page blanche/cassée) dés lors que ce pattern est en place (mai 2026).
+
+**Où chercher :** `/pages/event-list.vue`, `/utils/blockTypes.js:getDefaultBilletteriePage`, et le test `tests/playwright/event-list-fallback.spec.ts`.
 
 ---
 
