@@ -1,10 +1,10 @@
 <template>
   <section
-    class="block-text-img block-draggable block-textimage" :data-block-id="id"
+    class="block-text-img block-draggable block-textimage" :data-block-id="blockId"
     :style="{ background: backgroundColor, color: textColor }"
     :class="[visibilityClasses, { 'reverse': reverse }, `style-${visualStyle || 'default'}`]"
   >
-    <div v-if="$attrs['data-admin'] || (typeof window !== 'undefined' && window?.__PW_TEST)" class="block-draggable-handle" style="width:28px;height:28px;background:rgba(0,0,0,0.04);border-radius:8px;display:flex;align-items:center;justify-content:center;position:absolute;top:16px;left:16px;z-index:3;cursor:move;">
+    <div v-if="$attrs['data-admin'] || showDragHandle" class="block-draggable-handle" style="width:28px;height:28px;background:rgba(0,0,0,0.04);border-radius:8px;display:flex;align-items:center;justify-content:center;position:absolute;top:16px;left:16px;z-index:3;cursor:move;">
         <span style="font-size:1.2em;">⠿</span>
       </div>
     <div class="ti-inner">
@@ -33,6 +33,7 @@
 
 <script setup>
 const { visibility = {} } = defineProps({
+  blockId: { type: String, default: '' },
   title: { type: String, default: '' },
   subtitle: { type: String, default: '' },
   body: { type: String, default: '' },
@@ -53,6 +54,7 @@ const visibilityClasses = computed(() => ({
   'hide-tablet': visibility.tablet === false,
   'hide-desktop': visibility.desktop === false,
 }))
+const showDragHandle = import.meta.client && window.__PW_TEST
 </script>
 
 <style scoped>

@@ -21,7 +21,7 @@
 </template>
 
 <script setup>
-import { provide, ref, onMounted, computed } from 'vue'
+import { provide, ref, onMounted, onUnmounted, computed } from 'vue'
 
 useSeoMeta({
   ogSiteName: 'Église Cieux Ouverts — Morlaix',
@@ -85,8 +85,18 @@ watch(isAdminMode, (val) => {
   if (val && import.meta.client) loadMenuFromFirestore()
 }, { immediate: true })
 
+const onEscape = (e) => {
+  if (e.key === 'Escape' && isAdminMode.value) {
+    exitAdmin()
+    useRouter().replace({ query: {} }).catch(() => {})
+  }
+}
 onMounted(() => {
   isMounted.value = true
+  document.addEventListener('keydown', onEscape)
+})
+onUnmounted(() => {
+  document.removeEventListener('keydown', onEscape)
 })
 </script>
 

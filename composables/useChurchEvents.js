@@ -109,6 +109,7 @@ export function useChurchEvents(options = {}) {
       description: ev.description || null,
       source: ev.source || null,
       image_url: ev.image_url || null,
+      images: ev.images ? ev.images : (ev.image_url ? [ev.image_url] : []),
       repeat_period: ev.repeat_period || null,
       lien: ev.lien || ev.link || null,
       billetterie: ev.billetterie || ev.ticket_url || null,

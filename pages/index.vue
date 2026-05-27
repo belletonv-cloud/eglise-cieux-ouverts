@@ -37,12 +37,7 @@ const blocks = computed(() => {
 })
 
 function initAdminBlocks() {
-  // Allow pages to initialize admin blocks when the admin query is present
-  // because route query may be set before the global isAdminMode flag is
-  // toggled in the layout. We prefer a pragmatic approach: if either the
-  // composable flag or the URL indicates admin mode, initialize local blocks.
-  const shouldInit = isAdminMode.value || (import.meta.client && route.query.admin === 'true')
-  if (!shouldInit) return
+  if (!isAdminMode.value) return
   if (pageData.value?.blocks?.length) {
     enterAdmin(pageData.value.blocks)
   } else {
@@ -64,4 +59,15 @@ watch(pageData, () => {
 
 // Debug: log admin boot flow (Playwright traces)
 try { if (import.meta.env.DEV) console.debug('pages/index: isAdminMode on load=', isAdminMode.value, 'pageDataBlocks=', pageData?.value?.blocks?.length) } catch (e) {}
+
+// TEMP: Diagnostic log for duplicate hero block bug
+watchEffect(() => {
+  if (pageData.value?.blocks?.length) {
+    console.log('Bloc types dans API accueil :', pageData.value.blocks.map(b => b.type));
+  }
+  if (localBlocks.value?.length) {
+    console.log('Bloc types dans localBlocks (admin):', localBlocks.value.map(b => b.type));
+  }
+})
+
 </script>

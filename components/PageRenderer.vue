@@ -65,6 +65,14 @@
             <template #fallback></template>
           </Suspense>
         </template>
+        <template v-else-if="block.type === 'hero'">
+          <component
+            :is="blockComponent(block.type)"
+            v-bind="sanitizeProps(block.props, block.id)"
+            :visibility="block.visibility"
+            :block-id="block.id"
+          />
+        </template>
         <template v-else>
           <div class="block-server-placeholder" aria-hidden="true"></div>
         </template>
@@ -118,10 +126,12 @@ const {
   setup,
   handleBlocksChange,
   handleAnimationChange,
+  setupClient,
+  teardownClient,
 } = useBlockAnimation(isAdmin)
 
   const isMounted = ref(false)
-  const isServer = typeof window === 'undefined' || !import.meta?.client
+  const isServer = typeof window === 'undefined' || !import.meta.client
   const adminModeActive = computed(() => Boolean(isAdmin && (isMounted.value || isServer)))
 
 const useTrigger = shouldUseTrigger
@@ -137,8 +147,10 @@ const visibleBlocks = computed(() => {
 // Local reactive selected id (mirrors injected editingBlockId ref)
 const selectedId = ref(null)
 watch(editingBlockId, (v) => {
-  selectedId.value = v
-  try { console.warn('PageRenderer.selectedId changed', { selectedId: v }) } catch (e) {}
+  if (selectedId.value !== v) {
+    selectedId.value = v
+    try { if (import.meta.env.DEV) console.debug('PageRenderer.selectedId changed', { selectedId: v }) } catch (e) {}
+  }
 }, { immediate: true })
 
 function blockComponent(type) {
@@ -206,27 +218,24 @@ function countThenables(block) {
   }
 }
 
-// Only flip isMounted on the client — keep server output as placeholder to
-// avoid any Promise objects leaking into the SSR HTML.
-  // If we're in admin mode, ensure setup is called even on the server so that
-  // admin-specific behaviour (eg. pre-triggering all blocks) is available in
-  // the SSR output. For non-admin mode we defer setup to the client to avoid
-  // awaiting async loaders during SSR which previously leaked Promises.
-  try {
-    if (isAdmin && isAdmin.value) {
-      setup(props.blocks || [])
-    }
-  } catch (e) {}
+// Call setup synchronously during component setup (safe for lifecycle hooks).
+try {
+  setup(props.blocks || [])
+} catch (e) {}
 
-  if (typeof window !== 'undefined' && import.meta?.client) {
-    setTimeout(() => {
-      isMounted.value = true
-      // Call setup on the client as well to initialize IntersectionObserver etc.
-      try { setup(props.blocks || []) } catch (e) {}
-    }, 0)
-  } else {
-    // On server: do not set isMounted, but we may have called setup above for admin.
-  }
+if (typeof window !== 'undefined' && import.meta.client) {
+  isMounted.value = true
+} else {
+  // On server: isMounted stays false, server output is placeholder only.
+}
+
+onMounted(() => {
+  setupClient()
+})
+
+onUnmounted(() => {
+  teardownClient()
+})
 
 // Ensure clicks inside complex child components still select the block.
 // Some child components may stopPropagation on click; to be robust we add a
@@ -234,7 +243,7 @@ function countThenables(block) {
 // and calls selectBlock with its data-block-id. This is only active on the
 // client and only when admin mode is enabled.
 let docClickHandler, docPointerHandler
-if (typeof window !== 'undefined' && import.meta?.client) {
+if (typeof window !== 'undefined' && import.meta.client) {
   docClickHandler = (ev) => {
     try {
       if (!isAdmin || !isAdmin.value) return
@@ -327,7 +336,7 @@ function isSelected(block) {
 
 // After mount, scan for stray "[object Promise]" text nodes and log their block context
 // Only run this on the client — server environments don't have `document`.
-if (typeof window !== 'undefined' && import.meta?.client) {
+if (typeof window !== 'undefined' && import.meta.client) {
   nextTick().then(() => {
     try {
       // small delay to let hydration finish

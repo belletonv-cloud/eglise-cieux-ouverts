@@ -31,15 +31,16 @@
           >
             <span class="day-number" :class="{ today: isToday(day) }">{{ day }}</span>
             <div class="day-events">
-              <div
-                v-for="evt in getDayEvents(day)"
-                :key="evt.id"
-                class="event-pill"
-                :class="getEventColor(evt)"
-                :title="evt.titre"
-              >
-                {{ evt.emoji || '•' }} {{ evt.titre }}
-              </div>
+<div
+  v-for="evt in getDayEvents(day)"
+  :key="evt.id"
+  class="event-pill"
+  @click.stop="openEventModal(evt)" style="cursor:pointer"
+  :class="getEventColor(evt)"
+  :title="evt.titre"
+>
+  {{ evt.emoji || '•' }} {{ evt.titre }}
+</div>
             </div>
           </div>
         </div>
@@ -57,15 +58,16 @@
           >
             <span class="day-number" :class="{ today: isToday(day.day) }">{{ day.day }}</span>
             <div class="day-events">
-              <div
-                v-for="evt in day.events"
-                :key="evt.id"
-                class="event-pill"
-                :class="getEventColor(evt)"
-                :title="evt.titre"
-              >
-                {{ evt.emoji || '•' }} {{ evt.titre }}
-              </div>
+<div
+  v-for="evt in day.events"
+  :key="evt.id"
+  class="event-pill"
+  @click.stop="openEventModal(evt)" style="cursor:pointer"
+  :class="getEventColor(evt)"
+  :title="evt.titre"
+>
+  {{ evt.emoji || '•' }} {{ evt.titre }}
+</div>
             </div>
           </div>
         </div>
@@ -83,47 +85,103 @@
     <section class="events-list-section" v-if="currentView === 'cards' || currentView === 'agenda'">
       <div class="events-list-inner">
         <div v-if="currentView === 'cards'" class="events-list">
-          <article v-for="evt in filteredEvents" :key="evt.id" class="event-card">
-            <div class="event-date-badge">
-              <span class="badge-day">{{ formatDay(evt.date) }}</span>
-              <span class="badge-month">{{ formatMonth(evt.date) }}</span>
-            </div>
-            <div class="event-body">
-              <h3 class="event-title">{{ evt.titre }}</h3>
-              <div class="event-meta">
-                <span v-if="evt.heure">🕙 {{ evt.heure }}</span>
-                <span v-if="evt.lieu">📍 {{ evt.lieu }}</span>
-              </div>
-              <p v-if="evt.description" class="event-desc">{{ evt.description }}</p>
-              <div class="event-links" v-if="evt.lien || evt.billetterie">
-                <a v-if="evt.lien" :href="evt.lien" target="_blank" rel="noopener" class="btn-event">En savoir plus</a>
-                <a v-if="evt.billetterie" :href="evt.billetterie" target="_blank" rel="noopener" class="btn-event btn-event-outline">🎟️ Billetterie</a>
-              </div>
-            </div>
-          </article>
+<article v-for="evt in filteredEvents" :key="evt.id" class="event-card" @click="openEventModal(evt)" style="cursor:pointer">
+  <div style="position:relative;min-height:160px;width:100%">
+  <template v-if="evt.images && evt.images.length">
+    <EventImageSlider
+      v-if="evt.images.length > 1"
+      :images="evt.images"
+      :altPrefix="'Photo '"
+      mini
+      @click="(e) => e.stopPropagation()"
+      @slideClick="idx => openEventModal(evt, idx)"
+    />
+    <img
+      v-else
+      :src="evt.images[0]"
+      :alt="evt.titre"
+      class="event-card-img"
+      loading="lazy"
+      style="width:100%;height:160px;object-fit:cover; background:#ededed; border-radius:0; box-shadow:none; cursor:pointer;"
+      @click.stop="openEventModal(evt, 0)"
+    />
+  </template>
+  <div v-else style="width:100%;height:160px;display:flex;align-items:center;justify-content:center;background:#ebf0fa;">
+    <svg width="58" height="58" viewBox="0 0 40 40" fill="#b8c7da"><circle cx="20" cy="20" r="18" stroke="#a6bed7" stroke-width="2" fill="#e9f0fa"/><path d="M12.5 27.5L20 15l7.5 12.5h-15z" fill="#b8c7da"/><rect x="17.2" y="18" width="5.6" height="5.5" rx="2.7" fill="#a6bed7"/></svg>
+  </div>
+  <div class="event-date-badge">
+    <span class="badge-day">{{ formatDay(evt.date) }}</span>
+    <span class="badge-month">{{ formatMonth(evt.date) }}</span>
+  </div>
+</div>
+  <div class="event-body">
+    <h3 class="event-title">{{ evt.titre }}</h3>
+    <div class="event-meta">
+      <span v-if="evt.heure">🕙 {{ evt.heure }}</span>
+      <span v-if="evt.lieu">📍 {{ evt.lieu }}</span>
+    </div>
+    <p v-if="evt.description" class="event-desc" v-html="sanitizeHtml(evt.description)"></p>
+    <div class="event-links" v-if="evt.lien || evt.billetterie">
+      <a v-if="evt.lien" :href="evt.lien" target="_blank" rel="noopener" class="btn-event">En savoir plus</a>
+      <a v-if="evt.billetterie" :href="evt.billetterie" target="_blank" rel="noopener" class="btn-event btn-event-outline">🎟️ Billetterie</a>
+    </div>
+  </div>
+</article>
         </div>
         <div v-if="currentView === 'agenda'" class="agenda-list">
-          <div v-for="(group, gIdx) in groupedByDate" :key="gIdx" class="agenda-day-group">
-            <h3 class="agenda-day-label">{{ formatDayLabel(group.date) }}</h3>
-            <div v-for="evt in group.events" :key="evt.id" class="agenda-event">
-              <span class="agenda-time">{{ evt.heure || '—' }}</span>
-              <div class="agenda-event-body">
-                <strong>{{ evt.titre }}</strong>
-                <span v-if="evt.lieu" class="agenda-lieu">{{ evt.lieu }}</span>
-                <p v-if="evt.description" class="agenda-desc">{{ evt.description }}</p>
-              </div>
-            </div>
-          </div>
+<div v-for="(group, gIdx) in groupedByDate" :key="gIdx" class="agenda-day-group">
+  <h3 class="agenda-day-label">{{ formatDayLabel(group.date) }}</h3>
+  <div v-for="evt in group.events" :key="evt.id" class="agenda-event" @click="openEventModal(evt)" style="cursor:pointer">
+    <span class="agenda-time">{{ evt.heure || '—' }}</span>
+    <div class="agenda-event-body">
+      <strong>{{ evt.titre }}</strong>
+      <span v-if="evt.lieu" class="agenda-lieu">{{ evt.lieu }}</span>
+      <p v-if="evt.description" class="agenda-desc" v-html="sanitizeHtml(evt.description)"></p>
+    </div>
+  </div>
+</div>
           <p v-if="filteredEvents.length === 0" class="empty-msg">Aucun événement pour cette période.</p>
         </div>
       </div>
     </section>
 
     <div v-if="loading" class="loading-msg">Chargement des événements...</div>
+
+    <EventModal
+    v-if="eventModal.open && eventModal.event"
+    v-model="eventModal.open"
+    :title="eventModal.event.titre"
+    @close="closeEventModal"
+    >
+    <template #default>
+      <EventImageSlider v-if="eventModal.event.images && eventModal.event.images.length > 0"
+                    :images="eventModal.event.images"
+                    :altPrefix="'Photo '"
+                    :initialIndex="eventModal.imageIndex || 0"
+  />
+      <div class="event-modal-info">
+        <div class="event-modal-meta">
+          <span v-if="eventModal.event.date">📅 {{ formatDate(eventModal.event.date) }}</span>
+          <span v-if="eventModal.event.heure">🕙 {{ eventModal.event.heure }}</span>
+          <span v-if="eventModal.event.lieu">📍 {{ eventModal.event.lieu }}</span>
+        </div>
+        <div class="event-modal-desc" v-if="eventModal.event.description" v-html="sanitizeHtml(eventModal.event.description)"></div>
+        <div class="event-modal-links" v-if="eventModal.event.lien || eventModal.event.billetterie">
+          <a v-if="eventModal.event.lien" :href="eventModal.event.lien" target="_blank" rel="noopener" class="btn-event">En savoir plus</a>
+          <a v-if="eventModal.event.billetterie" :href="eventModal.event.billetterie" target="_blank" rel="noopener" class="btn-event btn-event-outline">🎟️ Billetterie</a>
+        </div>
+      </div>
+    </template>
+  </EventModal>
   </div>
 </template>
 
 <script setup>
+import { ref } from 'vue'
+import EventModal from '~/components/EventModal.vue'
+import EventImageSlider from '~/components/EventImageSlider.vue'
+
+
 useSeoMeta({
   title: "Agenda — Église Cieux Ouverts Morlaix",
   description: "Tous les événements à venir à l'Église Cieux Ouverts de Morlaix.",
@@ -132,6 +190,20 @@ useSeoMeta({
 const { evenements, loading } = useChurchEvents()
 const currentDate = ref(new Date())
 const currentView = ref('month')
+
+// Nouvelle modale centrale
+const eventModal = ref({ open: false, event: null, imageIndex: 0 })
+
+function openEventModal(evtObj, imageIndex = 0) {
+  eventModal.value.event = evtObj
+  eventModal.value.open = true
+  eventModal.value.imageIndex = imageIndex || 0
+}
+function closeEventModal() {
+  eventModal.value.open = false
+  eventModal.value.event = null
+  eventModal.value.imageIndex = 0
+}
 
 const dayNames = ['lun.', 'mar.', 'mer.', 'jeu.', 'ven.', 'sam.', 'dim.']
 
@@ -179,10 +251,20 @@ const weekDays = computed(() => {
 
 const filteredEvents = computed(() => {
   const d = currentDate.value
-  return evenements.value.filter(evt => {
+  const filtered = evenements.value.filter(evt => {
     const ed = toDate(evt.date)
     return ed.getMonth() === d.getMonth() && ed.getFullYear() === d.getFullYear()
   }).sort((a, b) => toDate(a.date) - toDate(b.date))
+
+  // Audit: log description length and content for investigation
+  if (process.client && typeof window !== 'undefined') {
+    filtered.forEach(evt => {
+      if (evt.description && evt.description.length < 30) {
+        console.warn('Event', evt.id, 'description may be short/truncated:', evt.description)
+      }
+    })
+  }
+  return filtered
 })
 
 const groupedByDate = computed(() => {
@@ -225,6 +307,17 @@ function next() {
   if (currentView.value === 'week') { d.setDate(d.getDate() + 7) }
   else { d.setMonth(d.getMonth() + 1) }
   currentDate.value = d
+}
+
+function sanitizeHtml(text) {
+  if (typeof text !== 'string') return ''
+  return text.replace(/\\n/g, '\n').replace(/\n/g, '<br>')
+}
+
+function formatDate(date) {
+  if (!date) return ''
+  if (typeof date === 'string') date = new Date(date)
+  try { return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) } catch (e) { return String(date) }
 }
 
 function toDate(ts) {
@@ -277,12 +370,56 @@ function formatDayLabel(date) {
 .btn-subscribe:hover { background: #d63a43; }
 .events-list-section { padding: 40px 24px; }
 .events-list-inner { max-width: 800px; margin: 0 auto; }
-.events-list { display: flex; flex-direction: column; gap: 16px; }
-.event-card { display: flex; gap: 20px; background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); align-items: flex-start; }
-.event-date-badge { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 56px; background: #064886; border-radius: 10px; padding: 10px 6px; color: white; flex-shrink: 0; }
+.events-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+@media (max-width: 900px) {
+  .events-list {
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+}
+
+@media (max-width: 600px) {
+  .events-list {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+.event-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  background: white;
+  border-radius: 14px;
+  padding: 0 0 18px 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  overflow: hidden;
+  position: relative;
+  min-height: 280px;
+}
+.event-date-badge {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 46px;
+  background: rgba(6,72,134,0.97);
+  border-radius: 9px;
+  padding: 7px 5px 5px 5px;
+  color: white;
+  z-index: 2;
+  box-shadow: 0 2px 10px rgba(6,72,134,0.13);
+}
 .badge-day { font-size: 1.6em; font-weight: 900; line-height: 1; }
 .badge-month { font-size: 0.65em; font-weight: 700; letter-spacing: 0.06em; opacity: 0.85; text-transform: uppercase; }
-.event-body { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+.event-body { flex: 1; display: flex; flex-direction: column; gap: 6px; padding: 14px 18px 2px 18px; }
 .event-title { font-size: 1.05em; font-weight: 700; color: #064886; margin: 0; }
 .event-meta { display: flex; gap: 14px; font-size: 0.85em; color: #888; flex-wrap: wrap; }
 .event-desc { font-size: 0.88em; color: #666; line-height: 1.6; margin: 0; }
@@ -307,16 +444,24 @@ function formatDayLabel(date) {
 
 .loading-msg { text-align: center; padding: 40px; color: #888; font-size: 1em; }
 
+.event-card-img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  background: #ededed;
+  display: block;
+}
+
 @media (max-width: 700px) {
   .agenda-header { padding: 30px 16px 16px; }
   .agenda-title { font-size: 2em; }
   .agenda-calendar { padding: 0 8px 30px; }
   .day-cell { min-height: 50px; padding: 3px; }
   .event-pill { font-size: 0.6em; padding: 1px 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-  .event-card { flex-direction: column; gap: 12px; }
-  .view-toggle { gap: 2px; }
-  .view-btn { font-size: 0.72em; padding: 4px 4px; }
+  .event-card { flex-direction: column; gap: 0; }
+  .event-body { padding: 12px 10px 4px 10px; }
 }
+
 
 @media (max-width: 480px) {
   .calendar-nav { flex-wrap: wrap; }

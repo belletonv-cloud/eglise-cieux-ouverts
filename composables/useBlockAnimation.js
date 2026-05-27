@@ -1,4 +1,4 @@
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref } from 'vue'
 
 const SUPPORTS_SCROLL_TIMELINE = typeof CSS !== 'undefined' && CSS.supports && CSS.supports('animation-timeline: view()')
 
@@ -75,7 +75,9 @@ export function useBlockAnimation(isAdmin) {
     }
   }
 
+  let blocksCache = []
   function setup(blocks) {
+    blocksCache = blocks || []
     if (isAdmin.value) {
       initAdminTrigger(blocks)
       return
@@ -92,26 +94,6 @@ export function useBlockAnimation(isAdmin) {
         }
       })
     }, { threshold: 0.05, rootMargin: '0px 0px -40px 0px' })
-
-    onMounted(() => {
-      observeElements()
-      setupFallbackObservers(blocks)
-      lastAnimations.value = Object.fromEntries((blocks || []).map(b => [b.id, b.props?.animation]))
-
-      replayHandler = (e) => {
-        const id = e?.detail?.id
-        if (!id) return
-        replayBlockAnimation(id)
-      }
-      document.addEventListener('replay-animation', replayHandler)
-    })
-
-    onUnmounted(() => {
-      if (observer) observer.disconnect()
-      if (replayHandler) document.removeEventListener('replay-animation', replayHandler)
-      for (const [, obs] of fallbackObservers) obs.disconnect()
-      fallbackObservers.clear()
-    })
   }
 
   function handleBlocksChange(blocks) {
@@ -152,6 +134,27 @@ export function useBlockAnimation(isAdmin) {
     lastAnimations.value = newMap
   }
 
+  function setupClient() {
+    if (isAdmin.value) return
+    observeElements()
+    setupFallbackObservers(blocksCache)
+    lastAnimations.value = Object.fromEntries((blocksCache || []).map(b => [b.id, b.props?.animation]))
+
+    replayHandler = (e) => {
+      const id = e?.detail?.id
+      if (!id) return
+      replayBlockAnimation(id)
+    }
+    document.addEventListener('replay-animation', replayHandler)
+  }
+
+  function teardownClient() {
+    if (observer) observer.disconnect()
+    if (replayHandler) document.removeEventListener('replay-animation', replayHandler)
+    for (const [, obs] of fallbackObservers) obs.disconnect()
+    fallbackObservers.clear()
+  }
+
   return {
     triggeredBlocks,
     wrapperRefs,
@@ -162,5 +165,7 @@ export function useBlockAnimation(isAdmin) {
     handleAnimationChange,
     initAdminTrigger,
     observeElements,
+    setupClient,
+    teardownClient,
   }
 }

@@ -61,11 +61,15 @@ export function useAdmin() {
     localBlocks.value = []
     undoStack.value = []
     redoStack.value = []
-    if (import.meta.client) {
-      const { pathname, search, hash } = window.location
-      const params = new URLSearchParams(search)
-      params.delete('admin')
-      window.history.replaceState(null, '', pathname + (params.toString() ? '?' + params.toString() : '') + hash)
+    if (import.meta.client && typeof window !== 'undefined') {
+      try {
+        const { pathname, search, hash } = window.location
+        const params = new URLSearchParams(search)
+        params.delete('admin')
+        window.history.replaceState(null, '', pathname + (params.toString() ? '?' + params.toString() : '') + hash)
+      } catch (e) {
+        // swallow
+      }
     }
   }
 

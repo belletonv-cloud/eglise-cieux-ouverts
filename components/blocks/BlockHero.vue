@@ -1,6 +1,6 @@
 <template>
   <section
-    class="block-hero block-draggable block-main-hero" :data-block-id="props.id"
+    class="block-hero block-draggable block-main-hero" :data-block-id="blockId"
     :class="visibilityClasses"
     :style="{ minHeight: (height ? height + 'px' : undefined), height: (height ? height + 'px' : 'auto') }"
   >
@@ -8,7 +8,7 @@
     <div v-if="overlay" class="hero-overlay" :style="{ background: overlayColor }" />
 
     <div class="hero-content">
-      <div v-if="$attrs['data-admin'] || (typeof window !== 'undefined' && window?.__PW_TEST)" class="block-draggable-handle" style="width:32px;height:32px;background:rgba(0,0,0,0.04);border-radius:8px;display:flex;align-items:center;justify-content:center;position:absolute;top:16px;left:16px;z-index:3;cursor:move;">
+      <div v-if="$attrs['data-admin'] || showDragHandle" class="block-draggable-handle" style="width:32px;height:32px;background:rgba(0,0,0,0.04);border-radius:8px;display:flex;align-items:center;justify-content:center;position:absolute;top:16px;left:16px;z-index:3;cursor:move;">
         <span style="font-size:1.6em;">⠿</span>
       </div>
       <template v-if="overlayText">
@@ -28,6 +28,7 @@ import { computed } from 'vue'
 defineOptions({ inheritAttrs: false })
 
 const props = defineProps({
+  blockId: { type: String, default: '' },
   visibility: { type: Object, default: () => ({}) },
   image: { type: String, default: '/foule-croix.png' },
   nameImage: { type: String, default: '' },
@@ -47,6 +48,7 @@ const visibilityClasses = computed(() => ({
   'hide-tablet': visibility.tablet === false,
   'hide-desktop': visibility.desktop === false,
 }))
+const showDragHandle = typeof window !== 'undefined' && window.__PW_TEST
 </script>
 
 <style scoped>

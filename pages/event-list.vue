@@ -3,6 +3,7 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import { getDefaultBilletteriePage } from '~/utils/blockTypes.js'
 
 useSeoMeta({
@@ -12,8 +13,9 @@ useSeoMeta({
 
 const { isAdminMode, enterAdmin, localBlocks } = useAdmin()
 
-const { data: pageData } = await useFetch('/api/pages/event-list', {
-  key: 'page-event-list',
+// useLazyFetch ne bloque pas le rendu : le fallback s'affiche immédiatement,
+// même pendant la navigation SPA. Le fetch se fait en arrière-plan.
+const { data: pageData } = useLazyFetch('/api/pages/event-list', {
   server: true,
 })
 
@@ -36,13 +38,8 @@ function initAdminBlocks() {
   }
 }
 
-watch(() => isAdminMode.value, () => {
-  initAdminBlocks()
-}, { immediate: true })
-
+watch(() => isAdminMode.value, initAdminBlocks, { immediate: true })
 watch(pageData, () => {
-  if (isAdminMode.value) {
-    initAdminBlocks()
-  }
+  if (isAdminMode.value) initAdminBlocks()
 })
 </script>
