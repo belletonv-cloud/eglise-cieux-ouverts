@@ -1,11 +1,5 @@
 {
   "name": "eglise-cieux-ouverts",
   "compatibility_date": "2024-04-03",
-  "pages_build_output_dir": "./dist"
-  ,
-  // Note: Environment variables are managed via Wrangler/Pages. Do NOT
-  // duplicate bindings here when adding the same names as Pages Secrets.
-  // Use the Pages UI or `wrangler pages secret put` to create encrypted
-  // secrets for NUXT_PUBLIC_FIREBASE_*. Keeping duplicate entries in
-  // "vars" causes binding conflicts during publish.
+  "pages_build_output_dir": "./.output/public"
 }

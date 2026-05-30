@@ -17,7 +17,7 @@
     "preview": "nuxt preview",
     "preview:local": "PW_TEST=1 NITRO_PORT=3001 NITRO_HOST=0.0.0.0 node .output/server/index.mjs",
     "dev:server": "node .output/server/index.mjs",
-    "deploy": "nuxt build && wrangler pages deploy dist --project-name eglise-cieux-ouverts"
+    "deploy": "nuxt build && wrangler pages deploy .output/public --project-name eglise-cieux-ouverts"
   },
   "dependencies": {
     "@vueuse/core": "^14.3.0",
