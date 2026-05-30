@@ -419,7 +419,7 @@ async function saveChanges() {
   color: white;
 }
 .admin-page-select:hover {
-  background: rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.2);
 }
 .admin-block-type {
   font-size: 0.9em;
@@ -480,7 +480,7 @@ async function saveChanges() {
 }
 .admin-icon-btn:hover {
   color: white;
-  background: rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.2);
 }
 .admin-icon-btn:disabled {
   opacity: 0.3;
@@ -514,9 +514,9 @@ async function saveChanges() {
 .admin-btn:hover { background: #2563eb; }
 .admin-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .admin-btn-secondary {
-  background: rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.2);
 }
-.admin-btn-secondary:hover { background: rgba(255,255,255,0.25); }
+.admin-btn-secondary:hover { background: rgba(255,255,255,0.3); }
 .admin-btn-login {
   background: #fff;
   color: #1a1a2e;

@@ -277,12 +277,12 @@ a:hover, .nav-admin-link:hover {
   .section-title { font-size: 1.6em; margin-bottom: 10px; }
 }
 
-.fade-in-on-scroll {
+.fade-in-header {
   opacity: 0;
   transform: translateY(16px);
   transition: opacity 0.45s ease-out, transform 0.45s ease-out;
 }
-.fade-in-on-scroll.visible {
+.fade-in-header.visible {
   opacity: 1;
   transform: translateY(0);
 }

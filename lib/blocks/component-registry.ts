@@ -44,6 +44,7 @@ export const BLOCK_MAP: Record<string, () => Promise<any>> = {
   spacer: () => import('../../components/blocks/BlockSpacer.vue'),
   fullWidthImage: () => import('../../components/blocks/BlockFullWidthImage.vue'),
   vision: () => import('../../components/blocks/BlockVision.vue'),
+  youtube: () => import('../../components/blocks/BlockYoutube.vue'),
 }
 
 export function getBlockTypes(): string[] {

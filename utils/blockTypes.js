@@ -325,6 +325,25 @@ export const BLOCK_TYPES = {
     ]
   },
 
+  youtube: {
+    label: "Vidéo YouTube",
+    icon: "▶️",
+    category: "media",
+    animations: "wrapper",
+    defaults: {
+      videoId: "",
+      title: "Message récent",
+      backgroundColor: "#ffffff",
+      animation: "fadeIn",
+    },
+    schema: [
+      { key: "videoId", label: "ID vidéo YouTube", type: "text" },
+      { key: "title", label: "Titre", type: "text" },
+      { key: "backgroundColor", label: "Fond", type: "color" },
+      { key: "animation", label: "Animation", type: "animation" },
+    ]
+  },
+
   vision: {
     label: 'Vision (citation)',
     icon: '🎯',
