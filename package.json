@@ -3,11 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "engineStrict": false,
   "scripts": {
-    "preinstall": "node -e \"if (!/^22\\./.test(process.versions.node)) { console.error('❌ Node 22.x.x requis. Utilisez nvm, volta, ou nodenv.'); process.exit(1); }\"",
+    "preinstall": "node -e \"if (!/^22\\\\./.test(process.versions.node)) { console.error('❌ Node 22.x.x requis. Utilisez nvm, volta, ou nodenv.'); process.exit(1); }\"",
     "dev": "nuxt dev",
     "build": "nuxt build",
     "build:e2e": "PW_TEST=1 nuxt build",
@@ -16,8 +16,8 @@
     "test:admin": "playwright test --config=playwright.admin.config.ts",
     "preview": "nuxt preview",
     "preview:local": "PW_TEST=1 NITRO_PORT=3001 NITRO_HOST=0.0.0.0 node .output/server/index.mjs",
-    "deploy": "nuxt build && wrangler pages deploy dist --project-name eglise-cieux-ouverts",
-    "cf:dev": "npm run build && npx wrangler dev .output/server/index.mjs --site .output/public"
+    "dev:server": "node .output/server/index.mjs",
+    "deploy": "nuxt build && wrangler pages deploy dist --project-name eglise-cieux-ouverts"
   },
   "dependencies": {
     "@vueuse/core": "^14.3.0",
