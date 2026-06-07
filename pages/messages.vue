@@ -12,35 +12,28 @@ useSeoMeta({
 
 const { isAdminMode, enterAdmin, localBlocks } = useAdmin()
 
-const { data: pageData } = useLazyFetch('/api/pages/messages', {
-  key: 'page-messages',
-  server: true,
+const { data: pageBlocks } = await useAsyncData('page-messages-blocks', async () => {
+  const data = await $fetch('/api/pages/messages').catch(() => ({ blocks: [] }))
+  return data?.blocks?.length ? normalizePageBlocks('messages', data.blocks) : getDefaultMessagesPage()
 })
 
 const blocks = computed(() => {
   if (isAdminMode.value && localBlocks.value.length) {
     return localBlocks.value
   }
-  if (pageData.value?.blocks?.length) {
-    return normalizePageBlocks('messages', pageData.value.blocks)
-  }
-  return getDefaultMessagesPage()
+  return pageBlocks.value || []
 })
 
 function initAdminBlocks() {
   if (!isAdminMode.value) return
-  if (pageData.value?.blocks?.length) {
-    enterAdmin(normalizePageBlocks('messages', pageData.value.blocks))
-  } else {
-    enterAdmin(getDefaultMessagesPage())
-  }
+  enterAdmin(pageBlocks.value?.length ? pageBlocks.value : getDefaultMessagesPage())
 }
 
 watch(() => isAdminMode.value, () => {
   initAdminBlocks()
 }, { immediate: true })
 
-watch(pageData, () => {
+watch(pageBlocks, () => {
   if (isAdminMode.value) {
     initAdminBlocks()
   }

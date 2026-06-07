@@ -12,35 +12,28 @@ useSeoMeta({
 
 const { isAdminMode, enterAdmin, localBlocks } = useAdmin()
 
-const { data: pageData } = useLazyFetch('/api/pages/contact', {
-  key: 'page-contact',
-  server: true,
+const { data: pageBlocks } = await useAsyncData('page-contact-blocks', async () => {
+  const data = await $fetch('/api/pages/contact').catch(() => ({ blocks: [] }))
+  return data?.blocks?.length ? normalizePageBlocks('contact', data.blocks) : getDefaultContactPage()
 })
 
 const blocks = computed(() => {
   if (isAdminMode.value && localBlocks.value.length) {
     return localBlocks.value
   }
-  if (pageData.value?.blocks?.length) {
-    return normalizePageBlocks('contact', pageData.value.blocks)
-  }
-  return getDefaultContactPage()
+  return pageBlocks.value || []
 })
 
 function initAdminBlocks() {
   if (!isAdminMode.value) return
-  if (pageData.value?.blocks?.length) {
-    enterAdmin(normalizePageBlocks('contact', pageData.value.blocks))
-  } else {
-    enterAdmin(getDefaultContactPage())
-  }
+  enterAdmin(pageBlocks.value?.length ? pageBlocks.value : getDefaultContactPage())
 }
 
 watch(() => isAdminMode.value, () => {
   initAdminBlocks()
 }, { immediate: true })
 
-watch(pageData, () => {
+watch(pageBlocks, () => {
   if (isAdminMode.value) {
     initAdminBlocks()
   }

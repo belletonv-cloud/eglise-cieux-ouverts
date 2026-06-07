@@ -19,27 +19,26 @@ useSeoMeta({
 })
 
 const { isAdminMode, enterAdmin, localBlocks } = useAdmin()
-const route = useRoute()
 
-const { data: pageData } = useLazyFetch('/api/pages/accueil', {
-  key: 'page-accueil',
-  server: true,
+// Fetch blocks from API, fallback to getDefaultHomePage if empty.
+// The handler runs ONCE during SSR (result serialized to payload),
+// so server and client always get the same data → no key mismatch.
+const { data: pageBlocks } = await useAsyncData('page-accueil-blocks', async () => {
+  const data = await $fetch('/api/pages/accueil').catch(() => ({ blocks: [] }))
+  return data?.blocks?.length ? data.blocks : getDefaultHomePage()
 })
 
 const blocks = computed(() => {
   if (isAdminMode.value && localBlocks.value.length) {
     return localBlocks.value
   }
-  if (pageData.value?.blocks?.length) {
-    return pageData.value.blocks
-  }
-  return getDefaultHomePage()
+  return pageBlocks.value || []
 })
 
 function initAdminBlocks() {
   if (!isAdminMode.value) return
-  if (pageData.value?.blocks?.length) {
-    enterAdmin(pageData.value.blocks)
+  if (pageBlocks.value?.length) {
+    enterAdmin(pageBlocks.value)
   } else {
     enterAdmin(getDefaultHomePage())
   }
@@ -50,14 +49,11 @@ watch(() => isAdminMode.value, () => {
   initAdminBlocks()
 }, { immediate: true })
 
-// Also watch pageData to catch late-arriving data after client-side navigation
-watch(pageData, () => {
+// Also watch pageBlocks to catch late-arriving data after client-side navigation
+watch(pageBlocks, () => {
   if (isAdminMode.value) {
     initAdminBlocks()
   }
 })
-
-// Debug: log admin boot flow (Playwright traces)
-try { if (import.meta.env.DEV) console.debug('pages/index: isAdminMode on load=', isAdminMode.value, 'pageDataBlocks=', pageData?.value?.blocks?.length) } catch (e) {}
 
 </script>
