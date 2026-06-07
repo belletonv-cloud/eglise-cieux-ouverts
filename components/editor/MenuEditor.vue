@@ -46,11 +46,11 @@
           <div class="menu-editor-bg-section">
             <h4>Fond du menu mobile</h4>
             <div class="menu-bg-row">
-              <input v-model="bgImage" placeholder="https://exemple.com/image.jpg" class="input-sm" @input="updateBg" />
-              <button v-if="bgImage" class="btn-mini" @click="clearBg">✕</button>
+              <input v-model="menuBgImage" placeholder="https://exemple.com/image.jpg" class="input-sm" />
+              <button v-if="menuBgImage" class="btn-mini" @click="clearBg">✕</button>
             </div>
-            <div v-if="bgImage" class="menu-bg-preview">
-              <img :src="bgImage" alt="aperçu" />
+            <div v-if="menuBgImage" class="menu-bg-preview">
+              <img :src="menuBgImage" alt="aperçu" />
             </div>
           </div>
           <div class="menu-editor-footer">
@@ -71,14 +71,13 @@ const {
   closeMenuEditor, selectMenuItem, updateMenuItem,
   addMenuItem, addSubMenuItem, removeMenuItem,
   moveMenuItem, toggleMenuItemVisibility, resetToDefault,
+  menuBgImage,
 } = useMenuEditor()
 
 const editLabel = ref('')
 const editTo = ref('')
 
-const bgImage = ref(menuBgImage.value || '')
-function updateBg() { menuBgImage.value = bgImage.value }
-function clearBg() { bgImage.value = ''; menuBgImage.value = '' }
+function clearBg() { menuBgImage.value = '' }
 
 watch(activeMenuItem, (item) => {
   if (item) { editLabel.value = item.label; editTo.value = item.to }

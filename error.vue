@@ -20,7 +20,6 @@
         <div class="error-links">
           <NuxtLink to="/messages">Messages</NuxtLink>
           <NuxtLink to="/agenda">Agenda</NuxtLink>
-          <NuxtLink to="/photos">Photos</NuxtLink>
         </div>
       </div>
     </div>
