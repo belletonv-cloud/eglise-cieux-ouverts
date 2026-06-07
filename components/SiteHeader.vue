@@ -409,6 +409,7 @@ onUnmounted(() => {
     left: 0;
     right: 0;
     bottom: 0;
+    background-color: #064886;
     background-size: cover;
     background-position: center center;
     background-repeat: no-repeat;

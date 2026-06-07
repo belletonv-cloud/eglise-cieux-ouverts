@@ -14,9 +14,12 @@
       <template v-if="overlayText">
         <h1 class="hero-title" :style="{ color: textColor }">{{ overlayText }}</h1>
       </template>
+      <template v-else-if="!imgError">
+        <img :src="nameImage" alt="Cieux Ouverts" class="hero-name" @error="onImgError" />
+        <img :src="logoImage" alt="Logo" class="hero-logo" @error="onImgError" />
+      </template>
       <template v-else>
-        <img :src="nameImage" alt="Cieux Ouverts" class="hero-name" />
-        <img :src="logoImage" alt="Logo" class="hero-logo" />
+        <h1 class="hero-title" :style="{ color: textColor }">Église Cieux Ouverts</h1>
       </template>
     </div>
   </section>
@@ -44,6 +47,8 @@ const props = defineProps({
 const { visibility = {} } = props
 
 const visible = ref(false)
+const imgError = ref(false)
+function onImgError() { imgError.value = true }
 onMounted(() => { visible.value = true })
 
 const visibilityClasses = computed(() => ({
