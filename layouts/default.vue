@@ -61,11 +61,13 @@ const previewUrl = computed(() => {
   return window.location.pathname + '?' + params.toString()
 })
 
-// Enter admin mode from URL param (auth is enforced by AdminToolbar itself)
-if (import.meta.client && route.query.admin === 'true' && !isAdminMode.value && !isPreviewMode.value) {
-  isAdminMode.value = true
-}
+// Load menu from Firestore when entering admin mode
+watch(isAdminMode, (val) => {
+  if (val && import.meta.client) loadMenuFromFirestore()
+}, { immediate: true })
 
+// Enter admin mode after hydration to avoid v-if/v-else template mismatch
+// during SSR hydration (causes block duplication + error page mismatches).
 watch(() => route.query.admin, (val) => {
   if (val === 'true' && !isAdminMode.value && !isPreviewMode.value) {
     isAdminMode.value = true
@@ -73,11 +75,6 @@ watch(() => route.query.admin, (val) => {
     exitAdmin()
   }
 })
-
-// Load menu from Firestore when entering admin mode
-watch(isAdminMode, (val) => {
-  if (val && import.meta.client) loadMenuFromFirestore()
-}, { immediate: true })
 
 const onEscape = (e) => {
   if (e.key === 'Escape' && isAdminMode.value) {
@@ -88,6 +85,10 @@ const onEscape = (e) => {
 onMounted(() => {
   isMounted.value = true
   document.addEventListener('keydown', onEscape)
+  // Activate admin mode after hydration is complete
+  if (route.query.admin === 'true' && !isAdminMode.value && !isPreviewMode.value) {
+    isAdminMode.value = true
+  }
 })
 onUnmounted(() => {
   document.removeEventListener('keydown', onEscape)
