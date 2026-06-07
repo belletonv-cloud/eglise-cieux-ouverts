@@ -10,7 +10,7 @@
             :class="[char === ' ' ? 'space' : '', { 'place-bold': i >= 10 && i <= 14 }]"
             :style="getShutterStyle(i)"
           >
-            {{ char === ' ' ? '&nbsp;' : char }}
+            {{ char === ' ' ? '\u00A0' : char }}
           </span>
         </h2>
       </div>
@@ -53,7 +53,7 @@ function getShutterStyle(i) {
 
 <style scoped>
 .site-footer {
-  background: linear-gradient(to bottom, #064886 0%, #064886 20%, #b8d4e8 100%);
+  background: linear-gradient(to bottom, #064886 0%, #064886 24%, #5a9fcf 100%);
   color: white;
   position: relative;
   overflow: hidden;
@@ -150,6 +150,12 @@ function getShutterStyle(i) {
   text-decoration: underline;
 }
 
+.footer-email:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
 .footer-info p {
   color: white;
   line-height: 1.6;
@@ -158,12 +164,20 @@ function getShutterStyle(i) {
 
 .footer-info strong {
   font-weight: 700;
-  color: #064886;
+  color: #f7fbff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shutter-char {
+    animation: none !important;
+    clip-path: inset(0 0 0 0) !important;
+    opacity: 1 !important;
+  }
 }
 
   @media (max-width: 768px) {
   .site-footer {
-    background: rgb(238, 108, 113);
+    background: linear-gradient(180deg, #d46269 0%, #be4f56 100%);
     min-height: 0;
   }
   .footer-inner {

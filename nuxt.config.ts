@@ -26,7 +26,7 @@ export default defineNuxtConfig({
     { path: '~/components/editor', global: true }
   ],
   nitro: {
-    preset: process.env.PW_TEST === '1' ? 'node-server' : 'cloudflare-worker',
+    preset: process.env.PW_TEST === '1' ? 'node-server' : 'cloudflare-pages',
   },
   hooks: {
     'build:before': async () => {

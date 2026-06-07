@@ -19,7 +19,7 @@ useSeoMeta({
   description: 'Galerie photos de l\'Église Cieux Ouverts à Morlaix.',
 })
 
-const { data: pageData } = await useFetch('/api/pages/photos', {
+const { data: pageData } = useLazyFetch('/api/pages/photos', {
   key: 'page-photos',
   server: true,
 })

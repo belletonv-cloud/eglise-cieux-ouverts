@@ -63,6 +63,7 @@ const onSlideChange = (e) => {
 }
 .event-swiper {
   width: 100%;
+  min-height: 200px;
   border-radius: 10px;
   overflow: hidden;
   box-shadow: 0 4px 20px rgba(0,0,0,0.11);
@@ -70,11 +71,10 @@ const onSlideChange = (e) => {
 }
 .event-img {
   width: 100%;
-  max-height: 340px;
+  height: 340px;
   object-fit: contain;
   background: #ededed;
   border-radius: 10px;
-  background: #ededed;
   display: block;
   margin: 0 auto;
 }
@@ -86,7 +86,7 @@ const onSlideChange = (e) => {
   font-weight: 500;
 }
 @media (max-width: 600px) {
-  .event-img { max-height: 160px; border-radius:8px }
+  .event-img { height: 200px; border-radius:8px }
   .event-slider { max-width:99vw }
 }
 </style>

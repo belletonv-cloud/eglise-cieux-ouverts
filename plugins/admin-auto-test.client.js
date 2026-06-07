@@ -3,9 +3,8 @@ export default defineNuxtPlugin(() => {
   const { enterAdmin } = useAdmin()
 
   if (import.meta.client) {
-    const params = new URLSearchParams(window.location.search)
     const isPWTest = typeof window !== 'undefined' && (window.PW_TEST || window.__PW_TEST__ || window.location.search.includes('PW_TEST=1'))
-    if (params.get('admin') === 'true' || isPWTest || (typeof process !== 'undefined' && process.env?.PW_TEST === '1')) {
+    if (isPWTest || (typeof process !== 'undefined' && process.env?.PW_TEST === '1')) {
       // Bypass auth in enterAdmin for tests:
       enterAdmin([]) // supply dummy blocks array as needed or empty to enable admin
     }

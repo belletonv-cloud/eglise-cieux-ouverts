@@ -61,20 +61,14 @@ const previewUrl = computed(() => {
   return window.location.pathname + '?' + params.toString()
 })
 
-// Don't enter admin with empty blocks — let the page component initialize its own blocks
+// Enter admin mode from URL param (auth is enforced by AdminToolbar itself)
 if (import.meta.client && route.query.admin === 'true' && !isAdminMode.value && !isPreviewMode.value) {
-  const nuxtApp = useNuxtApp()
-  if (nuxtApp.$auth?.currentUser) {
-    isAdminMode.value = true
-  }
+  isAdminMode.value = true
 }
 
 watch(() => route.query.admin, (val) => {
   if (val === 'true' && !isAdminMode.value && !isPreviewMode.value) {
-    const nuxtApp = useNuxtApp()
-    if (nuxtApp.$auth?.currentUser) {
-      isAdminMode.value = true
-    }
+    isAdminMode.value = true
   } else if (val !== 'true' && isAdminMode.value) {
     exitAdmin()
   }

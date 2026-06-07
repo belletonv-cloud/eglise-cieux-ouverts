@@ -7,7 +7,7 @@
     <img :src="image" alt="Hero background" class="hero-bg" />
     <div v-if="overlay" class="hero-overlay" :style="{ background: overlayColor }" />
 
-    <div class="hero-content">
+    <div class="hero-content" :class="{ 'hero-visible': visible }">
       <div v-if="$attrs['data-admin'] || showDragHandle" class="block-draggable-handle" style="width:32px;height:32px;background:rgba(0,0,0,0.04);border-radius:8px;display:flex;align-items:center;justify-content:center;position:absolute;top:16px;left:16px;z-index:3;cursor:move;">
         <span style="font-size:1.6em;">⠿</span>
       </div>
@@ -23,7 +23,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 
 defineOptions({ inheritAttrs: false })
 
@@ -42,6 +42,9 @@ const props = defineProps({
 })
 
 const { visibility = {} } = props
+
+const visible = ref(false)
+onMounted(() => { visible.value = true })
 
 const visibilityClasses = computed(() => ({
   'hide-mobile': visibility.mobile === false,
@@ -84,19 +87,19 @@ const showDragHandle = typeof window !== 'undefined' && window.__PW_TEST
   align-items: center;
   gap: 40px;
   opacity: 0;
-  animation: hero-in 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  transform: translateY(80px);
+  transition: opacity 1.2s cubic-bezier(0.2, 0.8, 0.2, 1), transform 1.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.hero-content.hero-visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 /* If admin mode, show content immediately for editing */
-.admin-mode .block-main-hero .hero-content { opacity: 1; animation: none; }
+.admin-mode .block-main-hero .hero-content { opacity: 1; transform: translateY(0); transition: none; }
 
 .hero-overlay { position: absolute; inset: 0; z-index: 0; }
 .hero-title { font-family: 'Playfair Display', serif; font-size: 3.2rem; margin: 0; text-align: center; }
-
-@keyframes hero-in {
-  0%   { opacity: 0; transform: translateY(80px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
 
 .hero-name {
   width: 100%;

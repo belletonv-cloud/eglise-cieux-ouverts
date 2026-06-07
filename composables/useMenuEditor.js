@@ -21,6 +21,7 @@ const editingMenuItemId = ref(null)
 const menuEditorOpen = ref(false)
 const menuLoaded = ref(false)
 const menuSaving = ref(false)
+const menuBgImage = ref('')
 let _menuEditorOpen = menuEditorOpen // alias for provide reactivity
 
 export function useMenuEditor() {
@@ -152,8 +153,10 @@ export function useMenuEditor() {
       const { getDoc, doc } = await import('firebase/firestore')
       const { $db } = useNuxtApp()
       const snap = await getDoc(doc($db, 'settings', 'menu'))
-      if (snap.exists() && snap.data().menuItems?.length) {
-        menuItems.value = JSON.parse(JSON.stringify(snap.data().menuItems))
+      if (snap.exists()) {
+        const data = snap.data()
+        if (data.menuItems?.length) menuItems.value = JSON.parse(JSON.stringify(data.menuItems))
+        if (data.menuBgImage) menuBgImage.value = data.menuBgImage
       }
     } catch (e) {
       console.warn('MenuEditor: could not load menu from Firestore, using defaults', e)
@@ -170,6 +173,7 @@ export function useMenuEditor() {
       const { $db } = useNuxtApp()
       await setDoc(doc($db, 'settings', 'menu'), {
         menuItems: JSON.parse(JSON.stringify(menuItems.value)),
+        menuBgImage: menuBgImage.value,
         updatedAt: new Date().toISOString(),
       })
     } catch (e) {
@@ -195,6 +199,7 @@ export function useMenuEditor() {
     activeMenuItem,
     menuLoaded,
     menuSaving,
+    menuBgImage,
     initMenuItems,
     loadMenuFromFirestore,
     saveMenuToFirestore,

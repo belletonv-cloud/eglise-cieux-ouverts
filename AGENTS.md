@@ -79,6 +79,11 @@ volta pin node@22
 - **Images Wix externes** : certaines images utilisent encore `static.wixstatic.com` (dépendance externe)
 - **Bloc Vidéo manquant** : pas encore de type `hero.video` ou embed YouTube dédié
 - **Tests admin** : nécessitent mock Firebase (non fait)
+- **Anim CSS du hero** : `BlockHero.vue` utilise une `transition` (pas `@keyframes`) déclenchée après `onMounted` via `.hero-visible` → évite le rejeu d'animation après hydratation
+- **Menu mobile scroll** : quand ouvert, le `body` est figé avec `position: fixed` + `touchAction: none` + restauration du scrollY à la fermeture
+- **Menu bg image** : configurable dans le MenuEditor, persistant dans Firestore (`settings/menu.menuBgImage`)
+- **Auth admin** : la toolbar d'admin (AdminToolbar) gère l'auth via Firebase `onAuthStateChanged`. `?admin=true` active le mode admin quelles que soient les permissions — la toolbar se charge d'afficher "Se connecter" si pas authentifié. Page `/admin` = page de login dédiée avec redirection vers `/?admin=true` après connexion.
+- **Nitro preset** : utiliser `cloudflare-pages` (pas `cloudflare-worker`). Le build sort dans `dist/` avec `_worker.js/` à l'intérieur. `wrangler.jsonc` doit pointer `pages_build_output_dir` vers `./dist`. Node 22 requis pour Wrangler 4.x.
 
 ## WIX-like Architecture Schema-Driven
 

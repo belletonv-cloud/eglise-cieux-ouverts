@@ -45,12 +45,18 @@
         </div>
       </nav>
 
-      <button @click="toggleMenu" class="burger" aria-label="Menu">
+      <button
+        @click="toggleMenu"
+        class="burger"
+        aria-label="Menu"
+        aria-controls="mobile-navigation"
+        :aria-expanded="menuOpen ? 'true' : 'false'"
+      >
         <span></span><span></span><span></span>
       </button>
     </div>
 
-    <nav class="nav-mobile">
+    <nav id="mobile-navigation" class="nav-mobile" :style="menuBgStyle">
         <template v-for="item in navItems" :key="item.id">
         <NuxtLink v-if="!isMounted || (!adminMode && item.visible !== false && (item.id !== 'event-list' || showBilletterie))"
           :to="item.to" @click="closeMenu"
@@ -88,6 +94,15 @@ import MenuEditor from '~/components/editor/MenuEditor.vue'
 const menuOpen = ref(false)
 const isScrolled = ref(false)
 const route = useRoute()
+const mobileMq = ref(null)
+
+function handleEscape(e) {
+  if (e.key === 'Escape') closeMenu()
+}
+
+function handleDesktopMediaChange(e) {
+  if (e.matches) closeMenu()
+}
 
 const isAdminRoute = computed(() => route.path.startsWith('/admin'))
 const adminMode = inject('isAdmin', ref(false))
@@ -100,8 +115,12 @@ const { hasEvenements } = useChurchEvents()
 const showBilletterie = computed(() => isAdminRoute.value || hasEvenements.value)
 
 // Menu editor integration — intercept clicks in admin mode
-const { menuItems: _m, menuEditorOpen, openMenuEditor, getVisibleItems, getMenuItems } = useMenuEditor()
+const { menuItems: _m, menuEditorOpen, openMenuEditor, getVisibleItems, getMenuItems, menuBgImage } = useMenuEditor()
 const navItems = computed(() => adminMode.value ? getMenuItems() : getVisibleItems())
+const menuBgStyle = computed(() => {
+  const img = menuBgImage.value || '/foule-croix.png'
+  return { backgroundImage: `url(${JSON.stringify(img)})` }
+})
 
 function onNavClick(e, item) {
   if (adminMode.value) {
@@ -122,14 +141,33 @@ function toggleMenu() {
     openMenuEditor()
   } else {
     menuOpen.value = !menuOpen.value
-    document.body.style.overflow = menuOpen.value ? 'hidden' : ''
+    lockBodyScroll(menuOpen.value)
   }
 }
 
 function closeMenu() {
   if (menuOpen.value) {
     menuOpen.value = false
+    lockBodyScroll(false)
+  }
+}
+
+const scrollY = ref(0)
+function lockBodyScroll(lock) {
+  if (lock) {
+    scrollY.value = window.scrollY
+    document.body.style.overflow = 'hidden'
+    document.body.style.position = 'fixed'
+    document.body.style.top = `-${scrollY.value}px`
+    document.body.style.width = '100%'
+    document.body.style.touchAction = 'none'
+  } else {
     document.body.style.overflow = ''
+    document.body.style.position = ''
+    document.body.style.top = ''
+    document.body.style.width = ''
+    document.body.style.touchAction = ''
+    window.scrollTo(0, scrollY.value)
   }
 }
 
@@ -142,17 +180,15 @@ watch(() => route.fullPath, () => { closeMenu() })
 onMounted(() => {
   isMounted.value = true
   window.addEventListener('scroll', onScroll)
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeMenu()
-  })
-  const mq = window.matchMedia('(min-width: 769px)')
-  mq.addEventListener('change', (e) => {
-    if (e.matches) closeMenu()
-  })
+  document.addEventListener('keydown', handleEscape)
+  mobileMq.value = window.matchMedia('(min-width: 769px)')
+  mobileMq.value.addEventListener('change', handleDesktopMediaChange)
 })
 
 onUnmounted(() => {
   window.removeEventListener('scroll', onScroll)
+  document.removeEventListener('keydown', handleEscape)
+  mobileMq.value?.removeEventListener('change', handleDesktopMediaChange)
   document.body.style.overflow = ''
 })
 </script>
@@ -169,7 +205,7 @@ onUnmounted(() => {
 }
 
 .site-header.scrolled {
-  box-shadow: 0 2px 20px rgba(124, 58, 237, 0.12);
+  box-shadow: 0 2px 20px rgba(6, 72, 134, 0.16);
 }
 
 .header-inner {
@@ -227,7 +263,6 @@ onUnmounted(() => {
 }
 .nav-admin-link.dimmed {
   opacity: 0.5;
-  pointer-events: none;
 }
 
 .nav-desktop-socials {
@@ -282,6 +317,16 @@ onUnmounted(() => {
   padding: 0 24px 16px;
   border-top: 1px solid var(--border-light);
   gap: 4px;
+  position: relative;
+  z-index: 0;
+}
+
+.nav-mobile::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(6, 72, 134, 0.92), rgba(6, 72, 134, 0.8));
+  z-index: -1;
 }
 
 .site-header.menu-open .nav-mobile { display: flex; }
@@ -290,7 +335,7 @@ onUnmounted(() => {
   padding: 12px 16px;
   border-radius: 10px;
   font-weight: 500;
-  color: #064886;
+  color: #ffffff;
   text-decoration: none;
   transition: color 0.2s;
   font-family: Helvetica, Arial, sans-serif;
@@ -302,19 +347,25 @@ onUnmounted(() => {
 }
 
 .nav-mobile a.active, .nav-mobile .nav-admin-link.active {
-  color: #EF4B54;
+  color: #ffd9dc;
   text-decoration: none;
-  border-bottom: 2px solid #EF4B54;
+  border-bottom: 2px solid #ffd9dc;
   font-weight: 600;
 }
 .nav-mobile .nav-admin-link.dimmed {
   opacity: 0.5;
-  pointer-events: none;
 }
 .nav-mobile a.sub-link, .nav-mobile .nav-admin-link.sub-link {
   padding-left: 32px;
   font-size: 0.9em;
-  color: #555;
+  color: rgba(255, 255, 255, 0.84);
+}
+
+.nav-desktop a:focus-visible,
+.nav-mobile a:focus-visible,
+.burger:focus-visible {
+  outline: 2px solid #ef4b54;
+  outline-offset: 2px;
 }
 
 .header-spacer { height: 76px; }
@@ -358,13 +409,20 @@ onUnmounted(() => {
     left: 0;
     right: 0;
     bottom: 0;
-    background: url('/foule-croix.png') center center / cover no-repeat;
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
     padding: 14px 12px 18px;
     gap: 8px;
     overflow-y: auto;
     border-top: none;
     box-shadow: none;
   }
+
+  .nav-mobile::before {
+    background: linear-gradient(180deg, rgba(6, 72, 134, 0.75), rgba(4, 48, 90, 0.7));
+  }
+
   .site-header.menu-open .nav-mobile { display: flex; }
   .nav-mobile a {
     padding: 14px 16px;
@@ -372,8 +430,8 @@ onUnmounted(() => {
     font-weight: 700;
     background: transparent;
     border: none;
-    color: #064886;
-    text-shadow: 0 1px 4px rgba(255,255,255,0.6);
+    color: #ffffff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
     text-decoration: none;
     border-radius: 0;
   }
@@ -382,9 +440,9 @@ onUnmounted(() => {
     text-underline-offset: 5px;
   }
   .nav-mobile a.active {
-    color: #EF4B54;
-    border-bottom: 2px solid #EF4B54;
-    text-shadow: 0 1px 4px rgba(255,255,255,0.6);
+    color: #ffd9dc;
+    border-bottom: 2px solid #ffd9dc;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
   }
   .nav-mobile-socials {
     margin-top: auto;
@@ -398,7 +456,7 @@ onUnmounted(() => {
     padding: 0;
     font-size: 0;
     text-shadow: none;
-    background: rgba(255,255,255,0.5);
+    background: rgba(255,255,255,0.85);
     border-radius: 50%;
     width: 44px;
     height: 44px;
@@ -407,7 +465,7 @@ onUnmounted(() => {
     justify-content: center;
   }
   .nav-mobile-socials a:hover {
-    background: rgba(255,255,255,0.8);
+    background: rgba(255,255,255,1);
     text-decoration: none;
   }
   .header-spacer {

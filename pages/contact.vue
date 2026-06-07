@@ -12,7 +12,7 @@ useSeoMeta({
 
 const { isAdminMode, enterAdmin, localBlocks } = useAdmin()
 
-const { data: pageData } = await useFetch('/api/pages/contact', {
+const { data: pageData } = useLazyFetch('/api/pages/contact', {
   key: 'page-contact',
   server: true,
 })

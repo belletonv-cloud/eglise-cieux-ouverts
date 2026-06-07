@@ -49,33 +49,20 @@
         :data-block-type="block.type"
         @click.capture="isAdmin && wrapperClick(block.id)"
       >
-        <template v-if="isMounted">
-          <Suspense>
-            <template #default>
-              <component
-                :is="blockComponent(block.type)"
-                v-bind="sanitizeProps(block.props, block.id)"
-                :data-admin="isAdmin || undefined"
-                :visibility="block.visibility"
-                :is-triggered="useTrigger(block) ? isTriggered(block.id) : false"
-                :block-id="block.id"
-                @click.capture="wrapperClick(block.id)"
-              />
-            </template>
-            <template #fallback></template>
-          </Suspense>
-        </template>
-        <template v-else-if="block.type === 'hero'">
-          <component
-            :is="blockComponent(block.type)"
-            v-bind="sanitizeProps(block.props, block.id)"
-            :visibility="block.visibility"
-            :block-id="block.id"
-          />
-        </template>
-        <template v-else>
-          <div class="block-server-placeholder" aria-hidden="true"></div>
-        </template>
+        <Suspense>
+          <template #default>
+            <component
+              :is="blockComponent(block.type)"
+              v-bind="sanitizeProps(block.props, block.id)"
+              :data-admin="isAdmin || undefined"
+              :visibility="block.visibility"
+              :is-triggered="useTrigger(block) ? isTriggered(block.id) : false"
+              :block-id="block.id"
+              @click.capture="wrapperClick(block.id)"
+            />
+          </template>
+          <template #fallback></template>
+        </Suspense>
       </div>
     </template>
   </div>

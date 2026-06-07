@@ -272,6 +272,37 @@ a:hover, .nav-admin-link:hover {
   transform: translateY(-8px);
 }
 
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .page-enter-active,
+  .page-leave-active {
+    transition: none !important;
+  }
+
+  .block-anim-fadeIn,
+  .block-anim-slideUp,
+  .block-anim-slideLeft,
+  .block-anim-zoom,
+  .block-anim-portal,
+  .block-anim-bounce,
+  .block-anim-flip,
+  .block-anim-wave {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
 @media (max-width: 768px) {
   .section { padding: 40px 16px; }
   .section-title { font-size: 1.6em; margin-bottom: 10px; }

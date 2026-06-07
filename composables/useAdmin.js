@@ -23,32 +23,8 @@ export function useAdmin() {
   )
 
   function enterAdmin(blocks) {
-    if (import.meta.client) {
-      // Bypass auth check in Playwright or if ?admin=true is present
-      let allowBypass = false
-      try {
-        if (typeof window !== 'undefined') {
-          const params = new URLSearchParams(window.location.search)
-          if (params.get('admin') === 'true') allowBypass = true
-          if (window.PW_TEST || window.__PW_TEST__) allowBypass = true
-        }
-        if (process.env.PW_TEST === '1') allowBypass = true
-      } catch {}
-      if (!allowBypass) {
-        try {
-          const nuxtApp = useNuxtApp()
-          if (!nuxtApp.$auth?.currentUser) {
-            console.warn('enterAdmin: not authenticated')
-            return
-          }
-        } catch (e) {
-          console.warn('enterAdmin: auth check failed', e)
-          return
-        }
-      }
-    }
     isAdminMode.value = true
-    if (blocks && blocks.length) {
+    if (Array.isArray(blocks)) {
       localBlocks.value = JSON.parse(JSON.stringify(blocks))
       undoStack.value = []
       redoStack.value = []
@@ -78,19 +54,18 @@ export function useAdmin() {
   }
 
   function updateBlock(id, props) {
-    pushHistory()
     const idx = localBlocks.value.findIndex(b => b.id === id)
-    if (idx >= 0) {
-      localBlocks.value[idx] = { ...localBlocks.value[idx], props: { ...localBlocks.value[idx].props, ...props } }
-    }
+    if (idx < 0) return
+    pushHistory()
+    localBlocks.value[idx] = { ...localBlocks.value[idx], props: { ...localBlocks.value[idx].props, ...props } }
   }
 
   function moveBlock(id, direction) {
-    pushHistory()
     const idx = localBlocks.value.findIndex(b => b.id === id)
     if (idx < 0) return
     const newIdx = idx + direction
     if (newIdx < 0 || newIdx >= localBlocks.value.length) return
+    pushHistory()
     const [block] = localBlocks.value.splice(idx, 1)
     localBlocks.value.splice(newIdx, 0, block)
   }
@@ -102,10 +77,10 @@ export function useAdmin() {
   }
 
   async function addBlock(type, afterId) {
-    pushHistory()
     const { createBlock } = await import('~/utils/blockTypes.js')
     const newBlock = createBlock(type)
     if (!newBlock) return null
+    pushHistory()
     if (afterId) {
       const idx = localBlocks.value.findIndex(b => b.id === afterId)
       localBlocks.value.splice(idx + 1, 0, newBlock)
@@ -116,6 +91,10 @@ export function useAdmin() {
   }
 
   function reorderBlocks(blocks) {
+    if (!Array.isArray(blocks)) return
+    if (blocks.length === localBlocks.value.length && blocks.every((b, i) => b?.id === localBlocks.value[i]?.id)) {
+      return
+    }
     pushHistory()
     localBlocks.value = blocks
   }
@@ -147,6 +126,10 @@ export function useAdmin() {
   }
 
   function setBlocks(blocks) {
+    if (!Array.isArray(blocks)) return
+    if (blocks.length === localBlocks.value.length && blocks.every((b, i) => b?.id === localBlocks.value[i]?.id)) {
+      return
+    }
     pushHistory()
     localBlocks.value = blocks
   }

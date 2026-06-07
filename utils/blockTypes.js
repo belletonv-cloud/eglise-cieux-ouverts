@@ -425,7 +425,7 @@ export function getDefaultHomePage() {
       image: 'https://static.wixstatic.com/media/11062b_c518f30e29fa44f0b424cabfdd0b5a6a~mv2.jpg/v1/fill/w_147,h_246,al_c,q_80,usm_0.66_1.00_0.01,blur_2,enc_avif,quality_auto/Smartphone%20en%20main.jpg', 
       backgroundGradient: '#064886' 
     }),
-  ].filter(Boolean)
+  ].filter(Boolean).map((block, i) => ({ ...block, id: `default-home-${i}` }))
 }
 
 export function getDefaultMessagesPage() {
@@ -449,7 +449,7 @@ export function getDefaultMessagesPage() {
       padding: 20,
       animation: 'fadeIn',
     }),
-  ].filter(Boolean)
+  ].filter(Boolean).map((block, i) => ({ ...block, id: `default-messages-${i}` }))
 }
 
 export function getDefaultPhotosPage() {
@@ -466,7 +466,7 @@ export function getDefaultPhotosPage() {
         '/photos/slide-buffet.jpg',
       ],
     }),
-  ].filter(Boolean)
+  ].filter(Boolean).map((block, i) => ({ ...block, id: `default-photos-${i}` }))
 }
 
 export function getDefaultBilletteriePage() {
@@ -479,7 +479,7 @@ export function getDefaultBilletteriePage() {
       padding: 70,
       animation: 'fadeIn',
     }),
-  ].filter(Boolean)
+  ].filter(Boolean).map((block, i) => ({ ...block, id: `default-billetterie-${i}` }))
 }
 
 export function getDefaultContactPage() {
@@ -493,7 +493,7 @@ export function getDefaultContactPage() {
       showQuestions: false,
       showSocials: false,
     }),
-  ].filter(Boolean)
+  ].filter(Boolean).map((block, i) => ({ ...block, id: `default-contact-${i}` }))
 }
 
 // ─── Pages d'erreur par défaut ─────────────────────────────────────────────
@@ -505,31 +505,26 @@ export function getDefaultErrorPage(code = 404) {
     animation: 'fadeIn',
   }
 
+  const blocks = []
+
   if (code === 404) {
-    return [
-      createBlock('richText', {
-        content: `<div style="max-width:820px;margin:0 auto;text-align:center;"><h1 style=\"font-family:'Playfair Display',Georgia,serif;color:#064886;\">404 — Page introuvable</h1><p>La page que vous cherchez n'existe pas ou a été déplacée.</p></div>`,
-        ...common,
-      }),
-    ]
-  }
-
-  if (code === 500) {
-    return [
-      createBlock('richText', {
-        content: `<div style="max-width:820px;margin:0 auto;text-align:center;"><h1 style=\"font-family:'Playfair Display',Georgia,serif;color:#064886;\">500 — Erreur serveur</h1><p>Désolé, une erreur inattendue s'est produite.</p></div>`,
-        ...common,
-      }),
-    ]
-  }
-
-  // 503 ou autres
-  return [
-    createBlock('richText', {
+    blocks.push(createBlock('richText', {
+      content: `<div style="max-width:820px;margin:0 auto;text-align:center;"><h1 style=\"font-family:'Playfair Display',Georgia,serif;color:#064886;\">404 — Page introuvable</h1><p>La page que vous cherchez n'existe pas ou a été déplacée.</p></div>`,
+      ...common,
+    }))
+  } else if (code === 500) {
+    blocks.push(createBlock('richText', {
+      content: `<div style="max-width:820px;margin:0 auto;text-align:center;"><h1 style=\"font-family:'Playfair Display',Georgia,serif;color:#064886;\">500 — Erreur serveur</h1><p>Désolé, une erreur inattendue s'est produite.</p></div>`,
+      ...common,
+    }))
+  } else {
+    blocks.push(createBlock('richText', {
       content: `<div style="max-width:820px;margin:0 auto;text-align:center;"><h1 style=\"font-family:'Playfair Display',Georgia,serif;color:#064886;\">${code} — Service indisponible</h1><p>Le site est momentanément indisponible. Revenez plus tard.</p></div>`,
       ...common,
-    }),
-  ]
+    }))
+  }
+
+  return blocks.filter(Boolean).map((block, i) => ({ ...block, id: `default-error-${code}-${i}` }))
 }
 
 function normalizeMessagesBlocks(blocks) {

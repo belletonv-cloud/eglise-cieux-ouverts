@@ -43,6 +43,16 @@
               </div>
             </div>
           </div>
+          <div class="menu-editor-bg-section">
+            <h4>Fond du menu mobile</h4>
+            <div class="menu-bg-row">
+              <input v-model="bgImage" placeholder="https://exemple.com/image.jpg" class="input-sm" @input="updateBg" />
+              <button v-if="bgImage" class="btn-mini" @click="clearBg">✕</button>
+            </div>
+            <div v-if="bgImage" class="menu-bg-preview">
+              <img :src="bgImage" alt="aperçu" />
+            </div>
+          </div>
           <div class="menu-editor-footer">
             <button class="btn-add" @click="addMenuItem()">+ Ajouter un lien</button>
           </div>
@@ -65,6 +75,10 @@ const {
 
 const editLabel = ref('')
 const editTo = ref('')
+
+const bgImage = ref(menuBgImage.value || '')
+function updateBg() { menuBgImage.value = bgImage.value }
+function clearBg() { bgImage.value = ''; menuBgImage.value = '' }
 
 watch(activeMenuItem, (item) => {
   if (item) { editLabel.value = item.label; editTo.value = item.to }
@@ -111,6 +125,11 @@ function applyEdit(id) {
 .menu-editor-footer { padding:12px 16px; border-top:1px solid #e5e7eb; }
 .btn-add { width:100%; padding:10px; background:#f3f4f6; color:#3B82F6; border:2px dashed #3B82F6; border-radius:8px; font-size:.9em; font-weight:600; cursor:pointer; }
 .btn-add:hover { background:#e0e7ff; }
+.menu-editor-bg-section { padding:12px 16px; border-top:1px solid #e5e7eb; }
+.menu-editor-bg-section h4 { margin:0 0 8px; font-size:.8em; font-weight:600; color:#555; }
+.menu-bg-row { display:flex; gap:6px; align-items:center; }
+.menu-bg-preview { margin-top:8px; border-radius:6px; overflow:hidden; }
+.menu-bg-preview img { width:100%; max-height:120px; object-fit:cover; border-radius:6px; }
 .panel-slide-enter-active,.panel-slide-leave-active { transition:opacity .2s; }
 .panel-slide-enter-active .menu-editor-panel,.panel-slide-leave-active .menu-editor-panel { transition:transform .25s ease; }
 .panel-slide-enter-from { opacity:0; }
