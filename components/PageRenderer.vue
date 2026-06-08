@@ -1,43 +1,48 @@
 <template>
   <div class="page-renderer" :class="{ 'admin-mode': isAdmin && isMounted }">
-    <VueDraggable
-      v-if="isMounted && isAdmin"
-      v-model="sortableBlocks"
-      :animation="200"
-      handle=".drag-handle"
-      :group="{ name: 'blocks' }"
-      ghost-class="block-ghost"
-      tag="div"
-      class="drag-container"
-      @change="onDragChange"
-    >
-      <div
-        v-for="block in sortableBlocks"
-        :key="block.id"
-        class="block-wrapper"
-        :class="[getAnimClass(block), useTrigger(block) ? { triggered: isTriggered(block.id) } : '', { 'admin-selected': isSelected(block), 'draggable': isAdmin }]"
-        :ref="el => setWrapperRef(el, block.id)"
-        :data-block-id="block.id"
-        :data-block-type="block.type"
-        @click.capture="wrapperClick(block.id)"
+    <!-- Admin branch: v-if only on isAdmin (stable across SSR/client) -->
+    <template v-if="isAdmin">
+      <VueDraggable
+        v-if="isMounted"
+        v-model="sortableBlocks"
+        :animation="200"
+        handle=".drag-handle"
+        :group="{ name: 'blocks' }"
+        ghost-class="block-ghost"
+        tag="div"
+        class="drag-container"
+        @change="onDragChange"
       >
-        <div v-if="isAdmin" class="drag-handle" @click.stop title="Déplacer">⠿</div>
-        <Suspense>
-          <template #default>
-            <component
-              :is="blockComponent(block.type)"
-              v-bind="sanitizeProps(block.props, block.id)"
-              :data-admin="isAdmin || undefined"
-              :visibility="block.visibility"
-              :is-triggered="useTrigger(block) ? isTriggered(block.id) : false"
-              :block-id="block.id"
-              @click.capture="wrapperClick(block.id)"
-            />
-          </template>
-          <template #fallback></template>
-        </Suspense>
-      </div>
-    </VueDraggable>
+        <div
+          v-for="block in sortableBlocks"
+          :key="block.id"
+          class="block-wrapper"
+          :class="[getAnimClass(block), useTrigger(block) ? { triggered: isTriggered(block.id) } : '', { 'admin-selected': isSelected(block), 'draggable': isAdmin }]"
+          :ref="el => setWrapperRef(el, block.id)"
+          :data-block-id="block.id"
+          :data-block-type="block.type"
+          @click.capture="wrapperClick(block.id)"
+        >
+          <div v-if="isAdmin" class="drag-handle" @click.stop title="Déplacer">⠿</div>
+          <BlockRenderer :block="block" :is-triggered="useTrigger(block) ? isTriggered(block.id) : false" :is-admin="isAdmin || undefined" />
+        </div>
+      </VueDraggable>
+      <template v-else>
+        <div
+          v-for="block in sortableBlocks"
+          :key="block.id"
+          class="block-wrapper"
+          :class="[getAnimClass(block), useTrigger(block) ? { triggered: isTriggered(block.id) } : '', { 'admin-selected': isSelected(block), 'draggable': isAdmin }]"
+          :ref="el => setWrapperRef(el, block.id)"
+          :data-block-id="block.id"
+          :data-block-type="block.type"
+          @click.capture="wrapperClick(block.id)"
+        >
+          <BlockRenderer :block="block" :is-triggered="useTrigger(block) ? isTriggered(block.id) : false" :is-admin="isAdmin || undefined" />
+        </div>
+      </template>
+    </template>
+    <!-- Public branch: rendered by both SSR and client when not admin -->
     <template v-else>
       <div
         v-for="block in visibleBlocks"
@@ -49,32 +54,19 @@
         :data-block-type="block.type"
         @click.capture="isAdmin && wrapperClick(block.id)"
       >
-        <Suspense>
-          <template #default>
-            <component
-              :is="blockComponent(block.type)"
-              v-bind="sanitizeProps(block.props, block.id)"
-              :data-admin="isAdmin || undefined"
-              :visibility="block.visibility"
-              :is-triggered="useTrigger(block) ? isTriggered(block.id) : false"
-              :block-id="block.id"
-              @click.capture="wrapperClick(block.id)"
-            />
-          </template>
-          <template #fallback></template>
-        </Suspense>
+        <BlockRenderer :block="block" :is-triggered="useTrigger(block) ? isTriggered(block.id) : false" :is-admin="isAdmin || undefined" />
       </div>
     </template>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, watch, nextTick, inject, defineAsyncComponent, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, nextTick, inject, onMounted, onUnmounted } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 import { normalizeBlock, getAnimClass, filterByVisibility, shouldUseTrigger } from '~/lib/blocks/renderer'
-import { resolveBlockComponent } from '~/lib/blocks/component-registry'
 import { useBlockAnimation } from '~/composables/useBlockAnimation'
 import { useAdmin } from '~/composables/useAdmin'
+
 
   const isAdmin = inject('isAdmin', ref(false))
   const isEditor = inject('isEditor', ref(false))
@@ -140,70 +132,7 @@ watch(editingBlockId, (v) => {
   }
 }, { immediate: true })
 
-function blockComponent(type) {
-  // Always return an async component wrapper. This ensures Suspense behaves
-  // predictably and prevents Promise objects from leaking into the render
-  // tree when a resolver returns a loader or a component directly.
-  const loader = resolveBlockComponent(type)
-  // Defensive normalization: resolveBlockComponent may return:
-  // - a loader function () => import('...')
-  // - a Promise resolving to a loader (older registry contract)
-  // - a component object directly
-  // Normalize to a factory that returns a Promise resolving to the component.
-  if (loader && typeof loader.then === 'function') {
-    // loader is already a Promise (resolve it to get the real loader/component)
-    return defineAsyncComponent(() => loader.then(r => r?.default || r))
-  }
 
-  if (typeof loader === 'function') {
-    // call the loader and normalize its result
-    return defineAsyncComponent(() => Promise.resolve(loader()).then(r => r?.default || r))
-  }
-
-  // otherwise assume it's a component-like value
-  return defineAsyncComponent(() => Promise.resolve(loader))
-}
-
-function sanitizeProps(obj, blockId = '') {
-  // Deep-clone while replacing any thenable/promise with null.
-  function clean(value, path = '') {
-    if (value === null || value === undefined) return value
-    if (typeof value !== 'object') return value
-    // Detect thenable/promise-like objects
-    if (typeof value.then === 'function') {
-      // eslint-disable-next-line no-console
-      if (import.meta.env.DEV) console.debug(`PageRenderer: replaced Promise-like value in props (block=${blockId} path=${path})`)
-      return null
-    }
-    if (Array.isArray(value)) {
-      return value.map((v, i) => clean(v, path ? `${path}[${i}]` : `[${i}]`))
-    }
-    const res = {}
-    for (const [k, v] of Object.entries(value)) {
-      res[k] = clean(v, path ? `${path}.${k}` : k)
-    }
-    return res
-  }
-
-  return clean(obj, '')
-}
-
-// Count thenable/promise-like values in a block's props (non-destructive).
-function countThenables(block) {
-  try {
-    if (!block || !block.props) return 0
-    let count = 0
-    function walk(v) {
-      if (v && typeof v.then === 'function') { count++; return }
-      if (Array.isArray(v)) return v.forEach(walk)
-      if (v && typeof v === 'object') return Object.values(v).forEach(walk)
-    }
-    walk(block.props)
-    return count
-  } catch (e) {
-    return 0
-  }
-}
 
 // Call setup synchronously during component setup (safe for lifecycle hooks).
 try {

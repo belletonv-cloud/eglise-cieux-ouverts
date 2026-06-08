@@ -239,6 +239,15 @@ Toutes les fonctions de rendu sont centralisées dans `lib/blocks/renderer.ts` :
 - CSS dans `assets/css/main.css` : `.page-enter-active`, `.page-leave-active`, etc.
 - Opacity + translateY sur 300ms ease
 
+### BlockRenderer (centralise le rendu des blocs)
+- Fichier : `components/BlockRenderer.vue`
+- Utilise des `import` statiques explicites (pas d'auto-import Nuxt) pour éviter les différences de référence SSR/CSR
+- Chaîne `v-if`/`v-else-if` sur `btype` (computed depuis `props.block.type`)
+- `sprops` via `clean()` (remplace thenable/promise par null) pour éviter `[object Promise]` dans le DOM
+- Passe `:block-id`, `:visibility`, `:is-triggered`, `:is-admin` à chaque bloc enfant
+- PageRenderer appelle `<BlockRenderer :block="block" :is-triggered="..." :is-admin="..." />`
+- **Ne pas utiliser `<component :is>` pour les blocs** — cassait l'hydratation SSR
+
 ### Conventions de test
 - Toujours tester : validité du schema (types, champs, defaults), rendu SSR, rendu admin, sélection
 - Utiliser `validateSchema()` dans les tests de chaque bloc
@@ -256,3 +265,28 @@ npx tsx scripts/add-block.ts monBloc
 npx tsx scripts/generate-tests.ts
 # → génère tests/schema-driven/generated/generated-tests.spec.ts
 ```
+
+## TODO — reste à faire
+
+### 1. Footer éditable
+- `SiteFooter.vue` est statique, pas de composable `useFooterEditor`
+- Créer un composable `useFooterEditor.js` similaire à `useMenuEditor.js`
+- Stocker les infos footer dans Firestore (`settings/footer`)
+- Rendre les textes éditorisables en mode admin (inline edit ou modal)
+
+### 2. Feedback undo/redo et auto-save
+- L'historique undo/redo existe (`useAdmin.js`) mais sans descriptions des changements
+- Ajouter un label à chaque entrée de l'historique (ex: "Déplacement du bloc X", "Modification du titre")
+- Afficher le label dans un tooltip au survol des boutons undo/redo
+- L'auto-save affiche "Auto-sauvegardé" mais pas de statut "Modifications non sauvegardées"
+
+### 3. SSR — pas de bugs de duplication héros (résolu)
+- **Root cause**: `<component :is>` avec résolution dynamique (même via `BLOCK_COMPONENTS` map statique) crée des références de composant différentes entre SSR et client → Vue hydrate en 2 pass → **chaque wrapper a 2 enfants**.
+- **Fix**: `BlockRenderer.vue` utilise une chaîne `v-if`/`v-else-if` avec des imports statiques explicites. Plus de `<component :is>`.
+- SSR (vérifié) : les 2 `data-block-id="bloc-hero"` sont sur **2 éléments différents** (div wrapper + section). 1 seule section hero.
+- **Règles**:
+  - `BlockRenderer` doit utiliser `import X from '~/components/blocks/BlockX.vue'` (pas d'auto-import Nuxt)
+  - `v-if="btype === 'hero'"` (pas `block.type` directement — utiliser computed)
+  - `v-bind="sprops"` avec `sprops` via `clean()` (supprime les thenable/promise)
+  - Toujours passer `:block-id`, `:visibility`, `:is-triggered`, `:is-admin` aux enfants
+  - Ne JAMAIS utiliser `<component :is>` pour les blocs — toujours des composants directs
