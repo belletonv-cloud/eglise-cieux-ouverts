@@ -49,13 +49,14 @@ export function useAdmin() {
     localBlocksPage.value = ''
     undoStack.value = []
     redoStack.value = []
-    if (import.meta.client && typeof window !== 'undefined') {
+    if (import.meta.client) {
       try {
-        const { pathname, search, hash } = window.location
-        const params = new URLSearchParams(search)
-        params.delete('admin')
-        window.history.replaceState(null, '', pathname + (params.toString() ? '?' + params.toString() : '') + hash)
-      } catch (e) {
+        const route = useRoute()
+        const router = useRouter()
+        const query = { ...route.query }
+        delete query.admin
+        router.replace({ query }).catch(() => {})
+      } catch {
         // swallow
       }
     }
