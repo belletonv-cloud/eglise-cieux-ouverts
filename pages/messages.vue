@@ -21,7 +21,7 @@ const blocks = computed(() => {
   if (isAdminMode.value && localBlocks.value.length && localBlocksPage.value === 'messages') {
     return localBlocks.value
   }
-  return pageBlocks.value || []
+  return pageBlocks.value?.length ? pageBlocks.value : getDefaultMessagesPage()
 })
 
 function initAdminBlocks() {

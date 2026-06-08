@@ -32,7 +32,7 @@ const blocks = computed(() => {
   if (isAdminMode.value && localBlocks.value.length && localBlocksPage.value === 'accueil') {
     return localBlocks.value
   }
-  return pageBlocks.value || []
+  return pageBlocks.value?.length ? pageBlocks.value : getDefaultHomePage()
 })
 
 function initAdminBlocks() {
