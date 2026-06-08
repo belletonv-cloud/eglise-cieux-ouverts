@@ -143,6 +143,7 @@ const {
   redo,
   canUndo,
   canRedo,
+  clearBlocks,
 } = useAdmin()
 
 const { $auth } = useNuxtApp()
@@ -298,6 +299,9 @@ function replayAnimation(blockId) {
 async function navigateToPage(slug) {
   // Use client-side navigation so the admin layout/offset is preserved
   const targetPath = slug === 'accueil' ? '/' : `/${slug}`
+
+  // Clear localBlocks so the new page loads its own data (not stale from previous page)
+  clearBlocks()
   const currentPath = route.path || window.location.pathname
   const currentAdmin = route.query?.admin === 'true' || route.query?.admin === '1'
 

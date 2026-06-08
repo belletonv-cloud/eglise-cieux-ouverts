@@ -22,6 +22,10 @@ export function useAdmin() {
     localBlocks.value.find(b => b.id === editingBlockId.value) || null
   )
 
+  function clearBlocks() {
+    localBlocks.value = []
+  }
+
   function enterAdmin(blocks) {
     isAdminMode.value = true
     if (Array.isArray(blocks)) {
@@ -142,6 +146,7 @@ export function useAdmin() {
     previewDevice,
     enterAdmin,
     exitAdmin,
+    clearBlocks,
     selectBlock,
     updateBlock,
     moveBlock,
