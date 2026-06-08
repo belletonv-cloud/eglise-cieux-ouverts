@@ -76,6 +76,13 @@ watch(() => route.query.admin, (val) => {
   }
 })
 
+// Reactive guard: whenever isAdminMode becomes true without admin=true in URL, revert
+watch(isAdminMode, (val) => {
+  if (val && route.query.admin !== 'true') {
+    exitAdmin()
+  }
+})
+
 const onEscape = (e) => {
   if (e.key === 'Escape' && isAdminMode.value) {
     exitAdmin()

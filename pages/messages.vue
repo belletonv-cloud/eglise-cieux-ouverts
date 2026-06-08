@@ -10,7 +10,7 @@ useSeoMeta({
   description: 'Retrouvez les messages et prédications de l\'Église Cieux Ouverts.',
 })
 
-const { isAdminMode, enterAdmin, localBlocks } = useAdmin()
+const { isAdminMode, enterAdmin, localBlocks, localBlocksPage } = useAdmin()
 
 const { data: pageBlocks } = await useAsyncData('page-messages-blocks', async () => {
   const data = await $fetch('/api/pages/messages').catch(() => ({ blocks: [] }))
@@ -18,7 +18,7 @@ const { data: pageBlocks } = await useAsyncData('page-messages-blocks', async ()
 })
 
 const blocks = computed(() => {
-  if (isAdminMode.value && localBlocks.value.length) {
+  if (isAdminMode.value && localBlocks.value.length && localBlocksPage.value === 'messages') {
     return localBlocks.value
   }
   return pageBlocks.value || []
@@ -26,7 +26,7 @@ const blocks = computed(() => {
 
 function initAdminBlocks() {
   if (!isAdminMode.value) return
-  enterAdmin(pageBlocks.value?.length ? pageBlocks.value : getDefaultMessagesPage())
+  enterAdmin(pageBlocks.value?.length ? pageBlocks.value : getDefaultMessagesPage(), 'messages')
 }
 
 watch(() => isAdminMode.value, () => {

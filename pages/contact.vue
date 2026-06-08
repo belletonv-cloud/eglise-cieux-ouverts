@@ -10,7 +10,7 @@ useSeoMeta({
   description: 'Contactez l\'Église Cieux Ouverts à Morlaix. 2 rue Jean Monnet, 29600 Morlaix.',
 })
 
-const { isAdminMode, enterAdmin, localBlocks } = useAdmin()
+const { isAdminMode, enterAdmin, localBlocks, localBlocksPage } = useAdmin()
 
 const { data: pageBlocks } = await useAsyncData('page-contact-blocks', async () => {
   const data = await $fetch('/api/pages/contact').catch(() => ({ blocks: [] }))
@@ -18,7 +18,7 @@ const { data: pageBlocks } = await useAsyncData('page-contact-blocks', async () 
 })
 
 const blocks = computed(() => {
-  if (isAdminMode.value && localBlocks.value.length) {
+  if (isAdminMode.value && localBlocks.value.length && localBlocksPage.value === 'contact') {
     return localBlocks.value
   }
   return pageBlocks.value || []
@@ -26,7 +26,7 @@ const blocks = computed(() => {
 
 function initAdminBlocks() {
   if (!isAdminMode.value) return
-  enterAdmin(pageBlocks.value?.length ? pageBlocks.value : getDefaultContactPage())
+  enterAdmin(pageBlocks.value?.length ? pageBlocks.value : getDefaultContactPage(), 'contact')
 }
 
 watch(() => isAdminMode.value, () => {

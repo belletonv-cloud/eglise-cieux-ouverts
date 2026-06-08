@@ -18,7 +18,7 @@ useSeoMeta({
   twitterCard: 'summary_large_image',
 })
 
-const { isAdminMode, enterAdmin, localBlocks } = useAdmin()
+const { isAdminMode, enterAdmin, localBlocks, localBlocksPage } = useAdmin()
 
 // Fetch blocks from API, fallback to getDefaultHomePage if empty.
 // The handler runs ONCE during SSR (result serialized to payload),
@@ -29,7 +29,7 @@ const { data: pageBlocks } = await useAsyncData('page-accueil-blocks', async () 
 })
 
 const blocks = computed(() => {
-  if (isAdminMode.value && localBlocks.value.length) {
+  if (isAdminMode.value && localBlocks.value.length && localBlocksPage.value === 'accueil') {
     return localBlocks.value
   }
   return pageBlocks.value || []
@@ -38,9 +38,9 @@ const blocks = computed(() => {
 function initAdminBlocks() {
   if (!isAdminMode.value) return
   if (pageBlocks.value?.length) {
-    enterAdmin(pageBlocks.value)
+    enterAdmin(pageBlocks.value, 'accueil')
   } else {
-    enterAdmin(getDefaultHomePage())
+    enterAdmin(getDefaultHomePage(), 'accueil')
   }
 }
 

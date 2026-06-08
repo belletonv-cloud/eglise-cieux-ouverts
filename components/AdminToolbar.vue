@@ -143,7 +143,6 @@ const {
   redo,
   canUndo,
   canRedo,
-  clearBlocks,
 } = useAdmin()
 
 const { $auth } = useNuxtApp()
@@ -299,18 +298,6 @@ function replayAnimation(blockId) {
 async function navigateToPage(slug) {
   // Use client-side navigation so the admin layout/offset is preserved
   const targetPath = slug === 'accueil' ? '/' : `/${slug}`
-
-  // Clear localBlocks so the new page loads its own data (not stale from previous page)
-  clearBlocks()
-  const currentPath = route.path || window.location.pathname
-  const currentAdmin = route.query?.admin === 'true' || route.query?.admin === '1'
-
-  // If already on the same path and admin param is set, skip navigation
-  if (currentPath === targetPath && currentAdmin) {
-    if (import.meta.env.DEV) console.debug('navigateToPage: already on target with admin — no navigation', targetPath)
-    return
-  }
-  if (import.meta.env.DEV) console.debug('navigateToPage:', { slug, targetPath, currentPath, routeQuery: route.query, isAdminMode: isAdminMode?.value })
 
   const newQuery = { ...route.query, admin: 'true' }
   // Always do client-side navigation to preserve admin-mode layout and offsets

@@ -3,7 +3,12 @@ import { ref, computed } from 'vue'
 const isAdminMode = ref(false)
 const editingBlockId = ref(null)
 const localBlocks = ref([])
+const localBlocksPage = ref('')
 const previewDevice = ref('desktop')
+
+
+
+
 
 // Undo/redo history
 const undoStack = ref([])
@@ -24,12 +29,14 @@ export function useAdmin() {
 
   function clearBlocks() {
     localBlocks.value = []
+    localBlocksPage.value = ''
   }
 
-  function enterAdmin(blocks) {
+  function enterAdmin(blocks, pageSlug) {
     isAdminMode.value = true
     if (Array.isArray(blocks)) {
       localBlocks.value = JSON.parse(JSON.stringify(blocks))
+      localBlocksPage.value = pageSlug || ''
       undoStack.value = []
       redoStack.value = []
     }
@@ -39,6 +46,7 @@ export function useAdmin() {
     isAdminMode.value = false
     editingBlockId.value = null
     localBlocks.value = []
+    localBlocksPage.value = ''
     undoStack.value = []
     redoStack.value = []
     if (import.meta.client && typeof window !== 'undefined') {
@@ -143,6 +151,7 @@ export function useAdmin() {
     editingBlockId,
     activeBlock,
     localBlocks,
+    localBlocksPage,
     previewDevice,
     enterAdmin,
     exitAdmin,
