@@ -37,7 +37,7 @@ provide('editingBlockId', editingBlockId)
 provide('selectBlock', selectBlock)
 provide('previewDevice', previewDevice)
 // legacy flag used by some components
-provide('isEditor', ref(false))
+provide('isEditor', isAdminMode)
 const isMounted = ref(false)
 const { loadMenuFromFirestore, saveMenuToFirestore } = useMenuEditor()
 
