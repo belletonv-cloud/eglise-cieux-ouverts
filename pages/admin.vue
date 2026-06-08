@@ -1,7 +1,7 @@
 <template>
   <div class="admin-login-page">
     <div class="admin-login-card">
-      <img src="/logo-c.png" alt="Cieux Ouverts" class="admin-login-logo" />
+      <img src="/logo-c-clean.png" alt="Cieux Ouverts" class="admin-login-logo" />
       <h1>Administration</h1>
       <p class="admin-login-subtitle">Connectez-vous pour modifier le site</p>
 
