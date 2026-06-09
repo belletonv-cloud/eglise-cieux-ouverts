@@ -382,23 +382,25 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
     }
     // Utiliser setTimeout au lieu de nextTick pour être sûr que les refs sont montées
     setTimeout(() => {
-      observeElements();
-      setupFallbackObservers(blocksToUse);
-      // Déclencher immédiatement les blocs déjà visibles
-      for (const [id, el] of Object.entries(wrapperRefs.value)) {
-        if (el && observer) {
-          const rect = el.getBoundingClientRect();
-          if (rect.top < window.innerHeight * 0.9) {
-            // Element is in viewport - marquer comme triggered
-            if (!triggeredBlocks.value.includes(id)) {
-              triggeredBlocks.value = [...triggeredBlocks.value, id];
-            }
-            if (!el.classList.contains("triggered")) {
-              el.classList.add("triggered");
+      requestAnimationFrame(() => {
+        observeElements();
+        setupFallbackObservers(blocksToUse);
+        // Déclencher immédiatement les blocs déjà visibles
+        for (const [id, el] of Object.entries(wrapperRefs.value)) {
+          if (el && observer) {
+            const rect = el.getBoundingClientRect();
+            if (rect.top < window.innerHeight * 0.9) {
+              // Element is in viewport - marquer comme triggered
+              if (!triggeredBlocks.value.includes(id)) {
+                triggeredBlocks.value = [...triggeredBlocks.value, id];
+              }
+              if (!el.classList.contains("triggered")) {
+                el.classList.add("triggered");
+              }
             }
           }
         }
-      }
+      });
     }, 500);
 
     replayHandler = (e) => {
