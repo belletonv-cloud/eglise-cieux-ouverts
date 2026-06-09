@@ -380,9 +380,12 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
         { threshold: 0.05, rootMargin: "0px 0px -40px 0px" },
       );
     }
-    // Utiliser setTimeout au lieu de nextTick pour être sûr que les refs sont montées
-    setTimeout(() => {
-      requestAnimationFrame(() => {
+    // Utiliser un polling intensif pour détecter quand les refs sont prêtes
+    let pollAttempts = 0;
+    const pollForRefs = () => {
+      const ids = Object.keys(wrapperRefs.value || {});
+      if (ids.length > 0 || pollAttempts >= 20) {
+        // Refs prêtes ou max tentatives atteintes
         observeElements();
         setupFallbackObservers(blocksToUse);
         // Déclencher immédiatement les blocs déjà visibles
@@ -400,8 +403,12 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
             }
           }
         }
-      });
-    }, 500);
+      } else {
+        pollAttempts++;
+        setTimeout(pollForRefs, 100);
+      }
+    };
+    pollForRefs();
 
     replayHandler = (e) => {
       const id = e?.detail?.id;
