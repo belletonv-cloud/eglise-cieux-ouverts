@@ -186,8 +186,9 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
     }
     // Mettre à jour blocksCache pour que setupFallbackObservers ait les bonnes données
     blocksCache = blocks || [];
-    // En mode public, relancer setupFallbackObservers après nextTick pour avoir les refs
-    if (!isAdmin.value && observer) {
+    // En mode public, déclencher setupFallbackObservers si l'observer existe déjà (après setupClient)
+    // Sinon, ce sera fait dans setupClient
+    if (observer) {
       nextTick(() => {
         setupFallbackObservers(blocks);
       });
@@ -290,9 +291,10 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
     // Attendre que les refs soient montées avant d'observer
     nextTick(() => {
       observeElements();
-      setupFallbackObservers(blocksCache);
-      // Déclencher immédiatement les blocs déjà visibles
+      // Laisser le temps à Vue de mettre à jour les refs après observeElements
       setTimeout(() => {
+        setupFallbackObservers(blocksCache);
+        // Déclencher immédiatement les blocs déjà visibles
         for (const [id, el] of Object.entries(wrapperRefs.value)) {
           if (el && observer) {
             const rect = el.getBoundingClientRect();
@@ -305,7 +307,7 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
             }
           }
         }
-      }, 100);
+      }, 200);
     });
 
     replayHandler = (e) => {
