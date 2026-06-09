@@ -201,11 +201,20 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
     // Mettre à jour blocksCache pour que setupFallbackObservers ait les bonnes données
     blocksCache = blocks || [];
     // En mode public, déclencher setupFallbackObservers si l'observer existe déjà (après setupClient)
-    // Sinon, ce sera fait dans setupClient
+    // Sinon, programmer pour le prochain tick après setupClient
     if (observer) {
       nextTick(() => {
         setupFallbackObservers(blocks);
       });
+    } else {
+      // L'observer n'existe pas encore - attendre qu'il soit créé
+      setTimeout(() => {
+        if (observer) {
+          nextTick(() => {
+            setupFallbackObservers(blocks);
+          });
+        }
+      }, 100);
     }
   }
 
