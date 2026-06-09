@@ -186,6 +186,12 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
     }
     // Mettre à jour blocksCache pour que setupFallbackObservers ait les bonnes données
     blocksCache = blocks || [];
+    // En mode public, relancer setupFallbackObservers après nextTick pour avoir les refs
+    if (!isAdmin.value && observer) {
+      nextTick(() => {
+        setupFallbackObservers(blocks);
+      });
+    }
   }
 
   function handleAnimationChange(fixedBlocks) {

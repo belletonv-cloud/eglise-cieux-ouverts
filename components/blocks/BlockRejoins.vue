@@ -106,7 +106,9 @@ const showContent = computed(() => isEditor || isTriggered);
         transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .triggered .rejoins-text-container,
-.triggered .rejoins-horaire {
+.triggered .rejoins-horaire,
+.block-wrapper.triggered .rejoins-text-container,
+.block-wrapper.triggered .rejoins-horaire {
     opacity: 1;
     transform: none;
 }
