@@ -316,20 +316,25 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
       // Un second nextTick pour être sûr que les refs sont montées
       nextTick(() => {
         observeElements();
-        setupFallbackObservers(blocksCache);
-        // Déclencher immédiatement les blocs déjà visibles
-        for (const [id, el] of Object.entries(wrapperRefs.value)) {
-          if (el && observer) {
-            const rect = el.getBoundingClientRect();
-            if (rect.top < window.innerHeight * 0.9) {
-              // Element is in viewport
-              if (!triggeredBlocks.value.includes(id)) {
-                triggeredBlocks.value = [...triggeredBlocks.value, id];
-                observer.unobserve(el);
+        // rAF + setTimeout pour couvrir tous les cas de timing du navigateur
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            setupFallbackObservers(blocksCache);
+            // Déclencher immédiatement les blocs déjà visibles
+            for (const [id, el] of Object.entries(wrapperRefs.value)) {
+              if (el && observer) {
+                const rect = el.getBoundingClientRect();
+                if (rect.top < window.innerHeight * 0.9) {
+                  // Element is in viewport
+                  if (!triggeredBlocks.value.includes(id)) {
+                    triggeredBlocks.value = [...triggeredBlocks.value, id];
+                    observer.unobserve(el);
+                  }
+                }
               }
             }
-          }
-        }
+          }, 0);
+        });
       });
     });
 
