@@ -29,7 +29,7 @@
                     getAnimClass(block),
                     useTrigger(block)
                         ? { triggered: isTriggered(block.id) }
-                        : '',
+                        : { triggered: isTriggered(block.id) },
                     { 'admin-selected': isSelected(block) },
                 ]"
                 :ref="(el) => setWrapperRef(el, block.id)"
@@ -39,9 +39,7 @@
             >
                 <BlockRenderer
                     :block="block"
-                    :is-triggered="
-                        useTrigger(block) ? isTriggered(block.id) : false
-                    "
+                    :is-triggered="isTriggered(block.id)"
                     :is-admin="isAdmin || undefined"
                 />
             </div>

@@ -13,6 +13,9 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
   let replayHandler = null;
   const fallbackObservers = new Map();
 
+  // Cache les blocs pour les utiliser dans replayBlockAnimation
+  let blocksCache = [];
+
   function isTriggered(id) {
     return triggeredBlocks.value.includes(id);
   }
@@ -121,7 +124,6 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
     }
   }
 
-  let blocksCache = [];
   function setup(blocks) {
     blocksCache = blocks || [];
     if (isAdmin.value || isServerAdminRef?.value) {
