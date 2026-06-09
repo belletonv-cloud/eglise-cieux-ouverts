@@ -152,6 +152,7 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
       return;
     }
 
+    // Créer l'observer mais ne pas observer encore - ça sera fait après mount
     observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
