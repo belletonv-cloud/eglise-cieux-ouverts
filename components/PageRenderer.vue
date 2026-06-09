@@ -382,8 +382,12 @@ watch(
     { deep: false },
 );
 
+// Appel supplémentaire après onMounted pour les blocs déjà chargés
 onMounted(() => {
     setupClient(props.blocks || []);
+    nextTick(() => {
+        handleBlocksChange(props.blocks || []);
+    });
 });
 watch(
     () =>
