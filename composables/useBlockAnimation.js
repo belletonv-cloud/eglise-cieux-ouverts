@@ -380,42 +380,26 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
         { threshold: 0.05, rootMargin: "0px 0px -40px 0px" },
       );
     }
-    // Attendre que les refs soient montées avant d'observer
-    nextTick(() => {
-      // Un second nextTick pour être sûr que les refs sont montées
-      nextTick(() => {
-        observeElements();
-        setupFallbackObservers(blocksToUse);
-        // Déclencher immédiatement les blocs déjà visibles
-        for (const [id, el] of Object.entries(wrapperRefs.value)) {
-          if (el && observer) {
-            const rect = el.getBoundingClientRect();
-            if (rect.top < window.innerHeight * 0.9) {
-              // Element is in viewport - marquer comme triggered
-              if (!triggeredBlocks.value.includes(id)) {
-                triggeredBlocks.value = [...triggeredBlocks.value, id];
-              }
-              if (!el.classList.contains("triggered")) {
-                el.classList.add("triggered");
-              }
-              // Unobserver si on a déclenché - mais pas pour les blocs internal
-              const block = blocksToUse.find((b) => b.id === id);
-              if (
-                block &&
-                ![
-                  "aspirations",
-                  "bienvenue",
-                  "nousRejoindre",
-                  "rejoins",
-                ].includes(block.type)
-              ) {
-                observer.unobserve(el);
-              }
+    // Utiliser setTimeout au lieu de nextTick pour être sûr que les refs sont montées
+    setTimeout(() => {
+      observeElements();
+      setupFallbackObservers(blocksToUse);
+      // Déclencher immédiatement les blocs déjà visibles
+      for (const [id, el] of Object.entries(wrapperRefs.value)) {
+        if (el && observer) {
+          const rect = el.getBoundingClientRect();
+          if (rect.top < window.innerHeight * 0.9) {
+            // Element is in viewport - marquer comme triggered
+            if (!triggeredBlocks.value.includes(id)) {
+              triggeredBlocks.value = [...triggeredBlocks.value, id];
+            }
+            if (!el.classList.contains("triggered")) {
+              el.classList.add("triggered");
             }
           }
         }
-      });
-    });
+      }
+    }, 500);
 
     replayHandler = (e) => {
       const id = e?.detail?.id;
