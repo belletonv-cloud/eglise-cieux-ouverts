@@ -234,7 +234,23 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
       initAdminTrigger(blocks);
       return;
     }
-    // L'observer sera créé dans setupClient (onMounted)
+    // Créer l'observer ici aussi pour que le watcher immediate puisse fonctionner
+    if (!observer) {
+      observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              const id = entry.target.dataset?.blockId;
+              if (id) {
+                triggeredBlocks.value = [...triggeredBlocks.value, id];
+                observer.unobserve(entry.target);
+              }
+            }
+          });
+        },
+        { threshold: 0.05, rootMargin: "0px 0px -40px 0px" },
+      );
+    }
   }
 
   function handleBlocksChange(blocks) {
