@@ -63,6 +63,8 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
     const el = wrapperRefs.value[id];
     // triggeredBlocks is an Array, so we filter instead of delete
     triggeredBlocks.value = triggeredBlocks.value.filter((item) => item !== id);
+
+    // For wrapper animations, remove/add the animation class
     if (el && el.classList) {
       const animClasses = Array.from(el.classList).filter((c) =>
         c.startsWith("block-anim-"),
@@ -71,6 +73,35 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
       void el.offsetHeight;
       animClasses.forEach((c) => el.classList.add(c));
     }
+
+    // For internal animations (aspirations, nousRejoindre), we need to scroll to trigger them
+    // or remove the triggered class if we're in admin mode
+    const internalTypes = ["aspirations", "nousRejoindre", "bienvenue"];
+    const block = blocksCache.find((b) => b.id === id);
+
+    if (internalTypes.includes(block?.type)) {
+      // For internal animations: remove .triggered class to reset, then optionally scroll
+      if (el && el.classList.contains("triggered")) {
+        el.classList.remove("triggered");
+        void el.offsetHeight;
+      }
+      if (isAdmin && isAdmin.value) {
+        // In admin mode, just re-add triggered immediately
+        setTimeout(() => {
+          if (el && !el.classList.contains("triggered")) {
+            el.classList.add("triggered");
+          }
+          triggeredBlocks.value = [...(triggeredBlocks.value || []), id];
+        }, 50);
+      } else {
+        // In public mode, scroll to trigger the internal animation
+        try {
+          el?.scrollIntoView({ behavior: "smooth", block: "center" });
+        } catch (err) {}
+      }
+      return;
+    }
+
     if (el && observer) {
       try {
         observer.unobserve(el);
