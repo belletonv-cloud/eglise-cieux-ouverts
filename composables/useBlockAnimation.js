@@ -184,7 +184,8 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
       triggeredBlocks.value = [...allIds]; // Array au lieu de Set
       return;
     }
-    // Ne rien faire ici - tout est géré dans setupClient après mount
+    // Mettre à jour blocksCache pour que setupFallbackObservers ait les bonnes données
+    blocksCache = blocks || [];
   }
 
   function handleAnimationChange(fixedBlocks) {
