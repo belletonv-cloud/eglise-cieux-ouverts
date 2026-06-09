@@ -24,6 +24,56 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
     if (el) wrapperRefs.value[id] = el;
   }
 
+  // Observer les éléments quand les refs sont prêtes (appelé après chaque setWrapperRef)
+  function checkAndObserveElement(id) {
+    if (!observer || !SUPPORTS_SCROLL_TIMELINE) return;
+    const el = wrapperRefs.value[id];
+    if (!el) return;
+
+    // Vérifier si c'est un bloc internal qui a besoin d'un fallback
+    const block = (blocksCache || []).find((b) => b.id === id);
+    if (!block) return;
+
+    const internalTypes = [
+      "aspirations",
+      "bienvenue",
+      "nousRejoindre",
+      "rejoins",
+    ];
+
+    if (internalTypes.includes(block.type)) {
+      // Pour les blocs internal, ajouter 'triggered' au wrapper si visible
+      const rect = el.getBoundingClientRect();
+      if (rect.top < window.innerHeight * 0.9) {
+        if (!el.classList.contains("triggered")) {
+          el.classList.add("triggered");
+          if (!triggeredBlocks.value.includes(id)) {
+            triggeredBlocks.value = [...triggeredBlocks.value, id];
+          }
+        }
+      } else {
+        // Observer pour ajouter triggered au scroll
+        if (!fallbackObservers.has(id)) {
+          const fbObserver = new IntersectionObserver(
+            ([entry]) => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add("triggered");
+                const eid = entry.target.dataset?.blockId;
+                if (eid && !triggeredBlocks.value.includes(eid)) {
+                  triggeredBlocks.value = [...triggeredBlocks.value, eid];
+                }
+                fbObserver.unobserve(entry.target);
+              }
+            },
+            { threshold: 0.1 },
+          );
+          fbObserver.observe(el);
+          fallbackObservers.set(id, fbObserver);
+        }
+      }
+    }
+  }
+
   function observeElements() {
     if (!observer) return;
     for (const [id, el] of Object.entries(wrapperRefs.value)) {
@@ -200,21 +250,11 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
     }
     // Mettre à jour blocksCache pour que setupFallbackObservers ait les bonnes données
     blocksCache = blocks || [];
-    // En mode public, déclencher setupFallbackObservers si l'observer existe déjà (après setupClient)
-    // Sinon, programmer pour le prochain tick après setupClient
+    // En mode public, déclencher setupFallbackObservers si l'observer existe déjà
     if (observer) {
       nextTick(() => {
         setupFallbackObservers(blocks);
       });
-    } else {
-      // L'observer n'existe pas encore - attendre qu'il soit créé
-      setTimeout(() => {
-        if (observer) {
-          nextTick(() => {
-            setupFallbackObservers(blocks);
-          });
-        }
-      }, 100);
     }
   }
 
@@ -316,27 +356,27 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
       // Un second nextTick pour être sûr que les refs sont montées
       nextTick(() => {
         observeElements();
-        // rAF + setTimeout pour couvrir tous les cas de timing du navigateur
-        requestAnimationFrame(() => {
-          setTimeout(() => {
-            setupFallbackObservers(blocksCache);
-            // Déclencher immédiatement les blocs déjà visibles
-            for (const [id, el] of Object.entries(wrapperRefs.value)) {
-              if (el && observer) {
-                const rect = el.getBoundingClientRect();
-                if (rect.top < window.innerHeight * 0.9) {
-                  // Element is in viewport
-                  if (!triggeredBlocks.value.includes(id)) {
-                    triggeredBlocks.value = [...triggeredBlocks.value, id];
-                    observer.unobserve(el);
-                  }
-                }
+        // Utiliser blocksCache (mis à jour dans setup/handleBlocksChange)
+        setupFallbackObservers(blocksCache);
+        // Déclencher immédiatement les blocs déjà visibles
+        for (const [id, el] of Object.entries(wrapperRefs.value)) {
+          if (el && observer) {
+            const rect = el.getBoundingClientRect();
+            if (rect.top < window.innerHeight * 0.9) {
+              // Element is in viewport
+              if (!triggeredBlocks.value.includes(id)) {
+                triggeredBlocks.value = [...triggeredBlocks.value, id];
+                observer.unobserve(el);
               }
             }
-          }, 0);
-        });
+          }
+        }
       });
     });
+
+    // Appeler handleBlocksChange pour être sûr que tout est configuré
+    // (au cas où le watcher n'aurait pas été appelé)
+    handleBlocksChange(props.blocks || []);
 
     replayHandler = (e) => {
       const id = e?.detail?.id;
