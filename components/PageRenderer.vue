@@ -156,6 +156,9 @@ if (typeof window !== "undefined" && import.meta.client) {
 
 onMounted(() => {
     setupClient(props.blocks || []);
+    nextTick(() => {
+        handleBlocksChange(props.blocks || []);
+    });
 });
 
 onUnmounted(() => {
@@ -370,17 +373,18 @@ watch(
     () => (props.blocks || []).map((b) => b.id).join(","),
     async () => {
         try {
-            // Attendre que les refs soient montées (250ms pour être sûr)
-            await new Promise((resolve) => setTimeout(resolve, 250));
+            await nextTick();
             handleBlocksChange(props.blocks || []);
         } catch (err) {
             console.error("PageRenderer: error in blocks watcher", err);
         }
     },
-    { immediate: true, deep: false },
+    { deep: false },
 );
 
-let suppressAnimationWatcher = false;
+onMounted(() => {
+    setupClient(props.blocks || []);
+});
 watch(
     () =>
         fixedBlocks.value.map((b) => ({ id: b.id, anim: b.props?.animation })),
