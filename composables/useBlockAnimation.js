@@ -132,7 +132,9 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
       const prev = oldMap[b.id];
       const now = b.props?.animation;
       if (prev !== undefined && prev !== now) {
-        triggeredBlocks.value.delete(b.id);
+        triggeredBlocks.value = triggeredBlocks.value.filter(
+          (item) => item !== b.id,
+        );
         const el = wrapperRefs.value[b.id];
         if (el && el.classList) {
           el.classList.remove(`block-anim-${prev}`, "triggered");
