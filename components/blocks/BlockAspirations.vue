@@ -244,17 +244,17 @@ function getCircleStyle(index) {
 }
 
 /* Fallback for browsers that don't support animation-timeline */
-.triggered .aspirations-list li {
+.block-wrapper.triggered .aspirations-viewport .aspirations-list li {
     opacity: 1 !important;
     transform: none !important;
     animation: none !important;
 }
-.triggered .aspirations-title {
+.block-wrapper.triggered .aspirations-viewport .aspirations-title {
     opacity: 1 !important;
     transform: none !important;
     animation: none !important;
 }
-.triggered .circle {
+.block-wrapper.triggered .aspirations-viewport .circle {
     display: none !important;
 }
 @keyframes aspir-title-in {
