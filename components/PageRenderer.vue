@@ -155,7 +155,7 @@ if (typeof window !== "undefined" && import.meta.client) {
 }
 
 onMounted(() => {
-    setupClient();
+    setupClient(props.blocks || []);
 });
 
 onUnmounted(() => {
