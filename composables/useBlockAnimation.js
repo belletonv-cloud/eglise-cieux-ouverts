@@ -64,10 +64,49 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
 
   function replayBlockAnimation(id) {
     const el = wrapperRefs.value[id];
-    // triggeredBlocks is an Array, so we filter instead of delete
-    triggeredBlocks.value = triggeredBlocks.value.filter((item) => item !== id);
+    const internalTypes = ["aspirations", "nousRejoindre", "bienvenue"];
+    const block = blocksCache.find((b) => b.id === id);
+
+    // For internal animations, we need special handling
+    if (internalTypes.includes(block?.type)) {
+      triggeredBlocks.value = triggeredBlocks.value.filter(
+        (item) => item !== id,
+      );
+
+      if (el && el.classList) {
+        el.classList.remove("triggered");
+        void el.offsetHeight;
+      }
+
+      // Réactiver l'observer fallback pour ce bloc
+      if (!SUPPORTS_SCROLL_TIMELINE) {
+        const fbObserver = fallbackObservers.get(id);
+        if (fbObserver && el) {
+          fbObserver.observe(el);
+        }
+      }
+
+      // En mode admin, réajouter triggered immédiatement
+      if (isAdmin && isAdmin.value) {
+        setTimeout(() => {
+          if (el && !el.classList.contains("triggered")) {
+            el.classList.add("triggered");
+          }
+          triggeredBlocks.value = [...(triggeredBlocks.value || []), id];
+        }, 50);
+        return;
+      }
+
+      // En mode public, scroll vers le bloc pour déclencher l'animation
+      try {
+        el?.scrollIntoView({ block: "center" });
+      } catch (err) {}
+      return;
+    }
 
     // For wrapper animations, remove/add the animation class
+    triggeredBlocks.value = triggeredBlocks.value.filter((item) => item !== id);
+
     if (el && el.classList) {
       const animClasses = Array.from(el.classList).filter((c) =>
         c.startsWith("block-anim-"),
@@ -75,34 +114,6 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
       animClasses.forEach((c) => el.classList.remove(c));
       void el.offsetHeight;
       animClasses.forEach((c) => el.classList.add(c));
-    }
-
-    // For internal animations (aspirations, nousRejoindre), we need to scroll to trigger them
-    // or remove the triggered class if we're in admin mode
-    const internalTypes = ["aspirations", "nousRejoindre", "bienvenue"];
-    const block = blocksCache.find((b) => b.id === id);
-
-    if (internalTypes.includes(block?.type)) {
-      // For internal animations: remove .triggered class to reset, then optionally scroll
-      if (el && el.classList.contains("triggered")) {
-        el.classList.remove("triggered");
-        void el.offsetHeight;
-      }
-      if (isAdmin && isAdmin.value) {
-        // In admin mode, just re-add triggered immediately
-        setTimeout(() => {
-          if (el && !el.classList.contains("triggered")) {
-            el.classList.add("triggered");
-          }
-          triggeredBlocks.value = [...(triggeredBlocks.value || []), id];
-        }, 50);
-      } else {
-        // In public mode, scroll to trigger the internal animation
-        try {
-          el?.scrollIntoView({ behavior: "smooth", block: "center" });
-        } catch (err) {}
-      }
-      return;
     }
 
     if (el && observer) {
@@ -250,8 +261,11 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
         { threshold: 0.05, rootMargin: "0px 0px -40px 0px" },
       );
     }
-    observeElements();
-    setupFallbackObservers(blocksCache);
+    // Attendre que les refs soient montées avant d'observer
+    nextTick(() => {
+      observeElements();
+      setupFallbackObservers(blocksCache);
+    });
 
     replayHandler = (e) => {
       const id = e?.detail?.id;
