@@ -234,7 +234,8 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
       initAdminTrigger(blocks);
       return;
     }
-    // Créer l'observer ici aussi pour que le watcher immediate puisse fonctionner
+    // Créer l'observer ici pour que le watcher immediate puisse fonctionner
+    // (onMounted va aussi l'appeler, mais pas de problème de double création)
     if (!observer) {
       observer = new IntersectionObserver(
         (entries) => {
@@ -264,9 +265,22 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
     // En mode public, déclencher setupFallbackObservers si l'observer existe déjà
     // Sinon ce sera fait dans setupClient qui utilise déjà blocksCache
     if (observer) {
-      nextTick(() => {
-        setupFallbackObservers(blocks);
-      });
+      setupFallbackObservers(blocks);
+      // Vérifier les éléments visibles et ajouter triggered
+      for (const [id, el] of Object.entries(wrapperRefs.value)) {
+        if (el && observer) {
+          const rect = el.getBoundingClientRect();
+          if (rect.top < window.innerHeight * 0.9) {
+            // Element is in viewport - marquer comme triggered
+            if (!triggeredBlocks.value.includes(id)) {
+              triggeredBlocks.value = [...triggeredBlocks.value, id];
+            }
+            if (!el.classList.contains("triggered")) {
+              el.classList.add("triggered");
+            }
+          }
+        }
+      }
     }
   }
 

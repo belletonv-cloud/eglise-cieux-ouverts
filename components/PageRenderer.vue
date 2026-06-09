@@ -370,7 +370,8 @@ watch(
     () => (props.blocks || []).map((b) => b.id).join(","),
     async () => {
         try {
-            await nextTick();
+            // Attendre que les refs soient montées (250ms pour être sûr)
+            await new Promise((resolve) => setTimeout(resolve, 250));
             handleBlocksChange(props.blocks || []);
         } catch (err) {
             console.error("PageRenderer: error in blocks watcher", err);
