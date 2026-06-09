@@ -210,6 +210,25 @@ function getCircleStyle(index) {
     min-height: auto !important;
     padding: 50px 20px !important;
 }
+
+/* Override cascade animations in admin mode */
+.block-wrapper.triggered .aspirations-title,
+.block-wrapper.triggered .aspirations-list li {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+}
+.block-wrapper.triggered .aspirations-viewport {
+    height: auto !important;
+}
+@supports (animation-timeline: --cascade) {
+    .block-wrapper.triggered .aspirations-title,
+    .block-wrapper.triggered .aspirations-list li {
+        opacity: 1 !important;
+        transform: none !important;
+        animation: none !important;
+    }
+}
 </style>
 
 <style>
