@@ -57,6 +57,10 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
         if (rect.top < window.innerHeight * 0.9) {
           if (!el.classList.contains("triggered")) {
             el.classList.add("triggered");
+            // Mettre aussi à jour la référence réactive
+            if (!triggeredBlocks.value.includes(block.id)) {
+              triggeredBlocks.value = [...triggeredBlocks.value, block.id];
+            }
           }
         } else {
           // Sinon observer pour ajouter triggered au scroll
@@ -64,6 +68,11 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
             ([entry]) => {
               if (entry.isIntersecting) {
                 entry.target.classList.add("triggered");
+                // Mettre aussi à jour la référence réactive
+                const id = entry.target.dataset?.blockId;
+                if (id && !triggeredBlocks.value.includes(id)) {
+                  triggeredBlocks.value = [...triggeredBlocks.value, id];
+                }
                 fbObserver.unobserve(entry.target);
               }
             },
@@ -79,6 +88,11 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
             ([entry]) => {
               if (entry.isIntersecting) {
                 entry.target.classList.add("triggered");
+                // Mettre aussi à jour la référence réactive
+                const id = entry.target.dataset?.blockId;
+                if (id && !triggeredBlocks.value.includes(id)) {
+                  triggeredBlocks.value = [...triggeredBlocks.value, id];
+                }
                 fbObserver.unobserve(entry.target);
               }
             },
@@ -290,9 +304,9 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
     }
     // Attendre que les refs soient montées avant d'observer
     nextTick(() => {
-      observeElements();
-      // Laisser le temps à Vue de mettre à jour les refs après observeElements
-      setTimeout(() => {
+      // Un second nextTick pour être sûr que les refs sont montées
+      nextTick(() => {
+        observeElements();
         setupFallbackObservers(blocksCache);
         // Déclencher immédiatement les blocs déjà visibles
         for (const [id, el] of Object.entries(wrapperRefs.value)) {
@@ -307,7 +321,7 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
             }
           }
         }
-      }, 200);
+      });
     });
 
     replayHandler = (e) => {
