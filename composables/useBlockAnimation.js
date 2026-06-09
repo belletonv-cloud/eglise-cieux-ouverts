@@ -41,7 +41,12 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
 
   function setupFallbackObservers(blocks) {
     if (SUPPORTS_SCROLL_TIMELINE) return;
-    const internalTypes = ["aspirations", "bienvenue", "nousRejoindre"];
+    const internalTypes = [
+      "aspirations",
+      "bienvenue",
+      "nousRejoindre",
+      "rejoins",
+    ];
     for (const block of blocks || []) {
       if (internalTypes.includes(block.type)) {
         const el = wrapperRefs.value[block.id];
@@ -64,7 +69,12 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
 
   function replayBlockAnimation(id) {
     const el = wrapperRefs.value[id];
-    const internalTypes = ["aspirations", "nousRejoindre", "bienvenue"];
+    const internalTypes = [
+      "aspirations",
+      "nousRejoindre",
+      "bienvenue",
+      "rejoins",
+    ];
     const block = blocksCache.find((b) => b.id === id);
 
     // For internal animations, we need special handling

@@ -191,4 +191,11 @@ onMounted(() => {
         min-height: 400px;
     }
 }
+
+/* Fallback: when wrapper has triggered class (for IntersectionObserver on non-supporting browsers) */
+.block-wrapper.triggered .block-rejoins .rejoins-text-container,
+.block-wrapper.triggered .block-rejoins .rejoins-horaire {
+    opacity: 1 !important;
+    transform: none !important;
+}
 </style>
