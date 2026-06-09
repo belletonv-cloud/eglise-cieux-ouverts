@@ -441,7 +441,7 @@ onUnmounted(() => {
     border-top: 1px solid var(--border-light);
     gap: 4px;
     position: relative;
-    z-index: 0;
+    z-index: 10;
 }
 
 .nav-mobile::before {
