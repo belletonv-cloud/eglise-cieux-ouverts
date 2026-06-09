@@ -22,12 +22,17 @@ const {
     title = "",
     link = "/contact",
     visibility = {},
+    isTriggered = false,
 } = defineProps({
     backgroundGradient: { type: String, default: "" },
     title: { type: String, default: "" },
     link: { type: String, default: "/contact" },
     visibility: { type: Object, default: () => ({}) },
+    isTriggered: { type: Boolean, default: false },
 });
+
+const isEditor = inject("isEditor", false);
+const isSsr = !import.meta.client;
 
 const visibilityClasses = computed(() => ({
     "hide-mobile": visibility.mobile === false,
@@ -48,6 +53,11 @@ const visibilityClasses = computed(() => ({
     position: relative;
     overflow: hidden;
     min-height: 500px;
+}
+
+/* Admin mode: disable scroll-driven animations and show content immediately */
+.block-wrapper.triggered & {
+    view-timeline: none;
 }
 
 .circle {
@@ -164,7 +174,7 @@ const visibilityClasses = computed(() => ({
 }
 .triggered .cta-link {
     animation: none;
-    transform: translateY(320px) scale(1);
+    transform: none;
     opacity: 1;
 }
 
@@ -186,7 +196,7 @@ const visibilityClasses = computed(() => ({
 }
 .block-wrapper.triggered .block-nous-rejoindre .cta-link {
     animation: none;
-    transform: translateY(320px) scale(1);
+    transform: none;
     opacity: 1;
 }
 
@@ -221,6 +231,17 @@ const visibilityClasses = computed(() => ({
     .circle-small {
         width: 50px;
         height: 50px;
+    }
+}
+
+@supports (animation-timeline: --rejoindre) {
+    .block-wrapper.triggered .block-nous-rejoindre .cta-link {
+        opacity: 1 !important;
+        transform: none !important;
+        animation: none !important;
+    }
+    .block-wrapper.triggered .block-nous-rejoindre .circle {
+        display: none !important;
     }
 }
 </style>
