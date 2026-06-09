@@ -40,7 +40,6 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
   }
 
   function setupFallbackObservers(blocks) {
-    if (SUPPORTS_SCROLL_TIMELINE) return;
     const internalTypes = [
       "aspirations",
       "bienvenue",
@@ -48,9 +47,34 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
       "rejoins",
     ];
     for (const block of blocks || []) {
+      const el = wrapperRefs.value[block.id];
+      if (!el) continue;
+
+      // Pour les blocs internal, ajouter 'triggered' au wrapper quand visible
       if (internalTypes.includes(block.type)) {
-        const el = wrapperRefs.value[block.id];
-        if (el && !fallbackObservers.has(block.id)) {
+        // Si déjà visible, ajouter triggered immédiatement
+        const rect = el.getBoundingClientRect();
+        if (rect.top < window.innerHeight * 0.9) {
+          if (!el.classList.contains("triggered")) {
+            el.classList.add("triggered");
+          }
+        } else {
+          // Sinon observer pour ajouter triggered au scroll
+          const fbObserver = new IntersectionObserver(
+            ([entry]) => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add("triggered");
+                fbObserver.unobserve(entry.target);
+              }
+            },
+            { threshold: 0.1 },
+          );
+          fbObserver.observe(el);
+          fallbackObservers.set(block.id, fbObserver);
+        }
+      } else if (!SUPPORTS_SCROLL_TIMELINE) {
+        // Pour les autres blocs, utiliser le fallback classique
+        if (!fallbackObservers.has(block.id)) {
           const fbObserver = new IntersectionObserver(
             ([entry]) => {
               if (entry.isIntersecting) {
