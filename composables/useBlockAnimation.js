@@ -26,7 +26,11 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
 
   // Observer les éléments quand les refs sont prêtes (appelé après chaque setWrapperRef)
   function checkAndObserveElement(id) {
-    if (!observer || !SUPPORTS_SCROLL_TIMELINE) return;
+    // L'observer est créé dans setupClient - si pas encore créé, on attend
+    if (!observer) {
+      setTimeout(() => checkAndObserveElement(id), 50);
+      return;
+    }
     const el = wrapperRefs.value[id];
     if (!el) return;
 
@@ -41,35 +45,26 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
       "rejoins",
     ];
 
+    // Pour les blocs internal, ajouter 'triggered' au wrapper si visible
+    // (utiliser le fallback IntersectionObserver pour tous les navigateurs)
     if (internalTypes.includes(block.type)) {
-      // Pour les blocs internal, ajouter 'triggered' au wrapper si visible
-      const rect = el.getBoundingClientRect();
-      if (rect.top < window.innerHeight * 0.9) {
-        if (!el.classList.contains("triggered")) {
-          el.classList.add("triggered");
-          if (!triggeredBlocks.value.includes(id)) {
-            triggeredBlocks.value = [...triggeredBlocks.value, id];
-          }
-        }
-      } else {
-        // Observer pour ajouter triggered au scroll
-        if (!fallbackObservers.has(id)) {
-          const fbObserver = new IntersectionObserver(
-            ([entry]) => {
-              if (entry.isIntersecting) {
-                entry.target.classList.add("triggered");
-                const eid = entry.target.dataset?.blockId;
-                if (eid && !triggeredBlocks.value.includes(eid)) {
-                  triggeredBlocks.value = [...triggeredBlocks.value, eid];
-                }
-                fbObserver.unobserve(entry.target);
+      // Observer pour ajouter triggered au scroll (ou si déjà visible)
+      if (!fallbackObservers.has(id)) {
+        const fbObserver = new IntersectionObserver(
+          ([entry]) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("triggered");
+              const eid = entry.target.dataset?.blockId;
+              if (eid && !triggeredBlocks.value.includes(eid)) {
+                triggeredBlocks.value = [...triggeredBlocks.value, eid];
               }
-            },
-            { threshold: 0.1 },
-          );
-          fbObserver.observe(el);
-          fallbackObservers.set(id, fbObserver);
-        }
+              fbObserver.unobserve(entry.target);
+            }
+          },
+          { threshold: 0.1 },
+        );
+        fbObserver.observe(el);
+        fallbackObservers.set(id, fbObserver);
       }
     }
   }
@@ -399,6 +394,7 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
     wrapperRefs,
     isTriggered,
     setWrapperRef,
+    checkAndObserveElement,
     setup,
     handleBlocksChange,
     handleAnimationChange,

@@ -32,7 +32,12 @@
                         : { triggered: isTriggered(block.id) },
                     { 'admin-selected': isSelected(block) },
                 ]"
-                :ref="(el) => setWrapperRef(el, block.id)"
+                :ref="
+                    (el) => {
+                        setWrapperRef(el, block.id);
+                        checkAndObserveElement(block.id);
+                    }
+                "
                 :data-block-id="block.id"
                 :data-block-type="block.type"
                 @click.capture="isAdmin && wrapperClick(block.id)"
@@ -94,6 +99,7 @@ const {
     triggeredBlocks,
     isTriggered,
     setWrapperRef,
+    checkAndObserveElement,
     setup,
     handleBlocksChange,
     handleAnimationChange,
