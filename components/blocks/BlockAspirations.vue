@@ -186,19 +186,6 @@ function getCircleStyle(index) {
         display: none;
     }
 }
-.triggered .aspirations-list li {
-    opacity: 1 !important;
-    transform: none !important;
-    animation: none !important;
-}
-.triggered .aspirations-title {
-    opacity: 1 !important;
-    transform: none !important;
-    animation: none !important;
-}
-.triggered .circle {
-    display: none !important;
-}
 
 /* Keyframes et autres styles laissés intacts */
 .aspirations-viewport {
@@ -231,7 +218,7 @@ function getCircleStyle(index) {
     }
 }
 
-/* Admin mode: override viewport height when block wrapper has triggered class (after keyframes) */
+/* Admin mode: override viewport height when block wrapper has triggered class (must come AFTER @supports) */
 @supports (animation-timeline: --cascade) {
     .block-wrapper.triggered .aspirations-title,
     .block-wrapper.triggered .aspirations-list li {
@@ -254,6 +241,21 @@ function getCircleStyle(index) {
     top: auto !important;
     min-height: auto !important;
     padding: 50px 20px !important;
+}
+
+/* Fallback for browsers that don't support animation-timeline */
+.triggered .aspirations-list li {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+}
+.triggered .aspirations-title {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+}
+.triggered .circle {
+    display: none !important;
 }
 @keyframes aspir-title-in {
     0% {
