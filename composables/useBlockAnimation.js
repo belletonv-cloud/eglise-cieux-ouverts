@@ -199,11 +199,9 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
       triggeredBlocks.value = [...allIds]; // Array au lieu de Set
       return;
     }
-    // Pour les internal blocks, il faut attendre que les refs soient montées
-    nextTick(() => {
-      observeElements();
-      setupFallbackObservers(blocks);
-    });
+    // L'observation des éléments se fait dans setupClient après mount
+    // Ici on met juste à jour blocksCache pour le fallback observer
+    blocksCache = blocks || [];
   }
 
   function handleAnimationChange(fixedBlocks) {
