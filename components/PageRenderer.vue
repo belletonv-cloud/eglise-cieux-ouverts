@@ -376,7 +376,7 @@ watch(
             console.error("PageRenderer: error in blocks watcher", err);
         }
     },
-    { deep: false },
+    { immediate: true, deep: false },
 );
 
 let suppressAnimationWatcher = false;
