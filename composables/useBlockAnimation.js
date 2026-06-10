@@ -1,4 +1,4 @@
-import { ref, nextTick } from "vue";
+import { ref, nextTick, watchEffect } from "vue";
 
 const SUPPORTS_SCROLL_TIMELINE =
   typeof CSS !== "undefined" &&
@@ -244,8 +244,6 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
       initAdminTrigger(blocks);
       return;
     }
-    // Créer l'observer ici pour que le watcher immediate puisse fonctionner
-    // (onMounted va aussi l'appeler, mais pas de problème de double création)
     if (!observer) {
       observer = new IntersectionObserver(
         (entries) => {
@@ -262,33 +260,59 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
         { threshold: 0.05, rootMargin: "0px 0px -40px 0px" },
       );
     }
-  }
-
-  function handleBlocksChange(blocks) {
-    if (isAdmin.value) {
-      const allIds = (blocks || []).map((b) => b.id).filter(Boolean);
-      triggeredBlocks.value = [...allIds]; // Array au lieu de Set
-      return;
-    }
-    // Mettre à jour blocksCache pour que setupFallbackObservers ait les bonnes données
-    blocksCache = blocks || [];
-    // En mode public, déclencher setupFallbackObservers si l'observer existe déjà
-    // Sinon ce sera fait dans setupClient qui utilise déjà blocksCache
-    if (observer) {
-      setupFallbackObservers(blocks);
-      // Vérifier les éléments visibles et ajouter triggered
+    nextTick().then(() => {
       for (const [id, el] of Object.entries(wrapperRefs.value)) {
-        if (el && observer) {
+        if (el) {
           const rect = el.getBoundingClientRect();
           if (rect.top < window.innerHeight * 0.9) {
-            // Element is in viewport - marquer comme triggered
             if (!triggeredBlocks.value.includes(id)) {
               triggeredBlocks.value = [...triggeredBlocks.value, id];
             }
             if (!el.classList.contains("triggered")) {
               el.classList.add("triggered");
             }
+            try { observer.unobserve(el); } catch (e) {}
           }
+        }
+      }
+    });
+  }
+
+  function handleBlocksChange(blocks) {
+    if (isAdmin.value) {
+      const allIds = (blocks || []).map((b) => b.id).filter(Boolean);
+      triggeredBlocks.value = [...allIds];
+      return;
+    }
+    blocksCache = blocks || [];
+    if (!observer) {
+      observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              const id = entry.target.dataset?.blockId;
+              if (id) {
+                triggeredBlocks.value = [...triggeredBlocks.value, id];
+                observer.unobserve(entry.target);
+              }
+            }
+          });
+        },
+        { threshold: 0.05, rootMargin: "0px 0px -40px 0px" },
+      );
+    }
+    setupFallbackObservers(blocks);
+    for (const [id, el] of Object.entries(wrapperRefs.value)) {
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        if (rect.top < window.innerHeight * 0.9) {
+          if (!triggeredBlocks.value.includes(id)) {
+            triggeredBlocks.value = [...triggeredBlocks.value, id];
+          }
+          if (!el.classList.contains("triggered")) {
+            el.classList.add("triggered");
+          }
+          try { observer.unobserve(el); } catch (e) {}
         }
       }
     }
@@ -371,7 +395,6 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
     }
 
     // Mode public: configurer les observers
-    // Utiliser les blocs passés en paramètre si disponibles, sinon blocksCache
     const blocksToUse = blocksParam || blocksCache;
 
     if (!observer) {
@@ -390,35 +413,35 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
         { threshold: 0.05, rootMargin: "0px 0px -40px 0px" },
       );
     }
-    // Utiliser un polling intensif pour détecter quand les refs sont prêtes
-    let pollAttempts = 0;
-    const pollForRefs = () => {
-      const ids = Object.keys(wrapperRefs.value || {});
-      if (ids.length > 0 || pollAttempts >= 20) {
-        // Refs prêtes ou max tentatives atteintes
+
+    nextTick().then(() => {
+      const apply = () => {
+        const ids = Object.keys(wrapperRefs.value);
+        if (ids.length === 0) return;
         observeElements();
         setupFallbackObservers(blocksToUse);
-        // Déclencher immédiatement les blocs déjà visibles
         for (const [id, el] of Object.entries(wrapperRefs.value)) {
-          if (el && observer) {
+          if (el) {
             const rect = el.getBoundingClientRect();
             if (rect.top < window.innerHeight * 0.9) {
-              // Element is in viewport - marquer comme triggered
               if (!triggeredBlocks.value.includes(id)) {
                 triggeredBlocks.value = [...triggeredBlocks.value, id];
               }
               if (!el.classList.contains("triggered")) {
                 el.classList.add("triggered");
               }
+              try { observer.unobserve(el); } catch (e) {}
             }
           }
         }
-      } else {
-        pollAttempts++;
-        setTimeout(pollForRefs, 100);
-      }
-    };
-    pollForRefs();
+      };
+      apply();
+      watchEffect(() => {
+        if (Object.keys(wrapperRefs.value).length > 0) {
+          apply();
+        }
+      });
+    });
 
     replayHandler = (e) => {
       const id = e?.detail?.id;

@@ -1,5 +1,6 @@
 <template>
     <section
+        ref="blockRef"
         class="block-rejoins"
         :style="{ background: backgroundGradient || '#064886' }"
         :class="[visibilityClasses, { triggered: showContent }]"
@@ -55,7 +56,30 @@ const visibilityClasses = computed(() => ({
 }));
 
 // Pour les animations internal (scroll-driven), on utilise isTriggered du wrapper
+// En mode public, on utilise aussi un IntersectionObserver en fallback
 const showContent = computed(() => isEditor || isTriggered);
+
+// Fallback IntersectionObserver pour ce bloc (toujours actif)
+const blockRef = ref(null);
+onMounted(() => {
+    if (isEditor) return;
+    const el = blockRef.value;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+        ([entry]) => {
+            if (entry.isIntersecting) {
+                // Ajouter triggered sur le wrapper parent
+                const wrapper = el.closest(".block-wrapper");
+                if (wrapper && !wrapper.classList.contains("triggered")) {
+                    wrapper.classList.add("triggered");
+                }
+                observer.unobserve(el);
+            }
+        },
+        { threshold: 0.1 },
+    );
+    observer.observe(el);
+});
 </script>
 
 <style scoped>
