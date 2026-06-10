@@ -1,5 +1,5 @@
 <template>
-    <div class="aspirations-viewport" :class="visibilityClasses">
+    <div ref="blockRef" class="aspirations-viewport" :class="visibilityClasses">
         <div
             class="sticky-box"
             :style="{
@@ -26,7 +26,7 @@
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { ref, computed, onMounted, inject } from "vue";
 const {
     backgroundGradient = "",
     backgroundColor = "#fff",
@@ -43,6 +43,8 @@ const {
     visibility: { type: Object, default: () => ({}) },
 });
 
+const isEditor = inject("isEditor", false);
+
 const visibilityClasses = computed(() => ({
     "hide-mobile": visibility.mobile === false,
     "hide-tablet": visibility.tablet === false,
@@ -52,7 +54,7 @@ const visibilityClasses = computed(() => ({
 const n = computed(() => items.length);
 
 function getItemStyle(index) {
-    const total = n.value || 1; // éviter division par zéro
+    const total = n.value || 1;
     const band = 80;
     const step = band / total;
     const pad = (100 - band) / 2;
@@ -78,6 +80,28 @@ function getCircleStyle(index) {
         animationName: "circle-" + index,
     };
 }
+
+// Fallback IntersectionObserver pour ce bloc (toujours actif)
+const blockRef = ref(null);
+onMounted(() => {
+    if (isEditor) return;
+    const el = blockRef.value;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+        ([entry]) => {
+            if (entry.isIntersecting) {
+                // Ajouter triggered sur le wrapper parent
+                const wrapper = el.closest(".block-wrapper");
+                if (wrapper && !wrapper.classList.contains("triggered")) {
+                    wrapper.classList.add("triggered");
+                }
+                observer.unobserve(el);
+            }
+        },
+        { threshold: 0.1 },
+    );
+    observer.observe(el);
+});
 </script>
 
 <style scoped>

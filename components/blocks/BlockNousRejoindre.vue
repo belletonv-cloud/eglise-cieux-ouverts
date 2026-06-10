@@ -1,5 +1,6 @@
 <template>
     <section
+        ref="blockRef"
         class="block-nous-rejoindre"
         :style="{ background: backgroundGradient }"
         :class="visibilityClasses"
@@ -15,7 +16,7 @@
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { ref, computed, onMounted, inject } from "vue";
 
 const {
     backgroundGradient = "",
@@ -39,6 +40,28 @@ const visibilityClasses = computed(() => ({
     "hide-tablet": visibility.tablet === false,
     "hide-desktop": visibility.desktop === false,
 }));
+
+// Fallback IntersectionObserver pour ce bloc (toujours actif)
+const blockRef = ref(null);
+onMounted(() => {
+    if (isEditor) return;
+    const el = blockRef.value;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+        ([entry]) => {
+            if (entry.isIntersecting) {
+                // Ajouter triggered sur le wrapper parent
+                const wrapper = el.closest(".block-wrapper");
+                if (wrapper && !wrapper.classList.contains("triggered")) {
+                    wrapper.classList.add("triggered");
+                }
+                observer.unobserve(el);
+            }
+        },
+        { threshold: 0.1 },
+    );
+    observer.observe(el);
+});
 </script>
 
 <style scoped>
