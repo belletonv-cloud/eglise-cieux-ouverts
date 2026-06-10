@@ -186,62 +186,12 @@ function getCircleStyle(index) {
         display: none;
     }
 }
-.triggered {
-    height: auto !important;
-}
-.triggered .sticky-box {
-    position: relative !important;
-    top: auto !important;
-    min-height: auto !important;
-    padding: 50px 20px !important;
-}
-.triggered .aspirations-list li {
-    opacity: 1 !important;
-    transform: none !important;
-    animation: none !important;
-}
-.triggered .aspirations-title {
-    opacity: 1 !important;
-    transform: none !important;
-    animation: none !important;
-}
-.triggered .circle {
-    display: none !important;
-}
-</style>
 
-<style>
-/* Fallback for when triggered is on the wrapper (IntersectionObserver) */
-.block-wrapper.triggered .aspirations-viewport {
-    height: auto !important;
-}
-.block-wrapper.triggered .aspirations-viewport .sticky-box {
-    position: relative !important;
-    top: auto !important;
-    min-height: auto !important;
-    padding: 50px 20px !important;
-}
-.block-wrapper.triggered .aspirations-viewport .aspirations-list li {
-    opacity: 1 !important;
-    transform: none !important;
-    animation: none !important;
-}
-.block-wrapper.triggered .aspirations-viewport .aspirations-title {
-    opacity: 1 !important;
-    transform: none !important;
-    animation: none !important;
-}
-.block-wrapper.triggered .aspirations-viewport .circle {
-    display: none !important;
-}
-/* Keyframes et autres styles laissés intacts */
-</style>
-
-<style>
 /* Keyframes et autres styles laissés intacts */
 .aspirations-viewport {
     view-timeline: --cascade;
 }
+
 @supports (animation-timeline: --cascade) {
     @media (min-width: 769px) {
         .aspirations-title {
@@ -266,6 +216,46 @@ function getCircleStyle(index) {
             animation-range: cover var(--anim-start) cover var(--anim-end);
         }
     }
+}
+
+/* Admin mode: override viewport height when block wrapper has triggered class (must come AFTER @supports) */
+@supports (animation-timeline: --cascade) {
+    .block-wrapper.triggered .aspirations-title,
+    .block-wrapper.triggered .aspirations-list li {
+        opacity: 1 !important;
+        transform: none !important;
+        animation: none !important;
+    }
+}
+.block-wrapper.triggered .aspirations-title,
+.block-wrapper.triggered .aspirations-list li {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+}
+.block-wrapper.triggered .aspirations-viewport {
+    height: auto !important;
+}
+.block-wrapper.triggered .aspirations-viewport .sticky-box {
+    position: relative !important;
+    top: auto !important;
+    min-height: auto !important;
+    padding: 50px 20px !important;
+}
+
+/* Fallback for browsers that don't support animation-timeline */
+.block-wrapper.triggered .aspirations-viewport .aspirations-list li {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+}
+.block-wrapper.triggered .aspirations-viewport .aspirations-title {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+}
+.block-wrapper.triggered .aspirations-viewport .circle {
+    display: none !important;
 }
 @keyframes aspir-title-in {
     0% {

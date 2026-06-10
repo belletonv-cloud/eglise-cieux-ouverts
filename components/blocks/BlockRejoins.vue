@@ -2,8 +2,7 @@
     <section
         class="block-rejoins"
         :style="{ background: backgroundGradient || '#064886' }"
-        :class="[visibilityClasses, { 'is-visible': isVisible }]"
-        ref="sectionRef"
+        :class="[visibilityClasses, { triggered: showContent }]"
     >
         <div class="rejoins-inner">
             <div class="rejoins-text-container">
@@ -55,27 +54,8 @@ const visibilityClasses = computed(() => ({
     "hide-desktop": visibility.desktop === false,
 }));
 
-const sectionRef = ref(null);
-const isVisible = ref(!import.meta.client || isEditor || isTriggered);
-
-onMounted(() => {
-    if (isEditor || isTriggered) {
-        requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-                isVisible.value = true;
-            });
-        });
-        return;
-    }
-    const observer = new IntersectionObserver(
-        ([entry]) => {
-            isVisible.value = entry.isIntersecting;
-        },
-        { threshold: 0.15 },
-    );
-    if (sectionRef.value) observer.observe(sectionRef.value);
-    onUnmounted(() => observer.disconnect());
-});
+// Pour les animations internal (scroll-driven), on utilise isTriggered du wrapper
+const showContent = computed(() => isEditor || isTriggered);
 </script>
 
 <style scoped>
@@ -125,8 +105,8 @@ onMounted(() => {
         opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
         transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.is-visible .rejoins-text-container,
-.is-visible .rejoins-horaire {
+.triggered .rejoins-text-container,
+.triggered .rejoins-horaire {
     opacity: 1;
     transform: none;
 }
@@ -190,18 +170,10 @@ onMounted(() => {
         min-height: 400px;
     }
 }
-/* Fallback for when triggered is on the section itself */
-.is-visible .rejoins-text-container,
-.is-visible .rejoins-horaire {
-    opacity: 1 !important;
-    transform: none !important;
-}
-</style>
 
-<!-- Global style for wrapper-triggered fallback (scoped CSS can't target parent) -->
-<style>
-.block-wrapper.triggered .block-rejoins .rejoins-text-container,
-.block-wrapper.triggered .block-rejoins .rejoins-horaire {
+/* Fallback: when wrapper has triggered class (for IntersectionObserver on non-supporting browsers) */
+.block-wrapper.triggered .block-rejoins.triggered .rejoins-text-container,
+.block-wrapper.triggered .block-rejoins.triggered .rejoins-horaire {
     opacity: 1 !important;
     transform: none !important;
 }
