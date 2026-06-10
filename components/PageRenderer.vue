@@ -32,12 +32,7 @@
                         : { triggered: isTriggered(block.id) },
                     { 'admin-selected': isSelected(block) },
                 ]"
-                :ref="
-                    (el) => {
-                        setWrapperRef(el, block.id);
-                        checkAndObserveElement(block.id);
-                    }
-                "
+                :ref="(el) => setWrapperRef(el, block.id)"
                 :data-block-id="block.id"
                 :data-block-type="block.type"
                 @click.capture="isAdmin && wrapperClick(block.id)"
@@ -99,7 +94,6 @@ const {
     triggeredBlocks,
     isTriggered,
     setWrapperRef,
-    checkAndObserveElement,
     setup,
     handleBlocksChange,
     handleAnimationChange,
@@ -155,10 +149,7 @@ if (typeof window !== "undefined" && import.meta.client) {
 }
 
 onMounted(() => {
-    setupClient(props.blocks || []);
-    nextTick(() => {
-        handleBlocksChange(props.blocks || []);
-    });
+    setupClient();
 });
 
 onUnmounted(() => {
@@ -382,9 +373,7 @@ watch(
     { deep: false },
 );
 
-onMounted(() => {
-    setupClient(props.blocks || []);
-});
+let suppressAnimationWatcher = false;
 watch(
     () =>
         fixedBlocks.value.map((b) => ({ id: b.id, anim: b.props?.animation })),

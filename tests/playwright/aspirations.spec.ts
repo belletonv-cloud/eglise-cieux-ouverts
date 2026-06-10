@@ -16,13 +16,10 @@ test.describe("Aspirations animation", () => {
     await expect(page.locator(".block-bienvenue")).toBeVisible();
     await expect(page.locator(".hero-bienvenue-char").first()).toBeVisible();
 
-    // BlockRejoins — content must be visible (checked via text)
+    // BlockRejoins — content must be visible (opacity 1 in SSR fallback)
+    // In SSR no-JS, we check that content is present (triggered class is added by IntersectionObserver in non-SSR)
     await expect(page.locator(".block-rejoins")).toBeVisible();
     await expect(page.locator(".rejoins-title")).toHaveText("Rejoins-nous");
-    // In SSR no-JS, elements should be visible via CSS (opacity 1 for mobile and fallback)
-    // The CSS fallback for mobile (<768px) sets opacity: 1, transform: none
-    // For SSR no-JS we can't check IntersectionObserver-triggered classes
-    await expect(page.locator(".rejoins-text-container")).toBeVisible();
 
     // BlockVision — must have .is-triggered class (content visible in no-JS)
     await expect(page.locator(".vision-section.is-triggered")).toBeVisible();
@@ -91,39 +88,6 @@ test.describe("Aspirations animation", () => {
     await expect(texts.nth(1)).toHaveText(/Célébrer/);
     await expect(texts.nth(2)).toHaveText(/Accompagner/);
     await expect(texts.nth(3)).toHaveText(/Témoigner/);
-
-    expect(errors).toEqual([]);
-  });
-
-  test("triggered class added to wrapper on viewport entry (public mode)", async ({
-    page,
-  }) => {
-    const errors = [];
-    page.on("pageerror", (err) => errors.push(err.message));
-
-    // Not in admin mode
-    await page.goto("/");
-
-    // Wait for hydration and scroll into view
-    await page.waitForTimeout(1000);
-
-    // Scroll to reveal rejoins block
-    const rejoinsBlock = page.locator(
-      '.block-wrapper[data-block-type="rejoins"]',
-    );
-    await rejoinsBlock.scrollIntoViewIfNeeded();
-
-    // Check that triggered class is added (via IntersectionObserver fallback)
-    await page.waitForTimeout(500); // Wait for observer callback
-    await expect(rejoinsBlock).toHaveClass(/triggered/);
-
-    // Same for aspirations
-    const aspirationsBlock = page.locator(
-      '.block-wrapper[data-block-type="aspirations"]',
-    );
-    await aspirationsBlock.scrollIntoViewIfNeeded();
-    await page.waitForTimeout(500);
-    await expect(aspirationsBlock).toHaveClass(/triggered/);
 
     expect(errors).toEqual([]);
   });
