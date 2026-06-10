@@ -91,4 +91,47 @@ test.describe("Aspirations animation", () => {
 
     expect(errors).toEqual([]);
   });
+
+  test("triggered class added to internal blocks in public mode", async ({
+    page,
+  }) => {
+    const errors = [];
+    page.on("pageerror", (err) => errors.push(err.message));
+
+    // Public mode (no admin)
+    await page.goto("/");
+
+    // Attendre un peu pour que les observers s'initialisent
+    await page.waitForTimeout(500);
+
+    // Scroll vers le bloc rejoins
+    const rejoinsWrapper = page.locator(
+      '.block-wrapper[data-block-type="rejoins"]',
+    );
+    await rejoinsWrapper.scrollIntoViewIfNeeded();
+
+    // Attendre que l'IntersectionObserver ajoute la classe
+    await page.waitForTimeout(500);
+
+    // Vérifier que la classe triggered est ajoutée au wrapper
+    await expect(rejoinsWrapper).toHaveClass(/triggered/);
+
+    // Scroll vers le bloc aspirations
+    const aspirationsWrapper = page.locator(
+      '.block-wrapper[data-block-type="aspirations"]',
+    );
+    await aspirationsWrapper.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(500);
+    await expect(aspirationsWrapper).toHaveClass(/triggered/);
+
+    // Scroll vers bienvenue
+    const bienvenueWrapper = page.locator(
+      '.block-wrapper[data-block-type="bienvenue"]',
+    );
+    await bienvenueWrapper.scrollIntoViewIfNeeded();
+    await page.waitForTimeout(500);
+    await expect(bienvenueWrapper).toHaveClass(/triggered/);
+
+    expect(errors).toEqual([]);
+  });
 });

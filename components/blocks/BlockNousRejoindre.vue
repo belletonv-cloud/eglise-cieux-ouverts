@@ -234,6 +234,15 @@ const visibilityClasses = computed(() => ({
     }
 }
 
+/* Fallback for browsers that don't support animation-timeline - always apply triggered styles */
+.block-wrapper.triggered .block-nous-rejoindre .cta-link {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+}
+.block-wrapper.triggered .block-nous-rejoindre .circle {
+    display: none !important;
+}
 @supports (animation-timeline: --rejoindre) {
     .block-wrapper.triggered .block-nous-rejoindre .cta-link {
         opacity: 1 !important;
