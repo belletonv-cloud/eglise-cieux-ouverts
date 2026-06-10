@@ -1,4 +1,4 @@
-import { ref, nextTick } from "vue";
+import { ref, nextTick, watchEffect } from "vue";
 
 const SUPPORTS_SCROLL_TIMELINE =
   typeof CSS !== "undefined" &&
@@ -281,9 +281,35 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
       );
     }
     // Attendre que les refs soient montées avant d'observer
+    // Utiliser watchEffect pour réagir quand les refs sont disponibles
     nextTick(() => {
       observeElements();
       setupFallbackObservers(blocksCache);
+      // Réagir aux changements de wrapperRefs après mont
+      watchEffect(() => {
+        if (Object.keys(wrapperRefs.value).length > 0) {
+          // Réappliquer les observers quand de nouvelles refs sont disponibles
+          for (const block of blocksCache || []) {
+            const el = wrapperRefs.value[block.id];
+            if (el && !fallbackObservers.has(block.id)) {
+              const internalTypes = [
+                "aspirations",
+                "bienvenue",
+                "nousRejoindre",
+                "rejoins",
+              ];
+              if (internalTypes.includes(block.type)) {
+                const rect = el.getBoundingClientRect();
+                if (rect.top < window.innerHeight * 0.9) {
+                  if (!el.classList.contains("triggered")) {
+                    el.classList.add("triggered");
+                  }
+                }
+              }
+            }
+          }
+        }
+      });
     });
 
     replayHandler = (e) => {
