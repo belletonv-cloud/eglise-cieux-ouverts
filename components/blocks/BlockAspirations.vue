@@ -1,5 +1,8 @@
 <template>
-    <div class="aspirations-viewport" :class="visibilityClasses">
+    <div
+        class="aspirations-viewport"
+        :class="[visibilityClasses, { triggered: showContent }]"
+    >
         <div
             class="sticky-box"
             :style="{
@@ -34,6 +37,7 @@ const {
     title = "",
     items = [],
     visibility = {},
+    isTriggered = false,
 } = defineProps({
     backgroundGradient: { type: String, default: "" },
     backgroundColor: { type: String, default: "#fff" },
@@ -41,6 +45,7 @@ const {
     title: { type: String, default: "" },
     items: { type: Array, default: () => [] },
     visibility: { type: Object, default: () => ({}) },
+    isTriggered: { type: Boolean, default: false },
 });
 
 const visibilityClasses = computed(() => ({
@@ -48,6 +53,9 @@ const visibilityClasses = computed(() => ({
     "hide-tablet": visibility.tablet === false,
     "hide-desktop": visibility.desktop === false,
 }));
+
+const isSsr = !import.meta.client;
+const showContent = computed(() => isTriggered || isSsr);
 
 const n = computed(() => items.length);
 
@@ -110,6 +118,11 @@ function getCircleStyle(index) {
     text-shadow: 0 1px 5px hsla(0, 0%, 0%, 0.8);
     text-align: center;
     padding-bottom: 1.5rem;
+    opacity: 0;
+    transform: translateY(20px);
+    transition:
+        opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+        transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .aspirations-divider {
     width: 100%;
@@ -136,6 +149,11 @@ function getCircleStyle(index) {
     line-height: 1.25;
     text-shadow: 0 1px 5px hsla(0, 0%, 0%, 0.8);
     border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    opacity: 0;
+    transform: translateY(25px);
+    transition:
+        opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+        transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .aspirations-list li:last-child {
     border-bottom: none;
@@ -364,5 +382,24 @@ function getCircleStyle(index) {
         opacity: 0.5;
         transform: translateY(calc(-50% - 22.5rem));
     }
+}
+</style>
+
+<!-- Global fallback for wrapper.triggered (scoped CSS can't target parent) -->
+<style>
+.block-wrapper.triggered .aspirations-viewport {
+    height: auto !important;
+}
+.block-wrapper.triggered .aspirations-viewport .aspirations-title,
+.block-wrapper.triggered .aspirations-viewport .aspirations-list li {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+}
+.block-wrapper.triggered .aspirations-viewport .sticky-box {
+    position: relative !important;
+    top: auto !important;
+    min-height: auto !important;
+    padding: 50px 20px !important;
 }
 </style>

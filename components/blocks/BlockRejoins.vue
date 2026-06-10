@@ -171,9 +171,19 @@ const showContent = computed(() => isEditor || isTriggered);
     }
 }
 
-/* Fallback: when wrapper has triggered class (for IntersectionObserver on non-supporting browsers) */
-.block-wrapper.triggered .block-rejoins.triggered .rejoins-text-container,
-.block-wrapper.triggered .block-rejoins.triggered .rejoins-horaire {
+/* Fallback: when section has triggered class (for IntersectionObserver) */
+.triggered .rejoins-text-container,
+.triggered .rejoins-horaire {
+    opacity: 1;
+    transform: none;
+}
+</style>
+
+<!-- Global fallback for wrapper.triggered (scoped CSS can't target parent) -->
+<style>
+.block-wrapper.triggered .block-rejoins,
+.block-wrapper.triggered .block-rejoins .rejoins-text-container,
+.block-wrapper.triggered .block-rejoins .rejoins-horaire {
     opacity: 1 !important;
     transform: none !important;
 }

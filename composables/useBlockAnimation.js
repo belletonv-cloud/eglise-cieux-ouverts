@@ -55,6 +55,10 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
             ([entry]) => {
               if (entry.isIntersecting) {
                 entry.target.classList.add("triggered");
+                // Also update the reactive state so isTriggered() returns true
+                if (!triggeredBlocks.value.includes(block.id)) {
+                  triggeredBlocks.value = [...triggeredBlocks.value, block.id];
+                }
                 fbObserver.unobserve(entry.target);
               }
             },
