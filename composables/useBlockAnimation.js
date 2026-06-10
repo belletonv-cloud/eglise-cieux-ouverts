@@ -40,7 +40,6 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
   }
 
   function setupFallbackObservers(blocks) {
-    if (SUPPORTS_SCROLL_TIMELINE) return;
     const internalTypes = [
       "aspirations",
       "bienvenue",
@@ -51,6 +50,8 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
       if (internalTypes.includes(block.type)) {
         const el = wrapperRefs.value[block.id];
         if (el && !fallbackObservers.has(block.id)) {
+          // Pour tous les navigateurs (même ceux qui supportent scroll-timeline)
+          // on veut ajouter 'triggered' au wrapper quand il est visible
           const fbObserver = new IntersectionObserver(
             ([entry]) => {
               if (entry.isIntersecting) {
