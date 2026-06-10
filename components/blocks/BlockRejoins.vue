@@ -177,14 +177,22 @@ const showContent = computed(() => isEditor || isTriggered);
     opacity: 1;
     transform: none;
 }
+
+/* When wrapper has triggered class, ensure immediate visibility */
+.block-wrapper.triggered .rejoins-text-container,
+.block-wrapper.triggered .rejoins-horaire {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+}
 </style>
 
 <!-- Global fallback for wrapper.triggered (scoped CSS can't target parent) -->
 <style>
-.block-wrapper.triggered .block-rejoins,
 .block-wrapper.triggered .block-rejoins .rejoins-text-container,
 .block-wrapper.triggered .block-rejoins .rejoins-horaire {
     opacity: 1 !important;
     transform: none !important;
+    transition: none !important;
 }
 </style>
