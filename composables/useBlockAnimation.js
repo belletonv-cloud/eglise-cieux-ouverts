@@ -48,8 +48,18 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
     // Pour les blocs internal, ajouter 'triggered' au wrapper si visible
     // (utiliser le fallback IntersectionObserver pour tous les navigateurs)
     if (internalTypes.includes(block.type)) {
-      // Observer pour ajouter triggered au scroll (ou si déjà visible)
-      if (!fallbackObservers.has(id)) {
+      // Vérifier si déjà visible
+      const rect = el.getBoundingClientRect();
+      if (rect.top < window.innerHeight * 0.9) {
+        // Déjà visible - ajouter triggered immédiatement
+        if (!el.classList.contains("triggered")) {
+          el.classList.add("triggered");
+        }
+        if (!triggeredBlocks.value.includes(id)) {
+          triggeredBlocks.value = [...triggeredBlocks.value, id];
+        }
+      } else if (!fallbackObservers.has(id)) {
+        // Observer pour ajouter triggered au scroll
         const fbObserver = new IntersectionObserver(
           ([entry]) => {
             if (entry.isIntersecting) {
