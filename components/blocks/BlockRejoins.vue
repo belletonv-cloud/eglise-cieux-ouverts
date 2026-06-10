@@ -81,30 +81,47 @@ const showContent = computed(() => isEditor || isTriggered);
     flex-direction: column;
     gap: 5px;
     will-change: transform, opacity;
-    opacity: 0;
-    transform: translateX(-120px);
+    opacity: 1;
+    transform: translateX(0);
     transition:
         opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
         transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
     transition-delay: 0s;
 }
+
+@supports (animation-timeline: view()) {
+    .rejoins-text-container {
+        opacity: 0;
+        transform: translateX(-120px);
+    }
+}
+
 .rejoins-grid {
     display: flex;
     flex-direction: column;
     gap: 50px;
     align-items: flex-start;
 }
+
 .rejoins-horaire {
     display: flex;
     flex-direction: column;
     gap: 0;
     will-change: transform, opacity;
-    opacity: 0;
-    transform: translateY(60px);
+    opacity: 1;
+    transform: translateY(0);
     transition:
         opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
         transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+@supports (animation-timeline: view()) {
+    .rejoins-horaire {
+        opacity: 0;
+        transform: translateY(60px);
+    }
+}
+
 .triggered .rejoins-text-container,
 .triggered .rejoins-horaire {
     opacity: 1;
@@ -176,23 +193,5 @@ const showContent = computed(() => isEditor || isTriggered);
 .triggered .rejoins-horaire {
     opacity: 1;
     transform: none;
-}
-
-/* When wrapper has triggered class, ensure immediate visibility */
-.block-wrapper.triggered .rejoins-text-container,
-.block-wrapper.triggered .rejoins-horaire {
-    opacity: 1 !important;
-    transform: none !important;
-    transition: none !important;
-}
-</style>
-
-<!-- Global fallback for wrapper.triggered (scoped CSS can't target parent) -->
-<style>
-.block-wrapper.triggered .block-rejoins .rejoins-text-container,
-.block-wrapper.triggered .block-rejoins .rejoins-horaire {
-    opacity: 1 !important;
-    transform: none !important;
-    transition: none !important;
 }
 </style>

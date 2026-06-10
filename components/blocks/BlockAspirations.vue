@@ -383,23 +383,7 @@ function getCircleStyle(index) {
         transform: translateY(calc(-50% - 22.5rem));
     }
 }
-</style>
-
-<!-- Global fallback for wrapper.triggered (scoped CSS can't target parent) -->
-<style>
-.block-wrapper.triggered .aspirations-viewport {
-    height: auto !important;
-}
-.block-wrapper.triggered .aspirations-viewport .aspirations-title,
-.block-wrapper.triggered .aspirations-viewport .aspirations-list li {
-    opacity: 1 !important;
-    transform: none !important;
-    animation: none !important;
-}
-.block-wrapper.triggered .aspirations-viewport .sticky-box {
-    position: relative !important;
-    top: auto !important;
-    min-height: auto !important;
-    padding: 50px 20px !important;
+@supports (animation-timeline: --cascade) {
+    /* Fallback managed via main.css */
 }
 </style>
