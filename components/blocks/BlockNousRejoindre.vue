@@ -2,7 +2,7 @@
     <section
         class="block-nous-rejoindre"
         :style="{ background: backgroundGradient }"
-        :class="visibilityClasses"
+        :class="[visibilityClasses, { triggered: isTriggered || isEditor }]"
     >
         <div class="circle circle-left"></div>
         <div class="circle circle-right"></div>
@@ -32,7 +32,6 @@ const {
 });
 
 const isEditor = inject("isEditor", false);
-const isSsr = !import.meta.client;
 
 const visibilityClasses = computed(() => ({
     "hide-mobile": visibility.mobile === false,

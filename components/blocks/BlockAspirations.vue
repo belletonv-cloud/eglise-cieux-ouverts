@@ -197,6 +197,17 @@ function getCircleStyle(index) {
     }
 }
 
+/* IntersectionObserver fallback: show content when triggered */
+.triggered .aspirations-title,
+.triggered .aspirations-list li {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+}
+.triggered .circle {
+    display: none !important;
+}
+
 @supports (animation-timeline: view()) {
     .aspirations-viewport {
         view-timeline: --cascade;
