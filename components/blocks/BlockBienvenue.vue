@@ -248,14 +248,6 @@ function getLetterVars(i) {
     transform: translateY(20px);
 }
 
-/* Fallback for browsers that don't support animation-timeline - always apply triggered styles */
-.block-wrapper.triggered .hero-bienvenue-portal,
-.block-wrapper.triggered .hero-subtitle,
-.block-wrapper.triggered .hero-socials {
-    opacity: 1 !important;
-    transform: none !important;
-}
-
 @supports (animation-timeline: --bienvenue) {
     @media (prefers-reduced-motion: no-preference) {
         .hero-socials {

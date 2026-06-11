@@ -171,10 +171,5 @@ const showContent = computed(() => isEditor || isTriggered);
     }
 }
 
-/* Fallback: when wrapper has triggered class (for IntersectionObserver on non-supporting browsers) */
-.block-wrapper.triggered .block-rejoins.triggered .rejoins-text-container,
-.block-wrapper.triggered .block-rejoins.triggered .rejoins-horaire {
-    opacity: 1 !important;
-    transform: none !important;
-}
+
 </style>

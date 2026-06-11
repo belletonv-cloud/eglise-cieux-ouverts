@@ -152,21 +152,7 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
       return;
     }
 
-    // Créer l'observer mais ne pas observer encore - ça sera fait après mount
-    observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const id = entry.target.dataset.blockId;
-            if (id) {
-              triggeredBlocks.value = [...triggeredBlocks.value, id];
-              observer.unobserve(entry.target);
-            }
-          }
-        });
-      },
-      { threshold: 0.05, rootMargin: "0px 0px -40px 0px" },
-    );
+    // L'observer sera créé dans setupClient (onMounted)
   }
 
   function handleBlocksChange(blocks) {
@@ -175,8 +161,7 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
       triggeredBlocks.value = [...allIds]; // Array au lieu de Set
       return;
     }
-    observeElements();
-    setupFallbackObservers(blocks);
+    // Tout est géré dans setupClient après mount
   }
 
   function handleAnimationChange(fixedBlocks) {

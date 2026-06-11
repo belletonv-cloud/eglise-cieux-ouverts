@@ -400,16 +400,16 @@ export const BLOCK_TYPES = {
     label: "Vision (citation)",
     icon: "🎯",
     category: "content",
-    animations: "wrapper",
+    animations: "none",
     defaults: {
       label: "Ce qui nous anime",
       quote:
-        "Voir la gloire, le royaume et la volonté de Dieu\\nse manifester sur la terre comme aux Cieux",
+        "Voir la gloire, le royaume et la volonté de Dieu\nse manifester sur la terre comme aux Cieux",
       ctaText: "",
       ctaLink: "",
       backgroundGradient: "#f8f9fa",
       textColor: "#064886",
-      animation: "fadeIn",
+      animation: "none",
     },
     schema: [
       { key: "label", label: "Label", type: "text" },

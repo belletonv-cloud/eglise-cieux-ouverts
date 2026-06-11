@@ -98,6 +98,8 @@ function getCircleStyle(index) {
     position: relative;
 }
 .sticky-box {
+    position: sticky;
+    top: 0;
     width: 100%;
     min-height: 100vh;
     display: flex;
@@ -193,23 +195,6 @@ function getCircleStyle(index) {
     .circle {
         display: none;
     }
-}
-
-/* IntersectionObserver fallback - when triggered class is present */
-.triggered .aspirations-title,
-.triggered .aspirations-list li {
-    opacity: 1 !important;
-    transform: none !important;
-    animation: none !important;
-}
-.triggered .circle {
-    display: none !important;
-}
-
-/* Keyframes et autres styles laissés intacts */
-.aspirations-viewport {
-    height: 300vh;
-    position: relative;
 }
 
 @supports (animation-timeline: view()) {

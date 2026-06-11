@@ -2,7 +2,7 @@
   <section
     class="vision-section"
     :style="{ background: backgroundGradient, color: textColor }"
-    :class="[visibilityClasses, { 'is-triggered': isTriggered || isEditor || isSsr }]"
+    :class="[visibilityClasses, { 'is-triggered': isTriggered || isEditor }]"
     ref="sectionRef"
   >
     <div class="vision-content" :style="contentStyle">
@@ -37,8 +37,6 @@ const {
 
 const isEditor = inject('isEditor', false)
 
-const isSsr = !import.meta.client
-
 const visibilityClasses = computed(() => ({
   'hide-mobile': visibility.mobile === false,
   'hide-tablet': visibility.tablet === false,
@@ -47,7 +45,7 @@ const visibilityClasses = computed(() => ({
 
 const formattedQuote = computed(() => {
   if (!quote) return ''
-  let text = quote.replace(/\n/g, '<br>')
+  let text = quote.replace(/\\n|\n/g, '<br>')
   text = text.replace(/gloire/g, '<strong>gloire</strong>')
   text = text.replace(/royaume/g, '<strong>royaume</strong>')
   text = text.replace(/volonté/g, '<strong>volonté</strong>')

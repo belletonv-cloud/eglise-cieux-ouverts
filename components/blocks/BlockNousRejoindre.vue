@@ -55,11 +55,6 @@ const visibilityClasses = computed(() => ({
     min-height: 500px;
 }
 
-/* Admin mode: disable scroll-driven animations and show content immediately */
-.block-wrapper.triggered & {
-    view-timeline: none;
-}
-
 .circle {
     position: absolute;
     left: 50%;
@@ -178,28 +173,6 @@ const visibilityClasses = computed(() => ({
     opacity: 1;
 }
 
-/* Admin mode: selector from block-wrapper triggered */
-.block-wrapper.triggered .block-nous-rejoindre .circle-left {
-    animation: none;
-    transform: translate(-50%, -50%) scale(1.2);
-    opacity: 1;
-}
-.block-wrapper.triggered .block-nous-rejoindre .circle-right {
-    animation: none;
-    transform: translate(-50%, -50%) scale(1.1);
-    opacity: 0.9;
-}
-.block-wrapper.triggered .block-nous-rejoindre .circle-small {
-    animation: none;
-    transform: translate(-50%, -50%) scale(1.1);
-    opacity: 1;
-}
-.block-wrapper.triggered .block-nous-rejoindre .cta-link {
-    animation: none;
-    transform: none;
-    opacity: 1;
-}
-
 @container (max-width: 768px) {
     .circle-left {
         width: 250px;
@@ -234,23 +207,4 @@ const visibilityClasses = computed(() => ({
     }
 }
 
-/* Fallback for browsers that don't support animation-timeline - always apply triggered styles */
-.block-wrapper.triggered .block-nous-rejoindre .cta-link {
-    opacity: 1 !important;
-    transform: none !important;
-    transition: none !important;
-}
-.block-wrapper.triggered .block-nous-rejoindre .circle {
-    display: none !important;
-}
-@supports (animation-timeline: --rejoindre) {
-    .block-wrapper.triggered .block-nous-rejoindre .cta-link {
-        opacity: 1 !important;
-        transform: none !important;
-        animation: none !important;
-    }
-    .block-wrapper.triggered .block-nous-rejoindre .circle {
-        display: none !important;
-    }
-}
 </style>

@@ -493,3 +493,39 @@ a:hover,
     opacity: 1;
     transform: translateY(0);
 }
+
+/* BlockAspirations: collapse 300vh viewport when triggered */
+.block-wrapper.triggered .aspirations-viewport {
+    height: auto !important;
+}
+.block-wrapper.triggered .aspirations-viewport .sticky-box {
+    position: relative !important;
+    top: auto !important;
+    min-height: auto !important;
+    padding: 50px 20px !important;
+}
+
+/* BlockRejoins: fallback IntersectionObserver */
+.block-wrapper.triggered .block-rejoins .rejoins-text-container,
+.block-wrapper.triggered .block-rejoins .rejoins-horaire {
+    opacity: 1 !important;
+    transform: none !important;
+}
+
+/* BlockBienvenue: fallback IntersectionObserver */
+.block-wrapper.triggered .hero-bienvenue-portal,
+.block-wrapper.triggered .hero-subtitle,
+.block-wrapper.triggered .hero-socials {
+    opacity: 1 !important;
+    transform: none !important;
+}
+
+/* BlockNousRejoindre: fallback IntersectionObserver */
+.block-wrapper.triggered .block-nous-rejoindre .cta-link {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+}
+.block-wrapper.triggered .block-nous-rejoindre .circle {
+    display: none !important;
+}
