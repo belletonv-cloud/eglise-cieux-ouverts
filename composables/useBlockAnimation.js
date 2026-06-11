@@ -5,16 +5,33 @@ const SUPPORTS_SCROLL_TIMELINE =
   CSS.supports &&
   CSS.supports("animation-timeline: view()");
 
+const INTERNAL_TYPES = [
+  "aspirations",
+  "bienvenue",
+  "nousRejoindre",
+  "rejoins",
+];
+
 export function useBlockAnimation(isAdmin, isServerAdminRef) {
-  const triggeredBlocks = ref([]); // Array au lieu de Set pour la réactivité Vue
+  const triggeredBlocks = ref([]);
   const wrapperRefs = ref({});
   const lastAnimations = ref({});
   let observer = null;
   let replayHandler = null;
   const fallbackObservers = new Map();
 
-  // Cache les blocs pour les utiliser dans replayBlockAnimation
   let blocksCache = [];
+
+  function isInternalBlock(id) {
+    const block = blocksCache.find((b) => b.id === id);
+    return block && INTERNAL_TYPES.includes(block.type);
+  }
+
+  function shouldSkipObservation(id) {
+    // In supporting browsers, internal blocks use scroll-driven animations
+    // and must NOT be interrupted by the observer / trigger system
+    return SUPPORTS_SCROLL_TIMELINE && isInternalBlock(id);
+  }
 
   function isTriggered(id) {
     return triggeredBlocks.value.includes(id);
@@ -29,26 +46,35 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
     for (const [id, el] of Object.entries(wrapperRefs.value)) {
       if (el) {
         el.dataset.blockId = id;
+        if (shouldSkipObservation(id)) continue;
         observer.observe(el);
+      }
+    }
+  }
+
+  function triggerVisibleBlocks() {
+    for (const [id, el] of Object.entries(wrapperRefs.value)) {
+      if (el && observer && !shouldSkipObservation(id)) {
+        const rect = el.getBoundingClientRect();
+        if (rect.top < window.innerHeight * 0.9) {
+          if (!triggeredBlocks.value.includes(id)) {
+            triggeredBlocks.value = [...triggeredBlocks.value, id];
+            observer.unobserve(el);
+          }
+        }
       }
     }
   }
 
   function initAdminTrigger(blocks) {
     const allIds = (blocks || []).map((b) => b.id).filter(Boolean);
-    triggeredBlocks.value = [...allIds]; // Array au lieu de Set
+    triggeredBlocks.value = [...allIds];
   }
 
   function setupFallbackObservers(blocks) {
     if (SUPPORTS_SCROLL_TIMELINE) return;
-    const internalTypes = [
-      "aspirations",
-      "bienvenue",
-      "nousRejoindre",
-      "rejoins",
-    ];
     for (const block of blocks || []) {
-      if (internalTypes.includes(block.type)) {
+      if (INTERNAL_TYPES.includes(block.type)) {
         const el = wrapperRefs.value[block.id];
         if (el && !fallbackObservers.has(block.id)) {
           const fbObserver = new IntersectionObserver(
@@ -69,16 +95,9 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
 
   function replayBlockAnimation(id) {
     const el = wrapperRefs.value[id];
-    const internalTypes = [
-      "aspirations",
-      "nousRejoindre",
-      "bienvenue",
-      "rejoins",
-    ];
     const block = blocksCache.find((b) => b.id === id);
 
-    // For internal animations, we need special handling
-    if (internalTypes.includes(block?.type)) {
+    if (INTERNAL_TYPES.includes(block?.type)) {
       triggeredBlocks.value = triggeredBlocks.value.filter(
         (item) => item !== id,
       );
@@ -88,7 +107,6 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
         void el.offsetHeight;
       }
 
-      // Réactiver l'observer fallback pour ce bloc
       if (!SUPPORTS_SCROLL_TIMELINE) {
         const fbObserver = fallbackObservers.get(id);
         if (fbObserver && el) {
@@ -96,7 +114,6 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
         }
       }
 
-      // En mode admin, réajouter triggered immédiatement
       if (isAdmin && isAdmin.value) {
         setTimeout(() => {
           if (el && !el.classList.contains("triggered")) {
@@ -107,7 +124,6 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
         return;
       }
 
-      // En mode public, scroll vers le bloc pour déclencher l'animation
       try {
         el?.scrollIntoView({ block: "center" });
       } catch (err) {}
@@ -151,17 +167,23 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
       initAdminTrigger(blocks);
       return;
     }
-
-    // L'observer sera créé dans setupClient (onMounted)
   }
 
   function handleBlocksChange(blocks) {
     if (isAdmin.value) {
       const allIds = (blocks || []).map((b) => b.id).filter(Boolean);
-      triggeredBlocks.value = [...allIds]; // Array au lieu de Set
+      triggeredBlocks.value = [...allIds];
       return;
     }
-    // Tout est géré dans setupClient après mount
+    blocksCache = blocks || [];
+    // Re-observer les wrappers après changement (blocs asynchrones)
+    nextTick(() => {
+      observeElements();
+      setupFallbackObservers(blocks || []);
+      setTimeout(() => {
+        triggerVisibleBlocks();
+      }, 100);
+    });
   }
 
   function handleAnimationChange(fixedBlocks) {
@@ -199,8 +221,6 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
   }
 
   function setupClient() {
-    // En mode admin, toujours déclencher les blocs (ils sont en cache dans blocksCache)
-    // Vérifier l'URL directement pour palier aux problèmes de timing avec la ref injectée
     const isCurrentlyAdmin = () => {
       if (typeof window === "undefined") return false;
       const urlParams = new URLSearchParams(window.location.search);
@@ -208,8 +228,6 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
     };
 
     if (isCurrentlyAdmin() || (isAdmin && isAdmin.value)) {
-      // Appliquer les classes triggered directement sur le DOM
-      // Utiliser plusieurs tentatives pour couvrir tous les cas de timing
       let attempts = 0;
       const maxAttempts = 10;
 
@@ -217,7 +235,6 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
         const allIds = (blocksCache || []).map((b) => b.id).filter(Boolean);
         triggeredBlocks.value = [...allIds];
 
-        // Appliquer directement sur le DOM
         for (const id of allIds) {
           document.querySelectorAll(`[data-block-id="${id}"]`).forEach((el) => {
             if (el && !el.classList.contains("triggered")) {
@@ -227,7 +244,6 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
         }
       };
 
-      // Essayer immédiatement et ensuite à intervalles
       applyTriggeredClasses();
       const intervalId = setInterval(() => {
         applyTriggeredClasses();
@@ -240,14 +256,14 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
       return;
     }
 
-    // Mode public: configurer les observers
+    // Mode public
     if (!observer) {
       observer = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry) => {
             if (entry.isIntersecting) {
               const id = entry.target.dataset?.blockId;
-              if (id) {
+              if (id && !shouldSkipObservation(id)) {
                 triggeredBlocks.value = [...triggeredBlocks.value, id];
                 observer.unobserve(entry.target);
               }
@@ -257,24 +273,12 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
         { threshold: 0.05, rootMargin: "0px 0px -40px 0px" },
       );
     }
-    // Attendre que les refs soient montées avant d'observer
+
     nextTick(() => {
       observeElements();
       setupFallbackObservers(blocksCache);
-      // Déclencher immédiatement les blocs déjà visibles
       setTimeout(() => {
-        for (const [id, el] of Object.entries(wrapperRefs.value)) {
-          if (el && observer) {
-            const rect = el.getBoundingClientRect();
-            if (rect.top < window.innerHeight * 0.9) {
-              // Element is in viewport
-              if (!triggeredBlocks.value.includes(id)) {
-                triggeredBlocks.value = [...triggeredBlocks.value, id];
-                observer.unobserve(el);
-              }
-            }
-          }
-        }
+        triggerVisibleBlocks();
       }, 100);
     });
 
