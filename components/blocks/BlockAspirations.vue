@@ -202,7 +202,9 @@ function getCircleStyle(index) {
     animation: none !important;
 }
 .triggered .circle {
-    display: none !important;
+    opacity: 0.5;
+    transform: translateY(-50%);
+    animation: none !important;
 }
 
 @supports (animation-timeline: view()) {

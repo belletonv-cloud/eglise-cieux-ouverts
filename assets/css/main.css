@@ -372,7 +372,9 @@ a:hover,
         animation: none !important;
     }
     .aspirations-viewport.triggered .circle {
-        display: none !important;
+        opacity: 0.5;
+        transform: translateY(-50%);
+        animation: none !important;
     }
 }
 
@@ -527,5 +529,5 @@ a:hover,
     transition: none !important;
 }
 .block-wrapper.triggered .block-nous-rejoindre .circle {
-    display: none !important;
+    animation: none !important;
 }
