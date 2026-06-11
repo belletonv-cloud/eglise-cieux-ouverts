@@ -1,5 +1,8 @@
 <template>
-    <div class="aspirations-viewport" :class="visibilityClasses">
+    <div
+        class="aspirations-viewport"
+        :class="[visibilityClasses, { triggered: showContent }]"
+    >
         <div
             class="sticky-box"
             :style="{
@@ -26,7 +29,7 @@
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { computed, inject } from "vue";
 const {
     backgroundGradient = "",
     backgroundColor = "#fff",
@@ -34,6 +37,7 @@ const {
     title = "",
     items = [],
     visibility = {},
+    isTriggered = false,
 } = defineProps({
     backgroundGradient: { type: String, default: "" },
     backgroundColor: { type: String, default: "#fff" },
@@ -41,13 +45,19 @@ const {
     title: { type: String, default: "" },
     items: { type: Array, default: () => [] },
     visibility: { type: Object, default: () => ({}) },
+    isTriggered: { type: Boolean, default: false },
 });
+
+const isEditor = inject("isEditor", false);
 
 const visibilityClasses = computed(() => ({
     "hide-mobile": visibility.mobile === false,
     "hide-tablet": visibility.tablet === false,
     "hide-desktop": visibility.desktop === false,
 }));
+
+// Pour les animations internal, on utilise la classe triggered sur le composant
+const showContent = computed(() => isEditor || isTriggered);
 
 const n = computed(() => items.length);
 
@@ -88,8 +98,6 @@ function getCircleStyle(index) {
     position: relative;
 }
 .sticky-box {
-    position: sticky;
-    top: 0;
     width: 100%;
     min-height: 100vh;
     display: flex;
@@ -187,12 +195,27 @@ function getCircleStyle(index) {
     }
 }
 
-/* Keyframes et autres styles laissés intacts */
-.aspirations-viewport {
-    view-timeline: --cascade;
+/* IntersectionObserver fallback - when triggered class is present */
+.triggered .aspirations-title,
+.triggered .aspirations-list li {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+}
+.triggered .circle {
+    display: none !important;
 }
 
-@supports (animation-timeline: --cascade) {
+/* Keyframes et autres styles laissés intacts */
+.aspirations-viewport {
+    height: 300vh;
+    position: relative;
+}
+
+@supports (animation-timeline: view()) {
+    .aspirations-viewport {
+        view-timeline: --cascade;
+    }
     @media (min-width: 769px) {
         .aspirations-title {
             opacity: 0;
@@ -218,56 +241,6 @@ function getCircleStyle(index) {
     }
 }
 
-/* Fallback when aspirations-viewport has triggered class (SSR or when wrapper has it) */
-.triggered .aspirations-title,
-.triggered .aspirations-list li {
-    opacity: 1 !important;
-    transform: none !important;
-    animation: none !important;
-}
-.triggered .circle {
-    display: none !important;
-}
-
-/* Admin mode: override viewport height when block wrapper has triggered class (must come AFTER @supports) */
-@supports (animation-timeline: --cascade) {
-    .block-wrapper.triggered .aspirations-title,
-    .block-wrapper.triggered .aspirations-list li {
-        opacity: 1 !important;
-        transform: none !important;
-        animation: none !important;
-    }
-}
-.block-wrapper.triggered .aspirations-title,
-.block-wrapper.triggered .aspirations-list li {
-    opacity: 1 !important;
-    transform: none !important;
-    animation: none !important;
-}
-.block-wrapper.triggered .aspirations-viewport {
-    height: auto !important;
-}
-.block-wrapper.triggered .aspirations-viewport .sticky-box {
-    position: relative !important;
-    top: auto !important;
-    min-height: auto !important;
-    padding: 50px 20px !important;
-}
-
-/* Fallback for browsers that don't support animation-timeline */
-.block-wrapper.triggered .aspirations-viewport .aspirations-list li {
-    opacity: 1 !important;
-    transform: none !important;
-    animation: none !important;
-}
-.block-wrapper.triggered .aspirations-viewport .aspirations-title {
-    opacity: 1 !important;
-    transform: none !important;
-    animation: none !important;
-}
-.block-wrapper.triggered .aspirations-viewport .circle {
-    display: none !important;
-}
 @keyframes aspir-title-in {
     0% {
         opacity: 0;
