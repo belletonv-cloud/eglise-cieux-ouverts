@@ -373,7 +373,7 @@ a:hover,
     }
     .aspirations-viewport.triggered .circle {
         opacity: 0.5;
-        transform: translateY(-50%);
+        transform: translateY(calc(-50% - var(--circle-offset, 0rem)));
         animation: none !important;
     }
 }
@@ -505,6 +505,11 @@ a:hover,
     top: auto !important;
     min-height: auto !important;
     padding: 50px 20px !important;
+}
+.block-wrapper.triggered .aspirations-viewport .circle {
+    opacity: 0.5;
+    transform: translateY(calc(-50% - var(--circle-offset, 0rem)));
+    animation: none !important;
 }
 
 /* BlockRejoins: fallback IntersectionObserver */
