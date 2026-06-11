@@ -2,7 +2,7 @@
     <section
         class="block-rejoins"
         :style="{ background: backgroundGradient || '#064886' }"
-        :class="[visibilityClasses, { triggered: showContent }]"
+        :class="[visibilityClasses, { triggered: isTriggered || isEditor }]"
     >
         <div class="rejoins-inner">
             <div class="rejoins-text-container">
@@ -26,7 +26,7 @@
 </template>
 
 <script setup>
-import { ref, computed, inject, onMounted, onUnmounted } from "vue";
+import { computed, inject, onMounted, onUnmounted } from "vue";
 
 const {
     backgroundGradient = "",
@@ -54,8 +54,7 @@ const visibilityClasses = computed(() => ({
     "hide-desktop": visibility.desktop === false,
 }));
 
-// Pour les animations internal (scroll-driven), on utilise isTriggered du wrapper
-const showContent = computed(() => isEditor || isTriggered);
+
 </script>
 
 <style scoped>

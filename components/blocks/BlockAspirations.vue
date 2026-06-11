@@ -1,7 +1,7 @@
 <template>
     <div
         class="aspirations-viewport"
-        :class="[visibilityClasses, { triggered: showContent }]"
+        :class="[visibilityClasses, { triggered: isTriggered || isEditor }]"
     >
         <div
             class="sticky-box"
@@ -55,9 +55,6 @@ const visibilityClasses = computed(() => ({
     "hide-tablet": visibility.tablet === false,
     "hide-desktop": visibility.desktop === false,
 }));
-
-// Pour les animations internal, on utilise la classe triggered sur le composant
-const showContent = computed(() => isEditor || isTriggered);
 
 const n = computed(() => items.length);
 
