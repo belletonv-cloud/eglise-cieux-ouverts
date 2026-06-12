@@ -107,13 +107,8 @@ function getCircleStyle(index) {
 <style scoped>
 /* styles inchangés */
 .aspirations-viewport {
-    height: 300vh;
-    position: relative;
-}
-@supports (animation-timeline: view()) {
-    .aspirations-viewport {
-        view-timeline: --cascade;
-    }
+    height: 100vh;
+    min-height: 100vh;
 }
 .sticky-box {
     width: 100%;
@@ -121,13 +116,6 @@ function getCircleStyle(index) {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    opacity: 0;
-    transform: translateY(20px);
-    transition:
-        opacity 0.6s ease,
-        transform 0.6s ease;
-}
-.aspirations-viewport.triggered .sticky-box {
     opacity: 1;
     transform: none;
 }
@@ -145,13 +133,6 @@ function getCircleStyle(index) {
     text-shadow: 0 1px 5px hsla(0, 0%, 0%, 0.8);
     text-align: center;
     padding-bottom: 1.5rem;
-    opacity: 0;
-    transform: translateY(20px);
-    transition:
-        opacity 0.6s ease,
-        transform 0.6s ease;
-}
-.aspirations-viewport.triggered .aspirations-title {
     opacity: 1;
     transform: none;
 }
@@ -180,33 +161,6 @@ function getCircleStyle(index) {
     line-height: 1.25;
     text-shadow: 0 1px 5px hsla(0, 0%, 0%, 0.8);
     border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-    opacity: 0;
-    transform: translateY(25px);
-    transition:
-        opacity 0.6s ease,
-        transform 0.6s ease;
-}
-/* Cascade delays for each list item */
-.aspirations-viewport.triggered .aspirations-list li:nth-child(1) {
-    transition-delay: 0.1s;
-}
-.aspirations-viewport.triggered .aspirations-list li:nth-child(2) {
-    transition-delay: 0.2s;
-}
-.aspirations-viewport.triggered .aspirations-list li:nth-child(3) {
-    transition-delay: 0.3s;
-}
-.aspirations-viewport.triggered .aspirations-list li:nth-child(4) {
-    transition-delay: 0.4s;
-}
-.aspirations-viewport.triggered .aspirations-list li:nth-child(5) {
-    transition-delay: 0.5s;
-}
-.aspirations-viewport.triggered .aspirations-list li:nth-child(6) {
-    transition-delay: 0.6s;
-}
-
-.aspirations-viewport.triggered .aspirations-list li {
     opacity: 1;
     transform: none;
 }
