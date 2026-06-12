@@ -9,7 +9,10 @@
     >
         <div class="admin-preview-frame" :class="`preview-${previewDevice}`">
             <AdminToolbar
-                v-if="isMounted && isAdminMode && !isPreviewMode"
+                v-if="
+                    !isPreviewMode &&
+                    (isMounted || route.query.admin === 'true')
+                "
                 :page-slug="currentPageSlug"
             />
             <template v-if="previewDevice === 'desktop' || !isAdminMode">
