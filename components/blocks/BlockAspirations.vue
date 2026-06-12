@@ -110,11 +110,6 @@ function getCircleStyle(index) {
     text-shadow: 0 1px 5px hsla(0, 0%, 0%, 0.8);
     text-align: center;
     padding-bottom: 1.5rem;
-    opacity: 0;
-    transform: translateY(20px);
-    transition:
-        opacity 0.6s ease,
-        transform 0.6s ease;
 }
 .aspirations-divider {
     width: 100%;
@@ -195,8 +190,6 @@ function getCircleStyle(index) {
 /* Keyframes et autres styles laissés intacts */
 .aspirations-viewport {
     view-timeline: --cascade;
-    height: 300vh;
-    position: relative;
 }
 
 /* ONLY for browsers that support scroll-driven animations (Chrome 115+) */
@@ -226,56 +219,13 @@ function getCircleStyle(index) {
     }
 }
 
-/* IntersectionObserver fallback - animate when wrapper has triggered class */
+/* Fallback when wrapper has triggered class (IntersectionObserver for non-supporting browsers) */
 .block-wrapper.triggered .aspirations-title,
 .block-wrapper.triggered .aspirations-list li {
     opacity: 1 !important;
     transform: none !important;
+    animation: none !important;
 }
-.block-wrapper.triggered .circle {
-    opacity: 0.5 !important;
-    transform: none !important;
-}
-
-/* Cascade delays for list items */
-.block-wrapper.triggered
-    .aspirations-viewport
-    .aspirations-list
-    li:nth-child(1) {
-    transition-delay: 0.1s;
-}
-.block-wrapper.triggered
-    .aspirations-viewport
-    .aspirations-list
-    li:nth-child(2) {
-    transition-delay: 0.2s;
-}
-.block-wrapper.triggered
-    .aspirations-viewport
-    .aspirations-list
-    li:nth-child(3) {
-    transition-delay: 0.3s;
-}
-.block-wrapper.triggered
-    .aspirations-viewport
-    .aspirations-list
-    li:nth-child(4) {
-    transition-delay: 0.4s;
-}
-.block-wrapper.triggered
-    .aspirations-viewport
-    .aspirations-list
-    li:nth-child(5) {
-    transition-delay: 0.5s;
-}
-.block-wrapper.triggered
-    .aspirations-viewport
-    .aspirations-list
-    li:nth-child(6) {
-    transition-delay: 0.6s;
-}
-
-/* Collapse viewport when triggered */
 .block-wrapper.triggered .aspirations-viewport {
     height: auto !important;
 }
