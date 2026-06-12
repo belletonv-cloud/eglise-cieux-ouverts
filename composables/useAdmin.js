@@ -1,7 +1,6 @@
 import { ref, computed } from 'vue'
 import { BLOCK_TYPES } from '~/utils/blockTypes.js'
-
-const isAdminMode = ref(false)
+import { DESIGN_DEFAULTS, DESIGN_FIELDS, mergeDesignDefaults } from '~/utils/designDefaults.js'
 const editingBlockId = ref(null)
 const localBlocks = ref([])
 const localBlocksPage = ref('')
@@ -14,62 +13,6 @@ const editingFooter = ref(false)
 
 function _blockLabel(type) {
   return BLOCK_TYPES[type]?.label || type || 'inconnu'
-}
-
-// Default design props merged into every block
-export const DESIGN_DEFAULTS = {
-  fontFamily: 'inherit',
-  fontSize: 16,
-  fontWeight: 400,
-  textAlign: 'inherit',
-  textColor: '',
-  bgColor: '',
-  padding: '',
-}
-
-export const DESIGN_FIELDS = [
-  { key: 'fontFamily', label: 'Police', type: 'select', options: [
-    { value: 'inherit', label: 'Par défaut' },
-    { value: 'Nunito, sans-serif', label: 'Nunito' },
-    { value: "'Playfair Display', serif", label: 'Playfair Display' },
-    { value: 'Georgia, serif', label: 'Georgia' },
-  ]},
-  { key: 'fontSize', label: 'Taille police', type: 'number', min: 8, max: 72 },
-  { key: 'fontWeight', label: 'Épaisseur', type: 'number', min: 100, max: 900, step: 100 },
-  { key: 'textAlign', label: 'Alignement', type: 'select', options: [
-    { value: 'inherit', label: 'Par défaut' },
-    { value: 'left', label: 'Gauche' },
-    { value: 'center', label: 'Centre' },
-    { value: 'right', label: 'Droite' },
-  ]},
-  { key: 'textColor', label: 'Couleur texte', type: 'color' },
-  { key: 'bgColor', label: 'Couleur fond', type: 'color' },
-  { key: 'padding', label: 'Padding', type: 'text' },
-]
-
-export function mergeDesignDefaults(block) {
-  if (!block) return block
-  if (!block.props) block.props = {}
-  const merged = { ...DESIGN_DEFAULTS }
-  for (const key of Object.keys(DESIGN_DEFAULTS)) {
-    if (block.props[key] !== undefined && block.props[key] !== '') {
-      merged[key] = block.props[key]
-    }
-  }
-  return { ...block, props: { ...merged, ...block.props } }
-}
-
-// Undo/redo history
-const undoStack = ref([])
-const redoStack = ref([])
-const MAX_HISTORY = 50
-
-function pushHistory(label) {
-  const snapshot = JSON.parse(JSON.stringify(localBlocks.value))
-  undoStack.value.push({ label, blocks: snapshot })
-  if (undoStack.value.length > MAX_HISTORY) undoStack.value.shift()
-  redoStack.value = []
-  hasUnsavedChanges.value = true
 }
 
 export function useAdmin() {

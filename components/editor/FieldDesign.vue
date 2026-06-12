@@ -20,7 +20,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { DESIGN_FIELDS } from '~/composables/useAdmin.js'
+import { DESIGN_FIELDS } from '~/utils/designDefaults.js'
 import FieldText from './fields/FieldText.vue'
 import FieldNumber from './fields/FieldNumber.vue'
 import FieldColor from './fields/FieldColor.vue'

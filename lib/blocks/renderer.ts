@@ -1,4 +1,5 @@
 import { ANIMATIONS, BLOCK_TYPES } from "~/utils/blockTypes.js";
+import { mergeDesignDefaults } from "~/utils/designDefaults.js";
 import { blockRegistry } from "./registry";
 import {
   getBlockComponentName,
@@ -45,7 +46,8 @@ export function normalizeBlock(block: BlockInstance): BlockInstance {
   } else {
     copy.props = { ...propsSrc };
   }
-  return copy;
+
+  return mergeDesignDefaults(copy);
 }
 
 export function normalizeBlocks(blocks: BlockInstance[]): BlockInstance[] {
