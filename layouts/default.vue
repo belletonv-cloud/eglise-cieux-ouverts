@@ -4,12 +4,18 @@
       <template v-if="previewDevice === 'desktop' || !isAdminMode">
         <SiteHeader />
         <slot />
-        <BlockFooter
+        <div
           v-if="footerBlock"
-          v-bind="footerBlock.props"
-          :block-id="footerBlock.id"
-          :data-admin="(isAdminMode && isMounted) || undefined"
-        />
+          class="footer-editable-wrap"
+          :class="{ 'admin-selected': editingFooter }"
+          @click.capture="onFooterClick"
+        >
+          <BlockFooter
+            v-bind="footerBlock.props"
+            :block-id="footerBlock.id"
+            :data-admin="(isAdminMode && isMounted) || undefined"
+          />
+        </div>
       </template>
       <div v-else class="device-iframe-wrap">
         <iframe
@@ -34,7 +40,7 @@ useSeoMeta({
   ogType: 'website',
 })
 
-const { isAdminMode, enterAdmin, exitAdmin, previewDevice, editingBlockId, selectBlock, footerBlock, loadFooterBlock } = useAdmin()
+const { isAdminMode, enterAdmin, exitAdmin, previewDevice, editingBlockId, selectBlock, editingFooter, footerBlock, loadFooterBlock, selectFooter } = useAdmin()
 
 // Provide the admin composable values to child components that use inject()
 provide('isAdmin', isAdminMode)
@@ -108,6 +114,12 @@ onMounted(() => {
 onUnmounted(() => {
   document.removeEventListener('keydown', onEscape)
 })
+
+function onFooterClick(e) {
+  if (!isAdminMode.value || !isMounted.value) return
+  e.stopPropagation()
+  selectFooter()
+}
 </script>
 
 <style>
@@ -160,5 +172,20 @@ onUnmounted(() => {
   background: white;
   box-shadow: 0 4px 24px rgba(0,0,0,0.1);
   transition: width 0.3s ease;
+}
+.footer-editable-wrap {
+  position: relative;
+  outline: 2px solid transparent;
+  outline-offset: -2px;
+  transition: outline-color 0.2s;
+}
+.footer-editable-wrap.admin-selected {
+  outline-color: #3b82f6;
+}
+#app-root.admin-mode .footer-editable-wrap {
+  cursor: pointer;
+}
+#app-root.admin-mode .footer-editable-wrap:hover {
+  outline-color: rgba(59, 130, 246, 0.4);
 }
 </style>

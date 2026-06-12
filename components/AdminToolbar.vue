@@ -79,14 +79,6 @@
             </div>
         </div>
         <div class="admin-toolbar-right">
-            <button
-                class="admin-footer-btn"
-                :class="{ active: editingFooter }"
-                @click="selectFooter"
-                title="Éditer le footer"
-            >
-                📋 Footer
-            </button>
             <div class="undo-redo-group">
                 <button
                     class="admin-icon-btn"
@@ -721,27 +713,6 @@ async function saveChanges() {
     background: rgba(255, 255, 255, 0.08);
     border-radius: 6px;
     padding: 2px;
-}
-.admin-footer-btn {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    color: rgba(255, 255, 255, 0.7);
-    padding: 4px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.8em;
-    white-space: nowrap;
-    transition: all 0.15s;
-    margin-right: 4px;
-}
-.admin-footer-btn:hover {
-    color: white;
-    background: rgba(255, 255, 255, 0.15);
-}
-.admin-footer-btn.active {
-    color: white;
-    background: #3b82f6;
-    border-color: #3b82f6;
 }
 .admin-icon-btn {
     background: none;
