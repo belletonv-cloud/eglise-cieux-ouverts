@@ -97,16 +97,19 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
         const el = wrapperRefs.value[block.id];
         if (el && !fallbackObservers.has(block.id)) {
           const isReversible = REVERSIBLE_TYPES.includes(block.type);
+          const prevFb = new Map();
           const fbObserver = new IntersectionObserver(
             ([entry]) => {
-              if (entry.isIntersecting) {
+              const was = prevFb.get(block.id) ?? false;
+              if (entry.isIntersecting && !was) {
                 entry.target.classList.add("triggered");
                 if (!isReversible) {
                   fbObserver.unobserve(entry.target);
                 }
-              } else if (isReversible) {
+              } else if (!entry.isIntersecting && was && isReversible) {
                 entry.target.classList.remove("triggered");
               }
+              prevFb.set(block.id, entry.isIntersecting);
             },
             { threshold: 0.1 },
           );
@@ -292,6 +295,7 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
 
     // Mode public
     if (!observer) {
+      const prevIntersecting = new Map();
       observer = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry) => {
@@ -299,19 +303,21 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
             if (id && !shouldSkipObservation(id)) {
               const block = blocksCache.find((b) => b.id === id);
               const isReversible = block && REVERSIBLE_TYPES.includes(block.type);
+              const was = prevIntersecting.get(id) ?? false;
 
-              if (entry.isIntersecting) {
+              if (entry.isIntersecting && !was) {
                 if (!triggeredBlocks.value.includes(id)) {
                   triggeredBlocks.value = [...triggeredBlocks.value, id];
                 }
                 if (!isReversible) {
                   observer.unobserve(entry.target);
                 }
-              } else if (isReversible) {
+              } else if (!entry.isIntersecting && was && isReversible) {
                 triggeredBlocks.value = triggeredBlocks.value.filter(
                   (bid) => bid !== id,
                 );
               }
+              prevIntersecting.set(id, entry.isIntersecting);
             }
           });
         },
