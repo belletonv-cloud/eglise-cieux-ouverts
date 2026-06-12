@@ -228,7 +228,10 @@ function getCircleStyle(index) {
 
 /* IntersectionObserver fallback - animate when wrapper has triggered class */
 .block-wrapper.triggered .aspirations-title,
-.block-wrapper.triggered .aspirations-list li,
+.block-wrapper.triggered .aspirations-list li {
+    opacity: 1 !important;
+    transform: none !important;
+}
 .block-wrapper.triggered .circle {
     opacity: 0.5 !important;
     transform: none !important;
