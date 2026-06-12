@@ -40,6 +40,7 @@ provide('previewDevice', previewDevice)
 provide('isEditor', isAdminMode)
 const isMounted = ref(false)
 const { loadMenuFromFirestore, saveMenuToFirestore } = useMenuEditor()
+const { loadFooterFromFirestore } = useFooterEditor()
 
 const route = useRoute()
 const currentPageSlug = computed(() => {
@@ -61,9 +62,12 @@ const previewUrl = computed(() => {
   return window.location.pathname + '?' + params.toString()
 })
 
-// Load menu from Firestore when entering admin mode
+// Load menu and footer from Firestore when entering admin mode
 watch(isAdminMode, (val) => {
-  if (val && import.meta.client) loadMenuFromFirestore()
+  if (val && import.meta.client) {
+    loadMenuFromFirestore()
+    loadFooterFromFirestore()
+  }
 }, { immediate: true })
 
 // Enter admin mode after hydration to avoid v-if/v-else template mismatch
