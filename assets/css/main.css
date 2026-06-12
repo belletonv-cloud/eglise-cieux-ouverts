@@ -371,11 +371,6 @@ a:hover,
         transform: none !important;
         animation: none !important;
     }
-    .aspirations-viewport.triggered .circle {
-        opacity: 0.5;
-        transform: translateY(calc(-50% - 4.5rem * var(--circle-index, 0))) !important;
-        animation: none !important;
-    }
 }
 
 /* Scroll-driven animations — progressive enhancement */
@@ -506,12 +501,6 @@ a:hover,
     min-height: auto !important;
     padding: 50px 20px !important;
 }
-.block-wrapper.triggered .aspirations-viewport .circle {
-    opacity: 0.5;
-    transform: translateY(calc(-50% - 4.5rem * var(--circle-index, 0))) !important;
-    animation: none !important;
-}
-
 /* BlockRejoins: fallback IntersectionObserver */
 .block-wrapper.triggered .block-rejoins .rejoins-text-container,
 .block-wrapper.triggered .block-rejoins .rejoins-horaire {
