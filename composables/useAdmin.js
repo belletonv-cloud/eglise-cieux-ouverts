@@ -1,6 +1,8 @@
 import { ref, computed } from 'vue'
 import { BLOCK_TYPES } from '~/utils/blockTypes.js'
 import { DESIGN_DEFAULTS, DESIGN_FIELDS, mergeDesignDefaults } from '~/utils/designDefaults.js'
+
+const isAdminMode = ref(false)
 const editingBlockId = ref(null)
 const localBlocks = ref([])
 const localBlocksPage = ref('')

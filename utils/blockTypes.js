@@ -400,7 +400,7 @@ export const BLOCK_TYPES = {
     label: "Vision (citation)",
     icon: "🎯",
     category: "content",
-    animations: "none",
+    animations: "wrapper",
     defaults: {
       label: "Ce qui nous anime",
       quote:
