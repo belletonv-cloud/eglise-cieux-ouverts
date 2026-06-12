@@ -8,13 +8,12 @@
         :style="{ '--admin-offset': isAdminMode && isMounted ? '48px' : '0px' }"
     >
         <div class="admin-preview-frame" :class="`preview-${previewDevice}`">
-            <AdminToolbar
-                v-if="
-                    !isPreviewMode &&
-                    (isMounted || route.query.admin === 'true')
-                "
-                :page-slug="currentPageSlug"
-            />
+            <ClientOnly>
+                <AdminToolbar
+                    v-if="isMounted && isAdminMode && !isPreviewMode"
+                    :page-slug="currentPageSlug"
+                />
+            </ClientOnly>
             <template v-if="previewDevice === 'desktop' || !isAdminMode">
                 <SiteHeader />
                 <slot />
