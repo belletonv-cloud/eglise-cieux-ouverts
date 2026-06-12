@@ -1,11 +1,11 @@
 <template>
   <div id="app-root" :class="{ 'admin-mode': isAdminMode && isMounted, 'is-preview': isPreviewMode }" :style="{ '--admin-offset': (isAdminMode && isMounted) ? '48px' : '0px' }">
     <div class="admin-preview-frame" :class="`preview-${previewDevice}`">
+      <AdminToolbar v-if="isMounted && isAdminMode && !isPreviewMode" :page-slug="currentPageSlug" />
       <template v-if="previewDevice === 'desktop' || !isAdminMode">
         <SiteHeader />
         <slot />
         <div
-          v-if="footerBlock"
           class="footer-editable-wrap"
           :class="{ 'admin-selected': editingFooter }"
           @click.capture="onFooterClick"
@@ -26,7 +26,6 @@
         />
       </div>
     </div>
-    <AdminToolbar v-if="isMounted && isAdminMode && !isPreviewMode" :page-slug="currentPageSlug" />
     <MenuEditor v-if="isMounted && isAdminMode" />
   </div>
 </template>
@@ -76,7 +75,6 @@ const previewUrl = computed(() => {
 watch(isAdminMode, (val) => {
   if (val && import.meta.client) {
     loadMenuFromFirestore()
-    loadFooterBlock()
   }
 }, { immediate: true })
 
@@ -110,6 +108,8 @@ onMounted(() => {
   if (route.query.admin === 'true' && !isAdminMode.value && !isPreviewMode.value) {
     isAdminMode.value = true
   }
+  // Load footer from Firestore (always, not just admin mode)
+  loadFooterBlock()
 })
 onUnmounted(() => {
   document.removeEventListener('keydown', onEscape)

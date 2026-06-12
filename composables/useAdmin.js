@@ -10,8 +10,18 @@ const previewDevice = ref('desktop')
 const hasUnsavedChanges = ref(false)
 
 // Footer block (managed separately from page blocks)
-const footerBlock = ref(null)
+// Initialized with defaults so it renders immediately (SSR/public).
+// loadFooterBlock() overwrites from Firestore on mount.
+function _defaultFooterBlock() {
+  return mergeDesignDefaults({
+    id: 'block-footer',
+    type: 'footer',
+    props: { ...BLOCK_TYPES.footer?.defaults }, // use || {} to handle missing BLOCK_TYPES at init
+  })
+}
+const footerBlock = ref(_defaultFooterBlock())
 const editingFooter = ref(false)
+let _footerLoaded = false
 
 function _blockLabel(type) {
   return BLOCK_TYPES[type]?.label || type || 'inconnu'
@@ -180,28 +190,25 @@ export function useAdmin() {
   // ─── Footer block management ─────────────────────────────────
 
   async function loadFooterBlock() {
+    if (_footerLoaded) return
     try {
       const { getDoc, doc } = await import('firebase/firestore')
       const { $db } = useNuxtApp()
       const snap = await getDoc(doc($db, 'settings', 'footer'))
       if (snap.exists()) {
         const data = snap.data()
-        const merged = mergeDesignDefaults({
+        footerBlock.value = mergeDesignDefaults({
           id: 'block-footer',
           type: 'footer',
           props: { ...data },
         })
-        footerBlock.value = merged
-      } else {
-        const { createBlock } = await import('~/utils/blockTypes.js')
-        const fb = createBlock('footer')
-        footerBlock.value = mergeDesignDefaults(fb)
       }
+      // else keep defaults
     } catch (e) {
       console.warn('useAdmin: could not load footer block', e)
-      const { createBlock } = await import('~/utils/blockTypes.js')
-      const fb = createBlock('footer')
-      footerBlock.value = mergeDesignDefaults(fb)
+      // keep defaults
+    } finally {
+      _footerLoaded = true
     }
   }
 
