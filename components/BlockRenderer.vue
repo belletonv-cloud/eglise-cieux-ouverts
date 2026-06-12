@@ -100,6 +100,13 @@
         :is-triggered="isTriggered"
         :data-admin="isAdmin || undefined"
     />
+    <BlockFooter
+        v-else-if="btype === 'footer'"
+        v-bind="sprops"
+        :block-id="bid"
+        :is-triggered="isTriggered"
+        :data-admin="isAdmin || undefined"
+    />
     <div v-else style="display: none" data-block-renderer-fallback="true">
         {{ btype }}
     </div>
@@ -121,6 +128,7 @@ import BlockSpacer from "~/components/blocks/BlockSpacer.vue";
 import BlockFullWidthImage from "~/components/blocks/BlockFullWidthImage.vue";
 import BlockTextImage from "~/components/blocks/BlockTextImage.vue";
 import BlockYoutube from "~/components/blocks/BlockYoutube.vue";
+import BlockFooter from "~/components/blocks/BlockFooter.vue";
 
 const props = defineProps({
     block: { type: Object, required: true },

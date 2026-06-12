@@ -15,6 +15,10 @@
         />
       </div>
     </EditorFieldError>
+    <FieldDesign
+      :model-value="modelValue"
+      @update="onDesignUpdate"
+    />
   </div>
 </template>
 
@@ -32,6 +36,7 @@ import FieldImage from './fields/FieldImage.vue'
 import FieldArray from './fields/FieldArray.vue'
 import FieldImages from './fields/FieldImages.vue'
 import EditorFieldError from './EditorFieldError.vue'
+import FieldDesign from './FieldDesign.vue'
 
 const props = defineProps<{
   schema: FieldSchema[]
@@ -67,6 +72,10 @@ function onChange(key: string, value: any) {
     props: { ...props.modelValue.props, [key]: value },
   }
   emit('update', updated)
+}
+
+function onDesignUpdate(block: BlockInstance) {
+  emit('update', block)
 }
 </script>
 

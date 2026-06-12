@@ -79,6 +79,14 @@
             </div>
         </div>
         <div class="admin-toolbar-right">
+            <button
+                class="admin-footer-btn"
+                :class="{ active: editingFooter }"
+                @click="selectFooter"
+                title="Éditer le footer"
+            >
+                📋 Footer
+            </button>
             <div class="undo-redo-group">
                 <button
                     class="admin-icon-btn"
@@ -156,18 +164,18 @@
 
     <div
         class="admin-sidebar-overlay"
-        v-if="activeBlock && user"
-        @click="selectBlock(null)"
+        v-if="sidebarBlock && user"
+        @click="closeSidebar"
     ></div>
-    <div class="admin-sidebar" v-if="activeBlock && user">
+    <div class="admin-sidebar" v-if="sidebarBlock && user">
         <div class="admin-sidebar-header">
-            <h3>{{ getBlockLabel(activeBlock.type) }}</h3>
-            <button class="admin-close-btn" @click="selectBlock(null)">
+            <h3>{{ getBlockLabel(sidebarBlock.type) }}</h3>
+            <button class="admin-close-btn" @click="closeSidebar">
                 ✕
             </button>
         </div>
         <div
-            v-if="activeBlock && user"
+            v-if="sidebarBlock && user && !editingFooter"
             style="
                 padding: 0 16px 12px;
                 border-bottom: 1px solid #eee;
@@ -178,7 +186,7 @@
         >
             <button
                 class="admin-btn"
-                @click.prevent="replayAnimation(activeBlock.id)"
+                @click.prevent="replayAnimation(sidebarBlock.id)"
             >
                 Rejouer l'animation
             </button>
@@ -189,11 +197,11 @@
         </div>
         <div class="admin-sidebar-body">
             <AutoEditor
-                :schema="getBlockSchema(activeBlock.type)"
-                :model-value="activeBlock"
+                :schema="sidebarSchema"
+                :model-value="sidebarBlock"
                 @update="onAutoUpdate"
             />
-            <div v-if="hasImageFields" class="admin-image-section">
+            <div v-if="!editingFooter && hasImageFields" class="admin-image-section">
                 <p class="admin-image-section-label">Images</p>
                 <div class="uploader-controls">
                     <input
@@ -237,28 +245,39 @@
                 </div>
             </div>
         </div>
-        <div class="admin-sidebar-footer">
+        <div class="admin-sidebar-footer" v-if="!editingFooter">
             <div class="admin-block-actions">
                 <button
                     class="admin-action-btn"
-                    @click="moveBlock(activeBlock.id, -1)"
+                    @click="moveBlock(sidebarBlock.id, -1)"
                     title="Monter"
                 >
                     ↑
                 </button>
                 <button
                     class="admin-action-btn"
-                    @click="moveBlock(activeBlock.id, 1)"
+                    @click="moveBlock(sidebarBlock.id, 1)"
                     title="Descendre"
                 >
                     ↓
                 </button>
                 <button
                     class="admin-action-btn admin-action-danger"
-                    @click="removeBlock(activeBlock.id)"
+                    @click="removeBlock(sidebarBlock.id)"
                     title="Supprimer"
                 >
                     🗑
+                </button>
+            </div>
+        </div>
+        <div class="admin-sidebar-footer" v-else>
+            <div class="admin-block-actions">
+                <button
+                    class="admin-btn"
+                    @click="saveFooterChanges"
+                    style="flex:1"
+                >
+                    Sauvegarder le footer
                 </button>
             </div>
         </div>
@@ -285,6 +304,9 @@ const route = useRoute();
 const {
     isAdminMode,
     activeBlock,
+    editingFooter,
+    sidebarBlock,
+    sidebarSchema,
     selectBlock,
     updateBlock,
     moveBlock,
@@ -301,6 +323,10 @@ const {
     nextRedoLabel,
     hasUnsavedChanges,
     markSaved,
+    selectFooter,
+    closeFooterEditor,
+    updateFooterBlock,
+    saveFooterBlock,
 } = useAdmin();
 
 const { $auth } = useNuxtApp();
@@ -395,8 +421,8 @@ function getBlockSchema(type) {
 }
 
 const hasImageFields = computed(() => {
-    if (!activeBlock.value) return false;
-    const schema = getBlockSchema(activeBlock.value.type);
+    if (!sidebarBlock.value) return false;
+    const schema = sidebarSchema.value;
     return schema.some((f) => f.type === "image" || f.type === "images");
 });
 
@@ -407,7 +433,11 @@ const showAdminImagesList = ref(false);
 const imagesLoading = ref(false);
 
 function onAutoUpdate(block) {
-    updateBlock(block.id, block.props);
+    if (editingFooter.value) {
+        updateFooterBlock(block.props);
+    } else {
+        updateBlock(block.id, block.props);
+    }
 }
 
 async function onAdminFileSelected(e) {
@@ -426,10 +456,14 @@ async function onAdminFileSelected(e) {
         const r = storageRef(storage, path);
         await uploadBytes(r, file);
         const url = await getDownloadURL(r);
-        if (activeBlock.value) {
-            updateBlock(activeBlock.value.id, {
-                [fieldKeysWithImages.value[0]]: url,
-            });
+        if (sidebarBlock.value) {
+            if (editingFooter.value) {
+                updateFooterBlock({ [fieldKeysWithImages.value[0]]: url });
+            } else {
+                updateBlock(sidebarBlock.value.id, {
+                    [fieldKeysWithImages.value[0]]: url,
+                });
+            }
         }
         await loadAdminUploadedImages();
     } catch (err) {
@@ -441,8 +475,8 @@ async function onAdminFileSelected(e) {
 }
 
 const fieldKeysWithImages = computed(() => {
-    if (!activeBlock.value) return [];
-    const schema = getBlockSchema(activeBlock.value.type);
+    if (!sidebarBlock.value) return [];
+    const schema = sidebarSchema.value;
     return schema.filter((f) => f.type === "image").map((f) => f.key);
 });
 
@@ -475,10 +509,14 @@ function toggleAdminImagesList() {
 }
 
 function selectAdminUploaded(url) {
-    if (activeBlock.value && fieldKeysWithImages.value.length > 0) {
-        updateBlock(activeBlock.value.id, {
-            [fieldKeysWithImages.value[0]]: url,
-        });
+    if (sidebarBlock.value && fieldKeysWithImages.value.length > 0) {
+        if (editingFooter.value) {
+            updateFooterBlock({ [fieldKeysWithImages.value[0]]: url });
+        } else {
+            updateBlock(sidebarBlock.value.id, {
+                [fieldKeysWithImages.value[0]]: url,
+            });
+        }
     }
     showAdminImagesList.value = false;
 }
@@ -490,6 +528,24 @@ function replayAnimation(blockId) {
             new CustomEvent("replay-animation", { detail: { id: blockId } }),
         );
     } catch (e) {}
+}
+
+function closeSidebar() {
+    if (editingFooter.value) {
+        closeFooterEditor();
+    } else {
+        selectBlock(null);
+    }
+}
+
+async function saveFooterChanges() {
+    try {
+        await saveFooterBlock();
+        markSaved();
+        alert("Footer sauvegardé !");
+    } catch (e) {
+        alert("Erreur lors de la sauvegarde du footer : " + e.message);
+    }
 }
 
 async function navigateToPage(slug) {
@@ -665,6 +721,27 @@ async function saveChanges() {
     background: rgba(255, 255, 255, 0.08);
     border-radius: 6px;
     padding: 2px;
+}
+.admin-footer-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.7);
+    padding: 4px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8em;
+    white-space: nowrap;
+    transition: all 0.15s;
+    margin-right: 4px;
+}
+.admin-footer-btn:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.15);
+}
+.admin-footer-btn.active {
+    color: white;
+    background: #3b82f6;
+    border-color: #3b82f6;
 }
 .admin-icon-btn {
     background: none;

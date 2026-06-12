@@ -4,7 +4,12 @@
       <template v-if="previewDevice === 'desktop' || !isAdminMode">
         <SiteHeader />
         <slot />
-        <SiteFooter />
+        <BlockFooter
+          v-if="footerBlock"
+          v-bind="footerBlock.props"
+          :block-id="footerBlock.id"
+          :data-admin="(isAdminMode && isMounted) || undefined"
+        />
       </template>
       <div v-else class="device-iframe-wrap">
         <iframe
@@ -29,7 +34,7 @@ useSeoMeta({
   ogType: 'website',
 })
 
-const { isAdminMode, enterAdmin, exitAdmin, previewDevice, editingBlockId, selectBlock } = useAdmin()
+const { isAdminMode, enterAdmin, exitAdmin, previewDevice, editingBlockId, selectBlock, footerBlock, loadFooterBlock } = useAdmin()
 
 // Provide the admin composable values to child components that use inject()
 provide('isAdmin', isAdminMode)
@@ -40,7 +45,6 @@ provide('previewDevice', previewDevice)
 provide('isEditor', isAdminMode)
 const isMounted = ref(false)
 const { loadMenuFromFirestore, saveMenuToFirestore } = useMenuEditor()
-const { loadFooterFromFirestore } = useFooterEditor()
 
 const route = useRoute()
 const currentPageSlug = computed(() => {
@@ -66,7 +70,7 @@ const previewUrl = computed(() => {
 watch(isAdminMode, (val) => {
   if (val && import.meta.client) {
     loadMenuFromFirestore()
-    loadFooterFromFirestore()
+    loadFooterBlock()
   }
 }, { immediate: true })
 

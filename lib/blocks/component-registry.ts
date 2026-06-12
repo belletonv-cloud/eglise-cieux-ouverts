@@ -45,6 +45,7 @@ export const BLOCK_MAP: Record<string, () => Promise<any>> = {
   fullWidthImage: () => import('../../components/blocks/BlockFullWidthImage.vue'),
   vision: () => import('../../components/blocks/BlockVision.vue'),
   youtube: () => import('../../components/blocks/BlockYoutube.vue'),
+  footer: () => import('../../components/blocks/BlockFooter.vue'),
 }
 
 export function getBlockTypes(): string[] {

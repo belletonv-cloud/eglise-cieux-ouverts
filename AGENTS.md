@@ -268,11 +268,11 @@ npx tsx scripts/generate-tests.ts
 
 ## TODO — reste à faire
 
-### 1. Footer éditable ✅
-- `SiteFooter.vue` est statique, pas de composable `useFooterEditor`
-- Créer un composable `useFooterEditor.js` similaire à `useMenuEditor.js`
-- Stocker les infos footer dans Firestore (`settings/footer`)
-- Rendre les textes éditorisables en mode admin (inline edit ou modal)
+### 1. Footer éditable ✅ (remplacé par BlockFooter)
+- `SiteFooter.vue` supprimé, remplacé par `BlockFooter.vue` (composant bloc standard)
+- Footer géré comme les autres blocs : schéma dans `BLOCK_TYPES`, édité via AutoEditor
+- Stocké dans `settings/footer`, chargé dans `default.vue` et rendu via `<BlockFooter>`
+- Bouton "📋 Footer" dans la toolbar admin → sidebar AutoEditor
 
 ### 2. Feedback undo/redo et auto-save ✅
 - Historique avec labels : `pushHistory(label)` stocke `{ label, blocks }` → tooltips "Annuler : Modification du bloc X"
@@ -281,7 +281,14 @@ npx tsx scripts/generate-tests.ts
 - Boutons undo/redo : tooltip dynamique avec le label de l'action suivante
 - `markSaved()` appelé après sauvegarde réussie (auto + manuelle)
 
-### 3. SSR — pas de bugs de duplication héros (résolu)
+### 3. Design Wix-like ✅
+- `FieldDesign.vue` : section "Design" repliable dans AutoEditor après les champs schema
+- Champs : police (Nunito, Playfair, Georgia...), taille, épaisseur, alignement, couleur texte, fond, padding
+- Design mergé dans `mergeDesignDefaults()` appliqué à chaque bloc
+- `BlockFooter.vue` utilise les props design (fontSize, textColor, etc.)
+- Tous les blocs reçoivent les props design via `BLOCK_TYPES` defaults
+
+### 4. SSR — pas de bugs de duplication héros (résolu)
 - **Root cause**: `<component :is>` avec résolution dynamique (même via `BLOCK_COMPONENTS` map statique) crée des références de composant différentes entre SSR et client → Vue hydrate en 2 pass → **chaque wrapper a 2 enfants**.
 - **Fix**: `BlockRenderer.vue` utilise une chaîne `v-if`/`v-else-if` avec des imports statiques explicites. Plus de `<component :is>`.
 - SSR (vérifié) : les 2 `data-block-id="bloc-hero"` sont sur **2 éléments différents** (div wrapper + section). 1 seule section hero.
