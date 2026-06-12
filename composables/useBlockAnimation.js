@@ -28,6 +28,7 @@ const REVERSIBLE_TYPES = [
 
 export function useBlockAnimation(isAdmin, isServerAdminRef) {
   const triggeredBlocks = ref([]);
+  const adminAnimated = ref(false);
   const wrapperRefs = ref({});
   const lastAnimations = ref({});
   let observer = null;
@@ -88,6 +89,8 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
   function initAdminTrigger(blocks) {
     const allIds = (blocks || []).map((b) => b.id).filter(Boolean);
     triggeredBlocks.value = [...allIds];
+    // Delay adminAnimated so CSS transitions play from initial to final state
+    setTimeout(() => { adminAnimated.value = true; }, 80);
   }
 
   function setupFallbackObservers(blocks) {
@@ -351,6 +354,7 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
 
   return {
     triggeredBlocks,
+    adminAnimated,
     wrapperRefs,
     isTriggered,
     setWrapperRef,

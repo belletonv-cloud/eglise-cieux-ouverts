@@ -15,7 +15,7 @@
             >
                 <BlockRenderer
                     :block="block"
-                    :is-triggered="true"
+                    :is-triggered="adminAnimated"
                     :is-admin="isAdmin || undefined"
                 />
             </div>
@@ -92,6 +92,7 @@ const { reorderBlocks } = useAdmin();
 
 const {
     triggeredBlocks,
+    adminAnimated,
     isTriggered,
     setWrapperRef,
     setup,
