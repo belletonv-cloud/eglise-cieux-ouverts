@@ -373,6 +373,7 @@ a:hover,
     }
     .aspirations-viewport.triggered .circle {
         opacity: 0.5;
+        transform: translateY(calc(-50% - 4.5rem * var(--circle-index, 0))) !important;
         animation: none !important;
     }
 }
@@ -507,6 +508,7 @@ a:hover,
 }
 .block-wrapper.triggered .aspirations-viewport .circle {
     opacity: 0.5;
+    transform: translateY(calc(-50% - 4.5rem * var(--circle-index, 0))) !important;
     animation: none !important;
 }
 

@@ -82,6 +82,7 @@ function getCircleStyle(index) {
         left: -6 + index * 4 + "rem",
         "--anim-start": start + "%",
         "--anim-end": end + "%",
+        "--circle-index": index,
         animationName: "circle-" + index,
     };
 }
@@ -203,6 +204,7 @@ function getCircleStyle(index) {
 }
 .triggered .circle {
     opacity: 0.5;
+    transform: translateY(calc(-50% - 4.5rem * var(--circle-index, 0))) !important;
     animation: none !important;
 }
 
