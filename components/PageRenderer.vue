@@ -1,49 +1,25 @@
 <template>
     <div class="page-renderer" :class="{ 'admin-mode': isAdmin && isMounted }">
-        <!-- Admin branch: render with triggered class when admin mode is active -->
-        <template v-if="isAdmin || isServerAdmin">
-            <!-- SSR/client: render with triggered class and animations in admin mode -->
-            <div
-                v-for="block in visibleBlocks"
-                :key="block.id"
-                class="block-wrapper triggered"
-                :class="getAnimClass(block)"
-                :ref="(el) => setWrapperRef(el, block.id)"
-                :data-block-id="block.id"
-                :data-block-type="block.type"
-                @click.capture="wrapperClick(block.id)"
-            >
-                <BlockRenderer
-                    :block="block"
-                    :is-triggered="adminAnimated"
-                    :is-admin="isAdmin || undefined"
-                />
-            </div>
-        </template>
-        <template v-else>
-            <div
-                v-for="block in visibleBlocks"
-                :key="block.id"
-                class="block-wrapper"
-                :class="[
-                    getAnimClass(block),
-                    useTrigger(block)
-                        ? { triggered: isTriggered(block.id) }
-                        : { triggered: isTriggered(block.id) },
-                    { 'admin-selected': isSelected(block) },
-                ]"
-                :ref="(el) => setWrapperRef(el, block.id)"
-                :data-block-id="block.id"
-                :data-block-type="block.type"
-                @click.capture="isAdmin && wrapperClick(block.id)"
-            >
-                <BlockRenderer
-                    :block="block"
-                    :is-triggered="isTriggered(block.id)"
-                    :is-admin="isAdmin || undefined"
-                />
-            </div>
-        </template>
+        <div
+            v-for="block in visibleBlocks"
+            :key="block.id"
+            class="block-wrapper"
+            :class="[
+                getAnimClass(block),
+                { triggered: isTriggered(block.id) },
+                { 'admin-selected': isAdmin && isSelected(block) },
+            ]"
+            :ref="(el) => setWrapperRef(el, block.id)"
+            :data-block-id="block.id"
+            :data-block-type="block.type"
+            @click.capture="isAdmin && wrapperClick(block.id)"
+        >
+            <BlockRenderer
+                :block="block"
+                :is-triggered="isTriggered(block.id)"
+                :is-admin="isAdmin || undefined"
+            />
+        </div>
     </div>
 </template>
 
@@ -92,7 +68,6 @@ const { reorderBlocks } = useAdmin();
 
 const {
     triggeredBlocks,
-    adminAnimated,
     isTriggered,
     setWrapperRef,
     setup,
