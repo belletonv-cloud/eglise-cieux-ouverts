@@ -12,6 +12,15 @@ const INTERNAL_TYPES = [
   "rejoins",
 ];
 
+// Blocs avec scroll-driven animations CSS (animation-timeline).
+// Ceux-ci ne doivent PAS être observés en Chrome (sinon .triggered tue l'animation).
+// Les autres blocs internal (rejoins) n'ont pas d'animation scroll-driven native
+// et ont besoin de l'observer pour que .triggered soit ajouté.
+const SCROLL_DRIVEN_TYPES = [
+  "aspirations",
+  "nousRejoindre",
+];
+
 export function useBlockAnimation(isAdmin, isServerAdminRef) {
   const triggeredBlocks = ref([]);
   const wrapperRefs = ref({});
@@ -22,15 +31,12 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
 
   let blocksCache = [];
 
-  function isInternalBlock(id) {
-    const block = blocksCache.find((b) => b.id === id);
-    return block && INTERNAL_TYPES.includes(block.type);
-  }
-
   function shouldSkipObservation(id) {
-    // In supporting browsers, internal blocks use scroll-driven animations
-    // and must NOT be interrupted by the observer / trigger system
-    return SUPPORTS_SCROLL_TIMELINE && isInternalBlock(id);
+    // In supporting browsers, scroll-driven blocks must NOT be interrupted
+    // by the observer / trigger system (triggered class kills animation-timeline)
+    // rejoins has opacity:0 by default and relies on triggered — don't skip it
+    const block = blocksCache.find((b) => b.id === id);
+    return SUPPORTS_SCROLL_TIMELINE && block && SCROLL_DRIVEN_TYPES.includes(block.type);
   }
 
   function isTriggered(id) {
