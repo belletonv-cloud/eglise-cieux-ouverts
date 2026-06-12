@@ -268,17 +268,18 @@ npx tsx scripts/generate-tests.ts
 
 ## TODO — reste à faire
 
-### 1. Footer éditable
+### 1. Footer éditable ✅
 - `SiteFooter.vue` est statique, pas de composable `useFooterEditor`
 - Créer un composable `useFooterEditor.js` similaire à `useMenuEditor.js`
 - Stocker les infos footer dans Firestore (`settings/footer`)
 - Rendre les textes éditorisables en mode admin (inline edit ou modal)
 
-### 2. Feedback undo/redo et auto-save
-- L'historique undo/redo existe (`useAdmin.js`) mais sans descriptions des changements
-- Ajouter un label à chaque entrée de l'historique (ex: "Déplacement du bloc X", "Modification du titre")
-- Afficher le label dans un tooltip au survol des boutons undo/redo
-- L'auto-save affiche "Auto-sauvegardé" mais pas de statut "Modifications non sauvegardées"
+### 2. Feedback undo/redo et auto-save ✅
+- Historique avec labels : `pushHistory(label)` stocke `{ label, blocks }` → tooltips "Annuler : Modification du bloc X"
+- `unsaved` ref : passe à `true` à chaque modification, `false` après auto-save réussie
+- Affichage "⚠ Modifications non sauvegardées" (jaune) entre la modif et l'auto-save
+- Boutons undo/redo : tooltip dynamique avec le label de l'action suivante
+- `markSaved()` appelé après sauvegarde réussie (auto + manuelle)
 
 ### 3. SSR — pas de bugs de duplication héros (résolu)
 - **Root cause**: `<component :is>` avec résolution dynamique (même via `BLOCK_COMPONENTS` map statique) crée des références de composant différentes entre SSR et client → Vue hydrate en 2 pass → **chaque wrapper a 2 enfants**.

@@ -1,25 +1,28 @@
 import { ref, computed } from 'vue'
+import { BLOCK_TYPES } from '~/utils/blockTypes.js'
 
 const isAdminMode = ref(false)
 const editingBlockId = ref(null)
 const localBlocks = ref([])
 const localBlocksPage = ref('')
 const previewDevice = ref('desktop')
+const hasUnsavedChanges = ref(false)
 
-
-
-
+function _blockLabel(type) {
+  return BLOCK_TYPES[type]?.label || type || 'inconnu'
+}
 
 // Undo/redo history
 const undoStack = ref([])
 const redoStack = ref([])
 const MAX_HISTORY = 50
 
-function pushHistory() {
+function pushHistory(label) {
   const snapshot = JSON.parse(JSON.stringify(localBlocks.value))
-  undoStack.value.push(snapshot)
+  undoStack.value.push({ label, blocks: snapshot })
   if (undoStack.value.length > MAX_HISTORY) undoStack.value.shift()
   redoStack.value = []
+  hasUnsavedChanges.value = true
 }
 
 export function useAdmin() {
@@ -69,7 +72,8 @@ export function useAdmin() {
   function updateBlock(id, props) {
     const idx = localBlocks.value.findIndex(b => b.id === id)
     if (idx < 0) return
-    pushHistory()
+    const label = _blockLabel(localBlocks.value[idx]?.type)
+    pushHistory(`Modification du bloc « ${label} »`)
     localBlocks.value[idx] = { ...localBlocks.value[idx], props: { ...localBlocks.value[idx].props, ...props } }
   }
 
@@ -78,13 +82,16 @@ export function useAdmin() {
     if (idx < 0) return
     const newIdx = idx + direction
     if (newIdx < 0 || newIdx >= localBlocks.value.length) return
-    pushHistory()
+    const label = _blockLabel(localBlocks.value[idx]?.type)
+    pushHistory(`Déplacement du bloc « ${label} »`)
     const [block] = localBlocks.value.splice(idx, 1)
     localBlocks.value.splice(newIdx, 0, block)
   }
 
   function removeBlock(id) {
-    pushHistory()
+    const idx = localBlocks.value.findIndex(b => b.id === id)
+    const label = idx >= 0 ? _blockLabel(localBlocks.value[idx]?.type) : 'inconnu'
+    pushHistory(`Suppression du bloc « ${label} »`)
     localBlocks.value = localBlocks.value.filter(b => b.id !== id)
     if (editingBlockId.value === id) editingBlockId.value = null
   }
@@ -93,7 +100,8 @@ export function useAdmin() {
     const { createBlock } = await import('~/utils/blockTypes.js')
     const newBlock = createBlock(type)
     if (!newBlock) return null
-    pushHistory()
+    const label = _blockLabel(type)
+    pushHistory(`Ajout du bloc « ${label} »`)
     if (afterId) {
       const idx = localBlocks.value.findIndex(b => b.id === afterId)
       localBlocks.value.splice(idx + 1, 0, newBlock)
@@ -108,22 +116,22 @@ export function useAdmin() {
     if (blocks.length === localBlocks.value.length && blocks.every((b, i) => b?.id === localBlocks.value[i]?.id)) {
       return
     }
-    pushHistory()
+    pushHistory('Réordonnancement')
     localBlocks.value = blocks
   }
 
   function undo() {
     if (undoStack.value.length === 0) return
     const snapshot = JSON.parse(JSON.stringify(localBlocks.value))
-    redoStack.value.push(snapshot)
-    localBlocks.value = undoStack.value.pop()
+    redoStack.value.push({ label: undoStack.value.at(-1).label, blocks: snapshot })
+    localBlocks.value = undoStack.value.pop().blocks
   }
 
   function redo() {
     if (redoStack.value.length === 0) return
     const snapshot = JSON.parse(JSON.stringify(localBlocks.value))
-    undoStack.value.push(snapshot)
-    localBlocks.value = redoStack.value.pop()
+    undoStack.value.push({ label: redoStack.value.at(-1).label, blocks: snapshot })
+    localBlocks.value = redoStack.value.pop().blocks
   }
 
   function canUndo() {
@@ -143,8 +151,22 @@ export function useAdmin() {
     if (blocks.length === localBlocks.value.length && blocks.every((b, i) => b?.id === localBlocks.value[i]?.id)) {
       return
     }
-    pushHistory()
+    pushHistory('Réinitialisation')
     localBlocks.value = blocks
+  }
+
+  function nextUndoLabel() {
+    if (undoStack.value.length === 0) return ''
+    return undoStack.value.at(-1).label
+  }
+
+  function nextRedoLabel() {
+    if (redoStack.value.length === 0) return ''
+    return redoStack.value.at(-1).label
+  }
+
+  function markSaved() {
+    hasUnsavedChanges.value = false
   }
 
   return {
@@ -154,6 +176,7 @@ export function useAdmin() {
     localBlocks,
     localBlocksPage,
     previewDevice,
+    hasUnsavedChanges,
     enterAdmin,
     exitAdmin,
     clearBlocks,
@@ -167,6 +190,9 @@ export function useAdmin() {
     redo,
     canUndo,
     canRedo,
+    nextUndoLabel,
+    nextRedoLabel,
+    markSaved,
     getBlocks,
     setBlocks,
   }

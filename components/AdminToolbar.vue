@@ -84,7 +84,7 @@
                     class="admin-icon-btn"
                     @click="undo"
                     :disabled="!canUndo()"
-                    title="Annuler (Ctrl+Z)"
+                    :title="undoTooltip"
                 >
                     ↩
                 </button>
@@ -92,7 +92,7 @@
                     class="admin-icon-btn"
                     @click="redo"
                     :disabled="!canRedo()"
-                    title="Rétablir (Ctrl+Shift+Z)"
+                    :title="redoTooltip"
                 >
                     ↪
                 </button>
@@ -100,9 +100,14 @@
             <ClientOnly>
                 <template v-if="user">
                     <span
+                        class="admin-save-status unsaved"
+                        v-if="hasUnsavedChanges && !saveStatus"
+                        >⚠ Modifications non sauvegardées</span
+                    >
+                    <span
                         class="admin-save-status auto-saved"
-                        v-if="saveStatus && saveStatus === 'Auto-sauvegardé'"
-                        >Auto-sauvegardé</span
+                        v-else-if="saveStatus && saveStatus === 'Auto-sauvegardé'"
+                        >✓ Auto-sauvegardé</span
                     >
                     <span class="admin-save-status" v-else-if="saveStatus">{{
                         saveStatus
@@ -292,6 +297,10 @@ const {
     redo,
     canUndo,
     canRedo,
+    nextUndoLabel,
+    nextRedoLabel,
+    hasUnsavedChanges,
+    markSaved,
 } = useAdmin();
 
 const { $auth } = useNuxtApp();
@@ -329,11 +338,23 @@ onUnmounted(() => {
     clearTimeout(autoSaveTimer);
 });
 
+const undoTooltip = computed(() => {
+    const label = nextUndoLabel();
+    return label ? `Annuler : ${label} (Ctrl+Z)` : `Annuler (Ctrl+Z)`;
+});
+
+const redoTooltip = computed(() => {
+    const label = nextRedoLabel();
+    return label ? `Rétablir : ${label} (Ctrl+Shift+Z)` : `Rétablir (Ctrl+Shift+Z)`;
+});
+
 // Auto-save Firestore with debounce
 watch(
     localBlocks,
     () => {
         if (!user.value || !import.meta.client) return;
+        // Show unsaved indicator immediately
+        saveStatus.value = "";
         clearTimeout(autoSaveTimer);
         autoSaveTimer = setTimeout(() => {
             autoSave();
@@ -350,6 +371,7 @@ async function autoSave() {
         await setDoc(doc($db, "pages", props.pageSlug), {
             blocks: localBlocks.value,
         });
+        markSaved();
         saveStatus.value = "Auto-sauvegardé";
         setTimeout(() => {
             saveStatus.value = "";
@@ -667,6 +689,12 @@ async function saveChanges() {
     color: rgba(255, 255, 255, 0.6);
     margin-right: 8px;
     white-space: nowrap;
+}
+.admin-save-status.unsaved {
+    color: #fbbf24;
+}
+.admin-save-status.auto-saved {
+    color: #4ade80;
 }
 .admin-avatar {
     width: 30px;
