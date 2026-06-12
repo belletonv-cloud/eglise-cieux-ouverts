@@ -365,11 +365,14 @@ a:hover,
 
 /* BlockAspirations IntersectionObserver fallback */
 @media (min-width: 769px) {
-    .aspirations-viewport.triggered .aspirations-title,
-    .aspirations-viewport.triggered .aspirations-list li {
+    .block-wrapper.triggered .aspirations-viewport .aspirations-title,
+    .block-wrapper.triggered .aspirations-viewport .aspirations-list li {
         opacity: 1 !important;
         transform: none !important;
         animation: none !important;
+    }
+    .block-wrapper.triggered .aspirations-viewport .circle {
+        display: none !important;
     }
 }
 
