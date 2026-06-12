@@ -176,7 +176,10 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
   }
 
   function handleBlocksChange(blocks) {
-    if (isAdmin.value) {
+    const currentlyAdmin =
+      typeof window !== "undefined" &&
+      new URLSearchParams(window.location.search).get("admin") === "true";
+    if (isAdmin.value || currentlyAdmin) {
       const allIds = (blocks || []).map((b) => b.id).filter(Boolean);
       triggeredBlocks.value = [...allIds];
       return;

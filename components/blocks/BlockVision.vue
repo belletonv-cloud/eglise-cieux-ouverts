@@ -115,8 +115,8 @@ const contentStyle = computed(() => ({
 }
 .vision-section.is-triggered .vision-label,
 .vision-section.is-triggered .vision-quote {
-  opacity: 1;
-  transform: translateY(0);
+  opacity: 1 !important;
+  transform: translateY(0) !important;
 }
 .vision-quote :deep(strong) {
   font-style: italic;
