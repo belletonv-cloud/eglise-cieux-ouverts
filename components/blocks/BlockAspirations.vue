@@ -203,8 +203,6 @@ function getCircleStyle(index) {
 }
 .triggered .circle {
     opacity: 0.5;
-    left: 50% !important;
-    transform: translate(-50%, -50%);
     animation: none !important;
 }
 
