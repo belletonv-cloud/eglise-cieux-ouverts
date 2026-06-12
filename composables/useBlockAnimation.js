@@ -58,8 +58,18 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
   }
 
   function triggerVisibleBlocks() {
+    // Skip internal blocks - they should only trigger on scroll, not on initial load
+    const internalBlockIds = new Set(
+      INTERNAL_TYPES.flatMap((t) =>
+        blocksCache.filter((b) => b.type === t).map((b) => b.id),
+      ),
+    );
+
     for (const [id, el] of Object.entries(wrapperRefs.value)) {
       if (el && observer && !shouldSkipObservation(id)) {
+        // Skip internal blocks - let IntersectionObservers handle them
+        if (internalBlockIds.has(id)) continue;
+
         const block = blocksCache.find((b) => b.id === id);
         const isReversible = block && REVERSIBLE_TYPES.includes(block.type);
         const rect = el.getBoundingClientRect();
