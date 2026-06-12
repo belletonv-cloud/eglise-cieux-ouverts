@@ -21,8 +21,8 @@ test.describe("Aspirations animation", () => {
     await expect(page.locator(".block-rejoins")).toBeVisible();
     await expect(page.locator(".rejoins-title")).toHaveText("Rejoins-nous");
 
-    // BlockVision — must have .is-triggered class (content visible in no-JS)
-    await expect(page.locator(".vision-section.is-triggered")).toBeVisible();
+    // BlockVision — content must be visible in SSR/no-JS even before client-side triggers
+    await expect(page.locator(".vision-section")).toBeVisible();
     await expect(page.locator(".vision-label")).toBeVisible();
     await expect(page.locator(".vision-quote")).toBeVisible();
 

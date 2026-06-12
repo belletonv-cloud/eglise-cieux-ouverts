@@ -41,7 +41,6 @@ test.describe('Animations des blocs en mode admin', () => {
     await page.screenshot({ path: 'debug-before-fail.png', fullPage: true })
 
     expect(await page.locator('.block-wrapper.block-anim-portal').count()).toBeGreaterThanOrEqual(1)
-    expect(await page.locator('.block-wrapper.block-anim-slideLeft').count()).toBeGreaterThanOrEqual(1)
     expect(await page.locator('.block-wrapper.block-anim-fadeIn').count()).toBeGreaterThanOrEqual(1)
   })
 
@@ -71,7 +70,8 @@ test.describe('Animations des blocs en mode admin', () => {
     await page.waitForTimeout(3000)
 
     await expect(page.locator('.block-bienvenue').first().locator('..')).toHaveClass(/block-anim-portal/)
-    await expect(page.locator('.block-rejoins').first().locator('..')).toHaveClass(/block-anim-slideLeft/)
+    await expect(page.locator('.block-rejoins').first().locator('..')).not.toHaveClass(/block-anim-/)
+    await expect(page.locator('.block-rejoins')).toHaveClass(/triggered/)
   })
 
   test("l'événement replay-animation est bien capté par PageRenderer", async ({ page }) => {

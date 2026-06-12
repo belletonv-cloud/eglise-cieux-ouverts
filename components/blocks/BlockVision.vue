@@ -97,8 +97,8 @@ const contentStyle = computed(() => ({
   font-family: 'Playfair Display', Georgia, serif;
   font-style: italic;
   margin-bottom: 20px;
-  opacity: 0;
-  transform: translateY(20px);
+  opacity: 1;
+  transform: translateY(0);
   transition: opacity 0.6s ease, transform 0.6s ease;
   transition-delay: 0.1s;
 }
@@ -108,8 +108,8 @@ const contentStyle = computed(() => ({
   line-height: 1.6;
   max-width: 800px;
   margin: 0 auto 36px;
-  opacity: 0;
-  transform: translateY(20px);
+  opacity: 1;
+  transform: translateY(0);
   transition: opacity 0.6s ease, transform 0.6s ease;
   transition-delay: 0.3s;
 }
@@ -133,8 +133,8 @@ const contentStyle = computed(() => ({
   text-decoration: none;
   transition: transform 0.2s;
   box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-  opacity: 0;
-  transform: translateY(20px);
+  opacity: 1;
+  transform: translateY(0);
   transition: opacity 0.6s ease, transform 0.6s ease, box-shadow 0.2s;
   transition-delay: 0.5s;
 }
