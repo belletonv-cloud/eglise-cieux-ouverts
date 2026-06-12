@@ -1,8 +1,5 @@
 <template>
-    <div
-        class="aspirations-viewport"
-        :class="[visibilityClasses, { triggered: showContent }]"
-    >
+    <div class="aspirations-viewport" :class="visibilityClasses">
         <div
             class="sticky-box"
             :style="{
@@ -29,7 +26,7 @@
 </template>
 
 <script setup>
-import { computed, inject, onMounted } from "vue";
+import { computed } from "vue";
 const {
     backgroundGradient = "",
     backgroundColor = "#fff",
@@ -37,7 +34,6 @@ const {
     title = "",
     items = [],
     visibility = {},
-    isTriggered = false,
 } = defineProps({
     backgroundGradient: { type: String, default: "" },
     backgroundColor: { type: String, default: "#fff" },
@@ -45,33 +41,13 @@ const {
     title: { type: String, default: "" },
     items: { type: Array, default: () => [] },
     visibility: { type: Object, default: () => ({}) },
-    isTriggered: { type: Boolean, default: false },
 });
-
-const isEditor = inject("isEditor", false);
 
 const visibilityClasses = computed(() => ({
     "hide-mobile": visibility.mobile === false,
     "hide-tablet": visibility.tablet === false,
     "hide-desktop": visibility.desktop === false,
 }));
-
-// Pour les animations internal, on utilise la classe triggered sur le composant
-// Mais on attend un frame pour laisser le temps à l'état initial d'être appliqué
-const showContent = computed(() => isEditor || isTriggered);
-
-// Force reflow après un frame pour que l'animation CSS puisse se déclencher
-onMounted(() => {
-    if (!isEditor && isTriggered) {
-        requestAnimationFrame(() => {
-            // Force reflow pour réinitialiser les transitions
-            const el = document.querySelector(".aspirations-viewport");
-            if (el) {
-                void el.offsetHeight;
-            }
-        });
-    }
-});
 
 const n = computed(() => items.length);
 
@@ -107,17 +83,18 @@ function getCircleStyle(index) {
 <style scoped>
 /* styles inchangés */
 .aspirations-viewport {
-    height: 100vh;
-    min-height: 100vh;
+    view-timeline: --cascade;
+    height: 300vh;
+    position: relative;
 }
 .sticky-box {
+    position: sticky;
+    top: 0;
     width: 100%;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    opacity: 1;
-    transform: none;
 }
 .aspirations-content {
     width: 100%;
@@ -133,8 +110,6 @@ function getCircleStyle(index) {
     text-shadow: 0 1px 5px hsla(0, 0%, 0%, 0.8);
     text-align: center;
     padding-bottom: 1.5rem;
-    opacity: 1;
-    transform: none;
 }
 .aspirations-divider {
     width: 100%;
@@ -161,8 +136,6 @@ function getCircleStyle(index) {
     line-height: 1.25;
     text-shadow: 0 1px 5px hsla(0, 0%, 0%, 0.8);
     border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-    opacity: 1;
-    transform: none;
 }
 .aspirations-list li:last-child {
     border-bottom: none;
@@ -214,45 +187,182 @@ function getCircleStyle(index) {
     }
 }
 
-/* IntersectionObserver fallback - show content when triggered */
-@media (min-width: 769px) {
-    .aspirations-viewport:not(.triggered) .aspirations-title,
-    .aspirations-viewport:not(.triggered) .aspirations-list li {
+/* Keyframes et autres styles laissés intacts */
+.aspirations-viewport {
+    view-timeline: --cascade;
+}
+
+@supports (animation-timeline: --cascade) {
+    @media (min-width: 769px) {
+        .aspirations-title {
+            opacity: 0;
+            animation: aspir-title-in both;
+            animation-timing-function: cubic-bezier(0.7, 0, 0.3, 1);
+            animation-timeline: --cascade;
+            animation-range: cover 0% cover 15%;
+        }
+        .aspirations-list li {
+            opacity: 0;
+            animation-name: aspir-item-in;
+            animation-timing-function: cubic-bezier(0.7, 0, 0.3, 1);
+            animation-fill-mode: both;
+            animation-timeline: --cascade;
+            animation-range: cover var(--anim-start) cover var(--anim-end);
+        }
+        .circle {
+            animation-timing-function: cubic-bezier(0.7, 0, 0.3, 1);
+            animation-fill-mode: both;
+            animation-timeline: --cascade;
+            animation-range: cover var(--anim-start) cover var(--anim-end);
+        }
+    }
+}
+
+/* Admin mode: override viewport height when block wrapper has triggered class (must come AFTER @supports) */
+@supports (animation-timeline: --cascade) {
+    .block-wrapper.triggered .aspirations-title,
+    .block-wrapper.triggered .aspirations-list li {
+        opacity: 1 !important;
+        transform: none !important;
+        animation: none !important;
+    }
+}
+.block-wrapper.triggered .aspirations-title,
+.block-wrapper.triggered .aspirations-list li {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+}
+.block-wrapper.triggered .aspirations-viewport {
+    height: auto !important;
+}
+.block-wrapper.triggered .aspirations-viewport .sticky-box {
+    position: relative !important;
+    top: auto !important;
+    min-height: auto !important;
+    padding: 50px 20px !important;
+}
+
+/* Fallback for browsers that don't support animation-timeline */
+.block-wrapper.triggered .aspirations-viewport .aspirations-list li {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+}
+.block-wrapper.triggered .aspirations-viewport .aspirations-title {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+}
+.block-wrapper.triggered .aspirations-viewport .circle {
+    display: none !important;
+}
+@keyframes aspir-title-in {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+@keyframes aspir-item-in {
+    0% {
         opacity: 0;
         transform: translateY(25px);
-        transition:
-            opacity 0.6s ease,
-            transform 0.6s ease;
     }
-
-    /* Cascade delays for each list item */
-    .aspirations-viewport.triggered .aspirations-list li:nth-child(1) {
-        transition-delay: 0.1s;
-    }
-    .aspirations-viewport.triggered .aspirations-list li:nth-child(2) {
-        transition-delay: 0.2s;
-    }
-    .aspirations-viewport.triggered .aspirations-list li:nth-child(3) {
-        transition-delay: 0.3s;
-    }
-    .aspirations-viewport.triggered .aspirations-list li:nth-child(4) {
-        transition-delay: 0.4s;
-    }
-    .aspirations-viewport.triggered .aspirations-list li:nth-child(5) {
-        transition-delay: 0.5s;
-    }
-    .aspirations-viewport.triggered .aspirations-list li:nth-child(6) {
-        transition-delay: 0.6s;
-    }
-
-    .aspirations-viewport.triggered .aspirations-title,
-    .aspirations-viewport.triggered .aspirations-list li {
+    25% {
         opacity: 1;
-        transform: none;
+        transform: translateY(0);
     }
-
-    .aspirations-viewport.triggered .circle {
-        display: none !important;
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+@keyframes circle-0 {
+    0% {
+        opacity: 0;
+        transform: translateY(-80%);
+    }
+    25% {
+        opacity: 0.5;
+        transform: translateY(-50%);
+    }
+    100% {
+        opacity: 0.5;
+        transform: translateY(-50%);
+    }
+}
+@keyframes circle-1 {
+    0% {
+        opacity: 0;
+        transform: translateY(-80%);
+    }
+    25% {
+        opacity: 0.5;
+        transform: translateY(calc(-50% - 4.5rem));
+    }
+    100% {
+        opacity: 0.5;
+        transform: translateY(calc(-50% - 4.5rem));
+    }
+}
+@keyframes circle-2 {
+    0% {
+        opacity: 0;
+        transform: translateY(-80%);
+    }
+    25% {
+        opacity: 0.5;
+        transform: translateY(calc(-50% - 9rem));
+    }
+    100% {
+        opacity: 0.5;
+        transform: translateY(calc(-50% - 9rem));
+    }
+}
+@keyframes circle-3 {
+    0% {
+        opacity: 0;
+        transform: translateY(-80%);
+    }
+    25% {
+        opacity: 0.5;
+        transform: translateY(calc(-50% - 13.5rem));
+    }
+    100% {
+        opacity: 0.5;
+        transform: translateY(calc(-50% - 13.5rem));
+    }
+}
+@keyframes circle-4 {
+    0% {
+        opacity: 0;
+        transform: translateY(-80%);
+    }
+    25% {
+        opacity: 0.5;
+        transform: translateY(calc(-50% - 18rem));
+    }
+    100% {
+        opacity: 0.5;
+        transform: translateY(calc(-50% - 18rem));
+    }
+}
+@keyframes circle-5 {
+    0% {
+        opacity: 0;
+        transform: translateY(-80%);
+    }
+    25% {
+        opacity: 0.5;
+        transform: translateY(calc(-50% - 22.5rem));
+    }
+    100% {
+        opacity: 0.5;
+        transform: translateY(calc(-50% - 22.5rem));
     }
 }
 </style>
