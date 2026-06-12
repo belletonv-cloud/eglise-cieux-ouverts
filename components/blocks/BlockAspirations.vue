@@ -29,7 +29,7 @@
 </template>
 
 <script setup>
-import { computed, inject } from "vue";
+import { computed, inject, onMounted } from "vue";
 const {
     backgroundGradient = "",
     backgroundColor = "#fff",
@@ -57,7 +57,21 @@ const visibilityClasses = computed(() => ({
 }));
 
 // Pour les animations internal, on utilise la classe triggered sur le composant
+// Mais on attend un frame pour laisser le temps à l'état initial d'être appliqué
 const showContent = computed(() => isEditor || isTriggered);
+
+// Force reflow après un frame pour que l'animation CSS puisse se déclencher
+onMounted(() => {
+    if (!isEditor && isTriggered) {
+        requestAnimationFrame(() => {
+            // Force reflow pour réinitialiser les transitions
+            const el = document.querySelector(".aspirations-viewport");
+            if (el) {
+                void el.offsetHeight;
+            }
+        });
+    }
+});
 
 const n = computed(() => items.length);
 
