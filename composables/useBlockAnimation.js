@@ -5,26 +5,16 @@ const SUPPORTS_SCROLL_TIMELINE =
   CSS.supports &&
   CSS.supports("animation-timeline: view()");
 
-const INTERNAL_TYPES = [
-  "aspirations",
-  "bienvenue",
-  "nousRejoindre",
-  "rejoins",
-];
+const INTERNAL_TYPES = ["aspirations", "bienvenue", "nousRejoindre", "rejoins"];
 
 // Blocs avec scroll-driven animations CSS (animation-timeline).
 // Ceux-ci ne doivent PAS être observés en Chrome (sinon .triggered tue l'animation).
 // Les autres blocs internal (rejoins) n'ont pas d'animation scroll-driven native
 // et ont besoin de l'observer pour que .triggered soit ajouté.
-const SCROLL_DRIVEN_TYPES = [
-  "aspirations",
-  "nousRejoindre",
-];
+const SCROLL_DRIVEN_TYPES = ["aspirations", "nousRejoindre"];
 
 // Blocs dont l'animation doit rejouer dans les deux sens (entrée/sortie du viewport)
-const REVERSIBLE_TYPES = [
-  "rejoins",
-];
+const REVERSIBLE_TYPES = ["rejoins"];
 
 export function useBlockAnimation(isAdmin, isServerAdminRef) {
   const triggeredBlocks = ref([]);
@@ -41,7 +31,11 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
     // by the observer / trigger system (triggered class kills animation-timeline)
     // rejoins has opacity:0 by default and relies on triggered — don't skip it
     const block = blocksCache.find((b) => b.id === id);
-    return SUPPORTS_SCROLL_TIMELINE && block && SCROLL_DRIVEN_TYPES.includes(block.type);
+    return (
+      SUPPORTS_SCROLL_TIMELINE &&
+      block &&
+      SCROLL_DRIVEN_TYPES.includes(block.type)
+    );
   }
 
   function isTriggered(id) {
@@ -91,7 +85,8 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
   }
 
   function setupFallbackObservers(blocks) {
-    if (SUPPORTS_SCROLL_TIMELINE) return;
+    // Always run IntersectionObserver for aspirations to handle viewport visibility
+    // This works as a fallback even for browsers that support scroll-timeline
     for (const block of blocks || []) {
       if (INTERNAL_TYPES.includes(block.type)) {
         const el = wrapperRefs.value[block.id];
@@ -138,12 +133,16 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
       // For non-reversible, re-attach observers so they fire once on next scroll
       if (!REVERSIBLE_TYPES.includes(block?.type)) {
         if (el && observer) {
-          try { observer.observe(el); } catch (e) {}
+          try {
+            observer.observe(el);
+          } catch (e) {}
         }
         if (!SUPPORTS_SCROLL_TIMELINE) {
           const fbObserver = fallbackObservers.get(id);
           if (fbObserver && el) {
-            try { fbObserver.observe(el); } catch (e) {}
+            try {
+              fbObserver.observe(el);
+            } catch (e) {}
           }
         }
       }
@@ -234,7 +233,8 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
             const id = entry.target.dataset?.blockId;
             if (id && !shouldSkipObservation(id)) {
               const block = blocksCache.find((b) => b.id === id);
-              const isReversible = block && REVERSIBLE_TYPES.includes(block.type);
+              const isReversible =
+                block && REVERSIBLE_TYPES.includes(block.type);
               const was = prevIntersecting.get(id) ?? false;
 
               if (entry.isIntersecting && !was) {
