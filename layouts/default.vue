@@ -115,6 +115,7 @@ watch(
             exitAdmin();
         }
     },
+    { immediate: true },
 );
 
 // Reactive guard: whenever isAdminMode becomes true without admin=true in URL, revert
