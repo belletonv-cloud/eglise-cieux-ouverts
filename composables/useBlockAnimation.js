@@ -134,16 +134,6 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
         void el.offsetHeight;
       }
 
-      if (isAdmin && isAdmin.value) {
-        setTimeout(() => {
-          if (el && !el.classList.contains("triggered")) {
-            el.classList.add("triggered");
-          }
-          triggeredBlocks.value = [...(triggeredBlocks.value || []), id];
-        }, 50);
-        return;
-      }
-
       // For reversible types, observers stay active (bidirectional toggle)
       // For non-reversible, re-attach observers so they fire once on next scroll
       if (!REVERSIBLE_TYPES.includes(block?.type)) {
@@ -184,34 +174,16 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
         observer.observe(el);
       } catch (err) {}
     }
-    if (isAdmin && isAdmin.value) {
-      setTimeout(() => {
-        triggeredBlocks.value = [...(triggeredBlocks.value || []), id];
-      }, 40);
-    } else {
-      try {
-        el?.scrollIntoView({ behavior: "smooth", block: "center" });
-      } catch (err) {}
-    }
+    try {
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+    } catch (err) {}
   }
 
   function setup(blocks) {
     blocksCache = blocks || [];
-    if (isAdmin.value || isServerAdminRef?.value) {
-      initAdminTrigger(blocks);
-      return;
-    }
   }
 
   function handleBlocksChange(blocks) {
-    const currentlyAdmin =
-      typeof window !== "undefined" &&
-      new URLSearchParams(window.location.search).get("admin") === "true";
-    if (isAdmin.value || currentlyAdmin) {
-      const allIds = (blocks || []).map((b) => b.id).filter(Boolean);
-      triggeredBlocks.value = [...allIds];
-      return;
-    }
     blocksCache = blocks || [];
     // Re-observer les wrappers après changement (blocs asynchrones)
     nextTick(() => {
@@ -247,53 +219,13 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
             console.error(e);
           }
         }
-        if (isAdmin && isAdmin.value) {
-          setTimeout(() => {
-            triggeredBlocks.value = [...(triggeredBlocks.value || []), b.id];
-          }, 40);
-        }
       }
     }
     lastAnimations.value = newMap;
   }
 
   function setupClient() {
-    const isCurrentlyAdmin = () => {
-      if (typeof window === "undefined") return false;
-      const urlParams = new URLSearchParams(window.location.search);
-      return urlParams.get("admin") === "true";
-    };
-
-    if (isCurrentlyAdmin() || (isAdmin && isAdmin.value)) {
-      let attempts = 0;
-      const maxAttempts = 10;
-
-      const applyTriggeredClasses = () => {
-        const allIds = (blocksCache || []).map((b) => b.id).filter(Boolean);
-        triggeredBlocks.value = [...allIds];
-
-        for (const id of allIds) {
-          document.querySelectorAll(`[data-block-id="${id}"]`).forEach((el) => {
-            if (el && !el.classList.contains("triggered")) {
-              el.classList.add("triggered");
-            }
-          });
-        }
-      };
-
-      applyTriggeredClasses();
-      const intervalId = setInterval(() => {
-        applyTriggeredClasses();
-        attempts++;
-        if (attempts >= maxAttempts) {
-          clearInterval(intervalId);
-        }
-      }, 50);
-
-      return;
-    }
-
-    // Mode public
+    // Mode public/admin unifié : l'observer gère le triggered au scroll dans les deux modes
     if (!observer) {
       const prevIntersecting = new Map();
       observer = new IntersectionObserver(
