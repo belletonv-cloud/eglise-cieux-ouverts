@@ -110,6 +110,11 @@ function getCircleStyle(index) {
     text-shadow: 0 1px 5px hsla(0, 0%, 0%, 0.8);
     text-align: center;
     padding-bottom: 1.5rem;
+    opacity: 0;
+    transform: translateY(20px);
+    transition:
+        opacity 0.6s ease,
+        transform 0.6s ease;
 }
 .aspirations-divider {
     width: 100%;
@@ -190,9 +195,12 @@ function getCircleStyle(index) {
 /* Keyframes et autres styles laissés intacts */
 .aspirations-viewport {
     view-timeline: --cascade;
+    height: 300vh;
+    position: relative;
 }
 
-@supports (animation-timeline: --cascade) {
+/* ONLY for browsers that support scroll-driven animations (Chrome 115+) */
+@supports (animation-timeline: view()) {
     @media (min-width: 769px) {
         .aspirations-title {
             opacity: 0;
@@ -218,21 +226,52 @@ function getCircleStyle(index) {
     }
 }
 
-/* Admin mode: override viewport height when block wrapper has triggered class (must come AFTER @supports) */
-@supports (animation-timeline: --cascade) {
-    .block-wrapper.triggered .aspirations-title,
-    .block-wrapper.triggered .aspirations-list li {
-        opacity: 1 !important;
-        transform: none !important;
-        animation: none !important;
-    }
-}
+/* IntersectionObserver fallback - animate when wrapper has triggered class */
 .block-wrapper.triggered .aspirations-title,
 .block-wrapper.triggered .aspirations-list li {
     opacity: 1 !important;
     transform: none !important;
-    animation: none !important;
 }
+
+/* Cascade delays for list items */
+.block-wrapper.triggered
+    .aspirations-viewport
+    .aspirations-list
+    li:nth-child(1) {
+    transition-delay: 0.1s;
+}
+.block-wrapper.triggered
+    .aspirations-viewport
+    .aspirations-list
+    li:nth-child(2) {
+    transition-delay: 0.2s;
+}
+.block-wrapper.triggered
+    .aspirations-viewport
+    .aspirations-list
+    li:nth-child(3) {
+    transition-delay: 0.3s;
+}
+.block-wrapper.triggered
+    .aspirations-viewport
+    .aspirations-list
+    li:nth-child(4) {
+    transition-delay: 0.4s;
+}
+.block-wrapper.triggered
+    .aspirations-viewport
+    .aspirations-list
+    li:nth-child(5) {
+    transition-delay: 0.5s;
+}
+.block-wrapper.triggered
+    .aspirations-viewport
+    .aspirations-list
+    li:nth-child(6) {
+    transition-delay: 0.6s;
+}
+
+/* Collapse viewport when triggered */
 .block-wrapper.triggered .aspirations-viewport {
     height: auto !important;
 }
@@ -241,21 +280,6 @@ function getCircleStyle(index) {
     top: auto !important;
     min-height: auto !important;
     padding: 50px 20px !important;
-}
-
-/* Fallback for browsers that don't support animation-timeline */
-.block-wrapper.triggered .aspirations-viewport .aspirations-list li {
-    opacity: 1 !important;
-    transform: none !important;
-    animation: none !important;
-}
-.block-wrapper.triggered .aspirations-viewport .aspirations-title {
-    opacity: 1 !important;
-    transform: none !important;
-    animation: none !important;
-}
-.block-wrapper.triggered .aspirations-viewport .circle {
-    display: none !important;
 }
 @keyframes aspir-title-in {
     0% {
