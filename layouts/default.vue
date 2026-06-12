@@ -32,6 +32,7 @@
 
 <script setup>
 import { provide, ref, onMounted, onUnmounted, computed } from 'vue'
+import BlockFooter from "~/components/blocks/BlockFooter.vue"
 
 useSeoMeta({
   ogSiteName: 'Église Cieux Ouverts — Morlaix',
