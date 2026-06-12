@@ -21,6 +21,11 @@ const SCROLL_DRIVEN_TYPES = [
   "nousRejoindre",
 ];
 
+// Blocs dont l'animation doit rejouer dans les deux sens (entrée/sortie du viewport)
+const REVERSIBLE_TYPES = [
+  "rejoins",
+];
+
 export function useBlockAnimation(isAdmin, isServerAdminRef) {
   const triggeredBlocks = ref([]);
   const wrapperRefs = ref({});
@@ -61,12 +66,20 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
   function triggerVisibleBlocks() {
     for (const [id, el] of Object.entries(wrapperRefs.value)) {
       if (el && observer && !shouldSkipObservation(id)) {
+        const block = blocksCache.find((b) => b.id === id);
+        const isReversible = block && REVERSIBLE_TYPES.includes(block.type);
         const rect = el.getBoundingClientRect();
         if (rect.top < window.innerHeight * 0.9) {
           if (!triggeredBlocks.value.includes(id)) {
             triggeredBlocks.value = [...triggeredBlocks.value, id];
+          }
+          if (!isReversible) {
             observer.unobserve(el);
           }
+        } else if (isReversible) {
+          triggeredBlocks.value = triggeredBlocks.value.filter(
+            (bid) => bid !== id,
+          );
         }
       }
     }
@@ -83,11 +96,16 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
       if (INTERNAL_TYPES.includes(block.type)) {
         const el = wrapperRefs.value[block.id];
         if (el && !fallbackObservers.has(block.id)) {
+          const isReversible = REVERSIBLE_TYPES.includes(block.type);
           const fbObserver = new IntersectionObserver(
             ([entry]) => {
               if (entry.isIntersecting) {
                 entry.target.classList.add("triggered");
-                fbObserver.unobserve(entry.target);
+                if (!isReversible) {
+                  fbObserver.unobserve(entry.target);
+                }
+              } else if (isReversible) {
+                entry.target.classList.remove("triggered");
               }
             },
             { threshold: 0.1 },
@@ -113,13 +131,6 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
         void el.offsetHeight;
       }
 
-      if (!SUPPORTS_SCROLL_TIMELINE) {
-        const fbObserver = fallbackObservers.get(id);
-        if (fbObserver && el) {
-          fbObserver.observe(el);
-        }
-      }
-
       if (isAdmin && isAdmin.value) {
         setTimeout(() => {
           if (el && !el.classList.contains("triggered")) {
@@ -128,6 +139,20 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
           triggeredBlocks.value = [...(triggeredBlocks.value || []), id];
         }, 50);
         return;
+      }
+
+      // For reversible types, observers stay active (bidirectional toggle)
+      // For non-reversible, re-attach observers so they fire once on next scroll
+      if (!REVERSIBLE_TYPES.includes(block?.type)) {
+        if (el && observer) {
+          try { observer.observe(el); } catch (e) {}
+        }
+        if (!SUPPORTS_SCROLL_TIMELINE) {
+          const fbObserver = fallbackObservers.get(id);
+          if (fbObserver && el) {
+            try { fbObserver.observe(el); } catch (e) {}
+          }
+        }
       }
 
       try {
@@ -270,11 +295,22 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
       observer = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              const id = entry.target.dataset?.blockId;
-              if (id && !shouldSkipObservation(id)) {
-                triggeredBlocks.value = [...triggeredBlocks.value, id];
-                observer.unobserve(entry.target);
+            const id = entry.target.dataset?.blockId;
+            if (id && !shouldSkipObservation(id)) {
+              const block = blocksCache.find((b) => b.id === id);
+              const isReversible = block && REVERSIBLE_TYPES.includes(block.type);
+
+              if (entry.isIntersecting) {
+                if (!triggeredBlocks.value.includes(id)) {
+                  triggeredBlocks.value = [...triggeredBlocks.value, id];
+                }
+                if (!isReversible) {
+                  observer.unobserve(entry.target);
+                }
+              } else if (isReversible) {
+                triggeredBlocks.value = triggeredBlocks.value.filter(
+                  (bid) => bid !== id,
+                );
               }
             }
           });
