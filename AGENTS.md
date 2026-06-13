@@ -311,22 +311,30 @@ npx tsx scripts/generate-tests.ts
   - Toujours passer `:block-id`, `:visibility`, `:is-triggered`, `:is-admin` aux enfants
   - Ne JAMAIS utiliser `<component :is>` pour les blocs — toujours des composants directs
 
-### 6. BlockRejoins — parallax scroll-driven (résolu)
+### 6. BlockRejoins — parallax scroll-driven avec stagger (résolu)
 
-**Feature**: Le texte "Rejoins-nous" glisse (parallax) en scrollant dans les deux sens.
+**Feature**: En scrollant vers le bas : "Rejoins-nous" glisse de la gauche (translateX), puis les horaires montent du bas (translateY) avec un décalage (9h30 puis 10h). En scrollant vers le haut : horaires disparaissent en premier (inverse).
 
-**Changements** (`57e72b8`):
-- `rejoins` ajouté à `SCROLL_DRIVEN_TYPES` dans `useBlockAnimation.js` — le bloc utilise désormais le scroll-driven natif
-- Nouveau helper `shouldSkipTrigger(type)` : retourne `true` seulement quand `animation-timeline: view()` EST supporté ET que le type est dans `SCROLL_DRIVEN_TYPES`. Remplace les filtres directs dans `initAdminTrigger`, `handleBlocksChange`, `applyTriggeredClasses` → Safari reçoit toujours `triggered` class (fallback fonctionnel)
-- `BlockRejoins.vue` :
-  - `@keyframes text-glide` (translateY ±35%) sur `.rejoins-text-container`
-  - `@keyframes item-glide` (translateY 80px→-30px) sur `.rejoins-horaire` (staggered via `--item-delay` inline)
-  - `@supports (animation-timeline: view())` : override `opacity:0`/`transform` initiaux → animation scroll-driven
-  - Fallback non-scroll-timeline : les classes `.triggered` continuent de fonctionner (transitions CSS existantes)
-  - `overflow: hidden` → `overflow: visible`, padding `70px` → `100px` pour la place de translation
+**État actuel** (commit `71c8eb9`, mode désiré) :
+
+- **Named timeline** : `<section>` a `view-timeline: --rejoins` ; les enfants utilisent `animation-timeline: --rejoins` (même pattern que `bienvenue`).
+- **Keyframes** :
+  - `text-from-left` : `translateX(-120px)→0` sur `0%→40%` du cover
+  - `horaires-from-below` : `translateY(60px)→0` sur `30%→60%` du cover
+- **Stagger** : chaque `.rejoins-horaire` reçoit `--item-delay: Ns` inline, utilisé comme `animation-delay: var(--item-delay, 0s)` → 9h30 avant 10h.
+- **`@supports`** : pas de `!important`, pas d'override de base. L'animation contrôle opacity+transform naturellement.
+- **Admin mode** : `rejoins` est dans `SCROLL_DRIVEN_TYPES` + `shouldSkipTrigger()` → le navigateur scroll-driven joue normalement dans le preview admin. Safari non-supportant reçoit `triggered` class.
+- **Fallback Safari** (non scroll-driven) : `.triggered .rejoins-text-container, .triggered .rejoins-horaire { opacity: 1; transform: none; }` inchangé.
+
+**Historique des changements techniques** :
+1. `57e72b8` — Première implémentation scroll-driven (text-glide/translateY, !important, rejoins dans SCROLL_DRIVEN_TYPES)
+2. `e643f4e` — Retiré `rejoins` de SCROLL_DRIVEN_TYPES (admin cassé par !important)
+3. `41c1a1a` — Nommé view-timeline `--rejoins`, plus de !important, rejoins remis dans SCROLL_DRIVEN_TYPES
+4. `71c8eb9` — Ranges élargis (text 0-40%, horaires 30-60%) + stagger animation-delay
 
 **Invariants** :
-1. `SCROLL_DRIVEN_TYPES` doit contenir `"rejoins"` si scroll-driven est souhaité
-2. `shouldSkipTrigger()` doit être utilisé partout où on filtre `SCROLL_DRIVEN_TYPES` (pas le filtrage direct)
-3. Le CSS `.triggered` fallback doit rester intact dans BlockRejoins.vue pour Safari
-4. `@supports (animation-timeline: view())` doit utiliser `!important` pour surcharger l'état initial caché
+1. `SCROLL_DRIVEN_TYPES` doit contenir `"rejoins"` (admin scroll-driven natif)
+2. `shouldSkipTrigger()` protège rejoins comme les autres scroll-driven
+3. Pas de `!important` sur `opacity`/`transform` dans `@supports` — ça bloque les keyframes
+4. Le stagger repose sur `--item-delay` inline + `animation-delay: var(--item-delay, 0s)` dans `@supports`
+5. Fallback `.triggered` intact pour Safari non-supportant
