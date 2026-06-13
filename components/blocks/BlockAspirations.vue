@@ -344,7 +344,7 @@ function getCircleStyle(index) {
 @keyframes circle-0 {
     0% {
         opacity: 0;
-        transform: translateY(-50%);
+        transform: translateY(-80%);
     }
     25% {
         opacity: 0.5;
@@ -358,7 +358,7 @@ function getCircleStyle(index) {
 @keyframes circle-1 {
     0% {
         opacity: 0;
-        transform: translateY(-50%);
+        transform: translateY(-80%);
     }
     25% {
         opacity: 0.5;
@@ -372,7 +372,7 @@ function getCircleStyle(index) {
 @keyframes circle-2 {
     0% {
         opacity: 0;
-        transform: translateY(-50%);
+        transform: translateY(-80%);
     }
     25% {
         opacity: 0.5;
@@ -386,7 +386,7 @@ function getCircleStyle(index) {
 @keyframes circle-3 {
     0% {
         opacity: 0;
-        transform: translateY(-50%);
+        transform: translateY(-80%);
     }
     25% {
         opacity: 0.5;
@@ -400,7 +400,7 @@ function getCircleStyle(index) {
 @keyframes circle-4 {
     0% {
         opacity: 0;
-        transform: translateY(-50%);
+        transform: translateY(-80%);
     }
     25% {
         opacity: 0.5;
@@ -414,7 +414,7 @@ function getCircleStyle(index) {
 @keyframes circle-5 {
     0% {
         opacity: 0;
-        transform: translateY(-50%);
+        transform: translateY(-80%);
     }
     25% {
         opacity: 0.5;
