@@ -9,6 +9,7 @@ const SCROLL_DRIVEN_TYPES = [
   "aspirations",
   "bienvenue",
   "nousRejoindre",
+  "rejoins",
 ];
 
 const INTERNAL_TYPES = [

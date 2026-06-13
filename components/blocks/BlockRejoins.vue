@@ -65,6 +65,7 @@ const visibilityClasses = computed(() => ({
     overflow: visible;
     position: relative;
     min-height: 600px;
+    view-timeline: --rejoins;
 }
 .rejoins-inner {
     max-width: 1200px;
@@ -110,35 +111,29 @@ const visibilityClasses = computed(() => ({
 }
 
 /* Scroll-driven — text glides from left, horaires from below */
-/* Opacity stays !important (always visible via @supports + triggered)  */
-/* Transform animates on scroll (animation overrides normal decls)      */
-/* Scrolling down: text in first, then horaires in                      */
-/* Scrolling up:   horaires leave first, then text leaves              */
+/* Uses named view-timeline: --rejoins (set on section)       */
+/* Scrolling down: text in first, then horaires in            */
+/* Scrolling up:   horaires leave first, then text leaves    */
 @keyframes text-from-left {
-    0%   { transform: translateX(-120px); }
-    15%  { transform: translateX(0); }
-    100% { transform: translateX(0); }
+    0%   { opacity: 0; transform: translateX(-120px); }
+    15%  { opacity: 1; transform: translateX(0); }
+    100% { opacity: 1; transform: translateX(0); }
 }
 @keyframes horaires-from-below {
-    0%   { transform: translateY(60px); }
-    15%  { transform: translateY(60px); }
-    35%  { transform: translateY(0); }
-    100% { transform: translateY(0); }
+    0%   { opacity: 0; transform: translateY(60px); }
+    15%  { opacity: 0; transform: translateY(60px); }
+    35%  { opacity: 1; transform: translateY(0); }
+    100% { opacity: 1; transform: translateY(0); }
 }
 @supports (animation-timeline: view()) {
-    .rejoins-text-container,
-    .rejoins-horaire {
-        opacity: 1 !important;
-        transition: none !important;
-    }
     .rejoins-text-container {
         animation: text-from-left ease-in-out both;
-        animation-timeline: view();
+        animation-timeline: --rejoins;
         animation-range: cover 0% cover 100%;
     }
     .rejoins-horaire {
         animation: horaires-from-below ease-in-out both;
-        animation-timeline: view();
+        animation-timeline: --rejoins;
         animation-range: cover 0% cover 100%;
     }
 }
