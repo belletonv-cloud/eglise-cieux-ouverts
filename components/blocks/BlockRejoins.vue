@@ -126,8 +126,6 @@ const visibilityClasses = computed(() => ({
 @supports (animation-timeline: view()) {
     .rejoins-text-container,
     .rejoins-horaire {
-        opacity: 1;
-        transform: none;
         transition: none !important;
     }
     .rejoins-text-container {
