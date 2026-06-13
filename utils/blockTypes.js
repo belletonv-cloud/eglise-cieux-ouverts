@@ -26,7 +26,7 @@ export const BLOCK_TYPES = {
     label: "Hero (bannière)",
     icon: "🖼️",
     category: "hero",
-    animations: "wrapper",
+    animations: "none",
     defaults: {
       image: "/foule-croix.png",
       height: 700,
