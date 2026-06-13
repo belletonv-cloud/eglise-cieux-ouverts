@@ -289,7 +289,18 @@ npx tsx scripts/generate-tests.ts
 - `BlockFooter.vue` utilise les props design (fontSize, textColor, etc.)
 - Tous les blocs reçoivent les props design via `BLOCK_TYPES` defaults
 
-### 4. SSR — pas de bugs de duplication héros (résolu)
+### 4. BlockAspirations — animation des ronds cassée par Vue scoped CSS (résolu)
+
+**Root cause** : `getCircleStyle()` mettait `animationName` en style inline (`animation-name: circle-0`). Vue 3 scoped CSS renomme les `@keyframes` avec un hash (`@keyframes circle-0-bfe4cc88`). L'`animation-name` inline référençait le nom non hashé → aucune animation → chaque rond restait centré sur sa ligne.
+
+**Fix** (commit `bfbfbc5`) : Remplacer les 6 keyframes par index par un seul `@keyframes circle-move` utilisant `var(--circle-offset, 0rem)`. `animation-name: circle-move` est défini dans le CSS scopé (Vue le hashe correctement), et l'offset par cercle passe via la propriété CSS `--circle-offset` inline (non affectée par le scoping).
+
+**Les 3 invariants dans `BlockAspirations.vue`** (si ça re-régresse) :
+1. `getCircleStyle()` doit définir `--circle-offset` (PAS `animationName`)
+2. `.circle` dans `@supports` doit avoir `animation-name: circle-move` (dans le CSS scopé)
+3. `@keyframes circle-move` doit utiliser `translateY(calc(-50% - var(--circle-offset, 0rem)))`
+
+### 5. SSR — pas de bugs de duplication héros (résolu)
 - **Root cause**: `<component :is>` avec résolution dynamique (même via `BLOCK_COMPONENTS` map statique) crée des références de composant différentes entre SSR et client → Vue hydrate en 2 pass → **chaque wrapper a 2 enfants**.
 - **Fix**: `BlockRenderer.vue` utilise une chaîne `v-if`/`v-else-if` avec des imports statiques explicites. Plus de `<component :is>`.
 - SSR (vérifié) : les 2 `data-block-id="bloc-hero"` sont sur **2 éléments différents** (div wrapper + section). 1 seule section hero.
