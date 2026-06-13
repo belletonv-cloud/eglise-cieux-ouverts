@@ -20,7 +20,11 @@ const INTERNAL_TYPES = [
 ];
 
 function shouldSkipTrigger(type) {
-  return SUPPORTS_SCROLL_TIMELINE && SCROLL_DRIVEN_TYPES.includes(type);
+  if (!SUPPORTS_SCROLL_TIMELINE) return false;
+  if (!SCROLL_DRIVEN_TYPES.includes(type)) return false;
+  // En admin, on force l'état final via triggered (pas de scroll-driven)
+  if (isAdmin?.value) return false;
+  return true;
 }
 
 export function useBlockAnimation(isAdmin, isServerAdminRef) {

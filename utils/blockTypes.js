@@ -52,8 +52,8 @@ export const BLOCK_TYPES = {
         max: 900,
       },
       { key: "overlay", label: "Overlay sombre", type: "boolean" },
-      { key: "overlayColor", label: "Couleur overlay", type: "color" },
-      { key: "overlayText", label: "Texte sur image", type: "text" },
+      { key: "overlayColor", label: "Fond overlay", type: "color" },
+      { key: "overlayText", label: "Texte principal (remplace logo)", type: "text" },
       { key: "textColor", label: "Couleur texte", type: "color" },
       { key: "showButton", label: "Afficher bouton", type: "boolean" },
     ],
@@ -209,7 +209,6 @@ export const BLOCK_TYPES = {
       ],
       backgroundGradient:
         "linear-gradient(to bottom, #064886 0%, #e58b8b 100%)",
-      animation: "none",
     },
     schema: [
       { key: "title", label: "Titre", type: "text" },
@@ -217,7 +216,6 @@ export const BLOCK_TYPES = {
       { key: "location", label: "Lieu", type: "text" },
       { key: "backgroundGradient", label: "Fond (CSS)", type: "text" },
       { key: "horaires", label: "Horaires", type: "array" },
-      { key: "animation", label: "Animation", type: "animation" },
     ],
   },
 
@@ -236,14 +234,12 @@ export const BLOCK_TYPES = {
       ],
       backgroundColor: "#064886",
       textColor: "#ffffff",
-      animation: "zoom",
     },
     schema: [
       { key: "title", label: "Titre", type: "text" },
       { key: "items", label: "Aspirations", type: "array" },
       { key: "backgroundColor", label: "Fond", type: "color" },
       { key: "textColor", label: "Couleur texte", type: "color" },
-      { key: "animation", label: "Animation citation", type: "animation" },
     ],
   },
 
@@ -409,7 +405,7 @@ export const BLOCK_TYPES = {
       ctaLink: "",
       backgroundGradient: "#f8f9fa",
       textColor: "#064886",
-      animation: "none",
+      animation: "fadeIn",
     },
     schema: [
       { key: "label", label: "Label", type: "text" },
