@@ -82,7 +82,6 @@ function getCircleStyle(index) {
         left: -6 + index * 4 + "rem",
         "--anim-start": start + "%",
         "--anim-end": end + "%",
-        animationName: "circle-" + index,
     };
 }
 </script>
@@ -218,6 +217,7 @@ function getCircleStyle(index) {
             animation-range: cover var(--anim-start) cover var(--anim-end);
         }
         .circle {
+            animation-name: circle-in;
             animation-timing-function: cubic-bezier(0.7, 0, 0.3, 1);
             animation-fill-mode: both;
             animation-timeline: --cascade;
@@ -235,7 +235,7 @@ function getCircleStyle(index) {
 }
 .block-wrapper.triggered .aspirations-viewport .circle {
     opacity: 0.5 !important;
-    transform: none !important;
+    transform: translateY(-50%) !important;
 }
 .block-wrapper.triggered .aspirations-viewport {
     height: auto !important;
@@ -312,7 +312,9 @@ function getCircleStyle(index) {
     padding: 50px 20px !important;
 }
 .aspirations-viewport.triggered .circle {
-    display: none !important;
+    opacity: 0.5 !important;
+    transform: translateY(-50%) !important;
+    animation: none !important;
 }
 
 @keyframes aspir-title-in {
@@ -339,10 +341,10 @@ function getCircleStyle(index) {
         transform: translateY(0);
     }
 }
-@keyframes circle-0 {
+@keyframes circle-in {
     0% {
         opacity: 0;
-        transform: translateY(-80%);
+        transform: translateY(50%);
     }
     25% {
         opacity: 0.5;
@@ -351,76 +353,6 @@ function getCircleStyle(index) {
     100% {
         opacity: 0.5;
         transform: translateY(-50%);
-    }
-}
-@keyframes circle-1 {
-    0% {
-        opacity: 0;
-        transform: translateY(-80%);
-    }
-    25% {
-        opacity: 0.5;
-        transform: translateY(calc(-50% - 4.5rem));
-    }
-    100% {
-        opacity: 0.5;
-        transform: translateY(calc(-50% - 4.5rem));
-    }
-}
-@keyframes circle-2 {
-    0% {
-        opacity: 0;
-        transform: translateY(-80%);
-    }
-    25% {
-        opacity: 0.5;
-        transform: translateY(calc(-50% - 9rem));
-    }
-    100% {
-        opacity: 0.5;
-        transform: translateY(calc(-50% - 9rem));
-    }
-}
-@keyframes circle-3 {
-    0% {
-        opacity: 0;
-        transform: translateY(-80%);
-    }
-    25% {
-        opacity: 0.5;
-        transform: translateY(calc(-50% - 13.5rem));
-    }
-    100% {
-        opacity: 0.5;
-        transform: translateY(calc(-50% - 13.5rem));
-    }
-}
-@keyframes circle-4 {
-    0% {
-        opacity: 0;
-        transform: translateY(-80%);
-    }
-    25% {
-        opacity: 0.5;
-        transform: translateY(calc(-50% - 18rem));
-    }
-    100% {
-        opacity: 0.5;
-        transform: translateY(calc(-50% - 18rem));
-    }
-}
-@keyframes circle-5 {
-    0% {
-        opacity: 0;
-        transform: translateY(-80%);
-    }
-    25% {
-        opacity: 0.5;
-        transform: translateY(calc(-50% - 22.5rem));
-    }
-    100% {
-        opacity: 0.5;
-        transform: translateY(calc(-50% - 22.5rem));
     }
 }
 </style>
