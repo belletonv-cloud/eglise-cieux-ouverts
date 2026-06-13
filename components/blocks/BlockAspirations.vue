@@ -221,10 +221,14 @@ function getCircleStyle(index) {
 
 /* Fallback when wrapper has triggered class (IntersectionObserver for non-supporting browsers) */
 .block-wrapper.triggered .aspirations-title,
-.block-wrapper.triggered .aspirations-list li {
+.block-wrapper.triggered .aspirations-viewport .aspirations-list li {
     opacity: 1 !important;
     transform: none !important;
     animation: none !important;
+}
+.block-wrapper.triggered .aspirations-viewport .circle {
+    opacity: 0.5 !important;
+    transform: none !important;
 }
 .block-wrapper.triggered .aspirations-viewport {
     height: auto !important;
@@ -234,6 +238,56 @@ function getCircleStyle(index) {
     top: auto !important;
     min-height: auto !important;
     padding: 50px 20px !important;
+}
+
+/* Cascade delays for list items - animate in sequence when triggered */
+.block-wrapper.triggered
+    .aspirations-viewport
+    .aspirations-list
+    li:nth-child(1) {
+    transition:
+        opacity 0.4s ease 0.1s,
+        transform 0.4s ease 0.1s;
+}
+.block-wrapper.triggered
+    .aspirations-viewport
+    .aspirations-list
+    li:nth-child(2) {
+    transition:
+        opacity 0.4s ease 0.2s,
+        transform 0.4s ease 0.2s;
+}
+.block-wrapper.triggered
+    .aspirations-viewport
+    .aspirations-list
+    li:nth-child(3) {
+    transition:
+        opacity 0.4s ease 0.3s,
+        transform 0.4s ease 0.3s;
+}
+.block-wrapper.triggered
+    .aspirations-viewport
+    .aspirations-list
+    li:nth-child(4) {
+    transition:
+        opacity 0.4s ease 0.4s,
+        transform 0.4s ease 0.4s;
+}
+.block-wrapper.triggered
+    .aspirations-viewport
+    .aspirations-list
+    li:nth-child(5) {
+    transition:
+        opacity 0.4s ease 0.5s,
+        transform 0.4s ease 0.5s;
+}
+.block-wrapper.triggered
+    .aspirations-viewport
+    .aspirations-list
+    li:nth-child(6) {
+    transition:
+        opacity 0.4s ease 0.6s,
+        transform 0.4s ease 0.6s;
 }
 @keyframes aspir-title-in {
     0% {
