@@ -5,6 +5,12 @@ const SUPPORTS_SCROLL_TIMELINE =
   CSS.supports &&
   CSS.supports("animation-timeline: view()");
 
+const SCROLL_DRIVEN_TYPES = [
+  "aspirations",
+  "bienvenue",
+  "nousRejoindre",
+];
+
 const INTERNAL_TYPES = [
   "aspirations",
   "bienvenue",
@@ -37,7 +43,7 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
       if (el) {
         if (SUPPORTS_SCROLL_TIMELINE) {
           const block = (blocksCache || []).find((b) => b.id === id);
-          if (block && INTERNAL_TYPES.includes(block.type)) continue;
+          if (block && SCROLL_DRIVEN_TYPES.includes(block.type)) continue;
         }
         el.dataset.blockId = id;
         observer.observe(el);
@@ -166,7 +172,7 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
             if (id) {
               if (SUPPORTS_SCROLL_TIMELINE) {
                 const block = (blocksCache || []).find((b) => b.id === id);
-                if (block && INTERNAL_TYPES.includes(block.type)) return;
+                if (block && SCROLL_DRIVEN_TYPES.includes(block.type)) return;
               }
               triggeredBlocks.value = [...triggeredBlocks.value, id];
               observer.unobserve(entry.target);
@@ -278,7 +284,7 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
                   );
                   if (
                     block &&
-                    INTERNAL_TYPES.includes(block.type)
+                    SCROLL_DRIVEN_TYPES.includes(block.type)
                   )
                     return;
                 }
@@ -301,7 +307,7 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
           if (el && observer) {
             if (SUPPORTS_SCROLL_TIMELINE) {
               const block = (blocksCache || []).find((b) => b.id === id);
-              if (block && INTERNAL_TYPES.includes(block.type)) continue;
+              if (block && SCROLL_DRIVEN_TYPES.includes(block.type)) continue;
             }
             const rect = el.getBoundingClientRect();
             if (rect.top < window.innerHeight * 0.9) {

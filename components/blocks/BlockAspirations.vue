@@ -1,5 +1,8 @@
 <template>
-    <div class="aspirations-viewport" :class="visibilityClasses">
+    <div
+        class="aspirations-viewport"
+        :class="[visibilityClasses, { triggered: isTriggered || isEditor }]"
+    >
         <div
             class="sticky-box"
             :style="{
@@ -26,7 +29,7 @@
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { computed, inject } from "vue";
 const {
     backgroundGradient = "",
     backgroundColor = "#fff",
@@ -34,6 +37,7 @@ const {
     title = "",
     items = [],
     visibility = {},
+    isTriggered = false,
 } = defineProps({
     backgroundGradient: { type: String, default: "" },
     backgroundColor: { type: String, default: "#fff" },
@@ -41,7 +45,10 @@ const {
     title: { type: String, default: "" },
     items: { type: Array, default: () => [] },
     visibility: { type: Object, default: () => ({}) },
+    isTriggered: { type: Boolean, default: false },
 });
+
+const isEditor = inject("isEditor", false);
 
 const visibilityClasses = computed(() => ({
     "hide-mobile": visibility.mobile === false,
@@ -289,6 +296,25 @@ function getCircleStyle(index) {
         opacity 0.4s ease 0.6s,
         transform 0.4s ease 0.6s;
 }
+.aspirations-viewport.triggered .aspirations-title,
+.aspirations-viewport.triggered .aspirations-list li {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+}
+.aspirations-viewport.triggered {
+    height: auto !important;
+}
+.aspirations-viewport.triggered .sticky-box {
+    position: relative !important;
+    top: auto !important;
+    min-height: auto !important;
+    padding: 50px 20px !important;
+}
+.aspirations-viewport.triggered .circle {
+    display: none !important;
+}
+
 @keyframes aspir-title-in {
     0% {
         opacity: 0;
