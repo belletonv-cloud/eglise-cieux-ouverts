@@ -25,6 +25,7 @@ Déployé sur Cloudflare Pages.
 - **Push sur main** → Cloudflare Pages déploie automatiquement
 - **Build** : `nuxt build` (Nitro preset `cloudflare-pages`)
 - Vérifier que la branche est bien `main` (pas `master`)
+- ⚠️ **Ne pas utiliser `npm run deploy` localement** — le CI fait le déploiement automatiquement. La commande existe mais nécessite `wrangler login` (et le CI est plus fiable).
 
 ## Structure
 
@@ -56,7 +57,7 @@ Tout fonctionne sur Node 22 : `nuxt dev`, `nuxt build`, les tests Playwright, le
 ```bash
 npm run dev       # dev local
 npm run test:e2e  # build + tests Playwright
-npm run deploy    # build + wrangler
+# Déploiement : push sur main → Cloudflare Pages auto-deploy
 ```
 
 Si votre manager de version ne switch pas automatiquement vers Node 22 :
