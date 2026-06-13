@@ -15,7 +15,7 @@
                     v-for="(h, i) in horaires"
                     :key="i"
                     class="rejoins-horaire"
-                    :style="{ transitionDelay: 0.2 + i * 0.12 + 's' }"
+                    :style="{ transitionDelay: 0.2 + i * 0.12 + 's', '--item-delay': i * 0.12 + 's' }"
                 >
                     <span class="horaire-time">{{ h.heure }}</span>
                     <span class="horaire-label">{{ h.label }}</span>
@@ -111,18 +111,19 @@ const visibilityClasses = computed(() => ({
 }
 
 /* Scroll-driven — text glides from left, horaires from below */
-/* Uses named view-timeline: --rejoins (set on section)       */
-/* Scrolling down: text in first, then horaires in            */
-/* Scrolling up:   horaires leave first, then text leaves    */
+/* Wide ranges so animation is visible (not done before entry)  */
+/* Staggered horaires via --item-delay animation-delay          */
+/* Scrolling down: text in (0-40%), then horaires (30-60%)      */
+/* Scrolling up:   horaires leave (60-30%), then text (40-0%)  */
 @keyframes text-from-left {
     0%   { opacity: 0; transform: translateX(-120px); }
-    15%  { opacity: 1; transform: translateX(0); }
+    40%  { opacity: 1; transform: translateX(0); }
     100% { opacity: 1; transform: translateX(0); }
 }
 @keyframes horaires-from-below {
     0%   { opacity: 0; transform: translateY(60px); }
-    15%  { opacity: 0; transform: translateY(60px); }
-    35%  { opacity: 1; transform: translateY(0); }
+    30%  { opacity: 0; transform: translateY(60px); }
+    60%  { opacity: 1; transform: translateY(0); }
     100% { opacity: 1; transform: translateY(0); }
 }
 @supports (animation-timeline: view()) {
@@ -135,6 +136,7 @@ const visibilityClasses = computed(() => ({
         animation: horaires-from-below ease-in-out both;
         animation-timeline: --rejoins;
         animation-range: cover 0% cover 100%;
+        animation-delay: var(--item-delay, 0s);
     }
 }
 
