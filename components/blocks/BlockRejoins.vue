@@ -110,22 +110,25 @@ const visibilityClasses = computed(() => ({
 }
 
 /* Scroll-driven — text glides from left, horaires from below */
-/* Scrolling down: text in first, then horaires in                     */
-/* Scrolling up:   horaires leave first, then text leaves             */
+/* Opacity stays !important (always visible via @supports + triggered)  */
+/* Transform animates on scroll (animation overrides normal decls)      */
+/* Scrolling down: text in first, then horaires in                      */
+/* Scrolling up:   horaires leave first, then text leaves              */
 @keyframes text-from-left {
-    0%   { transform: translateX(-120px); opacity: 0; }
-    15%  { transform: translateX(0);      opacity: 1; }
-    100% { transform: translateX(0);      opacity: 1; }
+    0%   { transform: translateX(-120px); }
+    15%  { transform: translateX(0); }
+    100% { transform: translateX(0); }
 }
 @keyframes horaires-from-below {
-    0%   { transform: translateY(60px); opacity: 0; }
-    15%  { transform: translateY(60px); opacity: 0; }
-    35%  { transform: translateY(0);    opacity: 1; }
-    100% { transform: translateY(0);    opacity: 1; }
+    0%   { transform: translateY(60px); }
+    15%  { transform: translateY(60px); }
+    35%  { transform: translateY(0); }
+    100% { transform: translateY(0); }
 }
 @supports (animation-timeline: view()) {
     .rejoins-text-container,
     .rejoins-horaire {
+        opacity: 1 !important;
         transition: none !important;
     }
     .rejoins-text-container {
