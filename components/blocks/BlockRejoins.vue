@@ -15,7 +15,7 @@
                     v-for="(h, i) in horaires"
                     :key="i"
                     class="rejoins-horaire"
-                    :style="{ '--item-delay': 0.2 + i * 0.12 + 's', transitionDelay: 0.2 + i * 0.12 + 's' }"
+                    :style="{ transitionDelay: 0.2 + i * 0.12 + 's' }"
                 >
                     <span class="horaire-time">{{ h.heure }}</span>
                     <span class="horaire-label">{{ h.label }}</span>
@@ -109,14 +109,19 @@ const visibilityClasses = computed(() => ({
     transform: none;
 }
 
-/* Scroll-driven parallax — text glides up/down on scroll */
-@keyframes text-glide {
-    from { transform: translateY(35%); }
-    to { transform: translateY(-35%); }
+/* Scroll-driven — text glides from left, horaires from below */
+/* Scrolling down: text in first, then horaires in                     */
+/* Scrolling up:   horaires leave first, then text leaves             */
+@keyframes text-from-left {
+    0%   { transform: translateX(-120px); opacity: 0; }
+    15%  { transform: translateX(0);      opacity: 1; }
+    100% { transform: translateX(0);      opacity: 1; }
 }
-@keyframes item-glide {
-    from { transform: translateY(80px); }
-    to { transform: translateY(-30px); }
+@keyframes horaires-from-below {
+    0%   { transform: translateY(60px); opacity: 0; }
+    15%  { transform: translateY(60px); opacity: 0; }
+    35%  { transform: translateY(0);    opacity: 1; }
+    100% { transform: translateY(0);    opacity: 1; }
 }
 @supports (animation-timeline: view()) {
     .rejoins-text-container,
@@ -126,15 +131,14 @@ const visibilityClasses = computed(() => ({
         transition: none !important;
     }
     .rejoins-text-container {
-        animation: text-glide ease-in-out;
+        animation: text-from-left ease-in-out both;
         animation-timeline: view();
-        animation-range: entry 0% exit 100%;
+        animation-range: cover 0% cover 100%;
     }
     .rejoins-horaire {
-        animation: item-glide ease-in-out;
+        animation: horaires-from-below ease-in-out both;
         animation-timeline: view();
-        animation-range: entry 0% exit 100%;
-        animation-delay: var(--item-delay, 0s);
+        animation-range: cover 0% cover 100%;
     }
 }
 
