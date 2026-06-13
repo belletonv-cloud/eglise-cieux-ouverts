@@ -1,7 +1,7 @@
 <template>
     <div
         class="aspirations-viewport"
-        :class="[visibilityClasses, { triggered: isTriggered || isEditor }]"
+        :class="[visibilityClasses, { triggered: isTriggered }]"
     >
         <div
             class="sticky-box"

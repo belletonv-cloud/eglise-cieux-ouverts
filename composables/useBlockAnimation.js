@@ -52,8 +52,11 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
   }
 
   function initAdminTrigger(blocks) {
-    const allIds = (blocks || []).map((b) => b.id).filter(Boolean);
-    triggeredBlocks.value = [...allIds]; // Array au lieu de Set
+    const allIds = (blocks || [])
+      .filter((b) => !SCROLL_DRIVEN_TYPES.includes(b.type))
+      .map((b) => b.id)
+      .filter(Boolean);
+    triggeredBlocks.value = [...allIds];
   }
 
   function setupFallbackObservers(blocks) {
@@ -186,8 +189,11 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
 
   function handleBlocksChange(blocks) {
     if (isAdmin.value) {
-      const allIds = (blocks || []).map((b) => b.id).filter(Boolean);
-      triggeredBlocks.value = [...allIds]; // Array au lieu de Set
+      const allIds = (blocks || [])
+        .filter((b) => !SCROLL_DRIVEN_TYPES.includes(b.type))
+        .map((b) => b.id)
+        .filter(Boolean);
+      triggeredBlocks.value = [...allIds];
       return;
     }
     observeElements();
@@ -244,10 +250,12 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
       const maxAttempts = 10;
 
       const applyTriggeredClasses = () => {
-        const allIds = (blocksCache || []).map((b) => b.id).filter(Boolean);
+        const allIds = (blocksCache || [])
+          .filter((b) => !SCROLL_DRIVEN_TYPES.includes(b.type))
+          .map((b) => b.id)
+          .filter(Boolean);
         triggeredBlocks.value = [...allIds];
 
-        // Appliquer directement sur le DOM
         for (const id of allIds) {
           document.querySelectorAll(`[data-block-id="${id}"]`).forEach((el) => {
             if (el && !el.classList.contains("triggered")) {

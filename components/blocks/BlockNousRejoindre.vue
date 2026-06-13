@@ -2,7 +2,7 @@
     <section
         class="block-nous-rejoindre"
         :style="{ background: backgroundGradient }"
-        :class="[visibilityClasses, { triggered: isTriggered || isEditor }]"
+        :class="[visibilityClasses, { triggered: isTriggered }]"
     >
         <div class="circle circle-left"></div>
         <div class="circle circle-right"></div>

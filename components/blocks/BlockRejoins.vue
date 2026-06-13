@@ -2,7 +2,7 @@
     <section
         class="block-rejoins"
         :style="{ background: backgroundGradient || '#064886' }"
-        :class="[visibilityClasses, { triggered: isTriggered || isEditor }]"
+        :class="[visibilityClasses, { triggered: isTriggered }]"
     >
         <div class="rejoins-inner">
             <div class="rejoins-text-container">
