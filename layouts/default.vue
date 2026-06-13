@@ -190,9 +190,6 @@ function onFooterClick(e) {
 #app-root.admin-mode .admin-preview-frame {
     /* header-spacer already accounts for the admin toolbar offset */
 }
-#app-root.admin-mode .block-main-hero {
-    margin-top: 0 !important;
-}
 .admin-preview-frame.preview-tablet {
     max-width: 100%;
 }
