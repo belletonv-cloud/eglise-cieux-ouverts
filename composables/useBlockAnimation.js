@@ -5,6 +5,13 @@ const SUPPORTS_SCROLL_TIMELINE =
   CSS.supports &&
   CSS.supports("animation-timeline: view()");
 
+const INTERNAL_TYPES = [
+  "aspirations",
+  "bienvenue",
+  "nousRejoindre",
+  "rejoins",
+];
+
 export function useBlockAnimation(isAdmin, isServerAdminRef) {
   const triggeredBlocks = ref([]); // Array au lieu de Set pour la réactivité Vue
   const wrapperRefs = ref({});
@@ -28,6 +35,10 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
     if (!observer) return;
     for (const [id, el] of Object.entries(wrapperRefs.value)) {
       if (el) {
+        if (SUPPORTS_SCROLL_TIMELINE) {
+          const block = (blocksCache || []).find((b) => b.id === id);
+          if (block && INTERNAL_TYPES.includes(block.type)) continue;
+        }
         el.dataset.blockId = id;
         observer.observe(el);
       }
@@ -41,20 +52,20 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
 
   function setupFallbackObservers(blocks) {
     if (SUPPORTS_SCROLL_TIMELINE) return;
-    const internalTypes = [
-      "aspirations",
-      "bienvenue",
-      "nousRejoindre",
-      "rejoins",
-    ];
     for (const block of blocks || []) {
-      if (internalTypes.includes(block.type)) {
+      if (INTERNAL_TYPES.includes(block.type)) {
         const el = wrapperRefs.value[block.id];
         if (el && !fallbackObservers.has(block.id)) {
           const fbObserver = new IntersectionObserver(
             ([entry]) => {
               if (entry.isIntersecting) {
                 entry.target.classList.add("triggered");
+                if (!triggeredBlocks.value.includes(block.id)) {
+                  triggeredBlocks.value = [
+                    ...triggeredBlocks.value,
+                    block.id,
+                  ];
+                }
                 fbObserver.unobserve(entry.target);
               }
             },
@@ -69,16 +80,10 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
 
   function replayBlockAnimation(id) {
     const el = wrapperRefs.value[id];
-    const internalTypes = [
-      "aspirations",
-      "nousRejoindre",
-      "bienvenue",
-      "rejoins",
-    ];
     const block = blocksCache.find((b) => b.id === id);
 
     // For internal animations, we need special handling
-    if (internalTypes.includes(block?.type)) {
+    if (INTERNAL_TYPES.includes(block?.type)) {
       triggeredBlocks.value = triggeredBlocks.value.filter(
         (item) => item !== id,
       );
@@ -159,6 +164,10 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
           if (entry.isIntersecting) {
             const id = entry.target.dataset.blockId;
             if (id) {
+              if (SUPPORTS_SCROLL_TIMELINE) {
+                const block = (blocksCache || []).find((b) => b.id === id);
+                if (block && INTERNAL_TYPES.includes(block.type)) return;
+              }
               triggeredBlocks.value = [...triggeredBlocks.value, id];
               observer.unobserve(entry.target);
             }
@@ -263,6 +272,16 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
             if (entry.isIntersecting) {
               const id = entry.target.dataset?.blockId;
               if (id) {
+                if (SUPPORTS_SCROLL_TIMELINE) {
+                  const block = (blocksCache || []).find(
+                    (b) => b.id === id,
+                  );
+                  if (
+                    block &&
+                    INTERNAL_TYPES.includes(block.type)
+                  )
+                    return;
+                }
                 triggeredBlocks.value = [...triggeredBlocks.value, id];
                 observer.unobserve(entry.target);
               }
@@ -280,9 +299,12 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
       setTimeout(() => {
         for (const [id, el] of Object.entries(wrapperRefs.value)) {
           if (el && observer) {
+            if (SUPPORTS_SCROLL_TIMELINE) {
+              const block = (blocksCache || []).find((b) => b.id === id);
+              if (block && INTERNAL_TYPES.includes(block.type)) continue;
+            }
             const rect = el.getBoundingClientRect();
             if (rect.top < window.innerHeight * 0.9) {
-              // Element is in viewport
               if (!triggeredBlocks.value.includes(id)) {
                 triggeredBlocks.value = [...triggeredBlocks.value, id];
                 observer.unobserve(el);

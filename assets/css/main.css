@@ -308,6 +308,40 @@ a:hover, .nav-admin-link:hover {
   .section-title { font-size: 1.6em; margin-bottom: 10px; }
 }
 
+/* Internal block fallbacks (IntersectionObserver-activated .triggered class) */
+@media (min-width: 769px) {
+  .block-wrapper.triggered .aspirations-viewport {
+    height: auto !important;
+  }
+  .block-wrapper.triggered .aspirations-viewport .sticky-box {
+    position: relative !important;
+    top: auto !important;
+    min-height: auto !important;
+    padding: 50px 20px !important;
+  }
+}
+
+.block-wrapper.triggered .block-rejoins .rejoins-text-container,
+.block-wrapper.triggered .block-rejoins .rejoins-horaire {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+.block-wrapper.triggered .hero-bienvenue-portal,
+.block-wrapper.triggered .hero-subtitle,
+.block-wrapper.triggered .hero-socials {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+.block-wrapper.triggered .block-nous-rejoindre .cta-link {
+  opacity: 1 !important;
+  transform: none !important;
+}
+.block-wrapper.triggered .block-nous-rejoindre .circle {
+  display: none !important;
+}
+
 .fade-in-header {
   opacity: 0;
   transform: translateY(16px);
