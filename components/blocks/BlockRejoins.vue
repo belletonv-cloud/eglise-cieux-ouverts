@@ -15,7 +15,7 @@
                     v-for="(h, i) in horaires"
                     :key="i"
                     class="rejoins-horaire"
-                    :style="{ transitionDelay: 0.2 + i * 0.12 + 's' }"
+                    :style="{ '--item-delay': 0.2 + i * 0.12 + 's', transitionDelay: 0.2 + i * 0.12 + 's' }"
                 >
                     <span class="horaire-time">{{ h.heure }}</span>
                     <span class="horaire-label">{{ h.label }}</span>
@@ -58,12 +58,11 @@ const visibilityClasses = computed(() => ({
 </script>
 
 <style scoped>
-/* Styles identiques, inchangés */
 .block-rejoins {
     container-type: inline-size;
-    padding: 70px 24px;
+    padding: 100px 24px;
     color: white;
-    overflow: hidden;
+    overflow: visible;
     position: relative;
     min-height: 600px;
 }
@@ -109,6 +108,36 @@ const visibilityClasses = computed(() => ({
     opacity: 1;
     transform: none;
 }
+
+/* Scroll-driven parallax — text glides up/down on scroll */
+@keyframes text-glide {
+    from { transform: translateY(35%); }
+    to { transform: translateY(-35%); }
+}
+@keyframes item-glide {
+    from { transform: translateY(80px); }
+    to { transform: translateY(-30px); }
+}
+@supports (animation-timeline: view()) {
+    .rejoins-text-container,
+    .rejoins-horaire {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+    }
+    .rejoins-text-container {
+        animation: text-glide ease-in-out;
+        animation-timeline: view();
+        animation-range: entry 0% exit 100%;
+    }
+    .rejoins-horaire {
+        animation: item-glide ease-in-out;
+        animation-timeline: view();
+        animation-range: entry 0% exit 100%;
+        animation-delay: var(--item-delay, 0s);
+    }
+}
+
 .rejoins-title {
     font-family: Helvetica, Arial, sans-serif;
     font-size: 75px;
@@ -169,6 +198,5 @@ const visibilityClasses = computed(() => ({
         min-height: 400px;
     }
 }
-
 
 </style>

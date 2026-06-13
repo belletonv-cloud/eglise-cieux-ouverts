@@ -9,6 +9,7 @@ const SCROLL_DRIVEN_TYPES = [
   "aspirations",
   "bienvenue",
   "nousRejoindre",
+  "rejoins",
 ];
 
 const INTERNAL_TYPES = [
@@ -17,6 +18,10 @@ const INTERNAL_TYPES = [
   "nousRejoindre",
   "rejoins",
 ];
+
+function shouldSkipTrigger(type) {
+  return SUPPORTS_SCROLL_TIMELINE && SCROLL_DRIVEN_TYPES.includes(type);
+}
 
 export function useBlockAnimation(isAdmin, isServerAdminRef) {
   const triggeredBlocks = ref([]); // Array au lieu de Set pour la réactivité Vue
@@ -53,7 +58,7 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
 
   function initAdminTrigger(blocks) {
     const allIds = (blocks || [])
-      .filter((b) => !SCROLL_DRIVEN_TYPES.includes(b.type))
+      .filter((b) => !shouldSkipTrigger(b.type))
       .map((b) => b.id)
       .filter(Boolean);
     triggeredBlocks.value = [...allIds];
@@ -190,7 +195,7 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
   function handleBlocksChange(blocks) {
     if (isAdmin.value) {
       const allIds = (blocks || [])
-        .filter((b) => !SCROLL_DRIVEN_TYPES.includes(b.type))
+        .filter((b) => !shouldSkipTrigger(b.type))
         .map((b) => b.id)
         .filter(Boolean);
       triggeredBlocks.value = [...allIds];
@@ -251,7 +256,7 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
 
       const applyTriggeredClasses = () => {
         const allIds = (blocksCache || [])
-          .filter((b) => !SCROLL_DRIVEN_TYPES.includes(b.type))
+        .filter((b) => !shouldSkipTrigger(b.type))
           .map((b) => b.id)
           .filter(Boolean);
         triggeredBlocks.value = [...allIds];
