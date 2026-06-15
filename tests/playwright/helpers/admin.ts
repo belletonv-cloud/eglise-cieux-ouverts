@@ -1,4 +1,4 @@
-import { Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
 
 /**
  * Navigue sur une page avec ?admin=true et attend la toolbar admin

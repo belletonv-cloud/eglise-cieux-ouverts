@@ -29,7 +29,7 @@
 </template>
 
 <script setup>
-import { computed, inject } from "vue";
+import { computed } from "vue";
 const {
     backgroundGradient = "",
     backgroundColor = "#fff",
@@ -47,8 +47,6 @@ const {
     visibility: { type: Object, default: () => ({}) },
     isTriggered: { type: Boolean, default: false },
 });
-
-const isEditor = inject("isEditor", false);
 
 const visibilityClasses = computed(() => ({
     "hide-mobile": visibility.mobile === false,

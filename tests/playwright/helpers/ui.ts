@@ -1,4 +1,4 @@
-import { Page } from '@playwright/test'
+import type { Page } from '@playwright/test'
 
 /**
  * Attend que l'indicateur auto-sauvegarde apparaisse après un changement

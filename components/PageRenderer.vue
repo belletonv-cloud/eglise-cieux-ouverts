@@ -102,12 +102,6 @@ watch(
     (v) => {
         if (selectedId.value !== v) {
             selectedId.value = v;
-            try {
-                if (import.meta.env.DEV)
-                    console.debug("PageRenderer.selectedId changed", {
-                        selectedId: v,
-                    });
-            } catch (e) {}
         }
     },
     { immediate: true },
@@ -116,7 +110,10 @@ watch(
 // Call setup synchronously during component setup (safe for lifecycle hooks).
 try {
     setup(props.blocks || []);
-} catch (e) {}
+} catch (e) {
+    if (typeof window !== "undefined")
+        console.warn("PageRenderer: setup failed", e);
+}
 
 if (typeof window !== "undefined" && import.meta.client) {
     isMounted.value = true;
@@ -149,13 +146,6 @@ if (typeof window !== "undefined" && import.meta.client) {
                 const bid = wrapper.getAttribute("data-block-id");
                 if (bid) {
                     try {
-                        if (import.meta.env.DEV)
-                            console.debug(
-                                "PageRenderer.docClick: found wrapper",
-                                { id: bid },
-                            );
-                    } catch (e) {}
-                    try {
                         selectBlock(bid);
                     } catch (e) {
                         console.error(
@@ -165,7 +155,9 @@ if (typeof window !== "undefined" && import.meta.client) {
                     }
                     try {
                         if (editingBlockId) editingBlockId.value = bid;
-                    } catch (e) {}
+                    } catch (e) {
+                        console.warn("PageRenderer.docClick: could not set editingBlockId", e);
+                    }
                     try {
                         document
                             .querySelectorAll(".block-wrapper.admin-selected")
@@ -173,7 +165,9 @@ if (typeof window !== "undefined" && import.meta.client) {
                                 el.classList.remove("admin-selected"),
                             );
                         wrapper.classList.add("admin-selected");
-                    } catch (e) {}
+                    } catch (e) {
+                        console.warn("PageRenderer.docClick: could not update DOM classes", e);
+                    }
                 }
             }
         } catch (e) {
@@ -191,18 +185,15 @@ if (typeof window !== "undefined" && import.meta.client) {
                 const bid = wrapper.getAttribute("data-block-id");
                 if (bid) {
                     try {
-                        if (import.meta.env.DEV)
-                            console.debug(
-                                "PageRenderer.docPointer: found wrapper",
-                                { id: bid },
-                            );
-                    } catch (e) {}
-                    try {
                         selectBlock(bid);
-                    } catch (e) {}
+                    } catch (e) {
+                        console.warn("PageRenderer.docPointer: selectBlock failed", e);
+                    }
                     try {
                         if (editingBlockId) editingBlockId.value = bid;
-                    } catch (e) {}
+                    } catch (e) {
+                        console.warn("PageRenderer.docPointer: could not set editingBlockId", e);
+                    }
                     try {
                         document
                             .querySelectorAll(".block-wrapper.admin-selected")
@@ -210,7 +201,9 @@ if (typeof window !== "undefined" && import.meta.client) {
                                 el.classList.remove("admin-selected"),
                             );
                         wrapper.classList.add("admin-selected");
-                    } catch (e) {}
+                    } catch (e) {
+                        console.warn("PageRenderer.docPointer: could not update DOM classes", e);
+                    }
                 }
             }
         } catch (e) {
@@ -236,38 +229,17 @@ onUnmounted(() => {
 // Click wrapper handler that logs and forwards to selectBlock
 function wrapperClick(id) {
     try {
-        if (import.meta.env.DEV)
-            console.debug("PageRenderer.wrapperClick: before", {
-                id,
-                editing: editingBlockId?.value,
-            });
-    } catch (e) {}
-    try {
         selectBlock(id);
     } catch (e) {
-        if (import.meta.env.DEV)
-            console.debug("PageRenderer.wrapperClick: selectBlock threw", e);
+        console.warn("PageRenderer.wrapperClick: selectBlock threw", e);
     }
-    // Fallback: ensure the injected editingBlockId ref is updated even if
-    // the provided selectBlock is not wired correctly in some environments.
     try {
         if (editingBlockId && editingBlockId.value !== id) {
             editingBlockId.value = id;
         }
     } catch (e) {
-        if (import.meta.env.DEV)
-            console.debug(
-                "PageRenderer.wrapperClick: failed to set editingBlockId directly",
-                e,
-            );
+        console.warn("PageRenderer.wrapperClick: failed to set editingBlockId directly", e);
     }
-    try {
-        if (import.meta.env.DEV)
-            console.debug("PageRenderer.wrapperClick: after", {
-                id,
-                editing: editingBlockId?.value,
-            });
-    } catch (e) {}
 }
 
 function isSelected(block) {
@@ -279,14 +251,6 @@ function isSelected(block) {
             editingBlockId &&
             editingBlockId.value === block.id,
         );
-        try {
-            if (import.meta.env.DEV)
-                console.debug("PageRenderer.isSelected", {
-                    blockId: block.id,
-                    editing: editingBlockId?.value,
-                    result: sel,
-                });
-        } catch (e) {}
         return sel;
     } catch (e) {
         return false;
@@ -317,21 +281,12 @@ if (typeof window !== "undefined" && import.meta.client) {
                                     .querySelector("[data-block-id]")
                                     ?.getAttribute("data-block-id") ||
                                 "unknown";
-                            if (import.meta.env.DEV)
-                                console.debug(
-                                    "PageRenderer: found [object Promise] text in wrapper",
-                                    {
-                                        blockId: bid,
-                                        html: w.innerHTML.slice(0, 300),
-                                    },
-                                );
                         }
                     }
                 }
             }, 50);
         } catch (e) {
-            if (import.meta.env.DEV)
-                console.debug("PageRenderer: error in promise-text scanner", e);
+            console.warn("PageRenderer: error in promise-text scanner", e);
         }
     });
 }

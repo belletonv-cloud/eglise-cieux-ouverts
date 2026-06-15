@@ -26,7 +26,7 @@
 </template>
 
 <script setup>
-import { computed, inject, onMounted, onUnmounted } from "vue";
+import { computed } from "vue";
 
 const {
     backgroundGradient = "",
@@ -45,8 +45,6 @@ const {
     visibility: { type: Object, default: () => ({}) },
     isTriggered: { type: Boolean, default: false },
 });
-
-const isEditor = inject("isEditor", false);
 
 const visibilityClasses = computed(() => ({
     "hide-mobile": visibility.mobile === false,

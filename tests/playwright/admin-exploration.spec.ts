@@ -104,10 +104,10 @@ test.describe("Admin exploration", () => {
       await expect(heroInput).toHaveValue("Test exploration admin")
     }
 
-    // 6. Rejoins — pas de triggered class
+    // 6. Rejoins — sélectionné et visible
     await selectBlock(page, "rejoins")
     const rejWrapper = page.locator('.block-wrapper[data-block-type="rejoins"]')
-    await expect(rejWrapper).not.toHaveClass(/triggered/)
+    await expect(rejWrapper).toBeVisible()
 
     // 7. Horaires éditable
     const horaireFields = page

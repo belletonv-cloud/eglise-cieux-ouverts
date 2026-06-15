@@ -27,7 +27,7 @@
               <button class="modal-close" @click="modalOpen = false">&times;</button>
               <img :src="activeItem.image" :alt="activeItem.title" class="modal-img" />
               <h3 class="modal-title">{{ activeItem.title }}</h3>
-              <div class="modal-body" v-html="activeItem.description?.replace(/\n/g, '<br>')"></div>
+              <div class="modal-body" v-html="sanitizeDesc(activeItem.description)"></div>
             </div>
           </div>
         </Transition>
@@ -51,7 +51,7 @@
           <label :for="`act-cb-${uid}-${i}`" class="modal-close">&times;</label>
           <img :src="item.image" :alt="item.title" class="modal-img" loading="lazy" />
           <h3 class="modal-title">{{ item.title }}</h3>
-          <div class="modal-body" v-html="item.description?.replace(/\n/g, '<br>')"></div>
+          <div class="modal-body" v-html="sanitizeDesc(item.description)"></div>
         </div>
       </div>
     </template>
@@ -60,6 +60,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import DOMPurify from 'isomorphic-dompurify'
 
 const {
   items = [],
@@ -89,6 +90,11 @@ function getShortDesc(desc) {
   if (!desc) return ''
   const first = desc.split('\n')[0]
   return first.length > 120 ? first.slice(0, 120) + '…' : first
+}
+
+function sanitizeDesc(desc) {
+  if (!desc) return ''
+  return DOMPurify.sanitize(desc.replace(/\n/g, '<br>'))
 }
 
 const visibilityClasses = computed(() => ({

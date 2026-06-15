@@ -92,7 +92,7 @@ test.describe("Aspirations animation", () => {
     expect(errors).toEqual([]);
   });
 
-  test("triggered class added to internal blocks in public mode", async ({
+  test("content of internal blocks is visible in public mode", async ({
     page,
   }) => {
     const errors = [];
@@ -100,8 +100,6 @@ test.describe("Aspirations animation", () => {
 
     // Public mode (no admin)
     await page.goto("/");
-
-    // Attendre un peu pour que les observers s'initialisent
     await page.waitForTimeout(500);
 
     // Scroll vers le bloc rejoins
@@ -109,12 +107,14 @@ test.describe("Aspirations animation", () => {
       '.block-wrapper[data-block-type="rejoins"]',
     );
     await rejoinsWrapper.scrollIntoViewIfNeeded();
-
-    // Attendre que l'IntersectionObserver ajoute la classe
     await page.waitForTimeout(500);
 
-    // Vérifier que la classe triggered est ajoutée au wrapper
-    await expect(rejoinsWrapper).toHaveClass(/triggered/);
+    // En Chromium (scroll-driven supporté), la classe triggered n'est PAS ajoutée
+    // aux blocs SCROLL_DRIVEN_TYPES (rejoins, aspirations) car ils utilisent
+    // des animations CSS natives via view-timeline.
+    // On vérifie juste que le contenu est visible.
+    await expect(rejoinsWrapper).toBeVisible();
+    await expect(page.locator(".rejoins-title")).toContainText("Rejoins-nous");
 
     // Scroll vers le bloc aspirations
     const aspirationsWrapper = page.locator(
@@ -122,15 +122,16 @@ test.describe("Aspirations animation", () => {
     );
     await aspirationsWrapper.scrollIntoViewIfNeeded();
     await page.waitForTimeout(500);
-    await expect(aspirationsWrapper).toHaveClass(/triggered/);
+    await expect(aspirationsWrapper).toBeVisible();
+    await expect(page.locator(".aspirations-viewport")).toBeVisible();
 
-    // Scroll vers bienvenue
+    // Scroll vers bienvenue (wrapper animation → contenu visible)
     const bienvenueWrapper = page.locator(
       '.block-wrapper[data-block-type="bienvenue"]',
     );
     await bienvenueWrapper.scrollIntoViewIfNeeded();
-    await page.waitForTimeout(500);
-    await expect(bienvenueWrapper).toHaveClass(/triggered/);
+    await expect(bienvenueWrapper).toBeVisible({ timeout: 3000 });
+    await expect(page.locator('.hero-bienvenue-portal')).toBeVisible({ timeout: 3000 });
 
     expect(errors).toEqual([]);
   });

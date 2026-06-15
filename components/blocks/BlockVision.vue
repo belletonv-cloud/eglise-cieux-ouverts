@@ -7,7 +7,7 @@
   >
     <div class="vision-content" :style="contentStyle">
       <p class="vision-label" v-if="label">{{ label }}</p>
-      <p class="vision-quote" v-if="quote" v-html="formattedQuote"></p>
+      <p class="vision-quote" v-if="quote" v-html="DOMPurify.sanitize(formattedQuote)"></p>
       <NuxtLink v-if="ctaText && ctaLink" :to="ctaLink" class="btn btn-white">{{ ctaText }}</NuxtLink>
     </div>
   </section>
@@ -15,6 +15,7 @@
 
 <script setup>
 import { computed, ref, onMounted, onUnmounted, inject } from 'vue'
+import DOMPurify from 'isomorphic-dompurify'
 const {
   backgroundGradient = '',
   textColor = '#222',

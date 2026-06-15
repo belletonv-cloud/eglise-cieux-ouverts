@@ -134,7 +134,7 @@ const onEscape = (e) => {
         exitAdmin();
         useRouter()
             .replace({ query: {} })
-            .catch(() => {});
+            .catch((e) => console.warn("layouts/default: router.replace failed", e));
     }
 };
 onMounted(() => {

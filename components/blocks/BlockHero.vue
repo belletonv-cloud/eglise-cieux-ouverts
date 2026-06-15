@@ -101,7 +101,7 @@ const visibilityClasses = computed(() => ({
     "hide-tablet": visibility.tablet === false,
     "hide-desktop": visibility.desktop === false,
 }));
-const showDragHandle = typeof window !== "undefined" && window.__PW_TEST;
+const showDragHandle = false;
 </script>
 
 <style scoped>

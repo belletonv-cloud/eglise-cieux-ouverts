@@ -24,14 +24,14 @@
 </template>
 
 <script setup lang="ts">
-import { Teleport, ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { Teleport, ref, computed, onMounted, onUnmounted, watch, type PropType } from 'vue'
 
 const props = defineProps({
   event: { type: Object, required: true },
   x: { type: Number, default: 0 },
   y: { type: Number, default: 0 },
   visible: { type: Boolean, default: false },
-  onClose: { type: Function, required: true },
+  onClose: { type: Function as PropType<(e: MouseEvent) => void>, required: true },
 })
 
 const popoverEl = ref<HTMLElement|null>(null)
@@ -43,10 +43,10 @@ const popoverStyle = computed(() => ({
   zIndex: 9999,
   minWidth: '270px',
   maxWidth: '95vw',
-}))
+} as const))
 
 function handleKeydown(e: KeyboardEvent) {
-  if (e.key === 'Escape') props.onClose()
+  if (e.key === 'Escape') (props.onClose as () => void)()
 }
 onMounted(() => {
   window.addEventListener('keydown', handleKeydown)

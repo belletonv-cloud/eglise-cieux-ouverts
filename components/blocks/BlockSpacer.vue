@@ -7,6 +7,8 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
+
 const { visibility = {} } = defineProps({
   height: { type: Number, default: 60 },
   backgroundColor: { type: String, default: 'transparent' },

@@ -18,13 +18,13 @@ export default defineNuxtConfig({
   typescript: {
     typeCheck: false,
     strict: false,
-    shim: false,
-    noImplicitAny: false
+    shim: false
   },
   components: [
     { path: '~/components', global: true },
     { path: '~/components/editor', global: true }
   ],
+  // @ts-expect-error: 'nitro' is valid at runtime but not in Nuxt 3.20's InputConfig type
   nitro: {
     preset: process.env.PW_TEST === '1' ? 'node-server' : 'cloudflare-pages',
   },

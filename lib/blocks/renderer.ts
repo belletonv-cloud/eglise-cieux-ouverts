@@ -59,10 +59,10 @@ export function filterByVisibility(
   device: "desktop" | "tablet" | "mobile",
 ): BlockInstance[] {
   return blocks.filter((b) => {
-    const v = b.visibility || {};
-    if (device === "mobile" && v.mobile === false) return false;
-    if (device === "tablet" && v.tablet === false) return false;
-    if (device === "desktop" && v.desktop === false) return false;
+    const v = b.visibility as Record<string, boolean | undefined> | undefined;
+    if (device === "mobile" && v?.mobile === false) return false;
+    if (device === "tablet" && v?.tablet === false) return false;
+    if (device === "desktop" && v?.desktop === false) return false;
     return true;
   });
 }

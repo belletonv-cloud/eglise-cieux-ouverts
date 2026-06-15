@@ -45,9 +45,9 @@ export default defineEventHandler(async (event) => {
   }
   
   // Cloudflare Pages: read from process.env directly
-  const firebaseProjectId = process.env.NUXT_FIREBASE_PROJECT_ID || config.firebaseProjectId || ''
-  const firebaseClientEmail = process.env.NUXT_FIREBASE_CLIENT_EMAIL || config.firebaseClientEmail || ''
-  const firebasePrivateKey = process.env.NUXT_FIREBASE_PRIVATE_KEY || config.firebasePrivateKey || ''
+  const firebaseProjectId = (process.env.NUXT_FIREBASE_PROJECT_ID || config.firebaseProjectId || '') as string
+  const firebaseClientEmail = (process.env.NUXT_FIREBASE_CLIENT_EMAIL || config.firebaseClientEmail || '') as string
+  const firebasePrivateKey = (process.env.NUXT_FIREBASE_PRIVATE_KEY || config.firebasePrivateKey || '') as string
   
   const prenom = assertString(body?.prenom, 80)
   const nom = assertString(body?.nom, 80)

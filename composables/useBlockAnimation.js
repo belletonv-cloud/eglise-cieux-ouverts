@@ -7,22 +7,19 @@ const SUPPORTS_SCROLL_TIMELINE =
 
 const SCROLL_DRIVEN_TYPES = [
   "aspirations",
-  "bienvenue",
   "nousRejoindre",
   "rejoins",
 ];
 
 const INTERNAL_TYPES = [
   "aspirations",
-  "bienvenue",
   "nousRejoindre",
   "rejoins",
 ];
 
-function shouldSkipTrigger(type) {
+function shouldSkipTrigger(type, isAdmin) {
   if (!SUPPORTS_SCROLL_TIMELINE) return false;
   if (!SCROLL_DRIVEN_TYPES.includes(type)) return false;
-  // En admin, on force l'état final via triggered (pas de scroll-driven)
   if (isAdmin?.value) return false;
   return true;
 }
@@ -62,7 +59,7 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
 
   function initAdminTrigger(blocks) {
     const allIds = (blocks || [])
-      .filter((b) => !shouldSkipTrigger(b.type))
+      .filter((b) => !shouldSkipTrigger(b.type, isAdmin))
       .map((b) => b.id)
       .filter(Boolean);
     triggeredBlocks.value = [...allIds];
@@ -133,7 +130,9 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
       // En mode public, scroll vers le bloc pour déclencher l'animation
       try {
         el?.scrollIntoView({ block: "center" });
-      } catch (err) {}
+      } catch (err) {
+        console.warn("useBlockAnimation: scrollIntoView failed for replay", err);
+      }
       return;
     }
 
@@ -152,10 +151,14 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
     if (el && observer) {
       try {
         observer.unobserve(el);
-      } catch (err) {}
+      } catch (err) {
+        console.warn("useBlockAnimation: unobserve failed", err);
+      }
       try {
         observer.observe(el);
-      } catch (err) {}
+      } catch (err) {
+        console.warn("useBlockAnimation: observe failed", err);
+      }
     }
     if (isAdmin && isAdmin.value) {
       setTimeout(() => {
@@ -164,7 +167,9 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
     } else {
       try {
         el?.scrollIntoView({ behavior: "smooth", block: "center" });
-      } catch (err) {}
+      } catch (err) {
+        console.warn("useBlockAnimation: smooth scrollIntoView failed", err);
+      }
     }
   }
 
@@ -199,7 +204,7 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
   function handleBlocksChange(blocks) {
     if (isAdmin.value) {
       const allIds = (blocks || [])
-        .filter((b) => !shouldSkipTrigger(b.type))
+        .filter((b) => !shouldSkipTrigger(b.type, isAdmin))
         .map((b) => b.id)
         .filter(Boolean);
       triggeredBlocks.value = [...allIds];
@@ -260,7 +265,7 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
 
       const applyTriggeredClasses = () => {
         const allIds = (blocksCache || [])
-        .filter((b) => !shouldSkipTrigger(b.type))
+        .filter((b) => !shouldSkipTrigger(b.type, isAdmin))
           .map((b) => b.id)
           .filter(Boolean);
         triggeredBlocks.value = [...allIds];

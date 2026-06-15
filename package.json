@@ -14,6 +14,7 @@
     "test:e2e": "npm run build:e2e && playwright test",
     "test:e2e:quick": "playwright test",
     "test:admin": "playwright test --config=playwright.admin.config.ts",
+    "test:unit": "playwright test --config=playwright.unit.config.ts",
     "preview": "nuxt preview",
     "preview:local": "PW_TEST=1 NITRO_PORT=3001 NITRO_HOST=0.0.0.0 node .output/server/index.mjs",
     "dev:server": "node .output/server/index.mjs",
@@ -21,10 +22,12 @@
   },
   "dependencies": {
     "@vueuse/core": "^14.3.0",
+    "dompurify": "^3.4.10",
     "firebase": "^12.12.1",
+    "isomorphic-dompurify": "^3.17.0",
     "nuxt": "3.20.0",
     "pinia": "^3.0.4",
-    "swiper": "^11.2.10",
+    "swiper": "^12.2.0",
     "vue": "^3.4.0",
     "vue-draggable-plus": "^0.6.1",
     "vue-router": "^4.3.0"

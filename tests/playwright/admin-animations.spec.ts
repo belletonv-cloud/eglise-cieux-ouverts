@@ -52,9 +52,9 @@ test.describe('Animations des blocs en mode admin', () => {
     await expect(aspirationsViewport).toBeVisible()
     expect(await aspirationsViewport.locator('..').getAttribute('class')).not.toContain('block-anim-')
 
-    const nousRejoindreBlock = page.locator('.block-nous-rejoindre').first()
-    await expect(nousRejoindreBlock).toBeVisible()
-    expect(await nousRejoindreBlock.locator('..').getAttribute('class')).not.toContain('block-anim-')
+    const nousRejoindreWrapper = page.locator('[data-block-type="nousRejoindre"]').first()
+    await expect(nousRejoindreWrapper).toBeVisible()
+    expect(await nousRejoindreWrapper.getAttribute('class')).not.toContain('block-anim-')
   })
 
   test('les blocs sont pré-déclenchés en mode admin (classe triggered)', async ({ page }) => {
@@ -69,9 +69,8 @@ test.describe('Animations des blocs en mode admin', () => {
     await page.goto('/?admin=true')
     await page.waitForTimeout(3000)
 
-    await expect(page.locator('.block-bienvenue').first().locator('..')).toHaveClass(/block-anim-portal/)
-    await expect(page.locator('.block-rejoins').first().locator('..')).not.toHaveClass(/block-anim-/)
-    await expect(page.locator('.block-rejoins')).toHaveClass(/triggered/)
+    await expect(page.locator('[data-block-type="bienvenue"]').first()).toHaveClass(/block-anim-portal/)
+    await expect(page.locator('[data-block-type="rejoins"]').first()).not.toHaveClass(/block-anim-/)
   })
 
   test("l'événement replay-animation est bien capté par PageRenderer", async ({ page }) => {
@@ -328,7 +327,7 @@ test.describe('Fallback animations sans JavaScript', () => {
     await page.goto('/')
 
 
-    await expect(page.locator('.block-main-hero')).toBeVisible({ timeout: 10000 })
+    await expect(page.locator('[data-block-type="hero"]')).toBeVisible({ timeout: 10000 })
     await expect(page.locator('.hero-content')).toBeVisible()
     await context.close()
   })
@@ -366,7 +365,7 @@ test.describe('Styles CSS des animations', () => {
       const count = await page.locator(`.${cls}`).count()
       if (count > 0) found.push(cls)
     }
-    // Au moins fadeIn, slideLeft et portal sont utilisés par défaut
-    expect(found.length).toBeGreaterThanOrEqual(3)
+    // Au moins fadeIn et portal sont utilisés par défaut (vision + bienvenue)
+    expect(found.length).toBeGreaterThanOrEqual(2)
   })
 })

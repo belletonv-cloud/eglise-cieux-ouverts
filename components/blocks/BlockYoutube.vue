@@ -26,7 +26,7 @@
 
 <script setup>
 import { computed } from 'vue'
-import { getAnimClass, filterByVisibility } from '~/lib/blocks/renderer'
+import { getAnimClass } from '~/lib/blocks/renderer'
 
 const props = defineProps({
   videoId: { type: String, default: '' },

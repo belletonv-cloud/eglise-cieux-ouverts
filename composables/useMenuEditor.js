@@ -189,7 +189,7 @@ export function useMenuEditor() {
   watch(menuItems, () => {
     if (!menuLoaded.value) return
     clearTimeout(_saveTimer)
-    _saveTimer = setTimeout(() => saveMenuToFirestore().catch(() => {}), 800)
+    _saveTimer = setTimeout(() => saveMenuToFirestore().catch((e) => console.warn("useMenuEditor: auto-save failed", e)), 800)
   }, { deep: true })
 
   const api = {

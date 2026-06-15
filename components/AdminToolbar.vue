@@ -519,7 +519,9 @@ function replayAnimation(blockId) {
         document.dispatchEvent(
             new CustomEvent("replay-animation", { detail: { id: blockId } }),
         );
-    } catch (e) {}
+    } catch (e) {
+        console.warn("AdminToolbar: replay-animation dispatch failed", e);
+    }
 }
 
 function closeSidebar() {
@@ -565,7 +567,9 @@ async function navigateToPage(slug) {
         await router.push({ path: targetPath, query: newQuery });
         try {
             window.scrollTo(0, 0);
-        } catch (e) {}
+        } catch (e) {
+            console.warn("AdminToolbar: scrollTo failed", e);
+        }
         if (import.meta.env.DEV)
             console.debug("navigateToPage: navigation done to", targetPath);
     } catch (err) {

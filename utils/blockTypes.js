@@ -541,12 +541,10 @@ export function getDefaultMessagesPage() {
       ctaText: "Notre chaine YouTube",
       ctaLink: "https://www.youtube.com/@eglisecieuxouverts",
     }),
-    createBlock("richText", {
-      content: `<div style="max-width:900px;margin:0 auto;text-align:center;"><h2 style="font-family:'Playfair Display',Georgia,serif;font-style:italic;color:#064886;">Dernier message</h2><div style="position:relative;width:100%;padding-bottom:56.25%;"><iframe src="https://www.youtube.com/embed/wZebQj0gR98" title="Dernier message" style="position:absolute;inset:0;width:100%;height:100%;border:none;" allowfullscreen></iframe></div></div>`,
-      backgroundGradient: DEFAULT_MESSAGES_GRADIENT,
-      textColor: "#064886",
-      textAlign: "left",
-      padding: 20,
+    createBlock("youtube", {
+      videoId: "wZebQj0gR98",
+      title: "Dernier message",
+      backgroundColor: DEFAULT_MESSAGES_GRADIENT,
       animation: "fadeIn",
     }),
   ]

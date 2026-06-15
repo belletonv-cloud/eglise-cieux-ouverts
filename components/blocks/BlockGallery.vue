@@ -32,6 +32,8 @@
 </template>
 
 <script setup>
+import { ref, computed } from 'vue'
+
 const { visibility = {}, images = [] } = defineProps({
   title: { type: String, default: '' },
   textColor: { type: String, default: '#064886' },

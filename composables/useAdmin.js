@@ -94,8 +94,8 @@ export function useAdmin() {
         const query = { ...route.query };
         delete query.admin;
         router.replace({ query }).catch(() => {});
-      } catch {
-        // swallow
+      } catch (e) {
+        console.warn("useAdmin: exitAdmin router.replace failed", e);
       }
     }
   }

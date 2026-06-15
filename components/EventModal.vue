@@ -22,7 +22,7 @@ const emit = defineEmits(['update:modelValue','close'])
 const content = ref(null)
 
 const close = () => {
-  try { document.body.style.overflow = '' } catch (e) {}
+  try { document.body.style.overflow = '' } catch (e) { console.warn("EventModal: could not reset body overflow on close", e); }
   emit('update:modelValue', false)
   emit('close')
 }
@@ -34,27 +34,27 @@ watch(() => props.modelValue, async (open) => {
   if (open) {
     try { _previousActive = document.activeElement } catch (e) { _previousActive = null }
     document.body.style.overflow = 'hidden'
-    try { document.body.classList.add('modal-open') } catch (e) {}
+    try { document.body.classList.add('modal-open') } catch (e) { console.warn("EventModal: could not add modal-open class", e); }
     await nextTick()
     if (content.value && typeof content.value.focus === 'function') {
       content.value.focus()
-      try { content.value.scrollIntoView({ block: 'center', behavior: 'auto' }) } catch (e) {}
+      try { content.value.scrollIntoView({ block: 'center', behavior: 'auto' }) } catch (e) { console.warn("EventModal: scrollIntoView failed", e); }
     }
     window.addEventListener('keydown', onKey)
   } else {
     if (_previousActive && typeof _previousActive.focus === 'function') {
-      try { _previousActive.focus() } catch (e) {}
+      try { _previousActive.focus() } catch (e) { console.warn("EventModal: could not restore focus", e); }
     }
     _previousActive = null
     document.body.style.overflow = ''
-    try { document.body.classList.remove('modal-open') } catch (e) {}
+    try { document.body.classList.remove('modal-open') } catch (e) { console.warn("EventModal: could not remove modal-open class", e); }
     window.removeEventListener('keydown', onKey)
   }
 })
 onUnmounted(() => {
   window.removeEventListener('keydown', onKey)
   document.body.style.overflow = ''
-  try { document.body.classList.remove('modal-open') } catch (e) {}
+  try { document.body.classList.remove('modal-open') } catch (e) { console.warn("EventModal: could not remove modal-open class on unmount", e); }
 })
 </script>
 

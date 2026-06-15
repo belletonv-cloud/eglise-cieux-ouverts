@@ -13,11 +13,11 @@ useSeoMeta({
 
 const { isAdminMode, enterAdmin, localBlocks, localBlocksPage } = useAdmin()
 
-// useLazyFetch ne bloque pas le rendu : le fallback s'affiche immédiatement,
-// même pendant la navigation SPA. Le fetch se fait en arrière-plan.
-const { data: pageData } = useLazyFetch('/api/pages/event-list', {
-  server: true,
-})
+// On utilise useFetch au lieu de useLazyFetch pour que les données
+// soient sérialisées dans le payload Nuxt et disponibles côté client
+// après hydratation. useLazyFetch ne sérialise pas les données, ce qui
+// empêche les mocks de fonctionner dans les tests Playwright admin.
+const { data: pageData } = await useFetch('/api/pages/event-list')
 
 const blocks = computed(() => {
   if (isAdminMode.value && localBlocks.value.length && localBlocksPage.value === 'event-list') {

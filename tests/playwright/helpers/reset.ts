@@ -1,4 +1,4 @@
-import { APIRequestContext } from '@playwright/test'
+import type { APIRequestContext } from '@playwright/test'
 
 /**
  * Réinitialise tous les mocks et la base via l'API de reset

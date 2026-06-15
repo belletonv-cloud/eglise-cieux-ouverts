@@ -1,8 +1,8 @@
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig(event)
-  const projectId = process.env.NUXT_FIREBASE_PROJECT_ID || config.firebaseProjectId
-  const clientEmail = process.env.NUXT_FIREBASE_CLIENT_EMAIL || config.firebaseClientEmail
-  const privateKey = process.env.NUXT_FIREBASE_PRIVATE_KEY || config.firebasePrivateKey
+  const projectId = (process.env.NUXT_FIREBASE_PROJECT_ID || config.firebaseProjectId) as string
+  const clientEmail = (process.env.NUXT_FIREBASE_CLIENT_EMAIL || config.firebaseClientEmail) as string
+  const privateKey = (process.env.NUXT_FIREBASE_PRIVATE_KEY || config.firebasePrivateKey) as string
 
   if (!projectId || !clientEmail || !privateKey) {
     // En CI, TEST_ENV ou local : renvoie la RAM du mock si Firestore absent

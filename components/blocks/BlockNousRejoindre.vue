@@ -31,8 +31,6 @@ const {
     isTriggered: { type: Boolean, default: false },
 });
 
-const isEditor = inject("isEditor", false);
-
 const visibilityClasses = computed(() => ({
     "hide-mobile": visibility.mobile === false,
     "hide-tablet": visibility.tablet === false,
