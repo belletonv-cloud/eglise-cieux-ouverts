@@ -41,6 +41,8 @@ const errorMessages = {
 }
 
 const info = errorMessages[props.statusCode] || { title: 'Erreur', message: props.statusMessage || 'Une erreur est survenue.' }
+const title = info.title
+const message = info.message
 
 useSeoMeta({
   title: `${info.title} — Église Cieux Ouverts`,

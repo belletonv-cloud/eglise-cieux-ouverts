@@ -13,6 +13,9 @@ export default defineNuxtConfig({
     appManifest: false
   },
   app: {
+    head: {
+      htmlAttrs: { lang: 'fr' },
+    },
     pageTransition: { name: 'page', mode: 'out-in' },
   },
   typescript: {
