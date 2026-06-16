@@ -36,12 +36,10 @@ export const BLOCK_TYPES = {
       textColor: "#064886",
       showButton: false,
       nameImage: "/images/hero-name-image.png",
-      logoImage: "/images/hero-logo.png",
     },
     schema: [
       { key: "image", label: "Image", type: "image" },
       { key: "nameImage", label: "Image titre", type: "image" },
-      { key: "logoImage", label: "Image logo", type: "image" },
       {
         key: "height",
         label: "Hauteur (px)",

@@ -48,12 +48,7 @@
                     class="hero-name"
                     @error="onImgError"
                 />
-                <img
-                    :src="logoImage"
-                    alt="Logo"
-                    class="hero-logo"
-                    @error="onImgError"
-                />
+
             </template>
             <template v-else>
                 <h1 class="hero-title" :style="{ color: textColor }">
