@@ -60,7 +60,6 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import DOMPurify from 'isomorphic-dompurify'
 
 const {
   items = [],
@@ -92,9 +91,11 @@ function getShortDesc(desc) {
   return first.length > 120 ? first.slice(0, 120) + '…' : first
 }
 
+import { sanitizeHtml } from '~/utils/sanitize'
+
 function sanitizeDesc(desc) {
   if (!desc) return ''
-  return DOMPurify.sanitize(desc.replace(/\n/g, '<br>'))
+  return sanitizeHtml(desc.replace(/\n/g, '<br>'))
 }
 
 const visibilityClasses = computed(() => ({

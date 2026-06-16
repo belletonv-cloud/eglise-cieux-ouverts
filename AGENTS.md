@@ -326,6 +326,8 @@ npx tsx scripts/generate-tests.ts
 - `error.vue`: expose `title`/`message` from info object (was broken — template referenced undefined vars)
 - `nuxt.config.ts`: added `htmlAttrs: { lang: 'fr' }` for `<html lang="fr">`
 - 39 new Playwright tests: keyboard nav, SEO meta, error pages, page transitions, responsive admin, a11y
+- **Wix migration**: 13 images downloaded → `public/images/`, 12 URLs replaced in 4 source files, fonts self-hosted
+- **Total project tests** : 520 Playwright + 368 schema = **888 tests** ✅
 - TypeScript: EventPopover fixed (Function → MouseEvent/PointerEvent types, CSSProperties)
 - Playwright helper imports changed to type-only (admin.ts, blocks.ts, reset.ts, ui.ts)
 - npm: swiper upgraded 11.2.10 → 12.2.0 (critical vuln fixed)
