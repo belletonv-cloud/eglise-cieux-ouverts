@@ -96,16 +96,6 @@ function getShutterStyle(i) {
 }
 </script>
 
-<style>
-@font-face {
-  font-family: 'wfont_9e41cf_58d674eb74ea449ba1ce06533c9a9704';
-  src: url("https://static.wixstatic.com/ufonts/9e41cf_58d674eb74ea449ba1ce06533c9a9704/woff2/file.woff2") format("woff2"),
-       url("https://static.wixstatic.com/ufonts/9e41cf_58d674eb74ea449ba1ce06533c9a9704/woff/file.woff") format("woff"),
-       url("https://static.wixstatic.com/ufonts/9e41cf_58d674eb74ea449ba1ce06533c9a9704/ttf/file.ttf") format("truetype");
-  font-display: swap;
-}
-</style>
-
 <style scoped>
 .site-footer {
   background: linear-gradient(to bottom, var(--bf-bg-start) 0%, var(--bf-bg-mid) 24%, var(--bf-bg-end) 100%);
@@ -131,7 +121,7 @@ function getShutterStyle(i) {
 }
 
 .footer-title {
-  font-family: 'wfont_9e41cf_58d674eb74ea449ba1ce06533c9a9704', 'Nunito', sans-serif;
+  font-family: 'Nunito', sans-serif;
   font-size: var(--bf-title-font-size, 24px);
   font-weight: 400;
   color: var(--bf-text-color, #ffffff);
@@ -187,7 +177,7 @@ function getShutterStyle(i) {
   gap: 6px;
   font-weight: 700;
   text-align: left;
-  font-family: 'wfont_9e41cf_58d674eb74ea449ba1ce06533c9a9704', 'Nunito', sans-serif;
+  font-family: 'Nunito', sans-serif;
 }
 
 .footer-email {

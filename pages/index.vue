@@ -14,8 +14,7 @@ useSeoMeta({
         "Bienvenue à l'Église Cieux Ouverts à Morlaix. Découvrez nos événements, cultes et activités.",
     ogDescription:
         "Bienvenue à l'Église Cieux Ouverts à Morlaix. Découvrez nos événements, cultes et activités.",
-    ogImage:
-        "https://static.wixstatic.com/media/d65230_2d9fe5fd35e84c55b202fcf057c136b5~mv2.jpg",
+    ogImage: "/images/activites-celebration.jpg",
     ogUrl: "https://eglise-cieux-ouverts.pages.dev",
     ogType: "website",
     twitterCard: "summary_large_image",

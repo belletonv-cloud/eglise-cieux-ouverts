@@ -25,7 +25,7 @@ test.describe('SEO meta tags', () => {
     expect(ogDesc).toContain('Bienvenue')
 
     const ogImage = await getMetaContent(page, 'og:image')
-    expect(ogImage).toContain('static.wixstatic.com')
+    expect(ogImage).toContain('/images/')
 
     const ogType = await getMetaContent(page, 'og:type')
     expect(ogType).toBe('website')

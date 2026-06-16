@@ -307,20 +307,25 @@ npx tsx scripts/generate-tests.ts
 - Fix : retiré des tableaux `SCROLL_DRIVEN_TYPES` et `INTERNAL_TYPES`
 
 ### Compteurs tests (15/06/2026)
-- **Playwright admin** : 113 tests (9 spec files) ✅ all passing
-  - admin-mock (21), admin-mock-fixtures (6), admin-autosave (7), admin-undo-redo (4), admin-mode (4), admin-animations (26), aspirations (3), admin-exploration (4), event-list-fallback (?)
+- **Playwright admin** : 152 tests (15 spec files) ✅ all passing
+  - admin-mock (21), admin-mock-fixtures (6), admin-autosave (7), admin-undo-redo (4), admin-mode (4), admin-animations (26), aspirations (3), admin-exploration (4), event-list-fallback (?), keyboard-navigation (6), seo-meta (6), error-pages (5), page-transitions (5), responsive-admin (9), accessibility (8)
 - **Schema-driven non-generated** : 118 tests (all-blocks, new-features, hero, text-image) ✅
 - **Schema-driven generated** : 248 tests (15 blocks × 6 sections) ✅
-- **Total** : 479 tests ✅
+- **Total** : 518 tests ✅
 
 ### 9. Final cleanup (15/06/2026)
 - Missing imports fixed in BlockGallery (ref, computed), BlockFullWidthImage (computed), BlockSpacer (computed) — prevented runtime crashes
 - Empty catch blocks (30+) replaced with console.warn across 7 files
 - Unused imports removed from BlockAspirations, BlockRejoins, BlockNousRejoindre, BlockYoutube
-- v-html XSS vectors sanitized with DOMPurify in BlockVision, BlockActivities
+- v-html XSS vectors sanitized with isomorphic-dompurify in BlockVision, BlockActivities
 - showDragHandle test-specific code (window.__PW_TEST) removed from BlockHero
 - console.debug calls removed from PageRenderer (9+)
 - Generated tests fixed: selectors `.block-*` → `[data-block-type="*"]`, `.catch(() => {})` removed
+- TypeScript: EventPopover fixed (Function → MouseEvent/PointerEvent types), Playwright helper imports → type-only
+- npm: swiper 11.2.10→12.2.0 (critical RCE vuln fixed)
+- `error.vue`: expose `title`/`message` from info object (was broken — template referenced undefined vars)
+- `nuxt.config.ts`: added `htmlAttrs: { lang: 'fr' }` for `<html lang="fr">`
+- 39 new Playwright tests: keyboard nav, SEO meta, error pages, page transitions, responsive admin, a11y
 - TypeScript: EventPopover fixed (Function → MouseEvent/PointerEvent types, CSSProperties)
 - Playwright helper imports changed to type-only (admin.ts, blocks.ts, reset.ts, ui.ts)
 - npm: swiper upgraded 11.2.10 → 12.2.0 (critical vuln fixed)

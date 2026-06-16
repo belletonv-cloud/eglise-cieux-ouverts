@@ -4,7 +4,7 @@
         :class="[visibilityClasses, { 'admin-animate': isAdmin }]"
     >
         <img
-            src="https://static.wixstatic.com/media/d65230_c609095100164117aabdd3b55d9cdf56~mv2.png/v1/fill/w_1920,h_515,al_c,q_90,usm_0.66_1.00_0.01,enc_avif,quality_auto/d65230_c609095100164117aabdd3b55d9cdf56~mv2.png"
+            src="/images/bienvenue-foule.png"
             alt="Foule Croix"
             class="bienvenue-img"
         />
