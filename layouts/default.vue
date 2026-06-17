@@ -90,6 +90,7 @@ const deviceWidth = computed(() => {
 });
 
 const previewUrl = computed(() => {
+    if (import.meta.server) return "";
     const params = new URLSearchParams(window.location.search);
     params.set("preview", "true");
     return window.location.pathname + "?" + params.toString();

@@ -21,10 +21,8 @@
     "deploy": "nuxt build && wrangler pages deploy dist --project-name eglise-cieux-ouverts"
   },
   "dependencies": {
-    "@vueuse/core": "^14.3.0",
     "firebase": "^12.12.1",
     "nuxt": "3.20.0",
-    "pinia": "^3.0.4",
     "swiper": "^12.2.0",
     "vue": "^3.4.0",
     "vue-draggable-plus": "^0.6.1",

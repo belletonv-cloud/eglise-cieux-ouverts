@@ -11,7 +11,7 @@
       <div class="ti-text">
         <h2 class="ti-title" :style="{ color: textColor }">{{ title }}</h2>
         <p v-if="subtitle" class="ti-subtitle">{{ subtitle }}</p>
-        <div class="ti-body" v-html="body"></div>
+        <div class="ti-body" v-html="sanitizedBody"></div>
         <a v-if="ctaText" :href="ctaLink" class="ti-cta">{{ ctaText }}</a>
       </div>
       <div class="ti-image">
@@ -32,7 +32,8 @@
 </template>
 
 <script setup>
-const { visibility = {} } = defineProps({
+import { sanitizeHtml } from '~/utils/sanitize.js'
+const props = defineProps({
   blockId: { type: String, default: '' },
   title: { type: String, default: '' },
   subtitle: { type: String, default: '' },
@@ -50,11 +51,12 @@ const { visibility = {} } = defineProps({
   previewDevice: { type: String, default: 'desktop' },
 })
 const visibilityClasses = computed(() => ({
-  'hide-mobile': visibility.mobile === false,
-  'hide-tablet': visibility.tablet === false,
-  'hide-desktop': visibility.desktop === false,
+  'hide-mobile': props.visibility.mobile === false,
+  'hide-tablet': props.visibility.tablet === false,
+  'hide-desktop': props.visibility.desktop === false,
 }))
 const showDragHandle = import.meta.client && window.__PW_TEST
+const sanitizedBody = computed(() => props.body ? sanitizeHtml(props.body) : '')
 </script>
 
 <style scoped>

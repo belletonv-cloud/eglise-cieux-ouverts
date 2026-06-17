@@ -11,11 +11,12 @@
     :class="[visibilityClasses, animClass]"
     ref="sectionRef"
   >
-    <div class="richtext-inner" v-html="content"></div>
+    <div class="richtext-inner" v-html="sanitizedContent"></div>
   </section>
 </template>
 
 <script setup>
+import { sanitizeHtml } from '~/utils/sanitize.js'
 const {
   backgroundGradient = '',
   backgroundColor = '#ffffff',
@@ -40,6 +41,7 @@ const {
 const sectionRef = ref(null)
 const triggered = ref(false)
 const isEditor = inject('isEditor', false)
+const sanitizedContent = computed(() => content ? sanitizeHtml(content) : '')
 
 const animClass = computed(() => {
   if (!animation || animation === 'none') return ''

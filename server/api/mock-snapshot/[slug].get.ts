@@ -1,4 +1,4 @@
-import { getPages } from '../utils/firestore-mock.js';
+import { getPages } from '../../utils/firestore-mock.js';
 import { getRouterParam } from 'h3';
 
 export default defineEventHandler((event) => {

@@ -1,3 +1,5 @@
+import { getAccessToken } from '../utils/firebase'
+
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token'
 const RATE_LIMIT = {
   windowMs: 15 * 60 * 1000, // 15 minutes

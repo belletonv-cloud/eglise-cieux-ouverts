@@ -313,7 +313,7 @@ npx tsx scripts/generate-tests.ts
 - **Schema-driven generated** : 248 tests (15 blocks × 6 sections) ✅
 - **Total** : 518 tests ✅
 
-### 9. Final cleanup (15/06/2026)
+## 9. Final cleanup (15/06/2026)
 - Missing imports fixed in BlockGallery (ref, computed), BlockFullWidthImage (computed), BlockSpacer (computed) — prevented runtime crashes
 - Empty catch blocks (30+) replaced with console.warn across 7 files
 - Unused imports removed from BlockAspirations, BlockRejoins, BlockNousRejoindre, BlockYoutube
@@ -332,3 +332,36 @@ npx tsx scripts/generate-tests.ts
 - Playwright helper imports changed to type-only (admin.ts, blocks.ts, reset.ts, ui.ts)
 - npm: swiper upgraded 11.2.10 → 12.2.0 (critical vuln fixed)
 - Admin exploration test fixed (rejoins scroll-driven class assertion)
+
+## 10. Final fixes (17/06/2026)
+
+### CRITICAL: SSR `window` crash fixed
+- `layouts/default.vue:92-96` — `previewUrl` computed used `window.location` in SSR → wrapped with `import.meta.server` guard
+- All pages no longer crash on SSR when `?admin=true` is set
+
+### CRITICAL: Contact form broken fixed
+- `server/api/contact.post.ts:78` — missing `import { getAccessToken }` from `server/utils/firebase.ts` → added import
+- Contact form submissions now actually authenticate to Firestore
+
+### CRITICAL: XSS sanitization fixed
+- `utils/sanitize.js` — completely rewritten from simple `<script>` tag stripper to defense-in-depth sanitizer: strips event handlers (`onerror`, `onload`, `onclick`, etc.), `javascript:` URLs, `<iframe srcdoc>`, `<svg onload>`, `<details ontoggle>`, `<body onload>`, `<math>` XSS vectors, `<meta refresh>`
+- `BlockRichText.vue` — `v-html` now uses `sanitizedContent` computed via `sanitizeHtml()`
+- `BlockTextImage.vue` — `v-html` now uses `sanitizedBody` computed via `sanitizeHtml()`
+
+### Removed unused dependencies
+- `pinia` — never imported in any source file (no `stores/` directory)
+- `@vueuse/core` — never imported in any source file
+- Both removed from `package.json` dependencies, saving ~12KB in bundle
+
+### Removed duplicate/redundant plugins
+- `plugins/admin.client.js` — removed duplicate Escape key handler (already handled in `layouts/default.vue` with proper `?admin=true` URL cleanup)
+- `plugins/adminMode.client.js` — removed redundant `admin-mode` CSS class toggler (already managed by layout template `:class` binding)
+
+### Fixed mock-snapshot dynamic route
+- `server/api/mock-snapshot.get.ts` — moved to `server/api/mock-snapshot/[slug].get.ts` (was reading `getRouterParam(event, 'slug')` from a static path, always returning null)
+- Updated import path: `../utils/firestore-mock.js` → `../../utils/firestore-mock.js`
+
+### Test count
+- **Playwright E2E**: 152 tests (15 spec files) ✅
+- **Schema-driven**: 368 tests ✅
+- **Total**: **520 tests** ✅
