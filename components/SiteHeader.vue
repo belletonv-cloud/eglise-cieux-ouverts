@@ -549,18 +549,19 @@ onUnmounted(() => {
         background-size: cover;
         background-position: center center;
         background-repeat: no-repeat;
-        padding: 14px 12px 18px;
+        padding: 4px 12px 18px;
         gap: 8px;
         overflow-y: auto;
         border-top: none;
         box-shadow: none;
+        background-image: none;
     }
 
     .nav-mobile::before {
         background: linear-gradient(
             180deg,
-            rgba(6, 72, 134, 0.75),
-            rgba(4, 48, 90, 0.7)
+            rgba(6, 72, 134, 0.95),
+            rgba(4, 48, 90, 0.92)
         );
     }
 

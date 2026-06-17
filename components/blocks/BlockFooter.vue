@@ -225,23 +225,24 @@ function getShutterStyle(i) {
     flex-direction: column;
     align-items: center;
     text-align: center;
-    gap: 16px;
-    padding: 20px 10px 16px;
+    gap: 12px;
+    padding: 16px 10px 12px;
   }
   .footer-right {
     justify-content: center;
   }
   .footer-info {
     text-align: center;
-    font-size: 0.92em;
+    font-size: 0.82em;
   }
   .footer-title {
     white-space: normal;
     text-align: center;
+    font-size: clamp(16px, 4.5vw, 20px);
   }
   .footer-email {
     margin-bottom: 4px;
-    font-size: 1em;
+    font-size: 0.82em;
   }
 }
 </style>
