@@ -541,7 +541,7 @@ onUnmounted(() => {
     }
     .nav-mobile {
         position: fixed;
-        top: 56px;
+        top: 52px;
         left: 0;
         right: 0;
         bottom: 0;
@@ -549,7 +549,7 @@ onUnmounted(() => {
         background-size: cover;
         background-position: center center;
         background-repeat: no-repeat;
-        padding: 4px 12px 18px;
+        padding: 0 12px 18px;
         gap: 8px;
         overflow-y: auto;
         border-top: none;
@@ -560,8 +560,8 @@ onUnmounted(() => {
     .nav-mobile::before {
         background: linear-gradient(
             180deg,
-            rgba(6, 72, 134, 0.95),
-            rgba(4, 48, 90, 0.92)
+            rgba(6, 72, 134, 1),
+            rgba(4, 48, 90, 1)
         );
     }
 
@@ -613,7 +613,7 @@ onUnmounted(() => {
         text-decoration: none;
     }
     .header-spacer {
-        height: 56px;
+        height: 52px;
     }
 }
 </style>
@@ -627,10 +627,17 @@ onUnmounted(() => {
 #app-root.admin-mode .header-spacer {
     height: calc(70px + var(--admin-offset, 48px));
 }
-@media (max-width: 768px) {
+    @media (max-width: 768px) {
     #app-root.admin-mode .header-spacer {
-        height: calc(56px + var(--admin-offset, 48px));
+        height: calc(52px + var(--admin-offset, 48px));
     }
+}
+/* In mobile admin mode, shift nav-mobile down to account for admin toolbar */
+@media (max-width: 768px) {
+    #app-root.admin-mode .nav-mobile {
+        top: calc(52px + var(--admin-offset, 48px));
+    }
+}
 }
 /* In mobile admin mode, shift nav-mobile down to account for admin toolbar */
 @media (max-width: 768px) {
