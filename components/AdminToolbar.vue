@@ -570,8 +570,6 @@ async function navigateToPage(slug) {
         } catch (e) {
             console.warn("AdminToolbar: scrollTo failed", e);
         }
-        if (import.meta.env.DEV)
-            console.debug("navigateToPage: navigation done to", targetPath);
     } catch (err) {
         console.error("navigateToPage: router.push failed", err);
     }

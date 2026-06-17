@@ -15,6 +15,7 @@ const INTERNAL_TYPES = [
   "aspirations",
   "nousRejoindre",
   "rejoins",
+  "footer",
 ];
 
 function shouldSkipTrigger(type, isAdmin) {

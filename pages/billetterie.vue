@@ -1,6 +1,3 @@
-<template><div /></template>
 <script setup>
-if (import.meta.client) {
-  navigateTo('/event-list', { replace: true })
-}
+// Redirect handled by routeRules in nuxt.config.ts
 </script>

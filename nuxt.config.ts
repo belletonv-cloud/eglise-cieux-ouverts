@@ -12,6 +12,9 @@ export default defineNuxtConfig({
   experimental: {
     appManifest: false
   },
+  routeRules: {
+    '/billetterie': { redirect: '/event-list' },
+  },
   app: {
     head: {
       htmlAttrs: { lang: 'fr' },
