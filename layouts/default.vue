@@ -132,6 +132,14 @@ watch(isAdminMode, (val) => {
     }
 });
 
+// Sync preview device to URL so it survives page reload / navigation
+watch(previewDevice, (device) => {
+    if (!isMounted.value) return;
+    const router = useRouter();
+    const query = { ...route.query, device };
+    router.replace({ query }).catch(() => {});
+});
+
 const onEscape = (e) => {
     if (e.key === "Escape" && isAdminMode.value) {
         exitAdmin();
@@ -150,6 +158,10 @@ onMounted(() => {
         !isPreviewMode.value
     ) {
         isAdminMode.value = true;
+    }
+    // Restore preview device from URL (persisted across navigations)
+    if (["mobile", "tablet", "desktop"].includes(route.query.device)) {
+        previewDevice.value = route.query.device;
     }
     // Load footer from Firestore (always, not just admin mode)
     loadFooterBlock();

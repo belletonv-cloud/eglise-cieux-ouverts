@@ -545,7 +545,7 @@ async function saveFooterChanges() {
 async function navigateToPage(slug) {
     const targetPath = slug === "accueil" ? "/" : `/${slug}`;
     clearBlocks();
-    const newQuery = { ...route.query, admin: "true" };
+    const newQuery = { ...route.query, admin: "true", device: previewDevice.value };
     const qs = new URLSearchParams(newQuery).toString();
     // In iframe preview mode, full page reload so the iframe loads the new page
     if (previewDevice.value !== "desktop") {
