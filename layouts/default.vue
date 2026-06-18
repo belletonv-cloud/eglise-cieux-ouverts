@@ -14,11 +14,7 @@
                     :page-slug="currentPageSlug"
                 />
             </ClientOnly>
-            <!-- Direct rendering for all modes — no iframe.
-                 In mobile/tablet preview, a device-frame constrains width.
-                 The header becomes static inside the frame so blocks stay clickable
-                 and the admin sidebar works. -->
-            <template v-if="previewDevice === 'desktop' || !isAdminMode || !isMounted">
+            <template v-if="previewDevice === 'desktop' || !isAdminMode">
                 <SiteHeader />
                 <slot />
                 <div
@@ -33,20 +29,14 @@
                     />
                 </div>
             </template>
-            <div v-else class="device-frame" :class="`device-${previewDevice}`">
-                <SiteHeader class="in-preview" />
-                <slot />
-                <div
-                    class="footer-editable-wrap"
-                    :class="{ 'admin-selected': editingFooter }"
-                    @click.capture="onFooterClick"
-                >
-                    <BlockFooter
-                        v-bind="footerBlock.props"
-                        :block-id="footerBlock.id"
-                        :data-admin="(isAdminMode && isMounted) || undefined"
-                    />
-                </div>
+            <div v-else class="device-iframe-wrap">
+                <iframe
+                    :key="route.path"
+                    :src="previewUrl"
+                    :style="{ width: deviceWidth + 'px' }"
+                    class="device-iframe"
+                    frameborder="0"
+                />
             </div>
         </div>
         <MenuEditor v-if="isMounted && isAdminMode" />
@@ -93,6 +83,20 @@ const currentPageSlug = computed(() => {
 });
 
 const isPreviewMode = computed(() => route.query.preview === "true");
+
+const deviceWidth = computed(() => {
+    if (previewDevice.value === "mobile") return 375;
+    if (previewDevice.value === "tablet") return 768;
+    return "100%";
+});
+
+const previewUrl = computed(() => {
+    if (import.meta.server) return "";
+    const path = route.path;
+    const params = new URLSearchParams(route.query);
+    params.set("preview", "true");
+    return path + "?" + params.toString();
+});
 
 // Load menu and footer from Firestore when entering admin mode
 watch(
@@ -207,33 +211,19 @@ function onFooterClick(e) {
 .admin-preview-frame.preview-mobile {
     max-width: 100%;
 }
-
-/* Device preview frame — renders content directly, no iframe.
-   The header becomes static so blocks stay clickable and the sidebar works. */
-.device-frame {
-    margin: 24px auto 48px;
-    background: white;
+.device-iframe-wrap {
+    display: flex;
+    justify-content: center;
+    padding-top: 68px; /* 48px toolbar + 20px spacing */
+    overflow-x: auto;
+}
+.device-iframe {
+    height: calc(100vh - 88px); /* 48px toolbar + 20px padding + 20px bottom */
     border: 1px solid #ddd;
     border-radius: 12px;
+    background: white;
     box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
-}
-.device-frame.device-mobile {
-    max-width: 375px;
-}
-.device-frame.device-tablet {
-    max-width: 768px;
-}
-/* Inside the device frame the header is static (not fixed) so it doesn't
-   overflow the constrained width. Admin offset is unnecessary since the
-   admin toolbar is outside the frame. */
-.site-header.in-preview {
-    position: relative !important;
-    top: 0 !important;
-}
-/* Spacer is only needed when header is fixed — hide it in static mode */
-.site-header.in-preview + .header-spacer {
-    display: none;
+    transition: width 0.3s ease;
 }
 .footer-editable-wrap {
     position: relative;
