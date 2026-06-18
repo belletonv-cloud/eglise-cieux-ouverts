@@ -959,13 +959,13 @@ async function saveChanges() {
 #app-root.admin-mode .site-header {
     top: var(--admin-offset, 48px) !important;
 }
-/* Also offset the spacer to prevent content from snapping up */
+/* Match actual header height (72px desktop = 52px logo + 20px padding, 52px mobile = 32px logo + 20px padding) */
 #app-root.admin-mode .header-spacer {
-    height: calc(76px + var(--admin-offset, 48px));
+    height: calc(72px + var(--admin-offset, 48px));
 }
 @media (max-width: 768px) {
     #app-root.admin-mode .header-spacer {
-        height: calc(56px + var(--admin-offset, 48px));
+        height: calc(52px + var(--admin-offset, 48px));
     }
 }
 </style>

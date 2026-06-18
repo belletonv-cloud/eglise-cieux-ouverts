@@ -624,7 +624,7 @@ onUnmounted(() => {
 }
 /* Also offset the spacer to prevent content from snapping up */
 #app-root.admin-mode .header-spacer {
-    height: calc(70px + var(--admin-offset, 48px));
+    height: calc(72px + var(--admin-offset, 48px));
 }
 @media (max-width: 768px) {
     #app-root.admin-mode .header-spacer {

@@ -91,9 +91,10 @@ const deviceWidth = computed(() => {
 
 const previewUrl = computed(() => {
     if (import.meta.server) return "";
-    const params = new URLSearchParams(window.location.search);
+    const path = route.path;
+    const params = new URLSearchParams(route.query);
     params.set("preview", "true");
-    return window.location.pathname + "?" + params.toString();
+    return path + "?" + params.toString();
 });
 
 // Load menu and footer from Firestore when entering admin mode
