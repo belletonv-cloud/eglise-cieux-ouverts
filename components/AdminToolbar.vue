@@ -102,17 +102,7 @@
                     <template v-if="checkingAdmin">
                         <span class="admin-save-status">Vérification...</span>
                     </template>
-                    <template v-else-if="!isAdminUser">
-                        <span class="admin-save-status" style="color:#ff6b6b">
-                            ⚠ Accès non autorisé — contactez l'administrateur
-                        </span>
-                        <button
-                            class="admin-btn admin-btn-secondary"
-                            @click="signOutAndExit"
-                        >
-                            Quitter
-                        </button>
-                    </template>
+                    <template v-else-if="!isAdminUser" />
                     <template v-else>
                         <span
                             class="admin-save-status unsaved"
@@ -669,6 +659,10 @@ onMounted(() => {
             isAdminUser.value = false
         }
         checkingAdmin.value = false
+
+        if (!isAdminUser.value) {
+            window.location.href = '/admin'
+        }
     });
 
     // Keyboard shortcuts for undo/redo

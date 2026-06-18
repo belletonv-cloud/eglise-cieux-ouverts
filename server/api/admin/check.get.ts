@@ -1,4 +1,4 @@
-import { verifyFirebaseToken, isUserAdmin } from '../../utils/firebase-admin'
+import { verifyFirebaseToken, isUserAdmin, getAdminUids } from '../../utils/firebase-admin'
 
 export default defineEventHandler(async (event) => {
   const authHeader = getHeader(event, 'authorization')
@@ -13,5 +13,11 @@ export default defineEventHandler(async (event) => {
   }
 
   const admin = await isUserAdmin(event, userInfo.uid)
-  return { isAdmin: admin, uid: userInfo.uid, email: userInfo.email }
+  const uids = await getAdminUids(event)
+  return {
+    isAdmin: admin,
+    setupMode: uids.length === 0,
+    uid: userInfo.uid,
+    email: userInfo.email,
+  }
 })
