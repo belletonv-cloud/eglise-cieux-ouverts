@@ -112,7 +112,6 @@
                 <NuxtLink
                     v-if="!isMounted || (!adminMode && item.visible !== false)"
                     :to="item.to"
-                    @click="closeMenu"
                     >{{ item.label }}</NuxtLink
                 >
                 <a
@@ -127,7 +126,6 @@
                     <NuxtLink
                         v-if="!adminMode && sub.visible !== false"
                         :to="sub.to"
-                        @click="closeMenu"
                         class="sub-link"
                         >— {{ sub.label }}</NuxtLink
                     >
@@ -182,7 +180,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted, inject } from "vue";
+import { ref, computed, watch, nextTick, onMounted, onUnmounted, inject } from "vue";
 import MenuEditor from "~/components/editor/MenuEditor.vue";
 
 const menuOpen = ref(false);
@@ -224,7 +222,7 @@ const navItems = computed(() =>
 );
 const menuBgStyle = computed(() => {
     const img = menuBgImage.value || "/foule-croix.png";
-    return { backgroundImage: `url(${JSON.stringify(img)})` };
+    return { backgroundImage: `url("${img}")` };
 });
 
 function onNavClick(e, item) {
@@ -250,9 +248,10 @@ function toggleMenu() {
     }
 }
 
-function closeMenu() {
+async function closeMenu() {
     if (menuOpen.value) {
         menuOpen.value = false;
+        await nextTick();
         lockBodyScroll(false);
     }
 }
