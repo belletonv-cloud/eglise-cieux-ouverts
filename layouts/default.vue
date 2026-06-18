@@ -103,8 +103,9 @@ async function waitForAuth() {
 async function redirectToLogin() {
     if (import.meta.server) return;
     const router = useRouter();
+    const fullPath = useRoute().fullPath;
     await router.replace(
-        "/admin?redirect=" + encodeURIComponent(route.fullPath),
+        "/admin?redirect=" + encodeURIComponent(fullPath),
     );
 }
 
