@@ -128,6 +128,13 @@
                     </button>
                     <button
                         class="admin-btn admin-btn-secondary"
+                        @click="showVersionHistory = true"
+                        title="Historique des versions"
+                    >
+                        🕐 Versions
+                    </button>
+                    <button
+                        class="admin-btn admin-btn-secondary"
                         @click="signOutAndExit"
                     >
                         Quitter
@@ -274,6 +281,43 @@
             </div>
         </div>
     </div>
+
+    <!-- Version History Modal -->
+    <Teleport to="body">
+        <div v-if="showVersionHistory" class="version-modal-overlay" @click.self="showVersionHistory = false">
+            <div class="version-modal">
+                <div class="version-modal-header">
+                    <h3>Historique des versions — {{ props.pageSlug }}</h3>
+                    <button class="version-modal-close" @click="showVersionHistory = false">✕</button>
+                </div>
+                <div class="version-modal-body">
+                    <div v-if="versionsLoading" class="version-loading">Chargement...</div>
+                    <div v-else-if="versions.length === 0" class="version-empty">
+                        Aucune version sauvegardée
+                    </div>
+                    <div v-else class="version-list">
+                        <div
+                            v-for="v in versions"
+                            :key="v.id"
+                            class="version-item"
+                        >
+                            <div class="version-info">
+                                <span class="version-date">{{ formatDate(v.savedAt) }}</span>
+                                <span class="version-author">{{ v.savedBy }}</span>
+                            </div>
+                            <button
+                                class="admin-btn admin-btn-secondary"
+                                @click="restoreVersion(v.id)"
+                                :disabled="restoring === v.id"
+                            >
+                                {{ restoring === v.id ? "Restauration..." : "Restaurer" }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </Teleport>
 </template>
 
 <script setup>
@@ -328,6 +372,69 @@ const saveStatus = ref("");
 
 let unsubscribe = null;
 let autoSaveTimer = null;
+
+// Version history
+const showVersionHistory = ref(false);
+const versions = ref([]);
+const versionsLoading = ref(false);
+const restoring = ref(null);
+
+watch(showVersionHistory, (show) => {
+    if (show) loadVersions()
+})
+
+async function loadVersions() {
+    versionsLoading.value = true
+    try {
+        const res = await fetch(`/api/pages/${props.pageSlug}/versions`)
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const data = await res.json()
+        versions.value = data.versions || []
+    } catch (e) {
+        console.error('[admin] load versions failed:', e)
+        versions.value = []
+    } finally {
+        versionsLoading.value = false
+    }
+}
+
+async function restoreVersion(versionId) {
+    restoring.value = versionId
+    try {
+        const res = await fetch(`/api/pages/${props.pageSlug}/versions/${versionId}`, { method: 'PUT' })
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}))
+            throw new Error(err.message || `HTTP ${res.status}`)
+        }
+        const data = await res.json()
+        if (data.blocks) {
+            localBlocks.value = data.blocks
+        }
+        showVersionHistory.value = false
+        saveStatus.value = "Version restaurée"
+        setTimeout(() => { saveStatus.value = "" }, 3000)
+    } catch (e) {
+        console.error('[admin] restore failed:', e)
+        alert("Erreur lors de la restauration : " + (e.message || e))
+    } finally {
+        restoring.value = null
+    }
+}
+
+function formatDate(dateStr: string | null) {
+    if (!dateStr) return "Date inconnue"
+    try {
+        return new Date(dateStr).toLocaleString('fr-FR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+        })
+    } catch {
+        return dateStr
+    }
+}
 
 onMounted(() => {
     unsubscribe = onAuthStateChanged($auth, (u) => {
@@ -393,14 +500,32 @@ watch(
     { deep: true },
 );
 
+async function saveToServer() {
+    const email = user.value?.email || '';
+    try {
+        const res = await fetch(`/api/pages/${props.pageSlug}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-user-email': email,
+            },
+            body: JSON.stringify({ blocks: localBlocks.value }),
+        })
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}))
+            throw new Error(err.message || `HTTP ${res.status}`)
+        }
+        return true
+    } catch (e) {
+        console.error('[admin] save failed:', e)
+        throw e
+    }
+}
+
 async function autoSave() {
     if (!user.value) return;
     try {
-        const { doc, setDoc } = await import("firebase/firestore");
-        const { $db } = useNuxtApp();
-        await setDoc(doc($db, "pages", props.pageSlug), {
-            blocks: localBlocks.value,
-        });
+        await saveToServer()
         markSaved();
         saveStatus.value = "Auto-sauvegardé";
         setTimeout(() => {
@@ -613,17 +738,18 @@ async function saveChanges() {
     }
     saving.value = true;
     try {
-        const { doc, setDoc } = await import("firebase/firestore");
-        const { $db } = useNuxtApp();
-        const blocks = localBlocks.value;
-        await setDoc(doc($db, "pages", props.pageSlug), { blocks });
+        await saveToServer();
         // Also persist menu changes
         const { saveMenuToFirestore } = useMenuEditor();
         await saveMenuToFirestore();
-        alert("Page et menu sauvegardés !");
+        markSaved();
+        saveStatus.value = "Sauvegardé";
+        setTimeout(() => {
+            saveStatus.value = "";
+        }, 2000);
     } catch (e) {
         console.error("Save error:", e);
-        alert("Erreur lors de la sauvegarde : " + e.message);
+        alert("Erreur lors de la sauvegarde : " + (e.message || e));
     } finally {
         saving.value = false;
     }
@@ -967,6 +1093,90 @@ async function saveChanges() {
 </style>
 
 <style>
+/* Version history modal */
+.version-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.version-modal {
+    background: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.2);
+}
+.version-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid #eee;
+}
+.version-modal-header h3 {
+    margin: 0;
+    font-size: 16px;
+    color: #333;
+}
+.version-modal-close {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #999;
+    padding: 4px 8px;
+}
+.version-modal-close:hover {
+    color: #333;
+}
+.version-modal-body {
+    padding: 16px 20px;
+    overflow-y: auto;
+    flex: 1;
+}
+.version-loading, .version-empty {
+    color: #888;
+    text-align: center;
+    padding: 24px;
+}
+.version-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.version-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+.version-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.version-date {
+    font-weight: 600;
+    color: #333;
+    font-size: 14px;
+}
+.version-author {
+    font-size: 12px;
+    color: #888;
+}
+
 /* Global fallback: ensure site header is offset below admin toolbar when in admin mode */
 #app-root.admin-mode .site-header {
     top: var(--admin-offset, 48px) !important;

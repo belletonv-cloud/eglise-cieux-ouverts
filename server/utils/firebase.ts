@@ -1,5 +1,21 @@
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token'
 
+export interface FirestoreConfig {
+  projectId: string
+  clientEmail: string
+  privateKey: string
+}
+
+export function getFirestoreConfig(event: any): FirestoreConfig | null {
+  const config = useRuntimeConfig(event)
+  const projectId = (process.env.NUXT_FIREBASE_PROJECT_ID || config.firebaseProjectId) as string
+  const clientEmail = (process.env.NUXT_FIREBASE_CLIENT_EMAIL || config.firebaseClientEmail) as string
+  const privateKey = (process.env.NUXT_FIREBASE_PRIVATE_KEY || config.firebasePrivateKey) as string
+
+  if (!projectId || !clientEmail || !privateKey) return null
+  return { projectId, clientEmail, privateKey }
+}
+
 export async function getAccessToken(clientEmail: string, privateKey: string): Promise<string> {
   const now = Math.floor(Date.now() / 1000)
   const expiry = now + 3600
@@ -69,6 +85,60 @@ export async function getFirestoreDoc(
 
   const data = await response.json()
   return data
+}
+
+export function encodeFirestoreValue(value: any): any {
+  if (value === null || value === undefined) return { nullValue: null }
+  if (typeof value === 'string') return { stringValue: value }
+  if (typeof value === 'number') {
+    if (Number.isInteger(value)) return { integerValue: String(value) }
+    return { doubleValue: value }
+  }
+  if (typeof value === 'boolean') return { booleanValue: value }
+  if (value instanceof Date) return { timestampValue: value.toISOString() }
+  if (Array.isArray(value)) {
+    return { arrayValue: { values: value.map(encodeFirestoreValue) } }
+  }
+  if (typeof value === 'object') {
+    const fields: Record<string, any> = {}
+    for (const [k, v] of Object.entries(value)) {
+      fields[k] = encodeFirestoreValue(v)
+    }
+    return { mapValue: { fields } }
+  }
+  return { nullValue: null }
+}
+
+export function encodeFirestoreDoc(data: Record<string, any>): any {
+  const fields: Record<string, any> = {}
+  for (const [key, value] of Object.entries(data)) {
+    fields[key] = encodeFirestoreValue(value)
+  }
+  return { fields }
+}
+
+export async function setFirestoreDoc(
+  projectId: string,
+  accessToken: string,
+  collection: string,
+  docId: string,
+  data: Record<string, any>
+): Promise<void> {
+  const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/${collection}/${docId}`
+
+  const response = await fetch(url, {
+    method: 'PATCH',
+    headers: {
+      authorization: `Bearer ${accessToken}`,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify(encodeFirestoreDoc(data)),
+  })
+
+  if (!response.ok) {
+    const text = await response.text()
+    throw new Error(`Firestore write error: ${text}`)
+  }
 }
 
 export function parseFirestoreDoc(doc: any): Record<string, any> | null {
