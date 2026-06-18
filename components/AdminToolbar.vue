@@ -332,6 +332,9 @@ let autoSaveTimer = null;
 onMounted(() => {
     unsubscribe = onAuthStateChanged($auth, (u) => {
         user.value = u;
+        if (!u && route.path !== '/admin') {
+            navigateTo('/admin', { replace: true })
+        }
     });
 
     // Keyboard shortcuts for undo/redo
