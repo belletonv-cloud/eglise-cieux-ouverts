@@ -85,19 +85,18 @@ const currentPageSlug = computed(() => {
 const isPreviewMode = computed(() => route.query.preview === "true");
 
 // Client-only auth check — returns user or null
+// Uses $auth.onAuthStateChanged directly (works with both real Firebase
+// and the mock $auth provided by auth-mock.client.ts in PW_TEST mode).
 async function waitForAuth() {
     if (import.meta.server || !import.meta.client) return null;
-    try {
-        const { onAuthStateChanged } = await import("firebase/auth");
-        const { $auth } = useNuxtApp();
-        if (!$auth) return null;
-        return await new Promise((resolve) => {
-            onAuthStateChanged($auth, resolve, { onlyOnce: true });
+    const { $auth } = useNuxtApp();
+    if (!$auth?.onAuthStateChanged) return null;
+    return await new Promise((resolve) => {
+        const unsubscribe = $auth.onAuthStateChanged((user) => {
+            resolve(user);
+            if (typeof unsubscribe === "function") unsubscribe();
         });
-    } catch (e) {
-        console.warn("auth check failed", e);
-        return null;
-    }
+    });
 }
 
 async function redirectToLogin() {

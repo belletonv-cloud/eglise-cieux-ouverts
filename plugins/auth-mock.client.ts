@@ -11,10 +11,19 @@ export default defineNuxtPlugin((nuxtApp) => {
     photoURL: 'https://robohash.org/fakeci.png?set=set4',
   }
 
+  // Allow tests to override mock auth result via window.__MOCK_AUTH_RESULT.
+  // Set to null to simulate unauthenticated state, or pass a custom user object.
+  const mockResult =
+    typeof window !== 'undefined' && '__MOCK_AUTH_RESULT' in window
+      ? (window as Record<string, unknown>).__MOCK_AUTH_RESULT
+      : undefined
+
+  const currentUser = mockResult === undefined ? fakeUser : (mockResult as typeof fakeUser | null)
+
   nuxtApp.provide('auth', {
-    currentUser: fakeUser,
+    currentUser,
     onAuthStateChanged: (callback: (u: typeof fakeUser | null) => void) => {
-      callback(fakeUser)
+      callback(currentUser)
       return () => {} // unsubscribe
     },
   })

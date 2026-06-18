@@ -24,13 +24,14 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from 'firebase/auth'
+import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth'
 
 useSeoMeta({
   title: 'Administration — Église Cieux Ouverts',
   description: 'Connexion à l\'administration du site.',
 })
 
+const route = useRoute()
 const { $auth } = useNuxtApp()
 const router = useRouter()
 const user = ref(null)
@@ -39,15 +40,17 @@ const checking = ref(true)
 const redirectUrl = computed(() => route.query.redirect || '/?admin=true')
 
 onMounted(() => {
-  if (!$auth) {
+  if (!$auth?.onAuthStateChanged) {
     checking.value = false
     return
   }
-  onAuthStateChanged($auth, (u) => {
+  // Use $auth.onAuthStateChanged directly — works with both real Firebase Auth
+  // and the mock $auth (auth-mock.client.ts in PW_TEST mode).
+  $auth.onAuthStateChanged((u) => {
     user.value = u
     checking.value = false
     if (u) {
-      router.replace(redirectUrl.value)
+      navigateTo(redirectUrl.value, { replace: true })
     }
   })
 })
@@ -64,7 +67,17 @@ async function signIn() {
 }
 
 function goAdmin() {
-  router.replace(redirectUrl.value)
+  try {
+    navigateTo(redirectUrl.value, { replace: true })
+  } catch (e) {
+    console.error('[admin] navigateTo failed, falling back to router.replace', e)
+    try {
+      router.replace(redirectUrl.value)
+    } catch (e2) {
+      console.error('[admin] router.replace also failed, using window.location', e2)
+      window.location.href = redirectUrl.value
+    }
+  }
 }
 </script>
 
