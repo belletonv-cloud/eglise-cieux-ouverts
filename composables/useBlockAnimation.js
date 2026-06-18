@@ -174,9 +174,13 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
     }
   }
 
+  function isInIframe() {
+    return typeof window !== "undefined" && window.top !== window.self;
+  }
+
   function setup(blocks) {
     blocksCache = blocks || [];
-    if (isAdmin.value || isServerAdminRef?.value) {
+    if (isAdmin.value || isServerAdminRef?.value || isInIframe()) {
       initAdminTrigger(blocks);
       return;
     }
@@ -203,7 +207,7 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
   }
 
   function handleBlocksChange(blocks) {
-    if (isAdmin.value) {
+    if (isAdmin.value || isInIframe()) {
       const allIds = (blocks || [])
         .filter((b) => !shouldSkipTrigger(b.type, isAdmin))
         .map((b) => b.id)
@@ -258,7 +262,7 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
       return urlParams.get("admin") === "true";
     };
 
-    if (isCurrentlyAdmin() || (isAdmin && isAdmin.value)) {
+    if (isCurrentlyAdmin() || (isAdmin && isAdmin.value) || isInIframe()) {
       // Appliquer les classes triggered directement sur le DOM
       // Utiliser plusieurs tentatives pour couvrir tous les cas de timing
       let attempts = 0;
