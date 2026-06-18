@@ -543,15 +543,16 @@ async function saveFooterChanges() {
 }
 
 async function navigateToPage(slug) {
-    // Use client-side navigation so the admin layout/offset is preserved
     const targetPath = slug === "accueil" ? "/" : `/${slug}`;
-
-    // Clear localBlocks so the new page loads its own data (not stale from previous page)
     clearBlocks();
-
     const newQuery = { ...route.query, admin: "true" };
-    // Always do client-side navigation to preserve admin-mode layout and offsets
-    // Ensure admin mode is applied immediately so layout (header spacer) updates
+    const qs = new URLSearchParams(newQuery).toString();
+    // In iframe preview mode, full page reload so the iframe loads the new page
+    if (previewDevice.value !== "desktop") {
+        window.location.href = targetPath + "?" + qs;
+        return;
+    }
+    // Desktop mode: client-side navigation is fine
     try {
         if (isAdminMode) isAdminMode.value = true;
         const root =
@@ -562,7 +563,6 @@ async function navigateToPage(slug) {
     } catch (e) {
         console.warn("navigateToPage: could not set admin-mode class", e);
     }
-
     try {
         await router.push({ path: targetPath, query: newQuery });
         try {
