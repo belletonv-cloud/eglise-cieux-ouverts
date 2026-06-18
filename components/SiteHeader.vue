@@ -622,13 +622,13 @@ onUnmounted(() => {
 #app-root.admin-mode .site-header {
     top: var(--admin-offset, 48px) !important;
 }
-/* Also offset the spacer to prevent content from snapping up */
+/* Spacer = header height only — admin toolbar already pushes down in flow */
 #app-root.admin-mode .header-spacer {
-    height: calc(72px + var(--admin-offset, 48px));
+    height: 72px;
 }
 @media (max-width: 768px) {
     #app-root.admin-mode .header-spacer {
-        height: calc(52px + var(--admin-offset, 48px));
+        height: 52px;
     }
 }
 /* In mobile admin mode, shift nav-mobile down to account for admin toolbar */

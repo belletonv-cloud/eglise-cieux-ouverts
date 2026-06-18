@@ -959,13 +959,14 @@ async function saveChanges() {
 #app-root.admin-mode .site-header {
     top: var(--admin-offset, 48px) !important;
 }
-/* Match actual header height (72px desktop = 52px logo + 20px padding, 52px mobile = 32px logo + 20px padding) */
+/* Spacer = header height only (72px desktop, 52px mobile).
+   Admin toolbar (48px) is already above in normal flow — do NOT add --admin-offset. */
 #app-root.admin-mode .header-spacer {
-    height: calc(72px + var(--admin-offset, 48px));
+    height: 72px;
 }
 @media (max-width: 768px) {
     #app-root.admin-mode .header-spacer {
-        height: calc(52px + var(--admin-offset, 48px));
+        height: 52px;
     }
 }
 </style>

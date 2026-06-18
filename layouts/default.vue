@@ -31,6 +31,7 @@
             </template>
             <div v-else class="device-iframe-wrap">
                 <iframe
+                    :key="route.path"
                     :src="previewUrl"
                     :style="{ width: deviceWidth + 'px' }"
                     class="device-iframe"
