@@ -176,20 +176,39 @@ function getCircleStyle(index) {
     }
     .aspirations-title {
         font-size: clamp(32px, 8vw, 48px);
-        opacity: 1;
-        transform: none;
     }
     .aspirations-list li {
         font-size: 1.2rem;
-        padding: 0.8rem 0;
-        text-align: center;
+        padding: 0.8rem 0 0.8rem 3rem;
+        text-align: left;
         border-bottom: 1px solid;
-        opacity: 1;
-        transform: none;
     }
     .circle {
-        display: none;
+        width: 8vh;
+        height: 8vh;
+        left: -1rem;
     }
+}
+
+/* Mobile/tablet triggered animation — stagger items on entry using keyframes
+   to override the global .block-wrapper.triggered fallback (which uses !important) */
+@media (max-width: 768px) {
+    .aspirations-viewport.triggered .aspirations-title {
+        animation: aspir-title-in 0.5s ease both !important;
+    }
+    .aspirations-viewport.triggered .aspirations-list li {
+        animation: aspir-mobile-item-in 0.4s ease both !important;
+    }
+    .aspirations-viewport.triggered .aspirations-list li:nth-child(1) { animation-delay: 0.15s !important; }
+    .aspirations-viewport.triggered .aspirations-list li:nth-child(2) { animation-delay: 0.25s !important; }
+    .aspirations-viewport.triggered .aspirations-list li:nth-child(3) { animation-delay: 0.35s !important; }
+    .aspirations-viewport.triggered .aspirations-list li:nth-child(4) { animation-delay: 0.45s !important; }
+    .aspirations-viewport.triggered .aspirations-list li:nth-child(5) { animation-delay: 0.55s !important; }
+    .aspirations-viewport.triggered .aspirations-list li:nth-child(6) { animation-delay: 0.65s !important; }
+}
+@keyframes aspir-mobile-item-in {
+    0% { opacity: 0; transform: translateY(15px); }
+    100% { opacity: 1; transform: translateY(0); }
 }
 
 /* Keyframes et autres styles laissés intacts */
