@@ -626,7 +626,7 @@ onUnmounted(() => {
 #app-root.admin-mode .header-spacer {
     height: calc(70px + var(--admin-offset, 48px));
 }
-    @media (max-width: 768px) {
+@media (max-width: 768px) {
     #app-root.admin-mode .header-spacer {
         height: calc(52px + var(--admin-offset, 48px));
     }
@@ -635,13 +635,6 @@ onUnmounted(() => {
 @media (max-width: 768px) {
     #app-root.admin-mode .nav-mobile {
         top: calc(52px + var(--admin-offset, 48px));
-    }
-}
-}
-/* In mobile admin mode, shift nav-mobile down to account for admin toolbar */
-@media (max-width: 768px) {
-    #app-root.admin-mode .nav-mobile {
-        top: calc(56px + var(--admin-offset, 48px));
     }
 }
 </style>
