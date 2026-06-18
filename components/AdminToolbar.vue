@@ -99,46 +99,69 @@
             </div>
             <ClientOnly>
                 <template v-if="user">
-                    <span
-                        class="admin-save-status unsaved"
-                        v-if="hasUnsavedChanges && !saveStatus"
-                        >⚠ Modifications non sauvegardées</span
-                    >
-                    <span
-                        class="admin-save-status auto-saved"
-                        v-else-if="saveStatus && saveStatus === 'Auto-sauvegardé'"
-                        >✓ Auto-sauvegardé</span
-                    >
-                    <span class="admin-save-status" v-else-if="saveStatus">{{
-                        saveStatus
-                    }}</span>
-                    <img
-                        v-if="user.photoURL"
-                        :src="user.photoURL"
-                        class="admin-avatar"
-                        alt="Photo profil"
-                    />
-                    <span v-else class="admin-user">{{ user.email }}</span>
-                    <button
-                        class="admin-btn"
-                        @click="saveChanges"
-                        :disabled="saving"
-                    >
-                        {{ saving ? "Sauvegarde..." : "Sauvegarder" }}
-                    </button>
-                    <button
-                        class="admin-btn admin-btn-secondary"
-                        @click="showVersionHistory = true"
-                        title="Historique des versions"
-                    >
-                        🕐 Versions
-                    </button>
-                    <button
-                        class="admin-btn admin-btn-secondary"
-                        @click="signOutAndExit"
-                    >
-                        Quitter
-                    </button>
+                    <template v-if="checkingAdmin">
+                        <span class="admin-save-status">Vérification...</span>
+                    </template>
+                    <template v-else-if="!isAdminUser">
+                        <span class="admin-save-status" style="color:#ff6b6b">
+                            ⚠ Accès non autorisé — contactez l'administrateur
+                        </span>
+                        <button
+                            class="admin-btn admin-btn-secondary"
+                            @click="signOutAndExit"
+                        >
+                            Quitter
+                        </button>
+                    </template>
+                    <template v-else>
+                        <span
+                            class="admin-save-status unsaved"
+                            v-if="hasUnsavedChanges && !saveStatus"
+                            >⚠ Modifications non sauvegardées</span
+                        >
+                        <span
+                            class="admin-save-status auto-saved"
+                            v-else-if="saveStatus && saveStatus === 'Auto-sauvegardé'"
+                            >✓ Auto-sauvegardé</span
+                        >
+                        <span class="admin-save-status" v-else-if="saveStatus">{{
+                            saveStatus
+                        }}</span>
+                        <img
+                            v-if="user.photoURL"
+                            :src="user.photoURL"
+                            class="admin-avatar"
+                            alt="Photo profil"
+                        />
+                        <span v-else class="admin-user">{{ user.email }}</span>
+                        <button
+                            class="admin-btn"
+                            @click="saveChanges"
+                            :disabled="saving"
+                        >
+                            {{ saving ? "Sauvegarde..." : "Sauvegarder" }}
+                        </button>
+                        <button
+                            class="admin-btn admin-btn-secondary"
+                            @click="showVersionHistory = true"
+                            title="Historique des versions"
+                        >
+                            🕐 Versions
+                        </button>
+                        <button
+                            class="admin-btn admin-btn-secondary"
+                            @click="showAdminManager = true"
+                            title="Gérer les administrateurs"
+                        >
+                            👥 Admins
+                        </button>
+                        <button
+                            class="admin-btn admin-btn-secondary"
+                            @click="signOutAndExit"
+                        >
+                            Quitter
+                        </button>
+                    </template>
                 </template>
                 <template v-else>
                     <button
@@ -318,6 +341,68 @@
             </div>
         </div>
     </Teleport>
+
+    <!-- Admin Manager Modal -->
+    <Teleport to="body">
+        <div v-if="showAdminManager" class="version-modal-overlay" @click.self="showAdminManager = false">
+            <div class="version-modal">
+                <div class="version-modal-header">
+                    <h3>Gestion des administrateurs</h3>
+                    <button class="version-modal-close" @click="showAdminManager = false">✕</button>
+                </div>
+                <div class="version-modal-body">
+                    <div class="admin-mgr-section">
+                        <h4>Ajouter un admin</h4>
+                        <div class="admin-mgr-add">
+                            <input
+                                v-model="newAdminUid"
+                                placeholder="UID Firebase"
+                                class="admin-mgr-input"
+                            />
+                            <button
+                                class="admin-btn"
+                                @click="addAdmin"
+                                :disabled="addingAdmin"
+                            >
+                                {{ addingAdmin ? "Ajout..." : "Ajouter" }}
+                            </button>
+                        </div>
+                        <p class="admin-mgr-hint">
+                            Collez l'UID Firebase de l'utilisateur (trouvable dans Firebase Console → Authentication)
+                        </p>
+                    </div>
+                    <div class="admin-mgr-section">
+                        <h4>Admins actuels</h4>
+                        <div v-if="adminList.length === 0" class="version-empty">
+                            Aucun admin
+                        </div>
+                        <div v-else class="admin-mgr-list">
+                            <div
+                                v-for="uid in adminList"
+                                :key="uid"
+                                class="admin-mgr-item"
+                            >
+                                <span class="admin-mgr-uid">{{ uid }}</span>
+                                <button
+                                    class="admin-action-btn admin-action-danger"
+                                    @click="removeAdmin(uid)"
+                                    title="Retirer"
+                                    :disabled="removingAdmin === uid"
+                                >
+                                    {{ removingAdmin === uid ? "..." : "✕" }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-if="setupMode" class="admin-mgr-section">
+                        <p class="admin-mgr-hint">
+                            Aucun admin configuré. <button class="admin-btn" @click="setupFirstAdmin">Devenir le premier admin</button>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </Teleport>
 </template>
 
 <script setup>
@@ -370,6 +455,10 @@ const user = ref(null);
 const saving = ref(false);
 const saveStatus = ref("");
 
+// Admin access control
+const isAdminUser = ref(false);
+const checkingAdmin = ref(true);
+
 let unsubscribe = null;
 let autoSaveTimer = null;
 
@@ -421,7 +510,7 @@ async function restoreVersion(versionId) {
     }
 }
 
-function formatDate(dateStr: string | null) {
+function formatDate(dateStr) {
     if (!dateStr) return "Date inconnue"
     try {
         return new Date(dateStr).toLocaleString('fr-FR', {
@@ -436,12 +525,150 @@ function formatDate(dateStr: string | null) {
     }
 }
 
-onMounted(() => {
-    unsubscribe = onAuthStateChanged($auth, (u) => {
-        user.value = u;
-        if (!u && route.path !== '/admin') {
-            navigateTo('/admin', { replace: true })
+// Admin management
+const showAdminManager = ref(false);
+const adminList = ref([]);
+const newAdminUid = ref('');
+const addingAdmin = ref(false);
+const removingAdmin = ref(null);
+const setupMode = ref(false);
+
+watch(showAdminManager, (show) => {
+    if (show) loadAdminList()
+})
+
+async function loadAdminList() {
+    const token = await getFirebaseToken()
+    if (!token) return
+    try {
+        const res = await fetch('/api/admin/users', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+        if (res.ok) {
+            const data = await res.json()
+            adminList.value = data.uids || []
+            setupMode.value = false
+        } else {
+            setupMode.value = true
+            adminList.value = []
         }
+    } catch {
+        adminList.value = []
+        setupMode.value = true
+    }
+}
+
+async function addAdmin() {
+    if (!newAdminUid.value.trim()) return
+    addingAdmin.value = true
+    try {
+        const token = await getFirebaseToken()
+        if (!token) throw new Error('Non authentifié')
+        const res = await fetch('/api/admin/users', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify({ uid: newAdminUid.value.trim() }),
+        })
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}))
+            throw new Error(err.message || `HTTP ${res.status}`)
+        }
+        const data = await res.json()
+        adminList.value = data.uids || []
+        newAdminUid.value = ''
+    } catch (e) {
+        console.error('[admin] addAdmin failed:', e)
+        alert("Erreur : " + (e.message || e))
+    } finally {
+        addingAdmin.value = false
+    }
+}
+
+async function removeAdmin(uid) {
+    removingAdmin.value = uid
+    try {
+        const token = await getFirebaseToken()
+        if (!token) throw new Error('Non authentifié')
+        const res = await fetch('/api/admin/users', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify({ uid }),
+        })
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}))
+            throw new Error(err.message || `HTTP ${res.status}`)
+        }
+        const data = await res.json()
+        adminList.value = data.uids || []
+    } catch (e) {
+        console.error('[admin] removeAdmin failed:', e)
+        alert("Erreur : " + (e.message || e))
+    } finally {
+        removingAdmin.value = null
+    }
+}
+
+async function setupFirstAdmin() {
+    try {
+        const token = await getFirebaseToken()
+        if (!token) throw new Error('Non authentifié')
+        const res = await fetch('/api/admin/setup', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+            },
+        })
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}))
+            throw new Error(err.message || `HTTP ${res.status}`)
+        }
+        showAdminManager.value = false
+        // Re-check admin status
+        isAdminUser.value = true
+        alert("Vous êtes maintenant administrateur !")
+    } catch (e) {
+        console.error('[admin] setupFirstAdmin failed:', e)
+        alert("Erreur : " + (e.message || e))
+    }
+}
+
+onMounted(() => {
+    unsubscribe = onAuthStateChanged($auth, async (u) => {
+        user.value = u;
+        if (!u) {
+            isAdminUser.value = false;
+            checkingAdmin.value = false;
+            if (route.path !== '/admin') {
+                navigateTo('/admin', { replace: true })
+            }
+            return
+        }
+        // En mode test, on saute la vérification admin
+        const config = useRuntimeConfig()
+        if (config.public?.TEST_ENV) {
+            isAdminUser.value = true
+            checkingAdmin.value = false
+            return
+        }
+        // Vérifier si l'utilisateur est admin
+        try {
+            const token = await u.getIdToken()
+            const res = await fetch('/api/admin/check', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            const data = await res.json()
+            isAdminUser.value = data.isAdmin === true
+        } catch {
+            isAdminUser.value = false
+        }
+        checkingAdmin.value = false
     });
 
     // Keyboard shortcuts for undo/redo
@@ -500,14 +727,23 @@ watch(
     { deep: true },
 );
 
+async function getFirebaseToken() {
+    try {
+        return await user.value?.getIdToken()
+    } catch {
+        return null
+    }
+}
+
 async function saveToServer() {
-    const email = user.value?.email || '';
+    const token = await getFirebaseToken()
+    if (!token) throw new Error('Non authentifié')
     try {
         const res = await fetch(`/api/pages/${props.pageSlug}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
-                'x-user-email': email,
+                'Authorization': `Bearer ${token}`,
             },
             body: JSON.stringify({ blocks: localBlocks.value }),
         })
@@ -1175,6 +1411,52 @@ async function saveChanges() {
 .version-author {
     font-size: 12px;
     color: #888;
+}
+
+/* Admin manager */
+.admin-mgr-section {
+    margin-bottom: 16px;
+}
+.admin-mgr-section h4 {
+    margin: 0 0 8px;
+    font-size: 14px;
+    color: #555;
+}
+.admin-mgr-add {
+    display: flex;
+    gap: 8px;
+}
+.admin-mgr-input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: monospace;
+}
+.admin-mgr-hint {
+    font-size: 12px;
+    color: #999;
+    margin: 6px 0 0;
+}
+.admin-mgr-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.admin-mgr-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 10px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    font-family: monospace;
+    font-size: 12px;
+}
+.admin-mgr-uid {
+    word-break: break-all;
+    color: #555;
 }
 
 /* Global fallback: ensure site header is offset below admin toolbar when in admin mode */
