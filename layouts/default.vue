@@ -84,6 +84,30 @@ const currentPageSlug = computed(() => {
 
 const isPreviewMode = computed(() => route.query.preview === "true");
 
+// Client-only auth check — returns user or null
+async function waitForAuth() {
+    if (import.meta.server || !import.meta.client) return null;
+    try {
+        const { onAuthStateChanged } = await import("firebase/auth");
+        const { $auth } = useNuxtApp();
+        if (!$auth) return null;
+        return await new Promise((resolve) => {
+            onAuthStateChanged($auth, resolve, { onlyOnce: true });
+        });
+    } catch (e) {
+        console.warn("auth check failed", e);
+        return null;
+    }
+}
+
+async function redirectToLogin() {
+    if (import.meta.server) return;
+    const router = useRouter();
+    await router.replace(
+        "/admin?redirect=" + encodeURIComponent(route.fullPath),
+    );
+}
+
 const deviceWidth = computed(() => {
     if (previewDevice.value === "mobile") return 375;
     if (previewDevice.value === "tablet") return 768;
@@ -109,18 +133,23 @@ watch(
     { immediate: true },
 );
 
-// Enter admin mode after hydration to avoid v-if/v-else template mismatch
-// during SSR hydration (causes block duplication + error page mismatches).
+// Activate admin mode when ?admin=true is present and user is authenticated.
+// SSR activation is intentionally skipped — Firebase auth is client-only.
 watch(
     () => route.query.admin,
-    (val) => {
+    async (val) => {
+        if (import.meta.server) return;
         if (val === "true" && !isAdminMode.value && !isPreviewMode.value) {
-            isAdminMode.value = true;
+            const user = await waitForAuth();
+            if (user) {
+                isAdminMode.value = true;
+            } else {
+                redirectToLogin();
+            }
         } else if (val !== "true" && isAdminMode.value) {
             exitAdmin();
         }
     },
-    { immediate: true },
 );
 
 // Reactive guard: whenever isAdminMode becomes true without admin=true in URL, revert
@@ -151,13 +180,15 @@ const onEscape = (e) => {
 onMounted(() => {
     isMounted.value = true;
     document.addEventListener("keydown", onEscape);
-    // Activate admin mode after hydration is complete
-    if (
-        route.query.admin === "true" &&
-        !isAdminMode.value &&
-        !isPreviewMode.value
-    ) {
-        isAdminMode.value = true;
+    // Activate admin mode after hydration is complete — auth guarded
+    if (route.query.admin === "true" && !isPreviewMode.value) {
+        waitForAuth().then((user) => {
+            if (user) {
+                isAdminMode.value = true;
+            } else {
+                redirectToLogin();
+            }
+        });
     }
     // Restore preview device from URL (persisted across navigations)
     if (["mobile", "tablet", "desktop"].includes(route.query.device)) {

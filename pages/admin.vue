@@ -36,6 +36,8 @@ const router = useRouter()
 const user = ref(null)
 const checking = ref(true)
 
+const redirectUrl = computed(() => route.query.redirect || '/?admin=true')
+
 onMounted(() => {
   if (!$auth) {
     checking.value = false
@@ -45,7 +47,7 @@ onMounted(() => {
     user.value = u
     checking.value = false
     if (u) {
-      router.replace('/?admin=true')
+      router.replace(redirectUrl.value)
     }
   })
 })
@@ -62,7 +64,7 @@ async function signIn() {
 }
 
 function goAdmin() {
-  router.replace('/?admin=true')
+  router.replace(redirectUrl.value)
 }
 </script>
 
