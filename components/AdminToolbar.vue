@@ -346,8 +346,17 @@ onMounted(() => {
         }
     };
     document.addEventListener("keydown", handler);
+
+    // Listen for block clicks from the preview iframe (mobile/tablet)
+    function onIframeBlockClick(e) {
+        if (e.data?.type === "block-click" && isAdminMode.value) {
+            selectBlock(e.data.blockId);
+        }
+    }
+    window.addEventListener("message", onIframeBlockClick);
     onUnmounted(() => {
         document.removeEventListener("keydown", handler);
+        window.removeEventListener("message", onIframeBlockClick);
     });
 });
 

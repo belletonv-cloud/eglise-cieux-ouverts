@@ -12,7 +12,7 @@
             :ref="(el) => setWrapperRef(el, block.id)"
             :data-block-id="block.id"
             :data-block-type="block.type"
-            @click.capture="isAdmin && wrapperClick(block.id)"
+            @click.capture="wrapperClick(block.id)"
         >
             <BlockRenderer
                 :block="block"
@@ -226,9 +226,16 @@ onUnmounted(() => {
         document.removeEventListener("pointerdown", docPointerHandler, true);
 });
 
-// Click wrapper handler that logs and forwards to selectBlock
+// Click wrapper handler that forwards to selectBlock.
+// When inside a preview iframe, sends a postMessage to the parent (admin toolbar)
+// so the sidebar can open for the clicked block.
 function wrapperClick(id) {
     try {
+        // Detect if we're inside an iframe (preview mode)
+        if (typeof window !== "undefined" && window.top !== window.self) {
+            window.parent.postMessage({ type: "block-click", blockId: id }, "*");
+            return;
+        }
         selectBlock(id);
     } catch (e) {
         console.warn("PageRenderer.wrapperClick: selectBlock threw", e);
