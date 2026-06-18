@@ -180,8 +180,14 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
 
   function setup(blocks) {
     blocksCache = blocks || [];
-    if (isAdmin.value || isServerAdminRef?.value || isInIframe()) {
+    if (isAdmin.value || isServerAdminRef?.value) {
       initAdminTrigger(blocks);
+      return;
+    }
+    // Preview iframe: trigger ALL blocks (scroll-driven too, since iframe may not scroll)
+    if (isInIframe()) {
+      const allIds = (blocks || []).map((b) => b.id).filter(Boolean);
+      triggeredBlocks.value = [...allIds];
       return;
     }
 
@@ -207,7 +213,12 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
   }
 
   function handleBlocksChange(blocks) {
-    if (isAdmin.value || isInIframe()) {
+    if (isInIframe()) {
+      const allIds = (blocks || []).map((b) => b.id).filter(Boolean);
+      triggeredBlocks.value = [...allIds];
+      return;
+    }
+    if (isAdmin.value) {
       const allIds = (blocks || [])
         .filter((b) => !shouldSkipTrigger(b.type, isAdmin))
         .map((b) => b.id)
@@ -262,7 +273,21 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
       return urlParams.get("admin") === "true";
     };
 
-    if (isCurrentlyAdmin() || (isAdmin && isAdmin.value) || isInIframe()) {
+    if (isInIframe()) {
+      // Preview iframe: trigger ALL blocks (scroll-driven too, since iframe may not scroll)
+      const allIds = (blocksCache || []).map((b) => b.id).filter(Boolean);
+      triggeredBlocks.value = [...allIds];
+      for (const id of allIds) {
+        document.querySelectorAll(`[data-block-id="${id}"]`).forEach((el) => {
+          if (el && !el.classList.contains("triggered")) {
+            el.classList.add("triggered");
+          }
+        });
+      }
+      return;
+    }
+
+    if (isCurrentlyAdmin() || (isAdmin && isAdmin.value)) {
       // Appliquer les classes triggered directement sur le DOM
       // Utiliser plusieurs tentatives pour couvrir tous les cas de timing
       let attempts = 0;
