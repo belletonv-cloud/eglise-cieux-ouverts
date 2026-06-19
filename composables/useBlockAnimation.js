@@ -21,7 +21,7 @@ const INTERNAL_TYPES = [
 function shouldSkipTrigger(type, isAdmin) {
   if (!SUPPORTS_SCROLL_TIMELINE) return false;
   if (!SCROLL_DRIVEN_TYPES.includes(type)) return false;
-  if (isAdmin?.value) return true;
+  if (isAdmin?.value) return false;
   return true;
 }
 

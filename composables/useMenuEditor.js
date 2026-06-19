@@ -1,15 +1,9 @@
-/**
- * Menu editor composable — manages navigation items in admin mode.
- * In edit mode, clicking a menu item opens the editor instead of navigating.
- * Persisted to Firestore: settings/menu → { menuItems }
- */
 import { ref, provide, watch, inject, computed } from 'vue'
 
 const DEFAULT_MENU_ITEMS = [
   { id: 'accueil', label: 'Accueil', to: '/', visible: true, children: [] },
   { id: 'messages', label: 'Messages', to: '/messages', visible: true, children: [] },
   { id: 'agenda', label: 'Agenda', to: '/agenda', visible: true, children: [] },
-
   { id: 'event-list', label: 'Événements', to: '/event-list', visible: true, children: [] },
   { id: 'contact', label: 'Contact', to: '/contact', visible: true, children: [] },
 ]
@@ -21,13 +15,13 @@ const editingMenuItemId = ref(null)
 const menuEditorOpen = ref(false)
 const menuLoaded = ref(false)
 const menuSaving = ref(false)
+const menuChanged = ref(false)
 const menuBgImage = ref('')
-let _menuEditorOpen = menuEditorOpen // alias for provide reactivity
 
 export function useMenuEditor() {
-  // If an ancestor provided a menu editor instance, reuse it (singleton behavior).
   const existing = inject(MENU_EDITOR_KEY, null)
   if (existing) return existing
+
   const activeMenuItem = computed(() => {
     if (!editingMenuItemId.value) return null
     return findItemById(menuItems.value, editingMenuItemId.value)
@@ -69,19 +63,17 @@ export function useMenuEditor() {
     editingMenuItemId.value = id
   }
 
+  function markChanged() {
+    menuChanged.value = true
+  }
+
   function updateMenuItem(id, updates) {
     const item = findItemById(menuItems.value, id)
-    if (item) Object.assign(item, updates)
+    if (item) { Object.assign(item, updates); markChanged() }
   }
 
   function addMenuItem(afterId = null) {
-    const newItem = {
-      id: 'item_' + Date.now(),
-      label: 'Nouveau lien',
-      to: '/',
-      visible: true,
-      children: [],
-    }
+    const newItem = { id: 'item_' + Date.now(), label: 'Nouveau lien', to: '/', visible: true, children: [] }
     if (afterId) {
       const idx = menuItems.value.findIndex(i => i.id === afterId)
       menuItems.value.splice(idx + 1, 0, newItem)
@@ -89,21 +81,17 @@ export function useMenuEditor() {
       menuItems.value.push(newItem)
     }
     editingMenuItemId.value = newItem.id
+    markChanged()
   }
 
   function addSubMenuItem(parentId) {
-    const newItem = {
-      id: 'sub_' + Date.now(),
-      label: 'Sous-menu',
-      to: '/',
-      visible: true,
-      children: [],
-    }
+    const newItem = { id: 'sub_' + Date.now(), label: 'Sous-menu', to: '/', visible: true, children: [] }
     const parent = findItemById(menuItems.value, parentId)
     if (parent) {
       if (!parent.children) parent.children = []
       parent.children.push(newItem)
       editingMenuItemId.value = newItem.id
+      markChanged()
     }
   }
 
@@ -117,6 +105,7 @@ export function useMenuEditor() {
     }
     menuItems.value = remove(menuItems.value)
     if (editingMenuItemId.value === id) editingMenuItemId.value = null
+    markChanged()
   }
 
   function moveMenuItem(id, direction) {
@@ -126,11 +115,17 @@ export function useMenuEditor() {
     if (newIdx < 0 || newIdx >= menuItems.value.length) return
     const [item] = menuItems.value.splice(idx, 1)
     menuItems.value.splice(newIdx, 0, item)
+    markChanged()
   }
 
   function toggleMenuItemVisibility(id) {
     const item = findItemById(menuItems.value, id)
-    if (item) item.visible = !item.visible
+    if (item) { item.visible = !item.visible; markChanged() }
+  }
+
+  function setMenuBgImage(value) {
+    menuBgImage.value = value
+    markChanged()
   }
 
   function getVisibleItems() {
@@ -144,6 +139,7 @@ export function useMenuEditor() {
   function resetToDefault() {
     menuItems.value = JSON.parse(JSON.stringify(DEFAULT_MENU_ITEMS))
     editingMenuItemId.value = null
+    markChanged()
   }
 
   // ── Firestore persistence ──
@@ -176,6 +172,7 @@ export function useMenuEditor() {
         menuBgImage: menuBgImage.value,
         updatedAt: new Date().toISOString(),
       })
+      menuChanged.value = false
     } catch (e) {
       console.error('MenuEditor: save failed', e)
       throw e
@@ -184,45 +181,21 @@ export function useMenuEditor() {
     }
   }
 
-  // Auto-save on changes (debounced)
-  let _saveTimer = null
-  watch(menuItems, () => {
-    if (!menuLoaded.value) return
-    clearTimeout(_saveTimer)
-    _saveTimer = setTimeout(() => saveMenuToFirestore().catch((e) => console.warn("useMenuEditor: auto-save failed", e)), 800)
-  }, { deep: true })
-
   const api = {
-    menuItems,
-    editingMenuItemId,
-    menuEditorOpen,
-    activeMenuItem,
-    menuLoaded,
-    menuSaving,
-    menuBgImage,
-    initMenuItems,
-    loadMenuFromFirestore,
-    saveMenuToFirestore,
-    openMenuEditor,
-    closeMenuEditor,
-    toggleMenuEditor,
-    selectMenuItem,
-    updateMenuItem,
-    addMenuItem,
-    addSubMenuItem,
-    removeMenuItem,
-    moveMenuItem,
-    toggleMenuItemVisibility,
-    getVisibleItems,
-    getMenuItems,
-    resetToDefault,
+    menuItems, editingMenuItemId, menuEditorOpen, activeMenuItem,
+    menuLoaded, menuSaving, menuChanged, menuBgImage,
+    initMenuItems, loadMenuFromFirestore, saveMenuToFirestore,
+    openMenuEditor, closeMenuEditor, toggleMenuEditor,
+    selectMenuItem, updateMenuItem, addMenuItem, addSubMenuItem,
+    removeMenuItem, moveMenuItem, toggleMenuItemVisibility,
+    setMenuBgImage, getVisibleItems, getMenuItems, resetToDefault,
   }
 
-  // Provide a symbol-keyed singleton API and keep legacy keys for compatibility.
   provide(MENU_EDITOR_KEY, api)
   provide('menuItems', menuItems)
   provide('menuEditorOpen', menuEditorOpen)
   provide('editingMenuItemId', editingMenuItemId)
+  provide('menuChanged', menuChanged)
 
   return api
 }

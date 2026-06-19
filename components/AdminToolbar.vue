@@ -1457,10 +1457,11 @@ async function saveChanges() {
     color: #555;
 }
 .admin-mgr-item button {
-    flex: 0 0 28px;
-    padding: 4px;
-    font-size: 13px;
-    border-radius: 4px;
+    flex: 0 0 22px;
+    padding: 2px;
+    font-size: 11px;
+    border-radius: 3px;
+    line-height: 1;
 }
 
 /* Global fallback: ensure site header is offset below admin toolbar when in admin mode */

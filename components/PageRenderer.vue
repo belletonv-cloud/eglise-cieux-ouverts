@@ -19,6 +19,12 @@
                 :is-triggered="isTriggered(block.id)"
                 :is-admin="isAdmin || undefined"
             />
+            <button
+                v-if="isAdmin && isMounted"
+                class="block-replay-btn"
+                @click.stop="replayBlock(block.id)"
+                title="Rejouer l'animation"
+            >▶</button>
         </div>
     </div>
 </template>
@@ -249,6 +255,14 @@ function wrapperClick(id) {
     }
 }
 
+function replayBlock(id) {
+    try {
+        document.dispatchEvent(new CustomEvent("replay-animation", { detail: { id } }))
+    } catch (e) {
+        console.warn("PageRenderer.replayBlock: dispatch failed", e)
+    }
+}
+
 function isSelected(block) {
     try {
         // editingBlockId is a ref provided from the admin composable.
@@ -360,6 +374,32 @@ watch(
 }
 .drag-handle:active {
     cursor: grabbing;
+}
+.block-replay-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 100;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.5);
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.15s, background 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+.block-wrapper:hover .block-replay-btn {
+    opacity: 1;
+}
+.block-replay-btn:hover {
+    background: rgba(59,130,246,0.8);
 }
 </style>
 

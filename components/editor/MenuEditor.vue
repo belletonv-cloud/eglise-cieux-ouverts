@@ -1,13 +1,17 @@
 <template>
   <ClientOnly>
     <Transition name="panel-slide">
-      <div v-if="menuEditorOpen" class="menu-editor-overlay" @click.self="closeMenuEditor">
+      <div v-if="menuEditorOpen" class="menu-editor-overlay" @click.self="onClose">
         <div class="menu-editor-panel">
           <div class="menu-editor-header">
             <h3>📋 Gestion du menu</h3>
             <div class="menu-editor-header-actions">
+              <span v-if="menuChanged" class="unsaved-badge">⚠ Non sauvegardé</span>
+              <button class="btn-icon btn-save" @click="saveMenu" :disabled="menuSaving || !menuChanged" title="Sauvegarder">
+                {{ menuSaving ? '...' : '💾' }}
+              </button>
               <button class="btn-icon" @click="resetToDefault" title="Réinitialiser">↺</button>
-              <button class="btn-icon" @click="closeMenuEditor" title="Fermer">✕</button>
+              <button class="btn-icon" @click="onClose" title="Fermer">✕</button>
             </div>
           </div>
           <div class="menu-editor-hint">
@@ -46,7 +50,7 @@
           <div class="menu-editor-bg-section">
             <h4>Fond du menu mobile</h4>
             <div class="menu-bg-row">
-              <input v-model="menuBgImage" placeholder="https://exemple.com/image.jpg" class="input-sm" />
+              <input v-model="bgInput" @input="onBgChange" placeholder="https://exemple.com/image.jpg" class="input-sm" />
               <button v-if="menuBgImage" class="btn-mini" @click="clearBg">✕</button>
             </div>
             <div v-if="menuBgImage" class="menu-bg-preview">
@@ -68,23 +72,44 @@ import { ref, watch } from 'vue'
 
 const {
   menuItems, menuEditorOpen, editingMenuItemId, activeMenuItem,
+  menuChanged, menuSaving,
   closeMenuEditor, selectMenuItem, updateMenuItem,
   addMenuItem, addSubMenuItem, removeMenuItem,
   moveMenuItem, toggleMenuItemVisibility, resetToDefault,
-  menuBgImage,
+  menuBgImage, saveMenuToFirestore, setMenuBgImage,
 } = useMenuEditor()
 
 const editLabel = ref('')
 const editTo = ref('')
+const bgInput = ref('')
 
-function clearBg() { menuBgImage.value = '' }
-
+watch(menuBgImage, (v) => { bgInput.value = v }, { immediate: true })
 watch(activeMenuItem, (item) => {
   if (item) { editLabel.value = item.label; editTo.value = item.to }
 })
 
 function applyEdit(id) {
   updateMenuItem(id, { label: editLabel.value, to: editTo.value })
+}
+
+function onBgChange() {
+  setMenuBgImage(bgInput.value)
+}
+
+function clearBg() {
+  setMenuBgImage('')
+}
+
+async function saveMenu() {
+  await saveMenuToFirestore()
+}
+
+function onClose() {
+  if (menuChanged.value) {
+    const answer = confirm('Vous avez des modifications non sauvegardées. Voulez-vous vraiment quitter sans sauvegarder ?')
+    if (!answer) return
+  }
+  closeMenuEditor()
 }
 </script>
 
@@ -93,9 +118,12 @@ function applyEdit(id) {
 .menu-editor-panel { width:380px; max-width:100vw; height:100vh; background:#fff; display:flex; flex-direction:column; box-shadow:-4px 0 24px rgba(0,0,0,.2); }
 .menu-editor-header { display:flex; align-items:center; justify-content:space-between; padding:16px; background:#1a1a2e; color:#fff; }
 .menu-editor-header h3 { margin:0; font-size:1em; }
-.menu-editor-header-actions { display:flex; gap:8px; }
-.btn-icon { background:rgba(255,255,255,.15); border:none; color:#fff; width:32px; height:32px; border-radius:6px; cursor:pointer; font-size:1em; }
+.menu-editor-header-actions { display:flex; gap:6px; align-items:center; }
+.unsaved-badge { font-size:.7em; color:#fbbf24; white-space:nowrap; }
+.btn-icon { background:rgba(255,255,255,.15); border:none; color:#fff; width:32px; height:32px; border-radius:6px; cursor:pointer; font-size:1em; display:flex; align-items:center; justify-content:center; }
 .btn-icon:hover { background:rgba(255,255,255,.25); }
+.btn-icon:disabled { opacity:.4; cursor:not-allowed; }
+.btn-save { font-size:1.1em; }
 .menu-editor-hint { padding:12px 16px; background:#f0f4ff; color:#3B82F6; font-size:.8em; border-bottom:1px solid #e0e7ff; }
 .menu-editor-list { flex:1; overflow-y:auto; padding:8px; }
 .menu-editor-item { border:1px solid #e5e7eb; border-radius:8px; margin-bottom:6px; transition:all .15s; }
@@ -115,7 +143,7 @@ function applyEdit(id) {
 .menu-item-edit { padding:12px; background:#f9fafb; border-top:1px solid #e5e7eb; }
 .menu-item-edit label { display:block; font-size:.75em; font-weight:600; color:#555; margin:8px 0 4px; }
 .menu-item-edit label:first-child { margin-top:0; }
-.input-sm { width:100%; padding:6px 10px; border:1px solid #ddd; border-radius:6px; font-size:.85em; }
+.input-sm { width:100%; padding:6px 10px; border:1px solid #ddd; border-radius:6px; font-size:.85em; box-sizing:border-box; }
 .input-sm:focus { outline:none; border-color:#3B82F6; }
 .sub-items { margin-top:8px; padding:8px; background:#fff; border:1px solid #e5e7eb; border-radius:6px; }
 .sub-item { display:flex; align-items:center; justify-content:space-between; padding:4px 0; font-size:.8em; }
