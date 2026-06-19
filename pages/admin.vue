@@ -90,15 +90,29 @@ onMounted(() => {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       const data = await res.json()
-      isSetupMode.value = data.setupMode === true
       if (data.isAdmin) {
         isAdmin.value = true
+        isSetupMode.value = false
         checking.value = false
         navigateTo(redirectUrl.value, { replace: true })
-      } else {
-        isAdmin.value = false
-        checking.value = false
+        return
       }
+      // Si setupMode pas dans la réponse (ancien déploiement),
+      // on teste /api/admin/users : 403 = pas d'admin configuré
+      if (data.setupMode === true || data.setupMode === undefined) {
+        try {
+          const usersRes = await fetch('/api/admin/users', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          })
+          isSetupMode.value = usersRes.status === 403 || usersRes.status === 401
+        } catch {
+          isSetupMode.value = true
+        }
+      } else {
+        isSetupMode.value = false
+      }
+      isAdmin.value = false
+      checking.value = false
     } catch {
       isAdmin.value = false
       isSetupMode.value = false
