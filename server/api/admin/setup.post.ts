@@ -21,16 +21,18 @@ export default defineEventHandler(async (event) => {
     const accessToken = await getAccessToken(config.clientEmail, config.privateKey)
     const doc = await getFirestoreDoc(config.projectId, accessToken, 'settings', 'admins')
     const parsed = doc ? parseFirestoreDoc(doc) : null
-    const currentUids: string[] = parsed?.uids || []
     const currentEmails: string[] = parsed?.emails || []
 
-    if (currentUids.length > 0 || currentEmails.length > 0) {
+    if (currentEmails.length > 0) {
       throw createError({ statusCode: 400, message: 'Des admins existent déjà. Utilisez la gestion des admins.' })
     }
 
+    if (!userInfo.email) {
+      throw createError({ statusCode: 400, message: 'Aucun email associé à ce compte Google' })
+    }
+
     await setFirestoreDoc(config.projectId, accessToken, 'settings', 'admins', {
-      emails: [userInfo.email].filter(Boolean),
-      uids: [userInfo.uid],
+      emails: [userInfo.email.toLowerCase()],
       updatedAt: new Date().toISOString(),
       updatedBy: userInfo.uid,
     })

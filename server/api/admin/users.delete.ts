@@ -1,5 +1,5 @@
-import { getFirestoreConfig, getAccessToken, getFirestoreDoc, setFirestoreDoc, parseFirestoreDoc } from '../../utils/firebase'
-import { verifyFirebaseToken } from '../../utils/firebase-admin'
+import { getFirestoreConfig, getAccessToken, setFirestoreDoc } from '../../utils/firebase'
+import { verifyFirebaseToken, getAdminEmails } from '../../utils/firebase-admin'
 
 export default defineEventHandler(async (event) => {
   const authHeader = getHeader(event, 'authorization')
@@ -28,16 +28,10 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'Impossible de se retirer soi-même' })
   }
 
-  const accessToken = await getAccessToken(config.clientEmail, config.privateKey)
-  const doc = await getFirestoreDoc(config.projectId, accessToken, 'settings', 'admins')
-  const parsed = doc ? parseFirestoreDoc(doc) : null
-  const currentEmails: string[] = parsed?.emails || []
-  const currentUids: string[] = parsed?.uids || []
+  const currentEmails = await getAdminEmails(event)
 
   // Vérifier que l'appelant est admin
-  const callerAdminByUid = currentUids.includes(callerInfo.uid)
-  const callerAdminByEmail = !!callerInfo.email && currentEmails.map(e => e.toLowerCase()).includes(callerInfo.email.toLowerCase())
-  if (!callerAdminByUid && !callerAdminByEmail) {
+  if (!callerInfo.email || !currentEmails.map(e => e.toLowerCase()).includes(callerInfo.email.toLowerCase())) {
     throw createError({ statusCode: 403, message: 'Seuls les admins peuvent gérer les comptes' })
   }
 
@@ -46,9 +40,9 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, message: 'Email pas dans la liste admin' })
   }
 
-  await setFirestoreDoc(config.projectId, accessToken, 'settings', 'admins', {
+  const token = await getAccessToken(config.clientEmail, config.privateKey)
+  await setFirestoreDoc(config.projectId, token, 'settings', 'admins', {
     emails: updatedEmails,
-    uids: currentUids,
     updatedAt: new Date().toISOString(),
     updatedBy: callerInfo.uid,
   })
