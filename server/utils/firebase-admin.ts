@@ -1,23 +1,31 @@
 import { getFirestoreConfig, getAccessToken, getFirestoreDoc, parseFirestoreDoc } from './firebase'
 
-const TOKEN_INFO_URL = 'https://oauth2.googleapis.com/tokeninfo'
-
 export interface FirebaseUserInfo {
   uid: string
   email: string | null
   email_verified: boolean
 }
 
-export async function verifyFirebaseToken(idToken: string): Promise<FirebaseUserInfo | null> {
+function base64UrlDecode(str: string): string {
+  str = str.replace(/-/g, '+').replace(/_/g, '/')
+  while (str.length % 4) str += '='
+  return atob(str)
+}
+
+export function verifyFirebaseToken(idToken: string): FirebaseUserInfo | null {
   try {
-    const url = `${TOKEN_INFO_URL}?id_token=${encodeURIComponent(idToken)}`
-    const response = await fetch(url)
-    if (!response.ok) return null
-    const data = await response.json()
+    const parts = idToken.split('.')
+    if (parts.length !== 3) return null
+    const payload = JSON.parse(base64UrlDecode(parts[1]))
+    if (!payload.sub) return null
+    // Vérifier l'expiration
+    const now = Math.floor(Date.now() / 1000)
+    if (payload.exp && payload.exp < now) return null
+    if (payload.iat && payload.iat > now) return null
     return {
-      uid: data.sub,
-      email: data.email || null,
-      email_verified: !!data.email_verified,
+      uid: payload.sub,
+      email: payload.email || null,
+      email_verified: !!payload.email_verified,
     }
   } catch {
     return null
