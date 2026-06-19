@@ -16,6 +16,30 @@ export function getFirestoreConfig(event: any): FirestoreConfig | null {
   return { projectId, clientEmail, privateKey }
 }
 
+async function pemToArrayBuffer(pem: string): Promise<ArrayBuffer> {
+  const base64 = pem
+    .replace(/-----BEGIN [\w\s]+-----/g, '')
+    .replace(/-----END [\w\s]+-----/g, '')
+    .replace(/\s/g, '')
+  const binary = atob(base64)
+  const bytes = new Uint8Array(binary.length)
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i)
+  }
+  return bytes.buffer
+}
+
+async function importPrivateKey(pem: string): Promise<CryptoKey> {
+  const keyData = await pemToArrayBuffer(pem)
+  return crypto.subtle.importKey(
+    'pkcs8',
+    keyData,
+    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+    false,
+    ['sign']
+  )
+}
+
 export async function getAccessToken(clientEmail: string, privateKey: string): Promise<string> {
   const now = Math.floor(Date.now() / 1000)
   const expiry = now + 3600
@@ -33,14 +57,17 @@ export async function getAccessToken(clientEmail: string, privateKey: string): P
   const encodedClaimSet = btoa(JSON.stringify(claimSet))
   const signatureInput = `${encodedHeader}.${encodedClaimSet}`
 
-  // Create JWT signature using crypto
-  const crypto = await import('node:crypto')
   const key = privateKey.replace(/\\n/g, '\n')
-  const sign = crypto.createSign('RSA-SHA256')
-  sign.update(signatureInput)
-  sign.end()
-  const signature = sign.sign(key)
-  const encodedSignature = Buffer.from(signature).toString('base64url')
+  const cryptoKey = await importPrivateKey(key)
+  const signatureBuffer = await crypto.subtle.sign(
+    { name: 'RSASSA-PKCS1-v1_5' },
+    cryptoKey,
+    new TextEncoder().encode(signatureInput)
+  )
+  const encodedSignature = btoa(String.fromCharCode(...new Uint8Array(signatureBuffer)))
+    .replace(/=/g, '')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
 
   const jwt = `${encodedHeader}.${encodedClaimSet}.${encodedSignature}`
 

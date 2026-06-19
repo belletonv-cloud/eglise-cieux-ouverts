@@ -17,21 +17,25 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 500, message: 'Firestore non configuré' })
   }
 
-  const accessToken = await getAccessToken(config.clientEmail, config.privateKey)
-  const doc = await getFirestoreDoc(config.projectId, accessToken, 'settings', 'admins')
-  const parsed = doc ? parseFirestoreDoc(doc) : null
-  const currentUids: string[] = parsed?.uids || []
+  try {
+    const accessToken = await getAccessToken(config.clientEmail, config.privateKey)
+    const doc = await getFirestoreDoc(config.projectId, accessToken, 'settings', 'admins')
+    const parsed = doc ? parseFirestoreDoc(doc) : null
+    const currentUids: string[] = parsed?.uids || []
 
-  // Ne fonctionne que s'il n'y a pas encore d'admin
-  if (currentUids.length > 0) {
-    throw createError({ statusCode: 400, message: 'Des admins existent déjà. Utilisez la gestion des admins.' })
+    if (currentUids.length > 0) {
+      throw createError({ statusCode: 400, message: 'Des admins existent déjà. Utilisez la gestion des admins.' })
+    }
+
+    await setFirestoreDoc(config.projectId, accessToken, 'settings', 'admins', {
+      uids: [userInfo.uid],
+      updatedAt: new Date().toISOString(),
+      updatedBy: userInfo.uid,
+    })
+
+    return { success: true, message: 'Premier admin créé' }
+  } catch (e: any) {
+    console.error('setup error:', e?.message || e?.toString() || e)
+    throw createError({ statusCode: 500, message: e?.message || 'Erreur interne' })
   }
-
-  await setFirestoreDoc(config.projectId, accessToken, 'settings', 'admins', {
-    uids: [userInfo.uid],
-    updatedAt: new Date().toISOString(),
-    updatedBy: userInfo.uid,
-  })
-
-  return { success: true, message: 'Premier admin créé' }
 })
