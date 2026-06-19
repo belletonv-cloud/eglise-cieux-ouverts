@@ -173,7 +173,7 @@ const submitted = ref(false)
 const errorMessage = ref('')
 const mountedAt = Date.now()
 
-const isFormDisabled = computed(() => sending.value || isEditor)
+const isFormDisabled = computed(() => sending.value)
 const isClassicPageContact = computed(() => Boolean(mapEmbedUrl))
 
 function normalizeForm() {
@@ -365,7 +365,7 @@ async function submitForm() {
 }
 .contact-page-btn {
   padding: 12px 40px;
-  background: #3B82F6;
+  background: rgb(26, 150, 223);
   color: white;
   font-size: 1em;
   font-weight: 700;
@@ -374,7 +374,7 @@ async function submitForm() {
   cursor: pointer;
   transition: background 0.2s;
 }
-.contact-page-btn:hover { background: #2563eb; }
+.contact-page-btn:hover { background: rgb(238, 108, 113); }
 .contact-page-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 .contact-page-map-col {
   border-radius: 10px;
@@ -509,16 +509,16 @@ async function submitForm() {
 .btn-submit {
   align-self: flex-start;
   padding: 14px 40px;
-  background: white;
-  color: #064886;
+  background: rgb(26, 150, 223);
+  color: white;
   border-radius: 50px;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 1.1em;
   cursor: pointer;
   border: none;
   transition: transform 0.2s, background 0.2s;
 }
-.btn-submit:hover { transform: translateY(-2px); background: #f0f0f0; }
+.btn-submit:hover { transform: translateY(-2px); background: rgb(238, 108, 113); }
 .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
 
 @container (max-width: 768px) {
