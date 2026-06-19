@@ -1,5 +1,5 @@
 import { getFirestoreConfig, getAccessToken, getFirestoreDoc, parseFirestoreDoc } from '../../utils/firebase'
-import { getAdminUids, verifyFirebaseToken } from '../../utils/firebase-admin'
+import { verifyFirebaseToken } from '../../utils/firebase-admin'
 
 export default defineEventHandler(async (event) => {
   const authHeader = getHeader(event, 'authorization')
@@ -12,13 +12,26 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, message: 'Token invalide' })
   }
 
-  const uids = await getAdminUids(event)
-  if (uids.length === 0) {
+  const config = getFirestoreConfig(event)
+  if (!config) {
+    throw createError({ statusCode: 500, message: 'Firestore non configuré' })
+  }
+
+  const accessToken = await getAccessToken(config.clientEmail, config.privateKey)
+  const doc = await getFirestoreDoc(config.projectId, accessToken, 'settings', 'admins')
+  const parsed = doc ? parseFirestoreDoc(doc) : null
+  const uids: string[] = parsed?.uids || []
+  const emails: string[] = parsed?.emails || []
+
+  if (uids.length === 0 && emails.length === 0) {
     throw createError({ statusCode: 404, message: 'Aucun administrateur configuré' })
   }
-  if (!uids.includes(userInfo.uid)) {
+
+  const adminByUid = uids.includes(userInfo.uid)
+  const adminByEmail = !!userInfo.email && emails.map(e => e.toLowerCase()).includes(userInfo.email.toLowerCase())
+  if (!adminByUid && !adminByEmail) {
     throw createError({ statusCode: 403, message: 'Accès refusé' })
   }
 
-  return { uids }
+  return { emails, uids }
 })

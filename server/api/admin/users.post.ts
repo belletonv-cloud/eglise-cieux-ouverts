@@ -18,31 +18,35 @@ export default defineEventHandler(async (event) => {
   }
 
   const body = await readBody(event)
-  const newUid = body?.uid
-  if (!newUid) {
-    throw createError({ statusCode: 400, message: 'UID manquant' })
+  const newEmail = body?.email?.trim().toLowerCase()
+  if (!newEmail) {
+    throw createError({ statusCode: 400, message: 'Email manquant' })
   }
 
   const accessToken = await getAccessToken(config.clientEmail, config.privateKey)
   const doc = await getFirestoreDoc(config.projectId, accessToken, 'settings', 'admins')
   const parsed = doc ? parseFirestoreDoc(doc) : null
+  const currentEmails: string[] = parsed?.emails || []
   const currentUids: string[] = parsed?.uids || []
 
-  // Vérifier que l'appelant est déjà admin
-  if (!currentUids.includes(callerInfo.uid)) {
+  // Vérifier que l'appelant est déjà admin (par uid ou email)
+  const callerAdminByUid = currentUids.includes(callerInfo.uid)
+  const callerAdminByEmail = !!callerInfo.email && currentEmails.map(e => e.toLowerCase()).includes(callerInfo.email.toLowerCase())
+  if (!callerAdminByUid && !callerAdminByEmail) {
     throw createError({ statusCode: 403, message: 'Seuls les admins peuvent gérer les comptes' })
   }
 
-  if (currentUids.includes(newUid)) {
-    return { success: true, message: 'Déjà admin' }
+  if (currentEmails.map(e => e.toLowerCase()).includes(newEmail)) {
+    return { success: true, message: 'Déjà admin', emails: currentEmails }
   }
 
-  currentUids.push(newUid)
+  currentEmails.push(newEmail)
   await setFirestoreDoc(config.projectId, accessToken, 'settings', 'admins', {
+    emails: currentEmails,
     uids: currentUids,
     updatedAt: new Date().toISOString(),
     updatedBy: callerInfo.uid,
   })
 
-  return { success: true, uids: currentUids }
+  return { success: true, emails: currentEmails }
 })

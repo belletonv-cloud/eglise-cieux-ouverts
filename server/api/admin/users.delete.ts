@@ -18,35 +18,40 @@ export default defineEventHandler(async (event) => {
   }
 
   const body = await readBody(event)
-  const targetUid = body?.uid
-  if (!targetUid) {
-    throw createError({ statusCode: 400, message: 'UID manquant' })
+  const targetEmail = body?.email?.trim().toLowerCase()
+  if (!targetEmail) {
+    throw createError({ statusCode: 400, message: 'Email manquant' })
   }
 
   // Empêcher un admin de se retirer lui-même
-  if (targetUid === callerInfo.uid) {
+  if (callerInfo.email && targetEmail === callerInfo.email.toLowerCase()) {
     throw createError({ statusCode: 400, message: 'Impossible de se retirer soi-même' })
   }
 
   const accessToken = await getAccessToken(config.clientEmail, config.privateKey)
   const doc = await getFirestoreDoc(config.projectId, accessToken, 'settings', 'admins')
   const parsed = doc ? parseFirestoreDoc(doc) : null
+  const currentEmails: string[] = parsed?.emails || []
   const currentUids: string[] = parsed?.uids || []
 
-  if (!currentUids.includes(callerInfo.uid)) {
+  // Vérifier que l'appelant est admin
+  const callerAdminByUid = currentUids.includes(callerInfo.uid)
+  const callerAdminByEmail = !!callerInfo.email && currentEmails.map(e => e.toLowerCase()).includes(callerInfo.email.toLowerCase())
+  if (!callerAdminByUid && !callerAdminByEmail) {
     throw createError({ statusCode: 403, message: 'Seuls les admins peuvent gérer les comptes' })
   }
 
-  const updatedUids = currentUids.filter((u: string) => u !== targetUid)
-  if (updatedUids.length === currentUids.length) {
-    throw createError({ statusCode: 404, message: 'Utilisateur pas dans la liste admin' })
+  const updatedEmails = currentEmails.filter(e => e.toLowerCase() !== targetEmail)
+  if (updatedEmails.length === currentEmails.length) {
+    throw createError({ statusCode: 404, message: 'Email pas dans la liste admin' })
   }
 
   await setFirestoreDoc(config.projectId, accessToken, 'settings', 'admins', {
-    uids: updatedUids,
+    emails: updatedEmails,
+    uids: currentUids,
     updatedAt: new Date().toISOString(),
     updatedBy: callerInfo.uid,
   })
 
-  return { success: true, uids: updatedUids }
+  return { success: true, emails: updatedEmails }
 })

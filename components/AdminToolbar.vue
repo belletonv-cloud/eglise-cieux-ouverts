@@ -345,8 +345,9 @@
                         <h4>Ajouter un admin</h4>
                         <div class="admin-mgr-add">
                             <input
-                                v-model="newAdminUid"
-                                placeholder="UID Firebase"
+                                v-model="newAdminEmail"
+                                placeholder="Email de l'utilisateur"
+                                type="email"
                                 class="admin-mgr-input"
                             />
                             <button
@@ -358,7 +359,7 @@
                             </button>
                         </div>
                         <p class="admin-mgr-hint">
-                            Collez l'UID Firebase de l'utilisateur (trouvable dans Firebase Console → Authentication)
+                            Entrez l'adresse email de l'utilisateur (compte Google utilisé pour la connexion)
                         </p>
                     </div>
                     <div class="admin-mgr-section">
@@ -368,18 +369,18 @@
                         </div>
                         <div v-else class="admin-mgr-list">
                             <div
-                                v-for="uid in adminList"
-                                :key="uid"
+                                v-for="email in adminList"
+                                :key="email"
                                 class="admin-mgr-item"
                             >
-                                <span class="admin-mgr-uid">{{ uid }}</span>
+                                <span class="admin-mgr-uid">{{ email }}</span>
                                 <button
                                     class="admin-action-btn admin-action-danger"
-                                    @click="removeAdmin(uid)"
+                                    @click="removeAdmin(email)"
                                     title="Retirer"
-                                    :disabled="removingAdmin === uid"
+                                    :disabled="removingAdmin === email"
                                 >
-                                    {{ removingAdmin === uid ? "..." : "✕" }}
+                                    {{ removingAdmin === email ? "..." : "✕" }}
                                 </button>
                             </div>
                         </div>
@@ -518,7 +519,7 @@ function formatDate(dateStr) {
 // Admin management
 const showAdminManager = ref(false);
 const adminList = ref([]);
-const newAdminUid = ref('');
+const newAdminEmail = ref('');
 const addingAdmin = ref(false);
 const removingAdmin = ref(null);
 const setupMode = ref(false);
@@ -536,11 +537,14 @@ async function loadAdminList() {
         })
         if (res.ok) {
             const data = await res.json()
-            adminList.value = data.uids || []
+            adminList.value = data.emails || []
             setupMode.value = false
-        } else {
+        } else if (res.status === 404) {
             setupMode.value = true
             adminList.value = []
+        } else {
+            adminList.value = []
+            setupMode.value = true
         }
     } catch {
         adminList.value = []
@@ -549,7 +553,7 @@ async function loadAdminList() {
 }
 
 async function addAdmin() {
-    if (!newAdminUid.value.trim()) return
+    if (!newAdminEmail.value.trim()) return
     addingAdmin.value = true
     try {
         const token = await getFirebaseToken()
@@ -560,15 +564,15 @@ async function addAdmin() {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`,
             },
-            body: JSON.stringify({ uid: newAdminUid.value.trim() }),
+            body: JSON.stringify({ email: newAdminEmail.value.trim() }),
         })
         if (!res.ok) {
             const err = await res.json().catch(() => ({}))
             throw new Error(err.message || `HTTP ${res.status}`)
         }
         const data = await res.json()
-        adminList.value = data.uids || []
-        newAdminUid.value = ''
+        adminList.value = data.emails || []
+        newAdminEmail.value = ''
     } catch (e) {
         console.error('[admin] addAdmin failed:', e)
         alert("Erreur : " + (e.message || e))
@@ -577,8 +581,8 @@ async function addAdmin() {
     }
 }
 
-async function removeAdmin(uid) {
-    removingAdmin.value = uid
+async function removeAdmin(email) {
+    removingAdmin.value = email
     try {
         const token = await getFirebaseToken()
         if (!token) throw new Error('Non authentifié')
@@ -588,14 +592,14 @@ async function removeAdmin(uid) {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`,
             },
-            body: JSON.stringify({ uid }),
+            body: JSON.stringify({ email }),
         })
         if (!res.ok) {
             const err = await res.json().catch(() => ({}))
             throw new Error(err.message || `HTTP ${res.status}`)
         }
         const data = await res.json()
-        adminList.value = data.uids || []
+        adminList.value = data.emails || []
     } catch (e) {
         console.error('[admin] removeAdmin failed:', e)
         alert("Erreur : " + (e.message || e))

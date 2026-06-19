@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
     return { isAdmin: false }
   }
 
-  const admin = await isUserAdmin(event, userInfo.uid)
+  const admin = await isUserAdmin(event, userInfo.uid, userInfo.email)
   const uids = await getAdminUids(event)
   return {
     isAdmin: admin,

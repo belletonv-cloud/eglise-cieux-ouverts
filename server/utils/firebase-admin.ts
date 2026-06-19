@@ -18,7 +18,6 @@ export function verifyFirebaseToken(idToken: string): FirebaseUserInfo | null {
     if (parts.length !== 3) return null
     const payload = JSON.parse(base64UrlDecode(parts[1]))
     if (!payload.sub) return null
-    // Vérifier l'expiration
     const now = Math.floor(Date.now() / 1000)
     if (payload.exp && payload.exp < now) return null
     if (payload.iat && payload.iat > now) return null
@@ -47,7 +46,39 @@ export async function getAdminUids(event: any): Promise<string[]> {
   }
 }
 
-export async function isUserAdmin(event: any, uid: string): Promise<boolean> {
-  const uids = await getAdminUids(event)
-  return uids.includes(uid)
+export async function getAdminEmails(event: any): Promise<string[]> {
+  const config = getFirestoreConfig(event)
+  if (!config) return []
+
+  try {
+    const accessToken = await getAccessToken(config.clientEmail, config.privateKey)
+    const doc = await getFirestoreDoc(config.projectId, accessToken, 'settings', 'admins')
+    if (!doc) return []
+    const parsed = parseFirestoreDoc(doc)
+    return parsed?.emails || []
+  } catch {
+    return []
+  }
+}
+
+export async function isUserAdmin(event: any, uid: string, email: string | null): Promise<boolean> {
+  const [uids, emails] = await Promise.all([getAdminUids(event), getAdminEmails(event)])
+  if (uids.includes(uid)) return true
+  if (email && emails.map(e => e.toLowerCase()).includes(email.toLowerCase())) return true
+  return false
+}
+
+export async function getAdminUidList(event: any): Promise<string[]> {
+  const config = getFirestoreConfig(event)
+  if (!config) return []
+
+  try {
+    const accessToken = await getAccessToken(config.clientEmail, config.privateKey)
+    const doc = await getFirestoreDoc(config.projectId, accessToken, 'settings', 'admins')
+    if (!doc) return []
+    const parsed = parseFirestoreDoc(doc)
+    return parsed?.uids || []
+  } catch {
+    return []
+  }
 }
