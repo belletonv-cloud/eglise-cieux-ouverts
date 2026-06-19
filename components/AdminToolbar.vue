@@ -1456,6 +1456,12 @@ async function saveChanges() {
     word-break: break-all;
     color: #555;
 }
+.admin-mgr-item button {
+    flex: 0 0 28px;
+    padding: 4px;
+    font-size: 13px;
+    border-radius: 4px;
+}
 
 /* Global fallback: ensure site header is offset below admin toolbar when in admin mode */
 #app-root.admin-mode .site-header {
