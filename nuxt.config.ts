@@ -49,6 +49,9 @@ export default defineNuxtConfig({
     server: { watch: { ignored: ['**/.opencode/**'] } }
   },
   runtimeConfig: {
+    firebaseProjectId: '',
+    firebaseClientEmail: '',
+    firebasePrivateKey: '',
     public: {
       TEST_ENV: !!process.env.PW_TEST,
       FIREBASE_API_KEY: process.env.NUXT_PUBLIC_FIREBASE_API_KEY,

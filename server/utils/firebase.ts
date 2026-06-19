@@ -8,9 +8,9 @@ export interface FirestoreConfig {
 
 export function getFirestoreConfig(event: any): FirestoreConfig | null {
   const config = useRuntimeConfig(event)
-  const projectId = (process.env.NUXT_FIREBASE_PROJECT_ID || config.firebaseProjectId) as string
-  const clientEmail = (process.env.NUXT_FIREBASE_CLIENT_EMAIL || config.firebaseClientEmail) as string
-  const privateKey = (process.env.NUXT_FIREBASE_PRIVATE_KEY || config.firebasePrivateKey) as string
+  const projectId = (config.firebaseProjectId || process.env.NUXT_FIREBASE_PROJECT_ID || '') as string
+  const clientEmail = (config.firebaseClientEmail || process.env.NUXT_FIREBASE_CLIENT_EMAIL || '') as string
+  const privateKey = (config.firebasePrivateKey || process.env.NUXT_FIREBASE_PRIVATE_KEY || '') as string
 
   if (!projectId || !clientEmail || !privateKey) return null
   return { projectId, clientEmail, privateKey }
