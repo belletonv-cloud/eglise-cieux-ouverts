@@ -98,14 +98,12 @@ onMounted(() => {
         return
       }
       // Si setupMode pas dans la réponse (ancien déploiement),
-      // on teste /api/admin/users : 404 = aucun admin configuré
+      // on teste /api/admin/exists (sans auth, fiable en tout temps)
       if (data.setupMode === true || data.setupMode === undefined) {
         try {
-          const usersRes = await fetch('/api/admin/users', {
-            headers: { 'Authorization': `Bearer ${token}` }
-          })
-          // 404 = pas d'admin du tout, 403 = admin existe mais pas nous
-          isSetupMode.value = usersRes.status === 404
+          const existsRes = await fetch('/api/admin/exists')
+          const existsData = await existsRes.json()
+          isSetupMode.value = !existsData.exists
         } catch {
           isSetupMode.value = true
         }
