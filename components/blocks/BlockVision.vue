@@ -2,30 +2,39 @@
   <section
     class="vision-section"
     :style="{ background: backgroundGradient, color: textColor }"
-    :class="[visibilityClasses, { 'is-triggered': isTriggered || isEditor }]"
+    :class="[visibilityClasses, { 'is-triggered': allTriggered }]"
     ref="sectionRef"
   >
     <div class="vision-content" :style="contentStyle">
-      <p class="vision-label" v-if="label">{{ label }}</p>
-      <p class="vision-quote" v-if="quote" v-html="sanitizedContent"></p>
-      <NuxtLink v-if="ctaText && ctaLink" :to="ctaLink" class="btn btn-white">{{ ctaText }}</NuxtLink>
+      <p
+        v-if="label"
+        class="vision-label"
+        :ref="labelAnim.setRef"
+        :class="[labelAnim.animClass, { triggered: labelAnim.triggered }]"
+      >{{ label }}</p>
+      <p
+        v-if="quote"
+        class="vision-quote"
+        :ref="quoteAnim.setRef"
+        :class="[quoteAnim.animClass, { triggered: quoteAnim.triggered }]"
+        v-html="sanitizedContent"
+      ></p>
+      <NuxtLink
+        v-if="ctaText && ctaLink"
+        :to="ctaLink"
+        class="btn btn-white"
+        :ref="ctaAnim.setRef"
+        :class="[ctaAnim.animClass, { triggered: ctaAnim.triggered }]"
+      >{{ ctaText }}</NuxtLink>
     </div>
   </section>
 </template>
 
 <script setup>
 import { computed, ref, onMounted, onUnmounted, inject } from 'vue'
+import { useAnimatedElements } from '~/composables/useAnimatedElements'
 
-const {
-  backgroundGradient = '',
-  textColor = '#222',
-  label = '',
-  quote = '',
-  ctaText = '',
-  ctaLink = '',
-  visibility = {},
-  isTriggered = false,
-} = defineProps({
+const props = defineProps({
   backgroundGradient: { type: String, default: '' },
   textColor: { type: String, default: '#222' },
   label: { type: String, default: '' },
@@ -34,19 +43,31 @@ const {
   ctaLink: { type: String, default: '' },
   visibility: { type: Object, default: () => ({}) },
   isTriggered: { type: Boolean, default: false },
+  blockId: { type: String, default: '' },
 })
 
 const isEditor = inject('isEditor', false)
 
+const { addElement, blockStates } = useAnimatedElements(props.blockId)
+
+const labelAnim = addElement('label', { animation: 'slideUp', delay: 0 })
+const quoteAnim = addElement('quote', { animation: 'fadeIn', delay: 150 })
+const ctaAnim = addElement('cta', { animation: 'bounce', delay: 300 })
+
+const allTriggered = computed(() =>
+  props.isTriggered || isEditor ||
+  (Object.keys(blockStates.value).length > 0 && Object.values(blockStates.value).every(Boolean))
+)
+
 const visibilityClasses = computed(() => ({
-  'hide-mobile': visibility.mobile === false,
-  'hide-tablet': visibility.tablet === false,
-  'hide-desktop': visibility.desktop === false,
+  'hide-mobile': props.visibility.mobile === false,
+  'hide-tablet': props.visibility.tablet === false,
+  'hide-desktop': props.visibility.desktop === false,
 }))
 
 const formattedQuote = computed(() => {
-  if (!quote) return ''
-  let text = quote.replace(/\\n|\n/g, '<br>')
+  if (!props.quote) return ''
+  let text = props.quote.replace(/\\n|\n/g, '<br>')
   text = text.replace(/gloire/g, '<strong>gloire</strong>')
   text = text.replace(/royaume/g, '<strong>royaume</strong>')
   text = text.replace(/volonté/g, '<strong>volonté</strong>')

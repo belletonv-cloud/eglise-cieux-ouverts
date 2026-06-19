@@ -16,7 +16,7 @@ export default defineEventHandler(async (event) => {
   if (!userInfo) {
     throw createError({ statusCode: 401, message: 'Token invalide' })
   }
-  if (!await isUserAdmin(event, userInfo.uid)) {
+  if (!await isUserAdmin(event, userInfo.email)) {
     throw createError({ statusCode: 403, message: 'Accès refusé' })
   }
 

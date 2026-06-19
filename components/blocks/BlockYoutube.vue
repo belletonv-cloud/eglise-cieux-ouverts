@@ -2,10 +2,10 @@
   <section
     class="block-youtube"
     :style="{ background: backgroundColor }"
-    :class="[visibilityClasses, getAnimClass(block)]"
+    :class="[visibilityClasses, containerAnim.animClass, { triggered: containerAnim.triggered }]"
   >
-    <div class="youtube-wrapper">
-      <div class="youtube-player" v-if="videoId && hasValidId">
+    <div class="youtube-inner">
+      <div class="youtube-player" v-if="videoId && hasValidId" :ref="containerAnim.setRef">
         <iframe
           :src="embedUrl"
           :title="title || 'Video'"
@@ -17,7 +17,7 @@
           loading="lazy"
         ></iframe>
       </div>
-      <div v-else class="youtube-placeholder">
+      <div v-else class="youtube-placeholder" :ref="containerAnim.setRef">
         <p class="placeholder-text">{{ placeholderText }}</p>
       </div>
     </div>
@@ -26,7 +26,7 @@
 
 <script setup>
 import { computed } from 'vue'
-import { getAnimClass } from '~/lib/blocks/renderer'
+import { useAnimatedElements } from '~/composables/useAnimatedElements'
 
 const props = defineProps({
   videoId: { type: String, default: '' },
@@ -37,6 +37,9 @@ const props = defineProps({
   isTriggered: { type: Boolean, default: false },
   blockId: { type: String, default: '' },
 })
+
+const { addElement, blockStates } = useAnimatedElements(props.blockId)
+const containerAnim = addElement('container', { animation: props.animation || 'fadeIn', delay: 0 })
 
 const visibilityClasses = computed(() => ({
   'hide-mobile': props.visibility?.mobile === false,
@@ -51,30 +54,27 @@ const embedUrl = computed(() => {
 })
 
 const placeholderText = 'Aucune vidéo configurée. En mode éditeur, entrez l\'ID YouTube.'
-
-const block = computed(() => ({ id: props.blockId, animation: props.animation }))
 </script>
 
 <style scoped>
 .block-youtube {
-  max-width: 900px;
-  margin: 0 auto;
+  width: 100%;
   padding: 60px 24px;
 }
 
-.youtube-wrapper {
-  position: relative;
-  width: 100%;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-  background: white;
+.youtube-inner {
+  max-width: 900px;
+  margin: 0 auto;
 }
 
 .youtube-player {
   position: relative;
   width: 100%;
-  padding-bottom: 56.25%; /* 16:9 aspect ratio */
+  padding-bottom: 56.25%;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  background: white;
 }
 
 .youtube-player iframe {
@@ -92,6 +92,7 @@ const block = computed(() => ({ id: props.blockId, animation: props.animation })
   align-items: center;
   justify-content: center;
   border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
 }
 
 .placeholder-text {
@@ -100,4 +101,5 @@ const block = computed(() => ({ id: props.blockId, animation: props.animation })
   text-align: center;
   padding: 20px;
 }
+
 </style>

@@ -1,9 +1,10 @@
 <template>
   <footer
     class="site-footer"
+    :class="{ animate: isAnimated }"
     :style="footerBgStyle"
   >
-    <div class="footer-inner">
+    <div class="footer-inner" :ref="titleAnim.setRef">
       <div class="footer-left">
         <h2 class="footer-title">
           <span
@@ -31,6 +32,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import { useAnimatedElements } from '~/composables/useAnimatedElements'
 
 const props = defineProps({
   title: { type: String, default: "Il y a une place pour toi !" },
@@ -46,8 +48,13 @@ const props = defineProps({
   titleFontSize: { type: [Number, String], default: 24 },
   textColor: { type: String, default: '#ffffff' },
   titleBoldStart: { type: Number, default: 10 },
-  titleBoldEnd: { type: Number, default: 14 },
+  titleBoldEnd: { type: Number, default: 15 },
+  blockId: { type: String, default: '' },
 })
+
+const { addElement } = useAnimatedElements(props.blockId)
+const titleAnim = addElement('title', { animation: 'fadeIn', delay: 0 })
+const isAnimated = computed(() => titleAnim.triggered.value)
 
 const titleChars = computed(() => props.title.split(''))
 
@@ -135,6 +142,7 @@ function getShutterStyle(i) {
   opacity: 1;
 }
 
+/* Scroll-driven animation */
 @supports (animation-timeline: scroll()) {
   @media (prefers-reduced-motion: no-preference) {
     .shutter-char {
@@ -147,6 +155,13 @@ function getShutterStyle(i) {
       animation-fill-mode: both;
     }
   }
+}
+
+/* Fallback: always visible + animated when in admin or when IntersectionObserver triggered */
+.site-footer.animate .shutter-char {
+  overflow: hidden;
+  animation: reveal 0.8s ease both;
+  animation-delay: calc(var(--shutter-d) * 0.14s);
 }
 
 @keyframes reveal {
@@ -203,9 +218,9 @@ function getShutterStyle(i) {
   margin: 0;
 }
 
-.footer-info strong {
+.footer-info :deep(strong) {
   font-weight: 700;
-  color: #f7fbff;
+  color: #4da6ff;
 }
 
 @media (prefers-reduced-motion: reduce) {

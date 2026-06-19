@@ -121,12 +121,90 @@ if (typeof window !== "undefined" && import.meta.client) {
     // On server: isMounted stays false, server output is placeholder only.
 }
 
+// Admin floating replay buttons for registered animated elements
+function setupElementReplayButtons() {
+    if (!isAdmin || !isAdmin.value) return
+    const container = document.createElement('div')
+    container.id = 'anim-replay-container'
+    container.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999'
+    document.body.appendChild(container)
+
+    function positionButtons() {
+        container.innerHTML = ''
+        const animEls = document.querySelectorAll('[data-anim-key]')
+        animEls.forEach((el) => {
+            const rect = el.getBoundingClientRect()
+            if (rect.width === 0) return
+            const key = el.getAttribute('data-anim-key') || ''
+            const btn = document.createElement('button')
+            btn.textContent = '▶'
+            btn.title = 'Rejouer l\'animation'
+            btn.dataset.animKey = key
+            btn.style.cssText = [
+                'position:fixed',
+                `top:${rect.top + 4}px`,
+                `left:${rect.right + 4}px`,
+                'width:24px',
+                'height:24px',
+                'border:none',
+                'border-radius:50%',
+                'background:rgba(0,0,0,0.45)',
+                'color:#fff',
+                'font-size:11px',
+                'cursor:pointer',
+                'pointer-events:auto',
+                'opacity:0',
+                'transition:opacity 0.15s',
+                'display:flex',
+                'align-items:center',
+                'justify-content:center',
+                'line-height:1',
+                'z-index:10000',
+            ].join(';')
+
+            // Show on hover over the animated element
+            el.addEventListener('mouseenter', () => { btn.style.opacity = '1' }, { once: false })
+            el.addEventListener('mouseleave', () => { btn.style.opacity = '0' })
+            btn.addEventListener('mouseenter', () => { btn.style.opacity = '1' })
+            btn.addEventListener('mouseleave', () => { btn.style.opacity = '0' })
+
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation()
+                const parts = key.split(':')
+                if (parts.length === 2) {
+                    document.dispatchEvent(new CustomEvent('replay-element-animation', { detail: { blockId: parts[0], elementId: parts[1] } }))
+                }
+            })
+            container.appendChild(btn)
+        })
+    }
+
+    positionButtons()
+    const repositionTimer = setInterval(positionButtons, 500)
+
+    // Cleanup
+    const origTeardown = teardownClient
+    const origOnUnmounted = onUnmounted
+    // We override teardown to also clean up the container
+    const cleanup = () => {
+        clearInterval(repositionTimer)
+        if (container.parentNode) container.parentNode.removeChild(container)
+    }
+
+    return cleanup
+}
+
+let animReplayCleanup = null
 onMounted(() => {
     setupClient();
+    if (isAdmin && isAdmin.value) {
+        animReplayCleanup = setupElementReplayButtons()
+    }
 });
 
 onUnmounted(() => {
     teardownClient();
+    if (animReplayCleanup) animReplayCleanup()
 });
 
 // Ensure clicks inside complex child components still select the block.
