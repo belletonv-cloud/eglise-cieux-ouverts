@@ -350,13 +350,13 @@ async function submitForm() {
   align-items: flex-start;
   gap: 10px;
   font-size: 0.88em;
-  color: #EF4B54;
+  color: rgb(238, 108, 113);
   font-weight: 600;
   cursor: pointer;
 }
 .contact-page-checkbox input {
   margin-top: 2px;
-  accent-color: #EF4B54;
+  accent-color: rgb(238, 108, 113);
 }
 .contact-page-submit {
   display: flex;
@@ -493,8 +493,8 @@ async function submitForm() {
 .contact-form textarea { resize: vertical; min-height: 150px; }
 .contact-form input::placeholder,
 .contact-form textarea::placeholder { color: #888; }
-.checkbox-label { display: flex; align-items: center; gap: 10px; font-size: 0.9em; cursor: pointer; opacity: 0.9; margin-top: 10px; margin-bottom: 10px; color: #EF4B54; font-weight: 600; }
-.checkbox-label input[type="checkbox"] { width: 18px; height: 18px; accent-color: #EF4B54; }
+.checkbox-label { display: flex; align-items: center; gap: 10px; font-size: 0.9em; cursor: pointer; opacity: 0.9; margin-top: 10px; margin-bottom: 10px; color: rgb(238, 108, 113); font-weight: 600; }
+.checkbox-label input[type="checkbox"] { width: 18px; height: 18px; accent-color: rgb(238, 108, 113); }
 .contact-honeypot {
   position: absolute;
   left: -9999px;

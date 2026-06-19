@@ -47,7 +47,7 @@ const props = defineProps({
   fontSize: { type: [Number, String], default: 19 },
   titleFontSize: { type: [Number, String], default: 24 },
   textColor: { type: String, default: '#ffffff' },
-  titleBoldStart: { type: Number, default: 10 },
+  titleBoldStart: { type: Number, default: 11 },
   titleBoldEnd: { type: Number, default: 15 },
   blockId: { type: String, default: '' },
 })
@@ -220,7 +220,7 @@ function getShutterStyle(i) {
 
 .footer-info :deep(strong) {
   font-weight: 700;
-  color: #4da6ff;
+  color: #064886;
 }
 
 @media (prefers-reduced-motion: reduce) {
