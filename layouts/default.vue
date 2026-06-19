@@ -14,7 +14,7 @@
                     :page-slug="currentPageSlug"
                 />
             </ClientOnly>
-            <template v-if="previewDevice === 'desktop' || !isAdminMode">
+            <div :class="deviceClass">
                 <SiteHeader />
                 <slot />
                 <div
@@ -28,15 +28,6 @@
                         :data-admin="(isAdminMode && isMounted) || undefined"
                     />
                 </div>
-            </template>
-            <div v-else class="device-iframe-wrap">
-                <iframe
-                    :key="route.path"
-                    :src="previewUrl"
-                    :style="{ width: deviceWidth + 'px' }"
-                    class="device-iframe"
-                    frameborder="0"
-                />
             </div>
         </div>
         <MenuEditor v-if="isMounted && isAdminMode" />
@@ -83,6 +74,11 @@ const currentPageSlug = computed(() => {
 });
 
 const isPreviewMode = computed(() => route.query.preview === "true");
+
+const deviceClass = computed(() => {
+    if (!isAdminMode.value) return ''
+    return `preview-${previewDevice.value}`
+})
 
 // Client-only auth check — returns user or null
 // Uses $auth.onAuthStateChanged directly (works with both real Firebase
@@ -233,28 +229,25 @@ function onFooterClick(e) {
     width: 100%;
     transition: max-width 0.3s ease;
 }
-#app-root.admin-mode .admin-preview-frame {
-    /* header-spacer already accounts for the admin toolbar offset */
-}
 .admin-preview-frame.preview-tablet {
-    max-width: 100%;
+    max-width: 768px;
+    box-shadow: 0 0 0 1px #ddd, 0 4px 24px rgba(0,0,0,0.1);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-top: 12px;
+    margin-bottom: 12px;
 }
 .admin-preview-frame.preview-mobile {
-    max-width: 100%;
-}
-.device-iframe-wrap {
-    display: flex;
-    justify-content: center;
-    padding-top: 68px; /* 48px toolbar + 20px spacing */
-    overflow-x: auto;
-}
-.device-iframe {
-    height: calc(100vh - 88px); /* 48px toolbar + 20px padding + 20px bottom */
-    border: 1px solid #ddd;
+    max-width: 375px;
+    box-shadow: 0 0 0 1px #ddd, 0 4px 24px rgba(0,0,0,0.1);
     border-radius: 12px;
+    overflow: hidden;
+    margin-top: 12px;
+    margin-bottom: 12px;
+}
+.admin-preview-frame.preview-tablet,
+.admin-preview-frame.preview-mobile {
     background: white;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
-    transition: width 0.3s ease;
 }
 .footer-editable-wrap {
     position: relative;

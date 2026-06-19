@@ -368,10 +368,8 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
     }
 
     if (isCurrentlyAdmin() || (isAdmin && isAdmin.value)) {
-      let attempts = 0
-      const maxAttempts = 10
-      const applyTriggeredClasses = () => {
-        // Legacy block-level triggered
+      // Delay triggering so CSS transitions fire (elements need to render first)
+      setTimeout(() => {
         const allIds = (blocksCache || [])
           .filter((b) => !shouldSkipTrigger(b.type, isAdmin))
           .map((b) => b.id)
@@ -382,7 +380,7 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
             if (el && !el.classList.contains('triggered')) el.classList.add('triggered')
           })
         }
-        // New element-level triggered: trigger all registered elements immediately
+        // Element-level: trigger all registered elements
         for (const [key, entry] of elementRegistry) {
           elementTriggers.value = { ...elementTriggers.value, [key]: true }
           if (entry.stateRef) entry.stateRef.value = true
@@ -390,17 +388,25 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
             entry.domRef.classList.add('triggered')
           }
         }
-      }
-      applyTriggeredClasses()
+      }, 100)
+      // Retry for late-registering elements
+      let attempts = 0
       const intervalId = setInterval(() => {
-        applyTriggeredClasses()
+        for (const [key, entry] of elementRegistry) {
+          if (!elementTriggers.value[key]) {
+            elementTriggers.value = { ...elementTriggers.value, [key]: true }
+            if (entry.stateRef) entry.stateRef.value = true
+            if (entry.domRef?.classList && !entry.domRef.classList.contains('triggered')) {
+              entry.domRef.classList.add('triggered')
+            }
+          }
+        }
         attempts++
-        if (attempts >= maxAttempts) clearInterval(intervalId)
-      }, 50)
-      return
+        if (attempts >= 10) clearInterval(intervalId)
+      }, 100)
     }
 
-    // Public mode
+    // Public mode — always set up observer for mixed admin/public scenarios
     if (!observer) {
       observer = new IntersectionObserver(
         (entries) => {
@@ -443,6 +449,8 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
       }, 100)
     })
 
+    // ── Event listeners for both admin and public modes ──
+
     replayHandler = (e) => {
       const id = e?.detail?.id
       if (!id) return
@@ -457,8 +465,8 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
     }
     document.addEventListener('replay-element-animation', elementReplayHandler)
 
-    // Store cleanup in teardownClient
-    const origTeardown = teardownClient
+    // Cleanup element replay listener on teardown
+    const origTeardown = typeof teardownClient === 'function' ? teardownClient : () => {}
     teardownClient = () => {
       origTeardown()
       document.removeEventListener('replay-element-animation', elementReplayHandler)

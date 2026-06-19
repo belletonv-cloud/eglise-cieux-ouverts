@@ -12,7 +12,9 @@
                 <option value="messages">Messages</option>
                 <option value="event-list">Événements</option>
                 <option value="agenda">Agenda</option>
+                <option v-for="p in customPages" :key="p.slug" :value="p.slug">{{ p.slug }}</option>
             </select>
+            <button class="admin-create-page-btn" @click="showCreateModal = true" title="Créer une page">+</button>
         </div>
         <div class="admin-toolbar-center">
             <div class="device-toggle" v-if="activeBlock">
@@ -389,6 +391,44 @@
                         <p class="admin-mgr-hint">
                             Aucun admin configuré. <button class="admin-btn" @click="setupFirstAdmin">Devenir le premier admin</button>
                         </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </Teleport>
+
+    <!-- Create Page Modal -->
+    <Teleport to="body">
+        <div v-if="showCreateModal" class="version-modal-overlay" @click.self="showCreateModal = false">
+            <div class="version-modal">
+                <div class="version-modal-header">
+                    <h3>Créer une nouvelle page</h3>
+                    <button class="version-modal-close" @click="showCreateModal = false">✕</button>
+                </div>
+                <div class="version-modal-body">
+                    <div class="admin-mgr-section">
+                        <label class="create-page-label">
+                            Slug de la page
+                            <input
+                                v-model="newPageSlug"
+                                placeholder="ex: notre-equipe"
+                                class="admin-mgr-input"
+                                @keyup.enter="createPage"
+                            />
+                        </label>
+                        <p class="admin-mgr-hint">
+                            Le slug apparaîtra dans l'URL : <strong>{{ siteUrl }}/{{ newPageSlug || 'slug' }}</strong>
+                        </p>
+                    </div>
+                    <p v-if="createPageError" class="create-page-error">{{ createPageError }}</p>
+                    <div class="create-page-actions">
+                        <button
+                            class="admin-btn"
+                            @click="createPage"
+                            :disabled="creatingPage || !newPageSlug.trim()"
+                        >
+                            {{ creatingPage ? "Création..." : "Créer la page" }}
+                        </button>
                     </div>
                 </div>
             </div>
@@ -912,6 +952,62 @@ async function saveFooterChanges() {
         alert("Erreur lors de la sauvegarde du footer : " + e.message);
     }
 }
+
+// Page creation
+const showCreateModal = ref(false);
+const newPageSlug = ref('');
+const creatingPage = ref(false);
+const createPageError = ref('');
+const customPages = ref([]);
+const siteUrl = computed(() => import.meta.client ? window.location.origin : '');
+
+async function createPage() {
+    const slug = newPageSlug.value.trim().toLowerCase().replace(/[^a-z0-9-]/g, '').replace(/^-+|-+$/g, '')
+    if (!slug) {
+        createPageError.value = 'Veuillez entrer un slug valide (lettres, chiffres, tirets)'
+        return
+    }
+    createPageError.value = ''
+    creatingPage.value = true
+    try {
+        const token = await getFirebaseToken()
+        if (!token) throw new Error('Non authentifié')
+        const res = await fetch('/api/pages', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify({ slug }),
+        })
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}))
+            throw new Error(err.message || `HTTP ${res.status}`)
+        }
+        showCreateModal.value = false
+        newPageSlug.value = ''
+        await navigateToPage(slug)
+    } catch (e) {
+        createPageError.value = e.message || 'Erreur lors de la création'
+    } finally {
+        creatingPage.value = false
+    }
+}
+
+function loadCustomPages() {
+    // Custom pages are slugs that don't match the hardcoded list
+    fetch('/api/pages')
+        .then(res => res.json())
+        .then(data => {
+            const hardcoded = ['accueil', 'contact', 'messages', 'event-list', 'agenda']
+            customPages.value = (data.pages || []).filter(p => !hardcoded.includes(p.slug))
+        })
+        .catch(() => { customPages.value = [] })
+}
+
+onMounted(() => {
+    loadCustomPages()
+})
 
 async function navigateToPage(slug) {
     const targetPath = slug === "accueil" ? "/" : `/${slug}`;

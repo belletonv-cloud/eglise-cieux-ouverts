@@ -114,6 +114,29 @@ export async function getFirestoreDoc(
   return data
 }
 
+export async function listFirestoreCollection(
+  projectId: string,
+  accessToken: string,
+  collection: string
+): Promise<any[]> {
+  const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/${collection}`
+
+  const response = await fetch(url, {
+    headers: {
+      authorization: `Bearer ${accessToken}`,
+    },
+  })
+
+  if (!response.ok) {
+    if (response.status === 404) return []
+    const text = await response.text()
+    throw new Error(`Firestore list error: ${text}`)
+  }
+
+  const data = await response.json()
+  return data.documents || []
+}
+
 export function encodeFirestoreValue(value: any): any {
   if (value === null || value === undefined) return { nullValue: null }
   if (typeof value === 'string') return { stringValue: value }
