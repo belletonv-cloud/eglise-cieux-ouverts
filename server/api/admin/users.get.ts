@@ -13,6 +13,9 @@ export default defineEventHandler(async (event) => {
   }
 
   const uids = await getAdminUids(event)
+  if (uids.length === 0) {
+    throw createError({ statusCode: 404, message: 'Aucun administrateur configuré' })
+  }
   if (!uids.includes(userInfo.uid)) {
     throw createError({ statusCode: 403, message: 'Accès refusé' })
   }
