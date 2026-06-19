@@ -68,17 +68,4 @@ export async function isUserAdmin(event: any, uid: string, email: string | null)
   return false
 }
 
-export async function getAdminUidList(event: any): Promise<string[]> {
-  const config = getFirestoreConfig(event)
-  if (!config) return []
 
-  try {
-    const accessToken = await getAccessToken(config.clientEmail, config.privateKey)
-    const doc = await getFirestoreDoc(config.projectId, accessToken, 'settings', 'admins')
-    if (!doc) return []
-    const parsed = parseFirestoreDoc(doc)
-    return parsed?.uids || []
-  } catch {
-    return []
-  }
-}
