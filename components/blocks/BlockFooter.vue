@@ -130,10 +130,11 @@ function getShutterStyle(i) {
 .footer-title {
   font-family: 'Nunito', sans-serif;
   font-size: var(--bf-title-font-size, 24px);
-  font-weight: 400;
+  font-weight: 800;
   color: var(--bf-text-color, #ffffff);
   margin: 0;
   white-space: nowrap;
+  -webkit-font-smoothing: antialiased;
 }
 
 .shutter-char {
@@ -190,16 +191,19 @@ function getShutterStyle(i) {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  font-weight: 700;
+  font-weight: 800;
   text-align: left;
   font-family: 'Nunito', sans-serif;
+  font-size: 19px;
+  -webkit-font-smoothing: antialiased;
 }
 
 .footer-email {
-  font-weight: 700;
+  font-weight: 800;
   text-decoration: none;
   margin-bottom: 4px;
   display: block;
+  font-size: 19px;
 }
 
 .footer-email:hover {
