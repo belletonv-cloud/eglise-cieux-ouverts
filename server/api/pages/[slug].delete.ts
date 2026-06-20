@@ -1,4 +1,4 @@
-import { getFirestoreConfig, getAccessToken, setFirestoreDoc } from '../../utils/firebase'
+import { getFirestoreConfig, getAccessToken, getFirestoreDoc, setFirestoreDoc } from '../../utils/firebase'
 import { verifyFirebaseToken, isUserAdmin } from '../../utils/firebase-admin'
 
 export default defineEventHandler(async (event) => {
@@ -19,37 +19,34 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 403, message: 'Accès refusé' })
   }
 
-  const body = await readBody(event)
-  if (!body || !body.slug) {
-    throw createError({ statusCode: 400, message: 'Slug manquant' })
-  }
-
-  const slug = String(body.slug).toLowerCase().replace(/[^a-z0-9-]/g, '').replace(/^-+|-+$/g, '')
+  const slug = getRouterParam(event, 'slug')
   if (!slug) {
-    throw createError({ statusCode: 400, message: 'Slug invalide' })
+    throw createError({ statusCode: 400, message: 'Slug manquant' })
   }
 
   const reservedSlugs = ['admin', 'api', '_nuxt', 'favicon.ico', 'robots.txt']
   if (reservedSlugs.includes(slug)) {
-    throw createError({ statusCode: 400, message: 'Ce slug est réservé' })
+    throw createError({ statusCode: 400, message: 'Impossible de supprimer cette page' })
   }
 
   try {
     const accessToken = await getAccessToken(config.clientEmail, config.privateKey)
 
-    const title = body.title?.trim() || slug
+    const doc = await getFirestoreDoc(config.projectId, accessToken, 'pages', slug)
+    if (!doc) {
+      throw createError({ statusCode: 404, message: 'Page introuvable' })
+    }
 
     await setFirestoreDoc(config.projectId, accessToken, 'pages', slug, {
-      title,
+      _deleted: true,
       blocks: [],
-      createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       updatedBy: userInfo.email || 'inconnu',
     })
 
-    return { success: true, slug }
+    return { success: true }
   } catch (err: any) {
-    console.error('Page create error:', err)
-    throw createError({ statusCode: 500, message: `Erreur lors de la création: ${err.message || err}` })
+    console.error('Page delete error:', err)
+    throw createError({ statusCode: 500, message: `Erreur lors de la suppression: ${err.message || err}` })
   }
 })

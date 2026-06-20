@@ -15,9 +15,11 @@ export default defineEventHandler(async (event) => {
         if (!data) return null
         return {
           slug: doc.name?.split('/').pop() || '',
+          title: data.title || data.slug || doc.name?.split('/').pop() || '',
           updatedAt: data.updatedAt || null,
           updatedBy: data.updatedBy || null,
           blockCount: data.blocks?.length || 0,
+          _deleted: data._deleted || false,
         }
       })
       .filter(Boolean)
