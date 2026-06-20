@@ -1,12 +1,9 @@
 <template>
   <section
-    class="block-text-img block-draggable block-textimage" :data-block-id="blockId"
+    class="block-text-img block-textimage" :data-block-id="blockId"
     :style="{ background: backgroundColor, color: textColor }"
     :class="[visibilityClasses, { 'reverse': reverse }, `style-${visualStyle || 'default'}`]"
   >
-    <div v-if="$attrs['data-admin'] || showDragHandle" class="block-draggable-handle" style="width:28px;height:28px;background:rgba(0,0,0,0.04);border-radius:8px;display:flex;align-items:center;justify-content:center;position:absolute;top:16px;left:16px;z-index:3;cursor:move;">
-        <span style="font-size:1.2em;">⠿</span>
-      </div>
     <div class="ti-inner">
       <div class="ti-text">
         <h2 class="ti-title" :style="{ color: textColor }">{{ title }}</h2>
@@ -55,7 +52,6 @@ const visibilityClasses = computed(() => ({
   'hide-tablet': props.visibility.tablet === false,
   'hide-desktop': props.visibility.desktop === false,
 }))
-const showDragHandle = import.meta.client && window.__PW_TEST
 const sanitizedBody = computed(() => props.body ? sanitizeHtml(props.body) : '')
 </script>
 

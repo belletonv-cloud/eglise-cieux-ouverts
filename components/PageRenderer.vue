@@ -342,40 +342,6 @@ function isSelected(block) {
     }
 }
 
-// After mount, scan for stray "[object Promise]" text nodes and log their block context
-// Only run this on the client — server environments don't have `document`.
-if (typeof window !== "undefined" && import.meta.client) {
-    nextTick().then(() => {
-        try {
-            // small delay to let hydration finish
-            setTimeout(() => {
-                const wrappers = Array.from(
-                    document.querySelectorAll(".block-wrapper"),
-                );
-                for (const w of wrappers) {
-                    for (const node of Array.from(w.childNodes || [])) {
-                        if (
-                            node.nodeType === Node.TEXT_NODE &&
-                            node.nodeValue &&
-                            node.nodeValue.includes("[object Promise]")
-                        ) {
-                            // find nearest block id via dataset or fallback
-                            const bid =
-                                w.getAttribute("data-block-id") ||
-                                w
-                                    .querySelector("[data-block-id]")
-                                    ?.getAttribute("data-block-id") ||
-                                "unknown";
-                        }
-                    }
-                }
-            }, 50);
-        } catch (e) {
-            console.warn("PageRenderer: error in promise-text scanner", e);
-        }
-    });
-}
-
 watch(
     () => (props.blocks || []).map((b) => b.id).join(","),
     async () => {
@@ -413,33 +379,6 @@ watch(
     outline: 2px solid #3b82f6;
     outline-offset: -2px;
 }
-.drag-container {
-    width: 100%;
-}
-.drag-handle {
-    position: absolute;
-    top: 4px;
-    left: 4px;
-    z-index: 100;
-    cursor: grab;
-    background: rgba(59, 130, 246, 0.15);
-    border: 1px solid rgba(59, 130, 246, 0.3);
-    border-radius: 6px;
-    padding: 2px 8px;
-    font-size: 18px;
-    line-height: 1;
-    color: #3b82f6;
-    opacity: 0;
-    transition: opacity 0.15s;
-    user-select: none;
-}
-.block-wrapper:hover .drag-handle {
-    opacity: 1;
-}
-.drag-handle:active {
-    cursor: grabbing;
-}
-
 </style>
 
 <style>
@@ -451,14 +390,5 @@ watch(
 .admin-mode .block-wrapper:hover {
     outline: 2px dashed rgba(59, 130, 246, 0.5);
     outline-offset: -2px;
-}
-.admin-mode .block-wrapper.draggable {
-    padding-top: 4px;
-}
-.block-ghost {
-    opacity: 0.4;
-    outline: 2px dashed #3b82f6;
-    outline-offset: -2px;
-    background: rgba(59, 130, 246, 0.05);
 }
 </style>
