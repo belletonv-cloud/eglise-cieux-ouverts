@@ -275,7 +275,7 @@ function onFooterClick(e) {
     box-shadow: 0 0 0 1px #ddd, 0 4px 24px rgba(0,0,0,0.1);
     border-radius: 12px;
     overflow: hidden;
-    margin-top: 12px;
+    margin-top: 48px;
     margin-bottom: 12px;
 }
 .admin-preview-frame.preview-mobile {
@@ -283,7 +283,7 @@ function onFooterClick(e) {
     box-shadow: 0 0 0 1px #ddd, 0 4px 24px rgba(0,0,0,0.1);
     border-radius: 12px;
     overflow: hidden;
-    margin-top: 12px;
+    margin-top: 48px;
     margin-bottom: 12px;
 }
 .admin-preview-frame.preview-tablet,
@@ -298,7 +298,7 @@ function onFooterClick(e) {
 }
 .preview-iframe {
     width: 100%;
-    height: calc(100vh - 48px - 24px);
+    height: calc(100vh - 48px - 12px);
     border: none;
     display: block;
     background: white;
