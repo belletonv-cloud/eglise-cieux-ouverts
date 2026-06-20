@@ -25,13 +25,58 @@ Déployé sur Cloudflare Pages.
 
 ## Déploiement (CI/CD)
 
-- **Production** (branche `main`) : push sur `main` → Cloudflare Pages déploie automatiquement
-- **Recette** (branche `recette`) : push sur `recette` → déploiement en preview sur `https://recette.eglise-cieux-ouverts.pages.dev`
-- Les variables d'environnement pour la recette sont configurées dans `deployment_configs.preview.env_vars` (via API Cloudflare). Elles utilisent le projet Firebase **eglise-cieux-ouverts-rec** (Spark gratuit).
-- La recette a sa propre base Firestore (vide), son Auth Google, et son Storage — isolée de la prod.
-- Pour basculer de main à recette : `git checkout recette && git merge main && git push origin recette`
-- **Build** : `nuxt build` (Nitro preset `cloudflare-pages`)
-- ⚠️ **Ne pas utiliser `npm run deploy` localement** — le CI fait le déploiement automatiquement. La commande existe mais nécessite `wrangler login` (et le CI est plus fiable).
+### Workflow recommandé
+
+```
+Dev local (main)
+  ↓
+Recette (branche recette) ← tu valides sur https://recette.e[...].pages.dev
+  ↓
+Production (branche main) ← push automatique quand recette est OK
+```
+
+### Commandes
+
+```bash
+# 1. Dev local (travaille sur main)
+git checkout main
+npx nuxi dev
+
+# 2. Livrer en recette (quand c'est prêt à être testé)
+git checkout recette
+git merge main
+git push origin recette
+# → Cloudflare déploie sur https://recette.eglise-cieux-ouverts.pages.dev
+
+# 3. Livrer en prod (quand recette est validé)
+git checkout main
+git merge recette
+git push origin main
+# → Cloudflare déploie sur https://eglise-cieux-ouverts.pages.dev
+```
+
+### Règles
+
+| Branche | Usage | Firebase | Déploiement |
+|---|---|---|---|
+| `main` (dev local) | Dev quotidien | Prod (pas de risque) | Manuel : `git push` |
+| `recette` | Test / validation | `eglise-cieux-ouverts-rec` (isolé) | Auto : push sur recette |
+| `main` (remote) | Production | Prod | Auto : push sur main |
+
+### Environnements Cloudflare
+
+- **Production** (branche `main`) : variables d'env → Firebase prod
+- **Preview** (branche `recette`) : variables d'env → Firebase recette (configurées via API Cloudflare dans `deployment_configs.preview.env_vars`)
+- La recette a sa propre base Firestore (vide), son Auth Google, et son Storage — complètement isolée de la prod.
+
+### Build
+
+```bash
+npx nuxi build        # Build local (Nitro preset cloudflare-pages)
+```
+
+⚠️ **Ne pas utiliser `npm run deploy` localement** — la commande existe mais nécessite `wrangler login`. Le CI via GitHub est plus fiable.
+⚠️ Après création de la branche `recette`, Cloudflare peut mettre quelques minutes à détecter la nouvelle branche et faire le premier déploiement.
 
 ## Structure
 
