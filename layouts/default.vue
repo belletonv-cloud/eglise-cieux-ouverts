@@ -13,6 +13,7 @@
                 <AdminToolbar
                     v-if="isMounted && isAdminMode && !isPreviewMode && !isInnerPreview"
                     :page-slug="currentPageSlug"
+                    @navigate-preview="onNavigatePreview"
                 />
             </ClientOnly>
 
@@ -210,6 +211,9 @@ onMounted(() => {
         waitForAuth().then((user) => {
             if (user) isAdminMode.value = true;
         });
+        // Force scroll to top so page content starts at viewport top
+        window.scrollTo(0, 0)
+        try { history.scrollRestoration = 'manual' } catch (e) {}
     }
     if (["mobile", "tablet", "desktop"].includes(route.query.device)) {
         previewDevice.value = route.query.device;
@@ -297,6 +301,7 @@ function onFooterClick(e) {
     height: calc(100vh - 48px - 24px);
     border: none;
     display: block;
+    background: white;
 }
 .footer-editable-wrap {
     position: relative;
