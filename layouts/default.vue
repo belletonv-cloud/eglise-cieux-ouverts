@@ -37,6 +37,7 @@
             <iframe
                 v-else-if="isMounted"
                 :src="previewIframeSrc"
+                :width="deviceWidth"
                 class="preview-iframe"
                 :class="`preview-${previewDevice}`"
                 title="Aperçu mobile/tablet"
