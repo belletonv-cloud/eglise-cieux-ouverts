@@ -35,8 +35,6 @@ Recette (branche recette) ← tu valides sur https://recette.e[...].pages.dev
 Production (branche main) ← push automatique quand recette est OK
 ```
 
-### Commandes
-
 ```bash
 # 1. Dev local (travaille sur main)
 git checkout main
@@ -71,12 +69,28 @@ git push origin main
 
 ### Build
 
+Sur Cloudflare, le build utilise `bash build.sh` (configuré dans le dashboard).  
+Ce script exporte les variables Firebase de la recette quand `$CF_PAGES_BRANCH === "recette"`, puis appelle `npm ci && npm run build`.
+
 ```bash
 npx nuxi build        # Build local (Nitro preset cloudflare-pages)
 ```
 
-⚠️ **Ne pas utiliser `npm run deploy` localement** — la commande existe mais nécessite `wrangler login`. Le CI via GitHub est plus fiable.
-⚠️ Après création de la branche `recette`, Cloudflare peut mettre quelques minutes à détecter la nouvelle branche et faire le premier déploiement.
+⚠️ **Ne pas utiliser `npm run deploy` localement** — la commande existe mais nécessite `wrangler login`. Le CI via GitHub est plus fiable.  
+⚠️ `build.sh` contient la clé privée du service account Firebase recette — le dépôt est privé.  
+⚠️ Les variables d'env de la recette (`NUXT_FIREBASE_PRIVATE_KEY` etc.) sont définies via API Cloudflare en `plain_text` dans `deployment_configs.preview.env_vars`.
+
+### Robots
+
+En environnement `recette` : `<meta name="robots" content="noindex, nofollow">` injecté automatiquement (conditionné sur `CF_PAGES_BRANCH`).  
+La prod (`main`) n'a pas ce tag — les moteurs indexent normalement.
+
+### Environnements Cloudflare
+
+| Environnement | Branche | Firebase | Déploiement |
+|---|---|---|---|
+| **Preview** | `recette` | `eglise-cieux-ouverts-rec` (isolé) | Auto : push sur `recette` |
+| **Production** | `main` | `eglise-cieux-ouverts` (prod) | Auto : push sur `main` |
 
 ## Structure
 

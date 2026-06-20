@@ -14,7 +14,13 @@ export default defineEventHandler(async (event) => {
 
   const config = getFirestoreConfig(event)
   if (!config) {
-    throw createError({ statusCode: 500, message: 'Firestore non configuré' })
+    const missing: string[] = []
+    const cfg = useRuntimeConfig(event)
+    if (!cfg.firebaseProjectId && !process.env.NUXT_FIREBASE_PROJECT_ID) missing.push('projectId')
+    if (!cfg.firebaseClientEmail && !process.env.NUXT_FIREBASE_CLIENT_EMAIL) missing.push('clientEmail')
+    if (!cfg.firebasePrivateKey && !process.env.NUXT_FIREBASE_PRIVATE_KEY) missing.push('privateKey')
+    console.error('setup error: config vars missing:', missing, 'runtimeConfig keys:', Object.keys(cfg))
+    throw createError({ statusCode: 500, message: 'Firestore non configuré. Vérifier que les variables NUXT_FIREBASE_* sont définies.' })
   }
 
   try {
