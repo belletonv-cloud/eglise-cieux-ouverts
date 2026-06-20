@@ -258,6 +258,11 @@ function onFooterClick(e) {
     right: auto !important;
     width: auto !important;
 }
+/* Push content below fixed toolbar in preview frames */
+.admin-preview-frame.preview-tablet > .preview-tablet,
+.admin-preview-frame.preview-mobile > .preview-mobile {
+    margin-top: 48px;
+}
 /* Force mobile nav display in preview modes (viewport is desktop but we want mobile) */
 .admin-preview-frame.preview-tablet .site-header .nav-desktop,
 .admin-preview-frame.preview-mobile .site-header .nav-desktop {

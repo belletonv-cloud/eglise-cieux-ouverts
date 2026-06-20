@@ -187,27 +187,6 @@
                 ✕
             </button>
         </div>
-        <div
-            v-if="sidebarBlock && user && !editingFooter"
-            style="
-                padding: 0 16px 12px;
-                border-bottom: 1px solid #eee;
-                display: flex;
-                gap: 8px;
-                align-items: center;
-            "
-        >
-            <button
-                class="admin-btn"
-                @click.prevent="replayAnimation(sidebarBlock.id)"
-            >
-                Rejouer l'animation
-            </button>
-            <small style="color: #666; font-size: 0.88em"
-                >Si l'animation est scroll-driven, je scrollerai vers le
-                bloc.</small
-            >
-        </div>
         <div class="admin-sidebar-body">
             <AutoEditor
                 :schema="sidebarSchema"
@@ -876,17 +855,6 @@ function selectAdminUploaded(url) {
     showAdminImagesList.value = false;
 }
 
-function replayAnimation(blockId) {
-    // dispatch global event handled by PageRenderer
-    try {
-        document.dispatchEvent(
-            new CustomEvent("replay-animation", { detail: { id: blockId } }),
-        );
-    } catch (e) {
-        console.warn("AdminToolbar: replay-animation dispatch failed", e);
-    }
-}
-
 function closeSidebar() {
     if (editingFooter.value) {
         closeFooterEditor();
@@ -996,7 +964,7 @@ async function saveChanges() {
 
 <style scoped>
 .admin-toolbar {
-    position: sticky;
+    position: fixed;
     top: 0;
     left: 0;
     right: 0;
