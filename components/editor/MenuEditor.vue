@@ -58,13 +58,18 @@
             </div>
           </div>
           <div class="menu-editor-page-section">
-            <h4>Pages personnalisées</h4>
-            <div v-if="customPages.length" class="menu-pages-list">
-              <div v-for="p in customPages" :key="p.slug" class="menu-page-item">
-                <span class="menu-page-slug">{{ p.slug }}</span>
+            <h4>Pages</h4>
+            <div v-if="pages.length" class="menu-pages-list">
+              <div v-for="p in pages" :key="p.slug" class="menu-page-item">
+                <span class="menu-page-slug">{{ p.title || p.slug }}</span>
+                <span class="menu-page-path">/{{ p.slug }}</span>
+                <div class="menu-page-actions" @click.stop>
+                  <button class="btn-mini" @click="navigateToPage(p.slug)" title="Voir la page">👁</button>
+                  <button class="btn-mini btn-danger" @click="deletePage(p.slug, p.title || p.slug)" title="Supprimer">🗑</button>
+                </div>
               </div>
             </div>
-            <p v-else class="menu-pages-empty">Aucune page personnalisée.</p>
+            <p v-else class="menu-pages-empty">Aucune page.</p>
             <button class="btn-sm btn-full" @click="showCreateModal = true">+ Créer une page</button>
           </div>
           <div class="menu-editor-footer">
@@ -84,7 +89,13 @@
           <div class="version-modal-body">
             <div class="admin-mgr-section">
               <label class="create-page-label">
-                Slug de la page
+                Titre de la page
+                <input v-model="newPageTitle" placeholder="ex: Notre équipe" class="admin-mgr-input" @keyup.enter="createPage" />
+              </label>
+            </div>
+            <div class="admin-mgr-section">
+              <label class="create-page-label">
+                Slug (URL)
                 <input v-model="newPageSlug" placeholder="ex: notre-equipe" class="admin-mgr-input" @keyup.enter="createPage" />
               </label>
               <p class="admin-mgr-hint">
@@ -155,10 +166,11 @@ function onClose() {
   closeMenuEditor()
 }
 
-// Page creation
-const customPages = ref([])
+// Page management
+const pages = ref([])
 const showCreateModal = ref(false)
 const newPageSlug = ref('')
+const newPageTitle = ref('')
 const creatingPage = ref(false)
 const createPageError = ref('')
 const siteUrl = computed(() => import.meta.client ? window.location.origin : '')
@@ -193,7 +205,7 @@ async function createPage() {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
       },
-      body: JSON.stringify({ slug }),
+      body: JSON.stringify({ slug, title: newPageTitle.value.trim() || slug }),
     })
     if (!res.ok) {
       const err = await res.json().catch(() => ({}))
@@ -201,12 +213,32 @@ async function createPage() {
     }
     showCreateModal.value = false
     newPageSlug.value = ''
-    loadCustomPages()
+    newPageTitle.value = ''
+    loadPages()
     await navigateToPage(slug)
   } catch (e) {
     createPageError.value = e.message || 'Erreur lors de la création'
   } finally {
     creatingPage.value = false
+  }
+}
+
+async function deletePage(slug, label) {
+  if (!confirm(`Supprimer la page « ${label} » (/ ${slug}) ?`)) return
+  const token = await getFirebaseToken()
+  if (!token) return
+  try {
+    const res = await fetch(`/api/pages/${slug}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` },
+    })
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      throw new Error(err.message || `HTTP ${res.status}`)
+    }
+    loadPages()
+  } catch (e) {
+    alert(`Erreur: ${e.message}`)
   }
 }
 
@@ -228,18 +260,17 @@ async function navigateToPage(slug) {
   }
 }
 
-function loadCustomPages() {
+function loadPages() {
   fetch('/api/pages')
     .then(res => res.json())
     .then(data => {
-      const hardcoded = ['accueil', 'contact', 'messages', 'event-list', 'agenda']
-      customPages.value = (data.pages || []).filter(p => !hardcoded.includes(p.slug))
+      pages.value = (data.pages || []).filter(p => !p._deleted)
     })
-    .catch(() => { customPages.value = [] })
+    .catch(() => { pages.value = [] })
 }
 
 onMounted(() => {
-  loadCustomPages()
+  loadPages()
 })
 </script>
 
@@ -290,8 +321,10 @@ onMounted(() => {
 .menu-editor-page-section { padding:12px 16px; border-top:1px solid #e5e7eb; }
 .menu-editor-page-section h4 { margin:0 0 8px; font-size:.8em; font-weight:600; color:#555; }
 .menu-pages-list { display:flex; flex-direction:column; gap:4px; margin-bottom:8px; }
-.menu-page-item { display:flex; align-items:center; justify-content:space-between; padding:4px 8px; background:#f9fafb; border-radius:4px; font-size:.8em; }
-.menu-page-slug { color:#555; font-family:monospace; font-size:.9em; }
+.menu-page-item { display:flex; align-items:center; gap:6px; padding:4px 8px; background:#f9fafb; border-radius:4px; font-size:.8em; }
+.menu-page-slug { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:500; color:#333; }
+.menu-page-path { color:#999; font-family:monospace; font-size:.85em; flex-shrink:0; }
+.menu-page-actions { display:flex; gap:2px; flex-shrink:0; }
 .menu-pages-empty { font-size:.78em; color:#aaa; margin:0 0 8px; }
 .btn-full { width:100%; margin-top:0; }
 .panel-slide-enter-active,.panel-slide-leave-active { transition:opacity .2s; }
