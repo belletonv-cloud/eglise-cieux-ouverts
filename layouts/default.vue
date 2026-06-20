@@ -258,13 +258,39 @@ function onFooterClick(e) {
     right: auto !important;
     width: auto !important;
 }
+/* Force mobile nav display in preview modes (viewport is desktop but we want mobile) */
+.admin-preview-frame.preview-tablet .site-header .nav-desktop,
+.admin-preview-frame.preview-mobile .site-header .nav-desktop {
+    display: none !important;
+}
+.admin-preview-frame.preview-tablet .site-header .burger,
+.admin-preview-frame.preview-mobile .site-header .burger {
+    display: flex !important;
+}
+/* Mobile nav positioning inside preview frame */
+.admin-preview-frame.preview-tablet .nav-mobile,
 .admin-preview-frame.preview-mobile .nav-mobile {
-    position: absolute !important;
+    position: fixed !important;
     top: 100% !important;
     left: 0 !important;
     right: 0 !important;
-    bottom: auto !important;
-    max-height: calc(100vh - 48px);
+    bottom: 0 !important;
+    max-height: calc(100vh - 48px - 52px);
+}
+/* Mobile header background on menu open in preview */
+.admin-preview-frame.preview-tablet .site-header.menu-open,
+.admin-preview-frame.preview-mobile .site-header.menu-open {
+    background: #064886 !important;
+    border-bottom: none !important;
+    box-shadow: none !important;
+}
+.admin-preview-frame.preview-tablet .site-header.menu-open .burger span,
+.admin-preview-frame.preview-mobile .site-header.menu-open .burger span {
+    background: white !important;
+}
+.admin-preview-frame.preview-tablet .site-header.menu-open .logo,
+.admin-preview-frame.preview-mobile .site-header.menu-open .logo {
+    filter: brightness(0) invert(1) !important;
 }
 /* Spacer is unnecessary when header is in flow */
 .admin-preview-frame.preview-tablet .header-spacer,
