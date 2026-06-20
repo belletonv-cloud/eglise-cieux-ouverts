@@ -31,7 +31,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, inject, ref } from 'vue'
 import { useAnimatedElements } from '~/composables/useAnimatedElements'
 
 const props = defineProps({
@@ -54,7 +54,8 @@ const props = defineProps({
 
 const { addElement } = useAnimatedElements(props.blockId)
 const titleAnim = addElement('title', { animation: 'fadeIn', delay: 0 })
-const isAnimated = computed(() => titleAnim.triggered.value)
+const isEditor = inject('isEditor', ref(false))
+const isAnimated = computed(() => titleAnim.triggered.value || isEditor.value)
 
 const titleChars = computed(() => props.title.split(''))
 

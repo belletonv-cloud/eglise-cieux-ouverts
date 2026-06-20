@@ -6,7 +6,7 @@
             'is-preview': isPreviewMode,
             'is-inner-preview': isInnerPreview,
         }"
-        :style="{ '--admin-offset': isAdminMode && isMounted ? '48px' : '0px' }"
+        :style="{ '--admin-offset': isAdminMode && isMounted && !isInnerPreview ? '48px' : '0px' }"
     >
         <div class="admin-preview-frame" :class="`preview-${previewDevice}`">
             <ClientOnly>
@@ -284,6 +284,12 @@ function onFooterClick(e) {
 .admin-preview-frame.preview-tablet,
 .admin-preview-frame.preview-mobile {
     background: white;
+}
+/* In iframe preview (preview-inner=1) suppress all admin overlays */
+#app-root.is-inner-preview .admin-sidebar-overlay,
+#app-root.is-inner-preview .admin-sidebar,
+#app-root.is-inner-preview .admin-toolbar {
+    display: none !important;
 }
 .preview-iframe {
     width: 100%;
