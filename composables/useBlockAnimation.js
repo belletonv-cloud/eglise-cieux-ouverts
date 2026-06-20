@@ -1,4 +1,4 @@
-import { ref, nextTick, provide } from "vue"
+import { ref, nextTick, provide, watch } from "vue"
 
 const SUPPORTS_SCROLL_TIMELINE =
   typeof CSS !== "undefined" &&
@@ -479,6 +479,27 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
     for (const [, obs] of fallbackObservers) obs.disconnect()
     fallbackObservers.clear()
   }
+
+  // When admin mode activates after mount (async auth), re-trigger
+  let watchedOnce = false
+  watch(isAdmin, (val) => {
+    if (val && blocksCache) {
+      initAdminTrigger(blocksCache)
+      // Also trigger element-level registry if it has entries now
+      if (elementRegistry.size > 0) {
+        for (const [key, entry] of elementRegistry) {
+          elementTriggers.value = { ...elementTriggers.value, [key]: true }
+          if (entry.stateRef) entry.stateRef.value = true
+          if (entry.domRef?.classList && !entry.domRef.classList.contains('triggered')) {
+            entry.domRef.classList.add('triggered')
+          }
+        }
+      }
+    }
+    if (!watchedOnce) {
+      watchedOnce = true
+    }
+  })
 
   return {
     triggeredBlocks, wrapperRefs,

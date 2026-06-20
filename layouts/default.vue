@@ -249,6 +249,28 @@ function onFooterClick(e) {
 .admin-preview-frame.preview-mobile {
     background: white;
 }
+/* In tablet/mobile preview the header should flow inside the constrained frame */
+.admin-preview-frame.preview-tablet .site-header,
+.admin-preview-frame.preview-mobile .site-header {
+    position: relative !important;
+    top: 0 !important;
+    left: auto !important;
+    right: auto !important;
+    width: auto !important;
+}
+.admin-preview-frame.preview-mobile .nav-mobile {
+    position: absolute !important;
+    top: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: auto !important;
+    max-height: calc(100vh - 48px);
+}
+/* Spacer is unnecessary when header is in flow */
+.admin-preview-frame.preview-tablet .header-spacer,
+.admin-preview-frame.preview-mobile .header-spacer {
+    display: none !important;
+}
 .footer-editable-wrap {
     position: relative;
     outline: 2px solid transparent;
