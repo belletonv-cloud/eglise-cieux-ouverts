@@ -201,6 +201,7 @@ async function createPage() {
     }
     showCreateModal.value = false
     newPageSlug.value = ''
+    loadCustomPages()
     await navigateToPage(slug)
   } catch (e) {
     createPageError.value = e.message || 'Erreur lors de la création'
