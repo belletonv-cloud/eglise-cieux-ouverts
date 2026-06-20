@@ -4,17 +4,20 @@
         :class="{
             'admin-mode': isAdminMode && isMounted,
             'is-preview': isPreviewMode,
+            'is-inner-preview': isInnerPreview,
         }"
         :style="{ '--admin-offset': isAdminMode && isMounted ? '48px' : '0px' }"
     >
         <div class="admin-preview-frame" :class="`preview-${previewDevice}`">
             <ClientOnly>
                 <AdminToolbar
-                    v-if="isMounted && isAdminMode && !isPreviewMode"
+                    v-if="isMounted && isAdminMode && !isPreviewMode && !isInnerPreview"
                     :page-slug="currentPageSlug"
                 />
             </ClientOnly>
-            <div :class="deviceClass">
+
+            <!-- Desktop: inline rendering (blocks editable) -->
+            <div v-if="previewDevice === 'desktop' || isInnerPreview" :class="deviceClass">
                 <SiteHeader />
                 <slot />
                 <div
@@ -29,8 +32,17 @@
                     />
                 </div>
             </div>
+
+            <!-- Mobile/tablet: iframe for faithful rendering -->
+            <iframe
+                v-else-if="isMounted"
+                :src="previewIframeSrc"
+                class="preview-iframe"
+                :class="`preview-${previewDevice}`"
+                title="Aperçu mobile/tablet"
+            />
         </div>
-        <MenuEditor v-if="isMounted && isAdminMode" />
+        <MenuEditor v-if="isMounted && isAdminMode && !isInnerPreview" />
     </div>
 </template>
 
@@ -57,12 +69,10 @@ const {
     selectFooter,
 } = useAdmin();
 
-// Provide the admin composable values to child components that use inject()
 provide("isAdmin", isAdminMode);
 provide("editingBlockId", editingBlockId);
 provide("selectBlock", selectBlock);
 provide("previewDevice", previewDevice);
-// legacy flag used by some components
 provide("isEditor", isAdminMode);
 const isMounted = ref(false);
 const { loadMenuFromFirestore, saveMenuToFirestore } = useMenuEditor();
@@ -74,15 +84,30 @@ const currentPageSlug = computed(() => {
 });
 
 const isPreviewMode = computed(() => route.query.preview === "true");
+const isInnerPreview = computed(() => route.query["preview-inner"] === "1");
 
 const deviceClass = computed(() => {
     if (!isAdminMode.value) return ''
     return `preview-${previewDevice.value}`
 })
 
-// Client-only auth check — returns user or null
-// Uses $auth.onAuthStateChanged directly (works with both real Firebase
-// and the mock $auth provided by auth-mock.client.ts in PW_TEST mode).
+// Slug used by the iframe (can differ from current page when dropdown changes)
+const previewSlug = ref(currentPageSlug.value)
+
+const previewIframeSrc = computed(() => {
+    const path = previewSlug.value === "accueil" ? "/" : `/${previewSlug.value}`
+    const params = new URLSearchParams({
+        admin: "true",
+        "preview-inner": "1",
+        device: previewDevice.value,
+    })
+    return path + "?" + params.toString()
+})
+
+function onNavigatePreview(slug) {
+    previewSlug.value = slug
+}
+
 async function waitForAuth() {
     if (import.meta.server || !import.meta.client) return null;
     const { $auth } = useNuxtApp();
@@ -104,21 +129,6 @@ async function redirectToLogin() {
     );
 }
 
-const deviceWidth = computed(() => {
-    if (previewDevice.value === "mobile") return 375;
-    if (previewDevice.value === "tablet") return 768;
-    return "100%";
-});
-
-const previewUrl = computed(() => {
-    if (import.meta.server) return "";
-    const path = route.path;
-    const params = new URLSearchParams(route.query);
-    params.set("preview", "true");
-    return path + "?" + params.toString();
-});
-
-// Load menu and footer from Firestore when entering admin mode
 watch(
     isAdminMode,
     (val) => {
@@ -129,13 +139,11 @@ watch(
     { immediate: true },
 );
 
-// Activate admin mode when ?admin=true is present and user is authenticated.
-// SSR activation is intentionally skipped — Firebase auth is client-only.
 watch(
     () => route.query.admin,
     async (val) => {
         if (import.meta.server) return;
-        if (val === "true" && !isAdminMode.value && !isPreviewMode.value) {
+        if (val === "true" && !isAdminMode.value && !isPreviewMode.value && !isInnerPreview.value) {
             const user = await waitForAuth();
             if (user) {
                 isAdminMode.value = true;
@@ -148,16 +156,27 @@ watch(
     },
 );
 
-// Reactive guard: whenever isAdminMode becomes true without admin=true in URL, revert
-// Only check after mount to avoid race condition with onMounted setting adminMode
+// In iframe (preview-inner): activate admin mode without toolbar
+watch(
+    () => route.query["preview-inner"],
+    async (val) => {
+        if (import.meta.server) return;
+        if (val === "1" && !isAdminMode.value) {
+            const user = await waitForAuth();
+            if (user) {
+                isAdminMode.value = true;
+            }
+        }
+    },
+);
+
 watch(isAdminMode, (val) => {
-    if (val && !isMounted.value) return; // Skip before mount
-    if (val && route.query.admin !== "true") {
+    if (val && !isMounted.value) return;
+    if (val && route.query.admin !== "true" && !isInnerPreview.value) {
         exitAdmin();
     }
 });
 
-// Sync preview device to URL so it survives page reload / navigation
 watch(previewDevice, (device) => {
     if (!isMounted.value) return;
     const router = useRouter();
@@ -166,7 +185,7 @@ watch(previewDevice, (device) => {
 });
 
 const onEscape = (e) => {
-    if (e.key === "Escape" && isAdminMode.value) {
+    if (e.key === "Escape" && isAdminMode.value && !isInnerPreview.value) {
         exitAdmin();
         useRouter()
             .replace({ query: {} })
@@ -176,8 +195,8 @@ const onEscape = (e) => {
 onMounted(() => {
     isMounted.value = true;
     document.addEventListener("keydown", onEscape);
-    // Activate admin mode after hydration is complete — auth guarded
-    if (route.query.admin === "true" && !isPreviewMode.value) {
+
+    if (route.query.admin === "true" && !isPreviewMode.value && !isInnerPreview.value) {
         waitForAuth().then((user) => {
             if (user) {
                 isAdminMode.value = true;
@@ -186,12 +205,26 @@ onMounted(() => {
             }
         });
     }
-    // Restore preview device from URL (persisted across navigations)
+    if (route.query["preview-inner"] === "1") {
+        waitForAuth().then((user) => {
+            if (user) isAdminMode.value = true;
+        });
+    }
     if (["mobile", "tablet", "desktop"].includes(route.query.device)) {
         previewDevice.value = route.query.device;
     }
-    // Load footer from Firestore (always, not just admin mode)
     loadFooterBlock();
+
+    // Listen for block clicks from preview iframe
+    function onIframeMessage(e) {
+        if (e.data?.type === "block-click" && isAdminMode.value && !isInnerPreview.value) {
+            selectBlock(e.data.blockId)
+        }
+    }
+    window.addEventListener("message", onIframeMessage)
+    onUnmounted(() => {
+        window.removeEventListener("message", onIframeMessage)
+    })
 });
 onUnmounted(() => {
     document.removeEventListener("keydown", onEscape);
@@ -224,6 +257,9 @@ function onFooterClick(e) {
 #app-root.is-preview .site-header {
     top: 0;
 }
+#app-root.is-inner-preview {
+    background: white;
+}
 .admin-preview-frame {
     margin: 0 auto;
     width: 100%;
@@ -249,58 +285,11 @@ function onFooterClick(e) {
 .admin-preview-frame.preview-mobile {
     background: white;
 }
-/* In tablet/mobile preview the header should flow inside the constrained frame */
-.admin-preview-frame.preview-tablet .site-header,
-.admin-preview-frame.preview-mobile .site-header {
-    position: relative !important;
-    top: 0 !important;
-    left: auto !important;
-    right: auto !important;
-    width: auto !important;
-}
-/* Push content below fixed toolbar in preview frames */
-.admin-preview-frame.preview-tablet > .preview-tablet,
-.admin-preview-frame.preview-mobile > .preview-mobile {
-    margin-top: 48px;
-}
-/* Force mobile nav display in preview modes (viewport is desktop but we want mobile) */
-.admin-preview-frame.preview-tablet .site-header .nav-desktop,
-.admin-preview-frame.preview-mobile .site-header .nav-desktop {
-    display: none !important;
-}
-.admin-preview-frame.preview-tablet .site-header .burger,
-.admin-preview-frame.preview-mobile .site-header .burger {
-    display: flex !important;
-}
-/* Mobile nav positioning inside preview frame */
-.admin-preview-frame.preview-tablet .nav-mobile,
-.admin-preview-frame.preview-mobile .nav-mobile {
-    position: fixed !important;
-    top: 100% !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    max-height: calc(100vh - 48px - 52px);
-}
-/* Mobile header background on menu open in preview */
-.admin-preview-frame.preview-tablet .site-header.menu-open,
-.admin-preview-frame.preview-mobile .site-header.menu-open {
-    background: #064886 !important;
-    border-bottom: none !important;
-    box-shadow: none !important;
-}
-.admin-preview-frame.preview-tablet .site-header.menu-open .burger span,
-.admin-preview-frame.preview-mobile .site-header.menu-open .burger span {
-    background: white !important;
-}
-.admin-preview-frame.preview-tablet .site-header.menu-open .logo,
-.admin-preview-frame.preview-mobile .site-header.menu-open .logo {
-    filter: brightness(0) invert(1) !important;
-}
-/* Spacer is unnecessary when header is in flow */
-.admin-preview-frame.preview-tablet .header-spacer,
-.admin-preview-frame.preview-mobile .header-spacer {
-    display: none !important;
+.preview-iframe {
+    width: 100%;
+    height: calc(100vh - 48px - 24px);
+    border: none;
+    display: block;
 }
 .footer-editable-wrap {
     position: relative;

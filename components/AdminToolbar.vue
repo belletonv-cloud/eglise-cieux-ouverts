@@ -390,6 +390,7 @@ import { BLOCK_TYPES, ANIMATIONS } from "~/utils/blockTypes.js";
 const props = defineProps({
     pageSlug: { type: String, default: "" },
 });
+const emit = defineEmits(['navigate-preview'])
 
 const router = useRouter();
 const route = useRoute();
@@ -886,16 +887,13 @@ function loadCustomPages() {
 }
 
 async function navigateToPage(slug) {
-    const targetPath = slug === "accueil" ? "/" : `/${slug}`;
+    if (previewDevice.value !== "desktop") {
+        emit('navigate-preview', slug)
+        return
+    }
+    // Desktop mode: client-side navigation
     clearBlocks();
     const newQuery = { ...route.query, admin: "true", device: previewDevice.value };
-    const qs = new URLSearchParams(newQuery).toString();
-    // In iframe preview mode, full page reload so the iframe loads the new page
-    if (previewDevice.value !== "desktop") {
-        window.location.href = targetPath + "?" + qs;
-        return;
-    }
-    // Desktop mode: client-side navigation is fine
     try {
         if (isAdminMode) isAdminMode.value = true;
         const root =
@@ -907,12 +905,8 @@ async function navigateToPage(slug) {
         console.warn("navigateToPage: could not set admin-mode class", e);
     }
     try {
-        await router.push({ path: targetPath, query: newQuery });
-        try {
-            window.scrollTo(0, 0);
-        } catch (e) {
-            console.warn("AdminToolbar: scrollTo failed", e);
-        }
+        await router.push({ path: slug === "accueil" ? "/" : `/${slug}`, query: newQuery });
+        try { window.scrollTo(0, 0) } catch (e) { console.warn(e) }
     } catch (err) {
         console.error("navigateToPage: router.push failed", err);
     }

@@ -49,6 +49,18 @@ const editingBlockId = inject("editingBlockId", ref(null));
 const selectBlock = inject("selectBlock", () => {});
 const previewDevice = inject("previewDevice", ref("desktop"));
 
+// In iframe preview mode, forward block clicks to parent
+function onBlockSelected(id) {
+    selectBlock(id)
+    try {
+        if (typeof window !== 'undefined' && window.top !== window.self) {
+            window.parent.postMessage({ type: 'block-click', blockId: id }, '*')
+        }
+    } catch (e) {
+        console.warn("PageRenderer: postMessage failed", e)
+    }
+}
+
 // SSR detection: return true on server when ?admin=true, false on client initially
 const isServer = typeof window === "undefined" || !import.meta.client;
 const route = useRoute();
@@ -224,7 +236,7 @@ if (typeof window !== "undefined" && import.meta.client) {
                 const bid = wrapper.getAttribute("data-block-id");
                 if (bid) {
                     try {
-                        selectBlock(bid);
+                        onBlockSelected(bid);
                     } catch (e) {
                         console.error(
                             "PageRenderer.docClick: selectBlock failed",
@@ -263,7 +275,7 @@ if (typeof window !== "undefined" && import.meta.client) {
                 const bid = wrapper.getAttribute("data-block-id");
                 if (bid) {
                     try {
-                        selectBlock(bid);
+                        onBlockSelected(bid);
                     } catch (e) {
                         console.warn("PageRenderer.docPointer: selectBlock failed", e);
                     }
@@ -304,20 +316,8 @@ onUnmounted(() => {
         document.removeEventListener("pointerdown", docPointerHandler, true);
 });
 
-// Click wrapper handler that forwards to selectBlock.
-// When inside a preview iframe, sends a postMessage to the parent (admin toolbar)
-// so the sidebar can open for the clicked block.
 function wrapperClick(id) {
-    try {
-        // Detect if we're inside an iframe (preview mode)
-        if (typeof window !== "undefined" && window.top !== window.self) {
-            window.parent.postMessage({ type: "block-click", blockId: id }, "*");
-            return;
-        }
-        selectBlock(id);
-    } catch (e) {
-        console.warn("PageRenderer.wrapperClick: selectBlock threw", e);
-    }
+    onBlockSelected(id)
     try {
         if (editingBlockId && editingBlockId.value !== id) {
             editingBlockId.value = id;
