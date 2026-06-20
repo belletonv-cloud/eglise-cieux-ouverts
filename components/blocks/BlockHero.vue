@@ -1,6 +1,6 @@
 <template>
     <section
-        class="block-hero block-draggable block-main-hero"
+        class="block-hero block-main-hero"
         :data-block-id="blockId"
         :class="visibilityClasses"
         :style="{
@@ -16,26 +16,6 @@
         />
 
         <div class="hero-content" :class="{ 'hero-visible': visible }">
-            <div
-                v-if="$attrs['data-admin'] || showDragHandle"
-                class="block-draggable-handle"
-                style="
-                    width: 32px;
-                    height: 32px;
-                    background: rgba(0, 0, 0, 0.04);
-                    border-radius: 8px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    position: absolute;
-                    top: 16px;
-                    left: 16px;
-                    z-index: 3;
-                    cursor: move;
-                "
-            >
-                <span style="font-size: 1.6em">⠿</span>
-            </div>
             <template v-if="overlayText">
                 <h1 class="hero-title" :style="{ color: textColor }">
                     {{ overlayText }}
@@ -96,7 +76,6 @@ const visibilityClasses = computed(() => ({
     "hide-tablet": visibility.tablet === false,
     "hide-desktop": visibility.desktop === false,
 }));
-const showDragHandle = false;
 </script>
 
 <style scoped>
