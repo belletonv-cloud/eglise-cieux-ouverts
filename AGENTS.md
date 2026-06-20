@@ -5,7 +5,11 @@ Déployé sur Cloudflare Pages.
 
 ## URLs
 
-- **Production** : https://eglise-cieux-ouverts.pages.dev
+- **Production** (branche `main`) : https://eglise-cieux-ouverts.pages.dev
+  - Firebase : `eglise-cieux-ouverts` (prod)
+- **Recette/Qualif** (branche `recette`) : https://recette.eglise-cieux-ouverts.pages.dev
+  - Firebase : `eglise-cieux-ouverts-rec` (Spark gratuit)
+- **Dev local** : `npx nuxi dev` (utilise le projet Firebase prod — pas de risque vu le faible trafic)
 - **App de gestion** : https://eglise-app.pages.dev
 - **GitHub** : https://github.com/belletonv-cloud/eglise-cieux-ouverts
 
@@ -21,10 +25,12 @@ Déployé sur Cloudflare Pages.
 
 ## Déploiement (CI/CD)
 
-- **Branche** : `main`
-- **Push sur main** → Cloudflare Pages déploie automatiquement
+- **Production** (branche `main`) : push sur `main` → Cloudflare Pages déploie automatiquement
+- **Recette** (branche `recette`) : push sur `recette` → déploiement en preview sur `https://recette.eglise-cieux-ouverts.pages.dev`
+- Les variables d'environnement pour la recette sont configurées dans `deployment_configs.preview.env_vars` (via API Cloudflare). Elles utilisent le projet Firebase **eglise-cieux-ouverts-rec** (Spark gratuit).
+- La recette a sa propre base Firestore (vide), son Auth Google, et son Storage — isolée de la prod.
+- Pour basculer de main à recette : `git checkout recette && git merge main && git push origin recette`
 - **Build** : `nuxt build` (Nitro preset `cloudflare-pages`)
-- Vérifier que la branche est bien `main` (pas `master`)
 - ⚠️ **Ne pas utiliser `npm run deploy` localement** — le CI fait le déploiement automatiquement. La commande existe mais nécessite `wrangler login` (et le CI est plus fiable).
 
 ## Structure
