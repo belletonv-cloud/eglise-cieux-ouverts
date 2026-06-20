@@ -193,6 +193,9 @@
                 :model-value="sidebarBlock"
                 @update="onAutoUpdate"
             />
+            <p v-if="sidebarBlock && BLOCK_TYPES[sidebarBlock.type]?.animations !== 'wrapper'" class="admin-anim-note">
+                {{ BLOCK_TYPES[sidebarBlock.type]?.animations === 'none' ? 'Aucune animation configurable pour ce bloc.' : 'Animation CSS native — non modifiable dans l\'éditeur.' }}
+            </p>
             <div v-if="!editingFooter && hasImageFields" class="admin-image-section">
                 <p class="admin-image-section-label">Images</p>
                 <div class="uploader-controls">
@@ -1226,6 +1229,14 @@ async function saveChanges() {
     letter-spacing: 0.1em;
     color: #7c7c9a;
     margin-bottom: 8px;
+}
+.admin-anim-note {
+    font-size: 0.78em;
+    color: #888;
+    background: #f5f5f5;
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin: 8px 0;
 }
 .admin-sidebar-footer {
     padding: 12px 16px;
