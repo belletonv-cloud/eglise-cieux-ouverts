@@ -19,6 +19,9 @@
                 :is-triggered="isTriggered(block.id)"
                 :is-admin="isAdmin || undefined"
             />
+            <span v-if="isAdmin && !getAnimClass(block) && getAnimationStrategy(block.type) !== 'wrapper'" class="anim-native-badge">
+                {{ getAnimationStrategy(block.type) === 'none' ? 'Aucune animation' : 'Animation native' }}
+            </span>
         </div>
     </div>
 </template>
@@ -36,6 +39,7 @@ import {
 import {
     normalizeBlock,
     getAnimClass,
+    getAnimationStrategy,
     filterByVisibility,
     shouldUseTrigger,
 } from "~/lib/blocks/renderer";
@@ -378,6 +382,19 @@ watch(
 .admin-selected {
     outline: 2px solid #3b82f6;
     outline-offset: -2px;
+}
+.anim-native-badge {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    z-index: 10;
+    font-size: 0.65em;
+    background: rgba(107, 114, 128, 0.85);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 10px;
+    pointer-events: none;
+    white-space: nowrap;
 }
 </style>
 
