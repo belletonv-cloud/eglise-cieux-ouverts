@@ -25,13 +25,52 @@ Déployé sur Cloudflare Pages.
 
 ## Déploiement (CI/CD)
 
-- **Production** (branche `main`) : push sur `main` → Cloudflare Pages déploie automatiquement
-- **Recette** (branche `recette`) : push sur `recette` → déploiement en preview sur `https://recette.eglise-cieux-ouverts.pages.dev`
-- Les variables d'environnement pour la recette sont configurées dans `deployment_configs.preview.env_vars` (via API Cloudflare). Elles utilisent le projet Firebase **eglise-cieux-ouverts-rec** (Spark gratuit).
-- La recette a sa propre base Firestore (vide), son Auth Google, et son Storage — isolée de la prod.
-- Pour basculer de main à recette : `git checkout recette && git merge main && git push origin recette`
-- **Build** : `nuxt build` (Nitro preset `cloudflare-pages`)
-- ⚠️ **Ne pas utiliser `npm run deploy` localement** — le CI fait le déploiement automatiquement. La commande existe mais nécessite `wrangler login` (et le CI est plus fiable).
+### Workflow recommandé
+
+```
+Dev local (main)
+  ↓
+Recette (branche recette) ← tu valides sur https://recette.e[...].pages.dev
+  ↓
+Production (branche main)
+```
+
+```bash
+# 1. Dev local (travaille sur main)
+git checkout main
+npx nuxi dev
+
+# 2. Livrer en recette (test)
+git checkout recette
+git merge main
+git push origin recette
+
+# 3. Livrer en prod (quand recette est validé)
+git checkout main
+git merge recette
+git push origin main
+```
+
+### Build
+
+Le build sur Cloudflare utilise `bash build.sh` (pas `npm run build` directement).  
+Ce script exporte les variables Firebase de la recette quand `$CF_PAGES_BRANCH === "recette"`, puis appelle `npm ci && npm run build`.
+
+⚠️ `build.sh` contient la clé privée du service account Firebase recette — le dépôt est privé, pas de partage.
+
+### Robots
+
+En environnement `recette` : `<meta name="robots" content="noindex, nofollow">` est injecté automatiquement via `nuxt.config.ts` (conditionné sur `CF_PAGES_BRANCH`).  
+La prod (`main`) n'a pas ce tag — les moteurs indexent normalement.
+
+### Environnements Cloudflare
+
+| Environnement | Branche | Firebase | Déploiement |
+|---|---|---|---|
+| **Preview** | `recette` | `eglise-cieux-ouverts-rec` (isolé) | Auto : push sur `recette` |
+| **Production** | `main` | `eglise-cieux-ouverts` (prod) | Auto : push sur `main` |
+
+⚠️ **Ne pas utiliser `npm run deploy` localement** — la commande existe mais nécessite `wrangler login`. Le CI via GitHub est plus fiable.
 
 ## Structure
 
