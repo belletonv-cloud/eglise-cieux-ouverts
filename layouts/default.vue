@@ -110,6 +110,28 @@ function onNavigatePreview(slug) {
     previewSlug.value = slug
 }
 
+// Sync parent's localBlocks with the preview page's blocks (needed for sidebar in iframe mode)
+async function syncPreviewBlocks(slug, device) {
+    if (import.meta.server || device === 'desktop') return
+    try {
+        const res = await fetch(`/api/pages/${slug}`)
+        if (res.ok) {
+            const data = await res.json()
+            enterAdmin(data.blocks || [], slug)
+        }
+    } catch (e) {
+        console.warn('Failed to sync blocks for preview:', e)
+    }
+}
+
+watch(previewSlug, async (slug) => {
+    await syncPreviewBlocks(slug, previewDevice.value)
+})
+
+watch(previewDevice, async (device) => {
+    await syncPreviewBlocks(previewSlug.value, device)
+})
+
 async function waitForAuth() {
     if (import.meta.server || !import.meta.client) return null;
     const { $auth } = useNuxtApp();
