@@ -18,6 +18,9 @@ export default defineNuxtConfig({
   app: {
     head: {
       htmlAttrs: { lang: 'fr' },
+      meta: process.env.CF_PAGES_BRANCH === 'recette'
+        ? [{ name: 'robots', content: 'noindex, nofollow' }]
+        : [],
     },
     pageTransition: { name: 'page', mode: 'out-in' },
   },
