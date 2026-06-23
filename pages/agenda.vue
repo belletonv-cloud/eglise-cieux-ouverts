@@ -256,14 +256,6 @@ const filteredEvents = computed(() => {
     return ed.getMonth() === d.getMonth() && ed.getFullYear() === d.getFullYear()
   }).sort((a, b) => toDate(a.date) - toDate(b.date))
 
-  // Audit: log description length and content for investigation
-  if (process.client && typeof window !== 'undefined') {
-    filtered.forEach(evt => {
-      if (evt.description && evt.description.length < 30) {
-        console.warn('Event', evt.id, 'description may be short/truncated:', evt.description)
-      }
-    })
-  }
   return filtered
 })
 

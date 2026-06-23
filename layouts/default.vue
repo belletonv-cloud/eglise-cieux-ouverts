@@ -39,8 +39,9 @@
                 v-else-if="isMounted"
                 :src="previewIframeSrc"
                 :width="deviceWidth"
-                class="preview-iframe"
+                class="device-iframe"
                 :class="`preview-${previewDevice}`"
+                :style="{ width: deviceWidth ? deviceWidth + 'px' : '100%' }"
                 title="Aperçu mobile/tablet"
             />
         </div>
@@ -104,6 +105,12 @@ const previewIframeSrc = computed(() => {
         device: previewDevice.value,
     })
     return path + "?" + params.toString()
+})
+
+const deviceWidth = computed(() => {
+    if (previewDevice.value === "mobile") return "375"
+    if (previewDevice.value === "tablet") return "768"
+    return ""
 })
 
 function onNavigatePreview(slug) {
@@ -318,7 +325,7 @@ function onFooterClick(e) {
 #app-root.is-inner-preview .admin-toolbar {
     display: none !important;
 }
-.preview-iframe {
+.device-iframe {
     width: 100%;
     height: calc(100vh - 48px - 12px);
     border: none;

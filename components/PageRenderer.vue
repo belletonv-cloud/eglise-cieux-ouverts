@@ -1,5 +1,40 @@
 <template>
-    <div class="page-renderer" :class="{ 'admin-mode': isAdmin && isMounted }">
+    <div v-if="isAdmin && isMounted" class="page-renderer admin-mode">
+        <VueDraggable
+            :list="visibleBlocks"
+            handle=".drag-handle"
+            ghost-class="block-ghost"
+            animation="200"
+            tag="div"
+            :style="{ minHeight: '40px' }"
+            @update="onDragUpdate"
+        >
+        <div
+            v-for="block in visibleBlocks"
+            :key="block.id"
+            class="block-wrapper"
+            :class="[
+                getAnimClass(block),
+                { triggered: isTriggered(block.id) },
+                { 'admin-selected': isSelected(block) },
+            ]"
+            :ref="(el) => setWrapperRef(el, block.id)"
+            :data-block-id="block.id"
+            :data-block-type="block.type"
+        >
+            <span class="drag-handle">⠿</span>
+            <BlockRenderer
+                :block="block"
+                :is-triggered="isTriggered(block.id)"
+                :is-admin="true"
+            />
+            <span v-if="!getAnimClass(block) && getAnimationStrategy(block.type) !== 'wrapper'" class="anim-native-badge">
+                {{ getAnimationStrategy(block.type) === 'none' ? 'Aucune animation' : 'Animation native' }}
+            </span>
+        </div>
+    </VueDraggable>
+    </div>
+    <div v-else class="page-renderer" :class="{ 'admin-mode': isAdmin && isMounted }">
         <div
             v-for="block in visibleBlocks"
             :key="block.id"
@@ -46,6 +81,7 @@ import {
 import { useBlockAnimation } from "~/composables/useBlockAnimation";
 import { useAdmin } from "~/composables/useAdmin";
 import { useRoute } from "#app";
+import { VueDraggable } from 'vue-draggable-plus';
 
 const isAdmin = inject("isAdmin", ref(false));
 const isEditor = inject("isEditor", ref(false));
@@ -81,6 +117,24 @@ const props = defineProps({
 });
 
 const { reorderBlocks } = useAdmin();
+
+function onDragUpdate(evt) {
+    const { newIndex, oldIndex } = evt
+    if (newIndex === oldIndex) return
+    const movedBlock = visibleBlocks.value[oldIndex]
+    const reordered = fixedBlocks.value.slice()
+    const oldPos = reordered.findIndex(b => b.id === movedBlock.id)
+    if (oldPos === -1) return
+    const [item] = reordered.splice(oldPos, 1)
+    const insertAfter = newIndex < visibleBlocks.value.length - 1
+        ? visibleBlocks.value[newIndex >= oldIndex ? newIndex : newIndex]?.id
+        : null
+    const newPos = insertAfter
+        ? reordered.findIndex(b => b.id === insertAfter)
+        : reordered.length
+    reordered.splice(newPos >= 0 ? newPos : reordered.length, 0, item)
+    reorderBlocks(reordered)
+}
 
 const {
     triggeredBlocks,
@@ -395,6 +449,29 @@ watch(
     border-radius: 10px;
     pointer-events: none;
     white-space: nowrap;
+}
+.drag-handle {
+    position: absolute;
+    top: 50%;
+    left: -28px;
+    transform: translateY(-50%);
+    cursor: grab;
+    font-size: 18px;
+    color: #6b7280;
+    opacity: 0;
+    transition: opacity 0.15s;
+    user-select: none;
+    line-height: 1;
+    padding: 4px;
+    z-index: 20;
+}
+.admin-mode .block-wrapper:hover .drag-handle {
+    opacity: 1;
+}
+.block-ghost {
+    opacity: 0.4;
+    outline: 2px dashed #3b82f6;
+    outline-offset: -2px;
 }
 </style>
 

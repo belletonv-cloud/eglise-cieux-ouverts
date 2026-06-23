@@ -25,7 +25,7 @@ export function getAnimClass(block: BlockInstance): string {
 
 export function shouldUseTrigger(block: BlockInstance): boolean {
   const strategy = getAnimationStrategy(block.type);
-  return strategy === "wrapper" || strategy === "internal";
+  return strategy === "wrapper";
 }
 
 export function normalizeBlock(block: BlockInstance): BlockInstance {

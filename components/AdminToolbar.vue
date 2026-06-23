@@ -389,6 +389,9 @@ import {
     onAuthStateChanged,
 } from "firebase/auth";
 import { BLOCK_TYPES, ANIMATIONS } from "~/utils/blockTypes.js";
+import { useToast } from '~/composables/useToast'
+
+const { showToast } = useToast()
 
 const props = defineProps({
     pageSlug: { type: String, default: "" },
@@ -480,7 +483,7 @@ async function restoreVersion(versionId) {
         setTimeout(() => { saveStatus.value = "" }, 3000)
     } catch (e) {
         console.error('[admin] restore failed:', e)
-        alert("Erreur lors de la restauration : " + (e.message || e))
+        showToast("Erreur lors de la restauration : " + (e.message || e), 'toast-error')
     } finally {
         restoring.value = null
     }
@@ -560,7 +563,7 @@ async function addAdmin() {
         newAdminEmail.value = ''
     } catch (e) {
         console.error('[admin] addAdmin failed:', e)
-        alert("Erreur : " + (e.message || e))
+        showToast("Erreur : " + (e.message || e), 'toast-error')
     } finally {
         addingAdmin.value = false
     }
@@ -587,7 +590,7 @@ async function removeAdmin(email) {
         adminList.value = data.emails || []
     } catch (e) {
         console.error('[admin] removeAdmin failed:', e)
-        alert("Erreur : " + (e.message || e))
+        showToast("Erreur : " + (e.message || e), 'toast-error')
     } finally {
         removingAdmin.value = null
     }
@@ -611,10 +614,10 @@ async function setupFirstAdmin() {
         showAdminManager.value = false
         // Re-check admin status
         isAdminUser.value = true
-        alert("Vous êtes maintenant administrateur !")
+        showToast("Vous êtes maintenant administrateur !", 'toast-success')
     } catch (e) {
         console.error('[admin] setupFirstAdmin failed:', e)
-        alert("Erreur : " + (e.message || e))
+        showToast("Erreur : " + (e.message || e), 'toast-error')
     }
 }
 
@@ -625,7 +628,7 @@ onMounted(() => {
             isAdminUser.value = false;
             checkingAdmin.value = false;
             if (route.path !== '/admin') {
-                navigateTo('/admin', { replace: true })
+                navigateTo(`/admin?redirect=${encodeURIComponent(route.fullPath)}`, { replace: true })
             }
             return
         }
@@ -806,7 +809,7 @@ async function onAdminFileSelected(e) {
         await loadAdminUploadedImages();
     } catch (err) {
         console.error("Upload error", err);
-        alert("Erreur lors du téléversement : " + (err.message || err));
+        showToast("Erreur lors du téléversement : " + (err.message || err), 'toast-error');
     } finally {
         imagesLoading.value = false;
     }
@@ -871,9 +874,9 @@ async function saveFooterChanges() {
     try {
         await saveFooterBlock();
         markSaved();
-        alert("Footer sauvegardé !");
+        showToast("Footer sauvegardé !", 'toast-success');
     } catch (e) {
-        alert("Erreur lors de la sauvegarde du footer : " + e.message);
+        showToast("Erreur lors de la sauvegarde du footer : " + e.message, 'toast-error');
     }
 }
 
@@ -921,7 +924,7 @@ async function signInWithGoogle() {
         await signInWithPopup($auth, provider);
     } catch (e) {
         console.error("Login error:", e);
-        alert("Connexion échouée : " + e.message);
+        showToast("Connexion échouée : " + e.message, 'toast-error');
     }
 }
 
@@ -936,7 +939,7 @@ async function signOutAndExit() {
 
 async function saveChanges() {
     if (!user.value) {
-        alert("Connectez-vous pour sauvegarder.");
+        showToast("Connectez-vous pour sauvegarder.", 'toast-error');
         return;
     }
     saving.value = true;
@@ -952,7 +955,7 @@ async function saveChanges() {
         }, 2000);
     } catch (e) {
         console.error("Save error:", e);
-        alert("Erreur lors de la sauvegarde : " + (e.message || e));
+        showToast("Erreur lors de la sauvegarde : " + (e.message || e), 'toast-error');
     } finally {
         saving.value = false;
     }

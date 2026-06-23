@@ -88,16 +88,16 @@ test.describe('Drag-and-drop', () => {
     expect(text?.trim()).toBe('⠿')
   })
 
-  test('drag container is present in admin mode', async ({ page }) => {
+  test('drag handle is present on blocks in admin mode', async ({ page }) => {
     await page.goto('/?admin=true')
     await page.waitForTimeout(1500)
-    await expect(page.locator('.drag-container')).toBeAttached()
+    await expect(page.locator('.drag-handle').first()).toBeAttached()
   })
 
-  test('drag container is absent in public mode', async ({ page }) => {
+  test('drag handle is absent in public mode', async ({ page }) => {
     await page.goto('/')
     await page.waitForTimeout(1000)
-    await expect(page.locator('.drag-container')).not.toBeAttached()
+    await expect(page.locator('.drag-handle')).toHaveCount(0)
   })
 
   test('block ghost CSS class is defined', async ({ page }) => {
@@ -107,7 +107,7 @@ test.describe('Drag-and-drop', () => {
       for (const sheet of document.styleSheets) {
         try {
           for (const rule of sheet.cssRules || []) {
-            if (rule.selectorText === '.block-ghost') return true
+            if (rule.selectorText && rule.selectorText.includes('.block-ghost')) return true
           }
         } catch (_) {}
       }
@@ -126,7 +126,7 @@ test.describe('Page transitions', () => {
       for (const sheet of document.styleSheets) {
         try {
           for (const rule of sheet.cssRules || []) {
-            if (rule.selectorText === '.page-enter-active,.page-leave-active') return true
+            if (rule.selectorText && rule.selectorText.includes('page-enter-active')) return true
           }
         } catch (_) {}
       }

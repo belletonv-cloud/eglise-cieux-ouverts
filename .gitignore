@@ -44,3 +44,9 @@ messages.html
 # Standalone Node.js binaries
 node-v*.tar.gz
 reggae-songmaker/
+
+# GSD Planning files
+.planning/
+
+# Scratch test files
+tests/scratch/

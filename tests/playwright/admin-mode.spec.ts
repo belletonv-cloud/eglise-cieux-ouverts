@@ -117,7 +117,7 @@ test.describe('Boutons device — iframe preview', () => {
 
     const iframe = page.locator('.device-iframe')
     const src = await iframe.getAttribute('src')
-    expect(src).toContain('preview=true')
+    expect(src).toContain('preview-inner=1')
   })
 
   test('revenir en desktop supprime l iframe', async ({ page }) => {

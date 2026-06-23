@@ -1,9 +1,12 @@
 import { getAccessToken } from '../utils/firebase'
 
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token'
+// Note: in-memory rate limiting is best-effort on serverless (Cloudflare Pages).
+// Each cold start resets the map. For proper production rate limiting,
+// configure Cloudflare Edge Rate Limiting in the Cloudflare Dashboard.
 const RATE_LIMIT = {
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  maxRequests: 3, // max 3 requests per IP per window
+  windowMs: 15 * 60 * 1000,
+  maxRequests: 3,
 }
 const rateLimitStore = new Map()
 
@@ -14,16 +17,16 @@ function getRateLimitKey(event) {
 function checkRateLimit(key) {
   const now = Date.now()
   const entry = rateLimitStore.get(key)
-  
+
   if (!entry || now - entry.resetTime > RATE_LIMIT.windowMs) {
     rateLimitStore.set(key, { count: 1, resetTime: now })
     return { allowed: true, remaining: RATE_LIMIT.maxRequests - 1 }
   }
-  
+
   if (entry.count >= RATE_LIMIT.maxRequests) {
     return { allowed: false, remaining: 0, resetIn: Math.ceil((entry.resetTime + RATE_LIMIT.windowMs - now) / 1000) }
   }
-  
+
   entry.count++
   return { allowed: true, remaining: RATE_LIMIT.maxRequests - entry.count }
 }

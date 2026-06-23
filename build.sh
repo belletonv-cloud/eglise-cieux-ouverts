@@ -11,9 +11,11 @@ if [ "$CF_PAGES_BRANCH" = "recette" ]; then
   export NUXT_PUBLIC_FIREBASE_STORAGE_BUCKET="eglise-cieux-ouverts-rec.firebasestorage.app"
   export NUXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="32860980186"
   export NUXT_PUBLIC_FIREBASE_APP_ID="1:32860980186:web:ba5609bfd7a3e8484136e3"
-  export NUXT_FIREBASE_PROJECT_ID="eglise-cieux-ouverts-rec"
-  export NUXT_FIREBASE_CLIENT_EMAIL="firebase-adminsdk-fbsvc@eglise-cieux-ouverts-rec.iam.gserviceaccount.com"
-  export NUXT_FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCYH10eGJvypai6\nw+E8N+UQcRkg3CSvwlcKMZt73y2+UNfCMysvKz5Tb0nJGVaKSJb7ER9QdZ3p1AVZ\nsyunad0//Nf9vVdo4wWUlKqyrGQDJNUSGG/RfZA1Iku1mlPRa2LEjVGegAwalsVB\nqyfobW/zs1gOjSNByLfjaSfXEsrjp4AoTnOlCyXeZ2i/z7wnV5sXkWG73FA1/SoS\nxkYtErzlAChKIVNf8qeWiVX+gSYnoEX0h9xG8PqBmAVfcgtpvrSKObygzAJXQqrN\nof4W1k1TEI9EyTS9xWvKnMg28zGl38qDBfJiN5ftU47VHZyL/2/7qY8XtHxbNSb5\n9ihTaME3AgMBAAECggEAAOKIRjcal4dIjV6jjgAlqak4yaNz85src6x5nPyBf0sx\n12LEmXy8dMVWt0Ke5iU3BQHY+ISbU5Dh+1n/CVvDcA+wyP8MfBQwcqCnWUb+DfFL\nQOkUi/FJSDx03NIbjvphymgHMAXpimfeOS+6YvRuGHjDBytjU/7ZQRJbvGIylprf\nCsQAALbWxmUoKYosCyvWsE4h1PlTM0IE4No1VMCW9XMVU2Uu1VkVRXM/GEp4vBHn\n8bhtkitIT12Y74WK74jBJdVynH0aweJ5GOeVECjt58NrCRJthedA/LukbC7EDF+O\nfVc1bYgXGpO+ISU18dspFMzjU6vQPVLcnifqwXs7AQKBgQDHJgzT8eonqXs0ugeM\ni9bzj2BwaWeLHC15I++uOQPJbeffd+0SAiPyDv7zKMhbox/Wa1M4KhscFqJAI/Tk\n4EVcKDxJSm4uixLM9egpw6rAaYBzpxK7xzYzGDqiHrzNcftSKnQFcmvZXPku2Dit\n8MrxLByrKqDMNb/IyehNRK8pXwKBgQDDjJryoaQzfke11Dkw49rNpjCCpcn2YjuL\nMMbWZR+Vcci0NgRX8uwbzAcefVrXmiaj0ymoBv0amSIMpYSY4omBTKgg9CPQLb4N\nWzWJEsNposPOdyk7yPKZS+0MWrEB5dUChgYcLg9miDW6ZTv/osWTd06PUMm4Vha7\nexV7EUt/KQKBgCRJ1LCSNl6/zUmQVGvR13tONv6E1m9M1SRr3fLbRMthkYzw52wO\no8op3V8loUzBbr29lM55LbNylGInqypBi6H9Wu7n9yfYA7cBYCqsEuM41kU8vncl\nF8U7twNvomu1R1xzi+yqKujSvj1A/SME65YCub6e5+oOKUJHOGNMDrb1AoGAWHXv\n1lj3HfA/Ymr54DsDTUqj4UY8gb/YbdQH7w7Z5dIOWC+jcWHMG5sFkW5lvOjYF/47\ndu6KaxDhDVWHEV5Rk/Noj1fCJ7e5pPMg2bxqOAxQhcL0HT5/OIfXWWJhdplQ7g5R\nD0hq4Rg3LfYD2VX6CQbMvBpw1nnjWLaKdhzRyVkCgYA6amxuRxZE2TtwIDPy87dJ\nQV/3viZ9awjqJezGuedVbnkfYfAlQ2J9UvALyb6x+aMyqd4Mk0/5GMUTh8gOZpNA\nwYaHbKNQBzSIAU5wqkscv4t/XRXvrjWpgxpp7o5sTnGFu35bVGpTN1I/JWb1FkIz\nBEl2pweOjbvrOt+Jjr2hcg==\n-----END PRIVATE KEY-----\n"
+  export NUXT_FIREBASE_PROJECT_ID="${NUXT_FIREBASE_PROJECT_ID:-eglise-cieux-ouverts-rec}"
+  export NUXT_FIREBASE_CLIENT_EMAIL="${NUXT_FIREBASE_CLIENT_EMAIL:-firebase-adminsdk-fbsvc@eglise-cieux-ouverts-rec.iam.gserviceaccount.com}"
+  # Lire depuis les variables d'environnement Cloudflare Pages (set dans le dashboard)
+  # Si non défini, utiliser une valeur factice qui échouera gracieusement à l'exécution
+  export NUXT_FIREBASE_PRIVATE_KEY="${NUXT_FIREBASE_PRIVATE_KEY:-dummy-key-set-in-cloudflare-dashboard}"
 fi
 
 npm ci

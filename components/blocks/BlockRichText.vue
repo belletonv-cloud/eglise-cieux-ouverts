@@ -39,13 +39,11 @@ const {
   isTriggered: { type: Boolean, default: false },
 })
 const sectionRef = ref(null)
-const triggered = ref(false)
-const isEditor = inject('isEditor', false)
 const sanitizedContent = computed(() => content ? sanitizeHtml(content) : '')
 
 const animClass = computed(() => {
   if (!animation || animation === 'none') return ''
-  return `block-anim-${animation} ${triggered.value ? 'triggered' : ''}`
+  return `block-anim-${animation} ${isTriggered ? 'triggered' : ''}`
 })
 
 const visibilityClasses = computed(() => ({
@@ -53,18 +51,6 @@ const visibilityClasses = computed(() => ({
   'hide-tablet': visibility.tablet === false,
   'hide-desktop': visibility.desktop === false,
 }))
-
-onMounted(() => {
-  if (isTriggered || isEditor) {
-    triggered.value = true
-    return
-  }
-  const observer = new IntersectionObserver(
-    ([entry]) => { if (entry.isIntersecting) { triggered.value = true; observer.disconnect() } },
-    { threshold: 0.1 }
-  )
-  if (sectionRef.value) observer.observe(sectionRef.value)
-})
 </script>
 
 <style scoped>

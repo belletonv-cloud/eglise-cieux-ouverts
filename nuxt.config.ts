@@ -8,7 +8,7 @@ if (isCI && process.env.NODE_ENV === "production" && !process.env.NUXT_PUBLIC_FI
 }
 
 export default defineNuxtConfig({
-  css: ['~/assets/css/main.css', '~/assets/css/event-modal.css'],
+  css: ['~/assets/css/main.css', '~/assets/css/event-modal.css', '~/assets/css/no-js.css'],
   experimental: {
     appManifest: false
   },
