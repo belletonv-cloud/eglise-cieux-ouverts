@@ -35,10 +35,11 @@
 <span
   v-for="evt in getDayEvents(day)"
   :key="evt.id"
-  class="event-dot"
+  class="event-pill"
   :class="getEventColor(evt)"
   :title="evt.titre"
-></span>
+  @click.stop="openEventModal(evt)"
+>{{ evt.emoji || '•' }} {{ evt.titre }}</span>
               </div>
             </div>
           </div>
@@ -60,10 +61,11 @@
 <span
   v-for="evt in day.events"
   :key="evt.id"
-  class="event-dot"
+  class="event-pill"
   :class="getEventColor(evt)"
   :title="evt.titre"
-></span>
+  @click.stop="openEventModal(evt)"
+>{{ evt.emoji || '•' }} {{ evt.titre }}</span>
               </div>
             </div>
           </div>
@@ -413,8 +415,8 @@ function formatDayModalDate(date) {
 .day-number { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; font-size: 0.85em; font-weight: 500; color: #4b5563; border-radius: 50%; margin-bottom: 4px; transition: all .15s; }
 .day-number.today { background: #2563eb; color: #fff; font-weight: 700; }
 .day-cell.has-events .day-number { font-weight: 600; }
-.day-events { display: flex; flex-wrap: wrap; gap: 3px; padding: 0 2px; }
-.event-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.day-events { display: flex; flex-direction: column; gap: 2px; padding: 0; }
+.event-pill { font-size: 0.75em; padding: 1px 6px; border-radius: 3px; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; display: block; }
 .color-blue { background: #2563eb; }
 .color-red { background: #ef4444; }
 .color-orange { background: #f59e0b; }
@@ -499,17 +501,16 @@ function formatDayModalDate(date) {
 .day-modal-event-meta { display: flex; gap: 14px; font-size: 0.82em; color: #6b7280; flex-wrap: wrap; margin-left: 18px; }
 .day-modal-event-time, .day-modal-event-lieu { display: inline-flex; align-items: center; gap: 3px; }
 
-@media (min-width: 640px) {
-  .day-modal-overlay { align-items: center; }
-  .day-modal { border-radius: 12px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
-}
-
 @media (max-width: 700px) {
   .agenda-header { padding: 30px 16px 16px; }
   .agenda-title { font-size: 2em; }
   .agenda-calendar { padding: 0 8px 30px; }
   .day-cell { min-height: 70px; padding: 4px; }
   .day-number { width: 24px; height: 24px; font-size: 0.78em; }
+  .event-pill {
+    font-size: 0; width: 6px; height: 6px; padding: 0;
+    border-radius: 50%; pointer-events: none;
+  }
 }
 
 @media (max-width: 480px) {
