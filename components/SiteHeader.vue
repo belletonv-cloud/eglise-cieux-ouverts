@@ -602,6 +602,7 @@ onUnmounted(() => {
         display: flex;
         gap: 16px;
         justify-content: center;
+        align-self: stretch;
     }
     .nav-mobile-socials a {
         color: #064886;
