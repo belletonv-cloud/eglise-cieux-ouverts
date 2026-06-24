@@ -501,7 +501,7 @@ function formatDayModalDate(date) {
 .day-modal-event-meta { display: flex; gap: 14px; font-size: 0.82em; color: #6b7280; flex-wrap: wrap; margin-left: 18px; }
 .day-modal-event-time, .day-modal-event-lieu { display: inline-flex; align-items: center; gap: 3px; }
 
-@media (max-width: 700px) {
+@media (max-width: 768px) {
   .agenda-header { padding: 30px 16px 16px; }
   .agenda-title { font-size: 2em; }
   .agenda-calendar { padding: 0 8px 30px; }
