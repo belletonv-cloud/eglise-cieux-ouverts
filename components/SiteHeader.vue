@@ -575,7 +575,7 @@ onUnmounted(() => {
     .nav-links {
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 16px;
         padding: 20px 0;
         margin: auto;
     }
