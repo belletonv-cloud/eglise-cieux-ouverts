@@ -4,7 +4,7 @@
             <span class="admin-badge">Mode édition</span>
             <select
                 class="admin-page-select"
-                :value="pageSlug"
+                :value="currentSlug"
                 @change="navigateToPage($event.target.value)"
             >
                 <option value="accueil">Accueil</option>
@@ -400,6 +400,8 @@ const emit = defineEmits(['navigate-preview'])
 
 const router = useRouter();
 const route = useRoute();
+const currentSlug = ref(props.pageSlug)
+watch(() => props.pageSlug, (val) => { currentSlug.value = val })
 
 const {
     isAdminMode,
@@ -893,6 +895,7 @@ function loadCustomPages() {
 }
 
 async function navigateToPage(slug) {
+    currentSlug.value = slug
     if (previewDevice.value !== "desktop") {
         emit('navigate-preview', slug)
         return
