@@ -71,9 +71,6 @@
 
       <div class="calendar-footer">
         <span class="tz-label">🌍 Europe/Paris</span>
-        <a href="https://www.helloasso.com/associations/eglise-cieux-ouverts" target="_blank" rel="noopener" class="btn-subscribe">
-          Billetterie Événements
-        </a>
       </div>
     </section>
 
@@ -467,15 +464,16 @@ function formatDayModalDate(date) {
 .day-modal-overlay {
   position: fixed; inset: 0; z-index: 1000;
   background: rgba(0,0,0,0.3);
-  display: flex; align-items: flex-end; justify-content: center;
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
 }
 .day-modal {
-  background: #fff; border-radius: 16px 16px 0 0;
-  box-shadow: 0 -4px 24px rgba(0,0,0,0.1);
+  background: #fff; border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
   width: 100%; max-width: 480px;
   padding: 24px 20px 32px;
   position: relative;
-  max-height: 70vh; overflow-y: auto;
+  max-height: 80vh; overflow-y: auto;
 }
 .day-modal-close {
   position: absolute; top: 12px; right: 16px;
