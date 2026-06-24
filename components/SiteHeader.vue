@@ -108,36 +108,38 @@
         </div>
 
         <nav id="mobile-navigation" class="nav-mobile" :style="menuBgStyle">
-            <template v-for="item in navItems" :key="item.id">
-                <NuxtLink
-                    v-if="!isMounted || (!adminMode && item.visible !== false)"
-                    :to="item.to"
-                    >{{ item.label }}</NuxtLink
-                >
-                <a
-                    v-if="isMounted && adminMode"
-                    href="#"
-                    class="nav-admin-link"
-                    :class="{ dimmed: !item.visible }"
-                    @click.prevent="onNavClick($event, item)"
-                    >{{ item.label }}</a
-                >
-                <template v-for="sub in item.children || []" :key="sub.id">
+            <div class="nav-links">
+                <template v-for="item in navItems" :key="item.id">
                     <NuxtLink
-                        v-if="!adminMode && sub.visible !== false"
-                        :to="sub.to"
-                        class="sub-link"
-                        >— {{ sub.label }}</NuxtLink
+                        v-if="!isMounted || (!adminMode && item.visible !== false)"
+                        :to="item.to"
+                        >{{ item.label }}</NuxtLink
                     >
                     <a
-                        v-if="adminMode"
+                        v-if="isMounted && adminMode"
                         href="#"
-                        class="nav-admin-link sub-link"
-                        @click.prevent="onNavClick($event, sub)"
-                        >— {{ sub.label }}</a
+                        class="nav-admin-link"
+                        :class="{ dimmed: !item.visible }"
+                        @click.prevent="onNavClick($event, item)"
+                        >{{ item.label }}</a
                     >
+                    <template v-for="sub in item.children || []" :key="sub.id">
+                        <NuxtLink
+                            v-if="!adminMode && sub.visible !== false"
+                            :to="sub.to"
+                            class="sub-link"
+                            >— {{ sub.label }}</NuxtLink
+                        >
+                        <a
+                            v-if="adminMode"
+                            href="#"
+                            class="nav-admin-link sub-link"
+                            @click.prevent="onNavClick($event, sub)"
+                            >— {{ sub.label }}</a
+                        >
+                    </template>
                 </template>
-            </template>
+            </div>
             <div class="nav-mobile-socials">
                 <a
                     href="https://www.instagram.com/eglise_cieux_ouverts/"
@@ -551,8 +553,7 @@ onUnmounted(() => {
         background-size: cover;
         background-position: center center;
         background-repeat: no-repeat;
-        padding: 24px 16px 18px;
-        gap: 4px;
+        padding: 0 16px;
         overflow-y: auto;
         border-top: none;
         box-shadow: none;
@@ -568,9 +569,18 @@ onUnmounted(() => {
 
     .site-header.menu-open .nav-mobile {
         display: flex;
+        flex-direction: column;
     }
-    .nav-mobile a {
-        padding: 12px 0;
+    .nav-links {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding: 20px 0;
+        margin: auto;
+        width: 100%;
+    }
+    .nav-links a {
+        padding: 10px 0;
         font-size: 1.15em;
         font-weight: 700;
         color: #ffffff;
@@ -591,12 +601,11 @@ onUnmounted(() => {
         padding-left: 24px;
     }
     .nav-mobile-socials {
-        margin-top: auto;
-        padding: 24px 0 0;
+        padding: 20px 0 24px;
         display: flex;
         gap: 16px;
         justify-content: center;
-        align-self: stretch;
+        flex-shrink: 0;
     }
     .nav-mobile-socials a {
         color: #064886;
