@@ -552,11 +552,10 @@ onUnmounted(() => {
         background-position: center center;
         background-repeat: no-repeat;
         padding: 24px 16px 18px;
-        gap: 8px;
+        gap: 4px;
         overflow-y: auto;
         border-top: none;
         box-shadow: none;
-        align-items: flex-start;
     }
 
     .nav-mobile::before {
@@ -571,17 +570,12 @@ onUnmounted(() => {
         display: flex;
     }
     .nav-mobile a {
-        display: block;
-        width: 100%;
-        padding: 10px 0;
+        padding: 12px 0;
         font-size: 1.15em;
         font-weight: 700;
-        background: transparent;
-        border: none;
         color: #ffffff;
         text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
         text-decoration: none;
-        border-radius: 0;
     }
     .nav-mobile a:hover {
         text-decoration: underline;
