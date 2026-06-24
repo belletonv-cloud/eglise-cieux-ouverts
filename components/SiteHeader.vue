@@ -557,6 +557,7 @@ onUnmounted(() => {
         overflow-y: auto;
         border-top: none;
         box-shadow: none;
+        align-items: center;
     }
 
     .nav-mobile::before {
@@ -574,18 +575,22 @@ onUnmounted(() => {
     .nav-links {
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 8px;
         padding: 20px 0;
         margin: auto;
-        width: 100%;
     }
     .nav-links a {
-        padding: 10px 0;
+        padding: 8px 0;
         font-size: 1.15em;
         font-weight: 700;
         color: #ffffff;
         text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
         text-decoration: none;
+        text-align: left;
+    }
+    .nav-links a.sub-link,
+    .nav-links .nav-admin-link.sub-link {
+        padding-left: 20px;
     }
     .nav-mobile a:hover {
         text-decoration: underline;
@@ -606,6 +611,7 @@ onUnmounted(() => {
         gap: 16px;
         justify-content: center;
         flex-shrink: 0;
+        align-self: stretch;
     }
     .nav-mobile-socials a {
         color: #064886;
