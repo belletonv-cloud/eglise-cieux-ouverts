@@ -12,6 +12,7 @@
         <button class="nav-btn" @click="next">&#8250;</button>
         <div class="view-toggle">
           <button class="view-btn" :class="{ active: currentView === 'month' }" @click="currentView = 'month'">Mois</button>
+          <button class="view-btn" :class="{ active: currentView === 'next' }" @click="currentView = 'next'">Prochain</button>
           <button class="view-btn" :class="{ active: currentView === 'cards' }" @click="currentView = 'cards'">Cartes</button>
           <button class="view-btn" :class="{ active: currentView === 'agenda' }" @click="currentView = 'agenda'">Ordre du jour</button>
           <button class="view-btn" :class="{ active: currentView === 'week' }" @click="currentView = 'week'">Semaine</button>
@@ -77,10 +78,29 @@
     </section>
 
     <!-- Cartes / Ordre du jour -->
-    <section class="events-list-section" v-if="currentView === 'cards' || currentView === 'agenda'">
+    <section class="events-list-section" v-if="currentView === 'cards' || currentView === 'next' || currentView === 'agenda'">
       <div class="events-list-inner">
+        <div v-if="currentView === 'next'" class="next-events">
+          <div v-for="(g, i) in nextEvents" :key="i" class="next-event" @click="openEventModal(g.events[0])">
+            <div class="next-event-date">
+              <span class="next-event-day">{{ formatDay(g.date) }}</span>
+              <span class="next-event-month">{{ formatMonth(g.date) }}</span>
+            </div>
+            <div class="next-event-body">
+              <div v-for="evt in g.events" :key="evt.id" class="next-event-item">
+                <strong>{{ evt.titre }}</strong>
+                <span class="next-event-meta">
+                  <span v-if="evt.heure">🕙 {{ evt.heure }}</span>
+                  <span v-if="evt.lieu">📍 {{ evt.lieu }}</span>
+                </span>
+              </div>
+            </div>
+            <div class="next-event-arrow">›</div>
+          </div>
+          <p v-if="nextEvents.length === 0" class="empty-msg">Aucun événement à venir.</p>
+        </div>
         <div v-if="currentView === 'cards'" class="events-list">
-<article v-for="evt in filteredEvents" :key="evt.id" class="event-card" @click="openEventModal(evt)" style="cursor:pointer">
+          <article v-for="evt in filteredEvents" :key="evt.id" class="event-card" @click="openEventModal(evt)" style="cursor:pointer">
   <div style="position:relative;min-height:160px;width:100%">
   <template v-if="evt.images && evt.images.length">
     <EventImageSlider
@@ -216,7 +236,7 @@ const currentView = ref('month')
 
 onMounted(() => {
   const saved = localStorage.getItem('agenda_view')
-  if (saved && ['month','cards','agenda','week'].includes(saved)) {
+  if (saved && ['month','next','cards','agenda','week'].includes(saved)) {
     currentView.value = saved
   } else if (window.innerWidth < 480) {
     currentView.value = 'cards'
@@ -314,6 +334,19 @@ const filteredEvents = computed(() => {
   }).sort((a, b) => toDate(a.date) - toDate(b.date))
 
   return filtered
+})
+
+const nextEvents = computed(() => {
+  const seen = new Set()
+  const groups = {}
+  for (const evt of evenements.value) {
+    if (seen.has(evt.id)) continue
+    seen.add(evt.id)
+    const dateKey = toDate(evt.date).toDateString()
+    if (!groups[dateKey]) groups[dateKey] = { date: toDate(evt.date), events: [] }
+    groups[dateKey].events.push(evt)
+  }
+  return Object.values(groups).sort((a, b) => a.date - b.date)
 })
 
 const groupedByDate = computed(() => {
@@ -427,6 +460,25 @@ function formatDayModalDate(date) {
 .btn-subscribe { display: inline-block; padding: 10px 24px; background: #ef4444; color: white; font-size: 0.9em; font-weight: 700; border-radius: 8px; text-decoration: none; transition: background 0.2s; }
 .btn-subscribe:hover { background: #dc2626; }
 
+/* Prochain */
+.next-events { display: flex; flex-direction: column; gap: 12px; }
+.next-event {
+  display: flex; align-items: center; gap: 16px;
+  background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
+  padding: 16px 20px; cursor: pointer; transition: all .15s;
+}
+.next-event:hover { border-color: #2563eb; background: #f8faff; }
+.next-event-date {
+  display: flex; flex-direction: column; align-items: center;
+  min-width: 50px; flex-shrink: 0;
+}
+.next-event-day { font-size: 1.4em; font-weight: 800; color: #111827; line-height: 1.1; }
+.next-event-month { font-size: 0.7em; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: .04em; }
+.next-event-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.next-event-item strong { font-size: 0.95em; font-weight: 600; color: #111827; display: block; }
+.next-event-meta { display: flex; gap: 12px; font-size: 0.82em; color: #6b7280; flex-wrap: wrap; }
+.next-event-arrow { font-size: 1.3em; color: #d1d5db; flex-shrink: 0; }
+
 /* Cartes */
 .events-list-section { padding: 40px 24px; }
 .events-list-inner { max-width: 800px; margin: 0 auto; }
@@ -511,6 +563,8 @@ function formatDayModalDate(date) {
     font-size: 0; width: 6px; height: 6px; padding: 0;
     border-radius: 50%; pointer-events: none;
   }
+  .next-event { padding: 12px 14px; gap: 12px; }
+  .next-event-day { font-size: 1.2em; }
 }
 
 @media (max-width: 480px) {
