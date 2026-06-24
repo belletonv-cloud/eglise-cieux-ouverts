@@ -21,6 +21,7 @@
             :ref="(el) => setWrapperRef(el, block.id)"
             :data-block-id="block.id"
             :data-block-type="block.type"
+            @click.capture="wrapperClick(block.id)"
         >
             <span class="drag-handle">⠿</span>
             <BlockRenderer

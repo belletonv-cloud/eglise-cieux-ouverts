@@ -78,7 +78,7 @@ provide("selectBlock", selectBlock);
 provide("previewDevice", previewDevice);
 provide("isEditor", isAdminMode);
 const isMounted = ref(false);
-const { loadMenuFromFirestore, saveMenuToFirestore } = useMenuEditor();
+const { loadMenuFromFirestore, saveMenuToFirestore, openMenuEditor } = useMenuEditor();
 
 const route = useRoute();
 const currentPageSlug = computed(() => {
@@ -243,16 +243,36 @@ onMounted(() => {
         // Force scroll to top so page content starts at viewport top
         window.scrollTo(0, 0)
         try { history.scrollRestoration = 'manual' } catch (e) {}
+        // Intercept link clicks to forward navigation to parent
+        function onPreviewLinkClick(e) {
+            let el = e.target
+            while (el && el.tagName !== 'A') el = el.parentElement
+            if (!el) return
+            if (el.closest('.burger')) return
+            const href = el.getAttribute('href')
+            if (!href || href.startsWith('#') || href.startsWith('http') || href.startsWith('mailto:')) return
+            e.preventDefault()
+            const path = href.startsWith('/') ? href : '/' + href
+            const slug = path === '/' ? 'accueil' : path.replace(/^\//, '')
+            try { window.parent.postMessage({ type: 'navigate', slug }, '*') } catch (e) { console.warn(e) }
+        }
+        document.addEventListener('click', onPreviewLinkClick, true)
+        onUnmounted(() => document.removeEventListener('click', onPreviewLinkClick, true))
     }
     if (["mobile", "tablet", "desktop"].includes(route.query.device)) {
         previewDevice.value = route.query.device;
     }
     loadFooterBlock();
 
-    // Listen for block clicks from preview iframe
+    // Listen for messages from preview iframe
     function onIframeMessage(e) {
-        if (e.data?.type === "block-click" && isAdminMode.value && !isInnerPreview.value) {
+        if (!isAdminMode.value || isInnerPreview.value) return
+        if (e.data?.type === "block-click") {
             selectBlock(e.data.blockId)
+        } else if (e.data?.type === "navigate") {
+            onNavigatePreview(e.data.slug)
+        } else if (e.data?.type === "open-menu-editor") {
+            openMenuEditor()
         }
     }
     window.addEventListener("message", onIframeMessage)

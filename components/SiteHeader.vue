@@ -241,6 +241,10 @@ function onNavClick(e, item) {
 
 function toggleMenu() {
     if (adminMode.value) {
+        if (window !== window.top) {
+            try { window.parent.postMessage({ type: 'open-menu-editor' }, '*') } catch (e) { console.warn(e) }
+            return
+        }
         openMenuEditor();
     } else {
         menuOpen.value = !menuOpen.value;

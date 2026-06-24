@@ -406,6 +406,24 @@ npx tsx scripts/generate-tests.ts
 - `server/api/mock-snapshot.get.ts` — moved to `server/api/mock-snapshot/[slug].get.ts` (was reading `getRouterParam(event, 'slug')` from a static path, always returning null)
 - Updated import path: `../utils/firestore-mock.js` → `../../utils/firestore-mock.js`
 
+## Cache et déploiement
+
+### Cache strategy (`public/_headers`)
+
+Le fichier `public/_headers` définit les headers HTTP pour Cloudflare Pages :
+
+```
+/*
+  cache-control: no-cache
+/_nuxt/*
+  cache-control: public, max-age=31536000, immutable
+```
+
+- **Pages HTML (`/*`)** : `no-cache` — le navigateur revalide à chaque visite. Essentiel car le HTML référence des assets hashés (`_nuxt/HASH.js`). Sans ça, le cache navigateur/Cloudflare sert l'ancien HTML après un déploiement → l'ancien bundle JS est chargé → le nouveau code (VueDraggable, classes CSS, etc.) n'existe pas → les fonctionnalités admin (device preview, dropdown de pages) cassent jusqu'au hard refresh.
+- **Assets `/_nuxt/*`** : cache long (1 an, immutable) car les noms de fichiers changent à chaque build.
+
+👉 Si après un déploiement les utilisateurs voient l'ancienne version, **purger le cache Cloudflare** dans le dashboard ou attendre que `no-cache` fasse son effet.
+
 ### Test count
 - **Playwright E2E**: 152 tests (15 spec files) ✅
 - **Schema-driven**: 368 tests ✅
