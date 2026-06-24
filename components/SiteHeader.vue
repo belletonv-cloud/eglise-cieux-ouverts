@@ -453,8 +453,8 @@ onUnmounted(() => {
     inset: 0;
     background: linear-gradient(
         180deg,
-        rgba(6, 72, 134, 0.92),
-        rgba(6, 72, 134, 0.8)
+        rgba(0, 0, 0, 0.35),
+        rgba(0, 0, 0, 0.55)
     );
     z-index: -1;
 }
@@ -548,7 +548,6 @@ onUnmounted(() => {
         left: 0;
         right: 0;
         bottom: 0;
-        background-color: #064886;
         background-size: cover;
         background-position: center center;
         background-repeat: no-repeat;
@@ -557,14 +556,13 @@ onUnmounted(() => {
         overflow-y: auto;
         border-top: none;
         box-shadow: none;
-        background-image: none;
     }
 
     .nav-mobile::before {
         background: linear-gradient(
             180deg,
-            rgba(6, 72, 134, 1),
-            rgba(4, 48, 90, 1)
+            rgba(0, 0, 0, 0.35),
+            rgba(0, 0, 0, 0.6)
         );
     }
 
