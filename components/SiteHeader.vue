@@ -551,8 +551,8 @@ onUnmounted(() => {
         background-size: cover;
         background-position: center center;
         background-repeat: no-repeat;
-        padding: 0 20px 18px;
-        gap: 2px;
+        padding: 12px 20px 18px;
+        gap: 0;
         overflow-y: auto;
         border-top: none;
         box-shadow: none;
@@ -570,7 +570,8 @@ onUnmounted(() => {
         display: flex;
     }
     .nav-mobile a {
-        padding: 12px 16px;
+        padding: 14px 16px;
+        margin-bottom: 2px;
         font-size: 1.15em;
         font-weight: 700;
         background: transparent;
@@ -578,7 +579,10 @@ onUnmounted(() => {
         color: #ffffff;
         text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
         text-decoration: none;
-        border-radius: 8px;
+        border-radius: 10px;
+    }
+    .nav-mobile a:last-of-type {
+        margin-bottom: 0;
     }
     .nav-mobile a:hover {
         text-decoration: underline;
@@ -595,10 +599,10 @@ onUnmounted(() => {
     }
     .nav-mobile-socials {
         margin-top: auto;
-        padding: 16px 16px 0;
+        padding: 20px 16px 0;
         display: flex;
         gap: 16px;
-        justify-content: flex-start;
+        justify-content: center;
     }
     .nav-mobile-socials a {
         color: #064886;
