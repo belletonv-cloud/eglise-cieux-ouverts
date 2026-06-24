@@ -20,17 +20,18 @@
 
       <!-- Mois -->
       <template v-if="currentView === 'month'">
-        <div class="calendar-grid">
-          <div class="day-header" v-for="d in dayNames" :key="d">{{ d }}</div>
-          <div class="day-cell empty" v-for="_ in firstDayOfMonth" :key="'e' + _"></div>
-          <div
-            v-for="day in daysInMonth"
-            :key="day"
-            class="day-cell"
-            :class="{ today: isToday(day), 'has-events': getDayEvents(day).length > 0 }"
-          >
-            <span class="day-number" :class="{ today: isToday(day) }">{{ day }}</span>
-            <div class="day-events">
+        <div class="calendar-grid-wrap">
+          <div class="calendar-grid">
+            <div class="day-header" v-for="d in dayNames" :key="d">{{ d }}</div>
+            <div class="day-cell empty" v-for="_ in firstDayOfMonth" :key="'e' + _"></div>
+            <div
+              v-for="day in daysInMonth"
+              :key="day"
+              class="day-cell"
+              :class="{ today: isToday(day), 'has-events': getDayEvents(day).length > 0 }"
+            >
+              <span class="day-number" :class="{ today: isToday(day) }">{{ day }}</span>
+              <div class="day-events">
 <div
   v-for="evt in getDayEvents(day)"
   :key="evt.id"
@@ -41,6 +42,7 @@
 >
   {{ evt.emoji || '•' }} {{ evt.titre }}
 </div>
+              </div>
             </div>
           </div>
         </div>
@@ -48,16 +50,17 @@
 
       <!-- Semaine -->
       <template v-if="currentView === 'week'">
-        <div class="calendar-grid">
-          <div class="day-header" v-for="d in dayNames" :key="d">{{ d }}</div>
-          <div
-            v-for="day in weekDays"
-            :key="day.date"
-            class="day-cell"
-            :class="{ today: isToday(day.day), 'has-events': day.events.length > 0 }"
-          >
-            <span class="day-number" :class="{ today: isToday(day.day) }">{{ day.day }}</span>
-            <div class="day-events">
+        <div class="calendar-grid-wrap">
+          <div class="calendar-grid">
+            <div class="day-header" v-for="d in dayNames" :key="d">{{ d }}</div>
+            <div
+              v-for="day in weekDays"
+              :key="day.date"
+              class="day-cell"
+              :class="{ today: isToday(day.day), 'has-events': day.events.length > 0 }"
+            >
+              <span class="day-number" :class="{ today: isToday(day.day) }">{{ day.day }}</span>
+              <div class="day-events">
 <div
   v-for="evt in day.events"
   :key="evt.id"
@@ -68,6 +71,7 @@
 >
   {{ evt.emoji || '•' }} {{ evt.titre }}
 </div>
+              </div>
             </div>
           </div>
         </div>
@@ -456,8 +460,16 @@ function formatDayLabel(date) {
 
 
 @media (max-width: 480px) {
-  .calendar-nav { flex-wrap: wrap; }
+  .agenda-calendar { padding: 0 4px 20px; }
+  .calendar-nav { flex-wrap: wrap; gap: 8px; padding: 12px 0; }
   .view-toggle { order: -1; width: 100%; justify-content: center; margin-left: 0; }
-  .day-cell { min-height: 40px; }
+  .view-btn { font-size: 0.75em; padding: 4px 6px; }
+  .calendar-grid-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .calendar-grid { min-width: 420px; }
+  .day-cell { min-height: 40px; padding: 2px; font-size: 0.75em; }
+  .day-number { width: 18px; height: 18px; line-height: 18px; font-size: 0.75em; }
+  .event-pill { font-size: 0.6em; padding: 1px 3px; max-width: 100%; box-sizing: border-box; }
+  .day-header { font-size: 0.7em; padding: 6px 2px; }
+  .calendar-footer { flex-direction: column; gap: 8px; align-items: flex-start; }
 }
 </style>
