@@ -551,8 +551,8 @@ onUnmounted(() => {
         background-size: cover;
         background-position: center center;
         background-repeat: no-repeat;
-        padding: 0 12px 18px;
-        gap: 8px;
+        padding: 0 20px 18px;
+        gap: 2px;
         overflow-y: auto;
         border-top: none;
         box-shadow: none;
@@ -570,7 +570,7 @@ onUnmounted(() => {
         display: flex;
     }
     .nav-mobile a {
-        padding: 14px 16px;
+        padding: 12px 16px;
         font-size: 1.15em;
         font-weight: 700;
         background: transparent;
@@ -578,7 +578,7 @@ onUnmounted(() => {
         color: #ffffff;
         text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
         text-decoration: none;
-        border-radius: 0;
+        border-radius: 8px;
     }
     .nav-mobile a:hover {
         text-decoration: underline;
@@ -589,12 +589,16 @@ onUnmounted(() => {
         border-bottom: 2px solid #ffd9dc;
         text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
     }
+    .nav-mobile a.sub-link,
+    .nav-mobile .nav-admin-link.sub-link {
+        padding-left: 40px;
+    }
     .nav-mobile-socials {
         margin-top: auto;
-        padding: 16px;
+        padding: 16px 16px 0;
         display: flex;
-        gap: 20px;
-        justify-content: center;
+        gap: 16px;
+        justify-content: flex-start;
     }
     .nav-mobile-socials a {
         color: #064886;
