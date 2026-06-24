@@ -181,7 +181,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import EventModal from '~/components/EventModal.vue'
 import EventImageSlider from '~/components/EventImageSlider.vue'
 
@@ -194,6 +194,18 @@ useSeoMeta({
 const { evenements, loading } = useChurchEvents()
 const currentDate = ref(new Date())
 const currentView = ref('month')
+
+onMounted(() => {
+  const saved = localStorage.getItem('agenda_view')
+  if (saved && ['month','cards','agenda','week'].includes(saved)) {
+    currentView.value = saved
+  } else if (window.innerWidth < 480) {
+    currentView.value = 'cards'
+  }
+})
+watch(currentView, (v) => {
+  if (import.meta.client) localStorage.setItem('agenda_view', v)
+})
 
 // Nouvelle modale centrale
 const eventModal = ref({ open: false, event: null, imageIndex: 0 })
