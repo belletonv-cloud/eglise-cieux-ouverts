@@ -25,7 +25,7 @@
                 <button
                     class="device-btn"
                     :class="{ active: previewDevice === 'desktop' }"
-                    @click="previewDevice = 'desktop'"
+                    @click="setDevice('desktop')"
                     title="Desktop"
                 >
                     <svg
@@ -44,7 +44,7 @@
                 <button
                     class="device-btn"
                     :class="{ active: previewDevice === 'tablet' }"
-                    @click="previewDevice = 'tablet'"
+                    @click="setDevice('tablet')"
                     title="Tablet"
                 >
                     <svg
@@ -62,7 +62,7 @@
                 <button
                     class="device-btn"
                     :class="{ active: previewDevice === 'mobile' }"
-                    @click="previewDevice = 'mobile'"
+                    @click="setDevice('mobile')"
                     title="Mobile"
                 >
                     <svg
@@ -432,6 +432,12 @@ const {
 } = useAdmin();
 
 const { $auth } = useNuxtApp();
+
+function setDevice(device) {
+  previewDevice.value = device
+  const newQuery = { ...route.query, device }
+  router.replace({ query: newQuery }).catch(() => {})
+}
 const user = ref(null);
 const saving = ref(false);
 const saveStatus = ref("");

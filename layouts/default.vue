@@ -208,12 +208,7 @@ watch(isAdminMode, (val) => {
     }
 });
 
-watch(previewDevice, (device) => {
-    if (!isMounted.value) return;
-    const router = useRouter();
-    const query = { ...route.query, device };
-    router.replace({ query }).catch(() => {});
-});
+
 
 const onEscape = (e) => {
     if (e.key === "Escape" && isAdminMode.value && !isInnerPreview.value) {
