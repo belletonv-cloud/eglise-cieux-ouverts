@@ -601,7 +601,7 @@ onUnmounted(() => {
         padding: 24px 0 0;
         display: flex;
         gap: 16px;
-        justify-content: flex-start;
+        justify-content: center;
     }
     .nav-mobile-socials a {
         color: #064886;
