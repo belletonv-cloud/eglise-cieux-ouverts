@@ -148,6 +148,13 @@
                         </button>
                         <button
                             class="admin-btn admin-btn-secondary"
+                            @click="showEventManager = true"
+                            title="Gérer les événements"
+                        >
+                            📅 Événements
+                        </button>
+                        <button
+                            class="admin-btn admin-btn-secondary"
                             @click="signOutAndExit"
                         >
                             Quitter
@@ -378,6 +385,8 @@
         </div>
     </Teleport>
 
+    <AdminEventManager :open="showEventManager" @close="showEventManager = false" />
+
 </template>
 
 <script setup>
@@ -514,6 +523,7 @@ function formatDate(dateStr) {
 
 // Admin management
 const showAdminManager = ref(false);
+const showEventManager = ref(false);
 const adminList = ref([]);
 const newAdminEmail = ref('');
 const addingAdmin = ref(false);
