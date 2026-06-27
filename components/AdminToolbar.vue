@@ -832,12 +832,22 @@ async function onAdminFileSelected(e) {
         await uploadBytes(r, file);
         const url = await getDownloadURL(r);
         if (sidebarBlock.value) {
-            if (editingFooter.value) {
-                updateFooterBlock({ [fieldKeysWithImages.value[0]]: url });
+            const key = fieldKeysWithImages.value[0];
+            if (!key) return;
+            if (fieldKeysImagesArray.value.includes(key)) {
+                const existing = sidebarBlock.value.props?.[key] ?? [];
+                const newArray = Array.isArray(existing) ? [...existing, url] : [url];
+                if (editingFooter.value) {
+                    updateFooterBlock({ [key]: newArray });
+                } else {
+                    updateBlock(sidebarBlock.value.id, { [key]: newArray });
+                }
             } else {
-                updateBlock(sidebarBlock.value.id, {
-                    [fieldKeysWithImages.value[0]]: url,
-                });
+                if (editingFooter.value) {
+                    updateFooterBlock({ [key]: url });
+                } else {
+                    updateBlock(sidebarBlock.value.id, { [key]: url });
+                }
             }
         }
         await loadAdminUploadedImages();
@@ -852,7 +862,13 @@ async function onAdminFileSelected(e) {
 const fieldKeysWithImages = computed(() => {
     if (!sidebarBlock.value) return [];
     const schema = sidebarSchema.value;
-    return schema.filter((f) => f.type === "image").map((f) => f.key);
+    return schema.filter((f) => f.type === "image" || f.type === "images").map((f) => f.key);
+});
+
+const fieldKeysImagesArray = computed(() => {
+    if (!sidebarBlock.value) return [];
+    const schema = sidebarSchema.value;
+    return schema.filter((f) => f.type === "images").map((f) => f.key);
 });
 
 async function loadAdminUploadedImages() {
@@ -884,13 +900,22 @@ function toggleAdminImagesList() {
 }
 
 function selectAdminUploaded(url) {
-    if (sidebarBlock.value && fieldKeysWithImages.value.length > 0) {
+    if (!sidebarBlock.value) return;
+    const key = fieldKeysWithImages.value[0];
+    if (!key) return;
+    if (fieldKeysImagesArray.value.includes(key)) {
+        const existing = sidebarBlock.value.props?.[key] ?? [];
+        const newArray = Array.isArray(existing) ? [...existing, url] : [url];
         if (editingFooter.value) {
-            updateFooterBlock({ [fieldKeysWithImages.value[0]]: url });
+            updateFooterBlock({ [key]: newArray });
         } else {
-            updateBlock(sidebarBlock.value.id, {
-                [fieldKeysWithImages.value[0]]: url,
-            });
+            updateBlock(sidebarBlock.value.id, { [key]: newArray });
+        }
+    } else {
+        if (editingFooter.value) {
+            updateFooterBlock({ [key]: url });
+        } else {
+            updateBlock(sidebarBlock.value.id, { [key]: url });
         }
     }
     showAdminImagesList.value = false;
