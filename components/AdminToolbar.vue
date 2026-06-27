@@ -290,7 +290,7 @@
         <div v-if="showVersionHistory" class="version-modal-overlay" @click.self="showVersionHistory = false">
             <div class="version-modal">
                 <div class="version-modal-header">
-                    <h3>Historique des versions — {{ props.pageSlug }}</h3>
+                    <h3>Historique des versions — {{ props.pageSlug }} <span v-if="versions.length" class="version-count">{{ versions.length }}</span></h3>
                     <button class="version-modal-close" @click="showVersionHistory = false">✕</button>
                 </div>
                 <div class="version-modal-body">
@@ -307,6 +307,14 @@
                             <div class="version-info">
                                 <span class="version-date">{{ formatDate(v.savedAt) }}</span>
                                 <span class="version-author">{{ v.savedBy }}</span>
+                                <div class="version-meta">
+                                    <span class="version-blocks">{{ v.blockCount }} blocs</span>
+                                    <span v-if="v.blockTypes" class="version-types">{{ getBlockTypesLabel(v.blockTypes) }}</span>
+                                    <span v-if="v.changes" class="version-changes" :class="{ 'version-added': v.changes.added > 0, 'version-removed': v.changes.removed > 0, 'version-modified': v.changes.modified > 0 && !v.changes.added && !v.changes.removed }">
+                                        {{ v.changes.summary }}
+                                    </span>
+                                    <span v-if="v === versions[0]" class="version-current">Actuelle</span>
+                                </div>
                             </div>
                             <button
                                 class="admin-btn admin-btn-secondary"
@@ -405,6 +413,7 @@ const { showToast } = useToast()
 const props = defineProps({
     pageSlug: { type: String, default: "" },
 });
+const emit = defineEmits(['navigate-preview'])
 
 const router = useRouter();
 const route = useRoute();
@@ -503,6 +512,14 @@ async function restoreVersion(versionId) {
     } finally {
         restoring.value = null
     }
+}
+
+function getBlockTypesLabel(typeCounts) {
+    if (!typeCounts) return ''
+    return Object.entries(typeCounts).map(([type, count]) => {
+        const label = BLOCK_TYPES[type]?.label || type
+        return count > 1 ? `${label} ×${count}` : label
+    }).join(', ')
 }
 
 function formatDate(dateStr) {
@@ -911,6 +928,11 @@ function loadCustomPages() {
 
 async function navigateToPage(slug) {
     currentSlug.value = slug
+    if (previewDevice.value !== "desktop") {
+        emit('navigate-preview', slug)
+        return
+    }
+    // Desktop mode: client-side navigation
     clearBlocks();
     const newQuery = { ...route.query, admin: "true", device: previewDevice.value };
     try {
@@ -1402,6 +1424,48 @@ async function saveChanges() {
 .version-author {
     font-size: 12px;
     color: #888;
+}
+.version-meta {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 2px;
+}
+.version-blocks {
+    font-size: 11px;
+    color: #666;
+    font-weight: 500;
+}
+.version-types {
+    font-size: 11px;
+    color: #555;
+}
+.version-changes {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 1px 5px;
+    border-radius: 3px;
+}
+.version-changes.version-added {
+    color: #059669;
+    background: #ecfdf5;
+}
+.version-changes.version-removed {
+    color: #dc2626;
+    background: #fef2f2;
+}
+.version-changes.version-modified {
+    color: #d97706;
+    background: #fffbeb;
+}
+.version-current {
+    font-size: 10px;
+    font-weight: 700;
+    color: #2563eb;
+    background: #eff6ff;
+    padding: 1px 5px;
+    border-radius: 3px;
+    text-transform: uppercase;
 }
 
 /* Admin manager */

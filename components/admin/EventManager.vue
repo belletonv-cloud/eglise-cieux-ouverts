@@ -52,7 +52,24 @@
               </select>
             </label>
             <label>Emoji <input v-model="form.emoji" type="text" maxlength="5" /></label>
-            <label>Image <input v-model="form.image_url" type="url" placeholder="https://..." /></label>
+            <div class="event-image-section">
+              <label class="event-image-label">Image</label>
+              <div class="event-image-controls">
+                <input v-model="form.image_url" type="url" placeholder="https://..." />
+                <input ref="eventFileInput" type="file" accept="image/*" class="file-input-hidden" @change="onFileSelected" />
+                <button class="event-btn-sec" type="button" @click="eventFileInput?.click()">Téléverser</button>
+                <button v-if="uploadedImages.length" class="event-btn-sec" type="button" @click="toggleUploadedList">Uploadées ({{ uploadedImages.length }})</button>
+              </div>
+              <img v-if="form.image_url" :src="form.image_url" class="event-image-preview" alt="" />
+              <div v-if="showUploadedList" class="event-uploaded-list">
+                <div v-if="imagesLoading" class="event-status">Chargement...</div>
+                <div v-else class="event-uploaded-grid">
+                  <div v-for="(url, i) in uploadedImages" :key="i" class="event-uploaded-item" :class="{ selected: url === form.image_url }" @click="form.image_url = url">
+                    <img :src="url" alt="" />
+                  </div>
+                </div>
+              </div>
+            </div>
             <label>Lien <input v-model="form.link" type="url" placeholder="https://..." /></label>
             <label>Billetterie <input v-model="form.ticket_url" type="url" placeholder="https://..." /></label>
             <label>Statut
@@ -61,6 +78,17 @@
                 <option value="cancelled">Annulé</option>
               </select>
             </label>
+
+            <div v-if="form.repeat_period" class="event-section">
+              <h4>Prochaines dates</h4>
+              <div class="next-dates-list">
+                <div v-for="(d, i) in nextOccurrences" :key="i" class="next-date-item">
+                  <span class="next-date-num">{{ i + 1 }}.</span>
+                  <span>{{ formatDateShort(d) }}</span>
+                  <span class="next-date-day">{{ d.toLocaleDateString('fr-FR', { weekday: 'long' }) }}</span>
+                </div>
+              </div>
+            </div>
 
             <div v-if="editing" class="event-section">
               <h4>Exceptions</h4>
@@ -102,7 +130,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 
 const props = defineProps({ open: Boolean })
 const emit = defineEmits(['close'])
@@ -118,6 +146,39 @@ const saving = ref(false)
 const formError = ref('')
 
 const newEx = ref({ type: 'cancelled', exception_date: '', new_date: '' })
+
+// Image upload
+const eventFileInput = ref(null)
+const uploadedImages = ref([])
+const showUploadedList = ref(false)
+const imagesLoading = ref(false)
+const uploadSaving = ref(false)
+
+const nextOccurrences = computed(() => {
+  if (!form.value.repeat_period || !form.value.start_date) return []
+  const now = new Date()
+  now.setHours(0, 0, 0, 0)
+  const start = new Date(form.value.start_date + 'T00:00:00')
+  const results = []
+  let d = new Date(start)
+  if (d < now) {
+    if (form.value.repeat_period === 'week') { while (d < now) d.setDate(d.getDate() + 7) }
+    else if (form.value.repeat_period === 'month') { while (d < now) d.setMonth(d.getMonth() + 1) }
+  }
+  let count = 0
+  while (count < 6 && count < 100) {
+    const dateStr = d.toISOString().slice(0, 10)
+    const cancelled = (form.value.exceptions || []).some(ex => ex.exception_date === dateStr && ex.type === 'cancelled')
+    if (!cancelled) {
+      results.push(new Date(d))
+      count++
+    }
+    if (form.value.repeat_period === 'week') d.setDate(d.getDate() + 7)
+    else if (form.value.repeat_period === 'month') d.setMonth(d.getMonth() + 1)
+    else break
+  }
+  return results
+})
 
 const form = ref({
   title: '', description: '', start_date: '', end_date: '',
@@ -240,6 +301,52 @@ async function deleteEvent() {
 
 function formatDay(d) { return d.toLocaleDateString('fr-FR', { day: '2-digit' }) }
 function formatMonth(d) { return d.toLocaleDateString('fr-FR', { month: 'short' }).toUpperCase() }
+function formatDateShort(d) {
+  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })
+}
+
+// Image upload
+async function onFileSelected(e) {
+  const file = e.target.files && e.target.files[0]
+  if (!file) return
+  uploadSaving.value = true
+  try {
+    const { getStorage, ref: storageRef, uploadBytes, getDownloadURL } = await import('firebase/storage')
+    const storage = getStorage()
+    const path = `uploads/${Date.now()}_${file.name}`
+    const r = storageRef(storage, path)
+    await uploadBytes(r, file)
+    form.value.image_url = await getDownloadURL(r)
+    await loadUploadedImages()
+  } catch (err) {
+    console.error('Upload error', err)
+    formError.value = 'Erreur de téléversement'
+  } finally {
+    uploadSaving.value = false
+    if (e.target) e.target.value = ''
+  }
+}
+
+async function loadUploadedImages() {
+  imagesLoading.value = true
+  try {
+    const { getStorage, ref: storageRef, listAll, getDownloadURL } = await import('firebase/storage')
+    const storage = getStorage()
+    const listRef = storageRef(storage, 'uploads')
+    const res = await listAll(listRef)
+    uploadedImages.value = await Promise.all(res.items.map(i => getDownloadURL(i)))
+  } catch (err) {
+    console.error('Load images error', err)
+    uploadedImages.value = []
+  } finally {
+    imagesLoading.value = false
+  }
+}
+
+function toggleUploadedList() {
+  showUploadedList.value = !showUploadedList.value
+  if (showUploadedList.value) loadUploadedImages()
+}
 
 watch(() => props.open, (v) => { if (v) fetchEvents() })
 </script>
@@ -332,4 +439,23 @@ watch(() => props.open, (v) => { if (v) fetchEvents() })
 .exception-add select, .exception-add input { padding: 6px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.82em; }
 .exception-add button { padding: 6px 12px; background: #2563eb; color: #fff; border: none; border-radius: 6px; font-size: 0.82em; cursor: pointer; }
 .exception-add button:hover { background: #1d4ed8; }
+
+.event-image-section { border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.event-image-label { font-size: 0.85em; font-weight: 600; color: #374151; }
+.event-image-controls { display: flex; gap: 6px; flex-wrap: wrap; }
+.event-image-controls input[type="url"] { flex: 1; min-width: 120px; }
+.event-image-controls input[type="url"] { padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9em; }
+.event-image-preview { max-width: 100%; max-height: 120px; object-fit: cover; border-radius: 6px; }
+.file-input-hidden { display: none; }
+.event-uploaded-list { max-height: 180px; overflow-y: auto; }
+.event-uploaded-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.event-uploaded-item { border: 2px solid transparent; border-radius: 6px; overflow: hidden; cursor: pointer; }
+.event-uploaded-item:hover { border-color: #93c5fd; }
+.event-uploaded-item.selected { border-color: #2563eb; }
+.event-uploaded-item img { width: 100%; height: 60px; object-fit: cover; display: block; }
+
+.next-dates-list { display: flex; flex-direction: column; gap: 4px; }
+.next-date-item { display: flex; align-items: center; gap: 8px; font-size: 0.85em; color: #374151; padding: 4px 8px; background: #f9fafb; border-radius: 4px; }
+.next-date-num { font-weight: 700; color: #2563eb; min-width: 16px; }
+.next-date-day { color: #6b7280; font-size: 0.9em; }
 </style>
