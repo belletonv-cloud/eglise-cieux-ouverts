@@ -405,7 +405,6 @@ const { showToast } = useToast()
 const props = defineProps({
     pageSlug: { type: String, default: "" },
 });
-const emit = defineEmits(['navigate-preview'])
 
 const router = useRouter();
 const route = useRoute();
@@ -912,11 +911,6 @@ function loadCustomPages() {
 
 async function navigateToPage(slug) {
     currentSlug.value = slug
-    if (previewDevice.value !== "desktop") {
-        emit('navigate-preview', slug)
-        return
-    }
-    // Desktop mode: client-side navigation
     clearBlocks();
     const newQuery = { ...route.query, admin: "true", device: previewDevice.value };
     try {
