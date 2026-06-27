@@ -102,7 +102,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 
 const props = defineProps({ open: Boolean })
 const emit = defineEmits(['close'])
@@ -241,7 +241,7 @@ async function deleteEvent() {
 function formatDay(d) { return d.toLocaleDateString('fr-FR', { day: '2-digit' }) }
 function formatMonth(d) { return d.toLocaleDateString('fr-FR', { month: 'short' }).toUpperCase() }
 
-if (props.open) fetchEvents()
+watch(() => props.open, (v) => { if (v) fetchEvents() })
 </script>
 
 <style scoped>
