@@ -20,7 +20,9 @@
             <!-- Desktop: inline rendering (blocks editable) -->
             <div v-if="previewDevice === 'desktop' || isInnerPreview" :class="deviceClass">
                 <SiteHeader />
-                <slot />
+                <main class="site-main">
+                    <slot />
+                </main>
                 <div
                     class="footer-editable-wrap"
                     :class="{ 'admin-selected': editingFooter }"

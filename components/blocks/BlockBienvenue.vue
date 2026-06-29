@@ -7,6 +7,7 @@
             src="/images/bienvenue-foule.png"
             alt="Foule Croix"
             class="bienvenue-img"
+            loading="lazy"
         />
 
         <div class="bienvenue-content">

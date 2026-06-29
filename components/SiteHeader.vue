@@ -5,11 +5,11 @@
         :style="headerStyle"
     >
         <div class="header-inner">
-            <NuxtLink to="/" class="brand">
+            <NuxtLink to="/" class="brand" aria-label="Accueil — Cieux Ouverts">
                 <img src="/logo-nav.png" alt="Cieux Ouverts" class="logo" />
             </NuxtLink>
 
-            <nav class="nav-desktop">
+            <nav class="nav-desktop" aria-label="Navigation principale">
                 <template v-for="item in navItems" :key="item.id">
                     <!-- Render NuxtLink on SSR (isMounted=false) or when not in admin mode.
                When admin mode is active on the client, render plain anchors that
@@ -107,7 +107,7 @@
             </button>
         </div>
 
-        <nav id="mobile-navigation" class="nav-mobile" :style="menuBgStyle">
+        <nav id="mobile-navigation" class="nav-mobile" aria-label="Navigation mobile" :style="menuBgStyle">
             <div class="nav-links">
                 <template v-for="item in navItems" :key="item.id">
                     <NuxtLink

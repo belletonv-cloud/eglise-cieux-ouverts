@@ -12,6 +12,7 @@
                 <option value="messages">Messages</option>
                 <option value="event-list">Événements</option>
                 <option value="agenda">Agenda</option>
+                <option value="photos">Photos</option>
                 <option v-for="p in customPages" :key="p.slug" :value="p.slug">{{ p.slug }}</option>
             </select>
         </div>

@@ -139,6 +139,8 @@ test.describe('Page transitions', () => {
 test.describe('Auto-save', () => {
 
   test('login button is visible in admin toolbar when logged out', async ({ page }) => {
+    // Force l'état déconnecté (le mock auth fournit un user par défaut).
+    await page.addInitScript(() => { (window as any).__MOCK_AUTH_RESULT = null })
     await page.goto('/?admin=true')
     await page.waitForTimeout(1500)
     await expect(page.locator('.admin-btn-login')).toBeVisible()
@@ -198,8 +200,10 @@ test.describe('Admin mode UI integrity', () => {
   test('server-side renders without errors in admin mode', async ({ page }) => {
     const errors: string[] = []
     page.on('pageerror', err => errors.push(err.message))
-    await page.goto('/?admin=true', { waitUntil: 'networkidle' })
-    await page.waitForTimeout(1000)
+    // 'load' plutôt que 'networkidle' : la connexion temps réel Firebase
+    // garde le réseau actif, donc networkidle ne se stabilise jamais.
+    await page.goto('/?admin=true', { waitUntil: 'load' })
+    await page.waitForTimeout(1500)
     expect(errors.length).toBe(0)
   })
 })

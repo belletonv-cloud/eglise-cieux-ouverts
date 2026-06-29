@@ -23,7 +23,9 @@
             :ref="(el) => setWrapperRef(el, block.id)"
             :data-block-id="block.id"
             :data-block-type="block.type"
+            tabindex="0"
             @click.capture="wrapperClick(block.id)"
+            @keydown.enter.prevent="wrapperClick(block.id)"
         >
             <span class="drag-handle">⠿</span>
             <BlockRenderer

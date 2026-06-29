@@ -13,7 +13,7 @@
           class="gallery-item"
           @click="openLightbox(i)"
         >
-          <img :src="img.src" :alt="img.alt ?? ''" class="gallery-img" />
+          <img :src="img.src" :alt="img.alt ?? ''" class="gallery-img" loading="lazy" />
           <div v-if="img.caption" class="gallery-caption">{{ img.caption }}</div>
         </div>
       </div>

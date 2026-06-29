@@ -1,6 +1,6 @@
 <template>
   <div class="block-image">
-    <img :src="src" alt="Image de contenu" v-if="src" />
+    <img :src="src" alt="Image de contenu" v-if="src" loading="lazy" />
     <button v-if="editable" @click="pick">Choisir une image</button>
   </div>
 </template>

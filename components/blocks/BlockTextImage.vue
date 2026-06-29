@@ -15,13 +15,13 @@
         <div v-if="visualStyle === 'messagesLaptop'" class="ti-laptop-shell">
           <div class="ti-laptop-screen-frame">
             <div class="ti-laptop-content">
-              <img v-if="image" :src="image" :alt="title" class="ti-img" />
+              <img v-if="image" :src="image" :alt="title" class="ti-img" loading="lazy" />
               <div v-else class="ti-img-placeholder">🖼️</div>
             </div>
           </div>
           <div class="ti-laptop-base"></div>
         </div>
-        <img v-else-if="image" :src="image" :alt="title" class="ti-img" />
+        <img v-else-if="image" :src="image" :alt="title" class="ti-img" loading="lazy" />
         <div v-else class="ti-img-placeholder">🖼️</div>
       </div>
     </div>

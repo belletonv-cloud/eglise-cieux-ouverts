@@ -73,7 +73,8 @@ test.describe('BlockTextImage — Schema-driven tests', () => {
   })
 
   test('wrapper gets admin-selected on click', async ({ page }) => {
-    await page.goto('/?admin=true')
+    // Le bloc textImage vit sur la page Messages, pas sur l'accueil.
+    await page.goto('/messages?admin=true')
     await page.waitForTimeout(3000)
     const block = page.locator('.block-textimage').first()
     await expect(block).toBeVisible()
@@ -111,7 +112,8 @@ test.describe('BlockTextImage — Schema-driven tests', () => {
   // ─── Admin editor tests ─────────────────────────────────────────────────
 
   test('schema fields appear in admin sidebar AutoEditor', async ({ page }) => {
-    await page.goto('/?admin=true')
+    // Le bloc textImage vit sur la page Messages, pas sur l'accueil.
+    await page.goto('/messages?admin=true')
     await page.waitForTimeout(3000)
     const block = page.locator('.block-textimage').first()
     await block.locator('..').click()

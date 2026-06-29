@@ -86,7 +86,7 @@
 
       <div class="contact-wrap">
         <div class="contact-left">
-          <img v-if="image" :src="image" alt="" class="contact-phone" />
+          <img v-if="image" :src="image" alt="" class="contact-phone" loading="lazy" />
           <div v-else class="contact-phone-placeholder"></div>
 
           <div class="contact-socials" v-if="showSocials">
