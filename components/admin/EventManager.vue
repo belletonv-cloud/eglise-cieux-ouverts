@@ -146,6 +146,7 @@ const saving = ref(false)
 const formError = ref('')
 
 const newEx = ref({ type: 'cancelled', exception_date: '', new_date: '' })
+const originalExceptions = ref([])
 
 // Image upload
 const eventFileInput = ref(null)
@@ -203,16 +204,19 @@ function startEdit(evt) {
   const d = evt.date instanceof Date ? evt.date : new Date(evt.date + 'T00:00:00')
   form.value = {
     title: evt.titre || '', description: evt.description || '',
-    start_date: d.toISOString().slice(0, 10), end_date: '',
-    start_time: evt.heure || '', end_time: '', location: evt.lieu || '',
+    start_date: d.toISOString().slice(0, 10), end_date: evt.end_date || '',
+    start_time: evt.heure || '', end_time: evt.fin || '', location: evt.lieu || '',
     repeat_period: evt.repeat_period || '', emoji: evt.emoji || '',
     image_url: evt.image_url || '', link: evt.lien || '',
-    ticket_url: evt.billetterie || '', status: 'active',
-    exceptions: evt.exceptions ? [...evt.exceptions] : []
+    ticket_url: evt.billetterie || '', status: evt.statut || 'active',
+    exceptions: evt.exceptions ? evt.exceptions.map(ex => ({ ...ex })) : []
   }
+  // Snapshot pour calculer les exceptions ajoutées/supprimées au save.
+  originalExceptions.value = (evt.exceptions || []).map(ex => ({ ...ex }))
 }
 function startCreate() {
   creating.value = true; editing.value = null; deleting.value = null; resetForm()
+  originalExceptions.value = []
 }
 
 function addException() {
@@ -244,29 +248,58 @@ async function fetchEvents() {
     const data = await res.json()
     events.value = (data || []).map(e => ({
       id: e.id, titre: e.title, date: new Date(e.start_date + 'T00:00:00'),
-      heure: e.start_time || null, lieu: e.location || null,
+      heure: e.start_time || null, fin: e.end_time || null,
+      end_date: e.end_date || null, lieu: e.location || null,
       description: e.description || null, image_url: e.image_url || null,
       repeat_period: e.repeat_period || null, emoji: e.emoji || null,
       lien: e.link || null, billetterie: e.ticket_url || null,
+      statut: e.status || 'active',
       exceptions: e.exceptions || []
     })).sort((a, b) => a.date - b.date)
   } catch (e) { console.error(e); events.value = []
   } finally { loading.value = false }
 }
 
+// Synchronise les exceptions du formulaire avec le backend :
+// supprime celles retirées (avaient un id, plus présentes) et crée les nouvelles
+// (sans id). Les exceptions ne sont liées qu'aux événements récurrents.
+async function syncExceptions(eventId) {
+  if (!eventId) return
+  const current = form.value.exceptions || []
+  const original = originalExceptions.value || []
+  for (const o of original) {
+    if (o.id && !current.some(c => c.id === o.id)) {
+      await api(`/api/church-events/${eventId}/exceptions/${o.id}`, { method: 'DELETE' })
+    }
+  }
+  for (const c of current) {
+    if (!c.id) {
+      await api(`/api/church-events/${eventId}/exceptions`, { method: 'POST', body: JSON.stringify({
+        type: c.type, exception_date: c.exception_date || null, new_date: c.new_date || null,
+      }) })
+    }
+  }
+}
+
+function eventPayload() {
+  return {
+    title: form.value.title, description: form.value.description || null,
+    start_date: form.value.start_date, end_date: form.value.end_date || null,
+    start_time: form.value.start_time || null, end_time: form.value.end_time || null,
+    location: form.value.location || null, repeat_period: form.value.repeat_period || null,
+    emoji: form.value.emoji || null, image_url: form.value.image_url || null,
+    link: form.value.link || null, ticket_url: form.value.ticket_url || null,
+    status: form.value.status || 'active'
+  }
+}
+
 async function createEvent() {
   if (!form.value.title || !form.value.start_date) { formError.value = 'Titre et date requis'; return }
   saving.value = true; formError.value = ''
   try {
-    await api('/api/church-events', { method: 'POST', body: JSON.stringify({
-      title: form.value.title, description: form.value.description || null,
-      start_date: form.value.start_date, end_date: form.value.end_date || null,
-      start_time: form.value.start_time || null, end_time: form.value.end_time || null,
-      location: form.value.location || null, repeat_period: form.value.repeat_period || null,
-      emoji: form.value.emoji || null, image_url: form.value.image_url || null,
-      link: form.value.link || null, ticket_url: form.value.ticket_url || null,
-      status: form.value.status || 'active'
-    }) })
+    const res = await api('/api/church-events', { method: 'POST', body: JSON.stringify(eventPayload()) })
+    const created = await res.json().catch(() => null)
+    if (created?.id) await syncExceptions(created.id)
     await fetchEvents(); creating.value = false
   } catch (e) { formError.value = e.message
   } finally { saving.value = false }
@@ -275,15 +308,8 @@ async function createEvent() {
 async function updateEvent() {
   saving.value = true; formError.value = ''
   try {
-    await api(`/api/church-events/${editing.value}`, { method: 'PUT', body: JSON.stringify({
-      title: form.value.title, description: form.value.description || null,
-      start_date: form.value.start_date, end_date: form.value.end_date || null,
-      start_time: form.value.start_time || null, end_time: form.value.end_time || null,
-      location: form.value.location || null, repeat_period: form.value.repeat_period || null,
-      emoji: form.value.emoji || null, image_url: form.value.image_url || null,
-      link: form.value.link || null, ticket_url: form.value.ticket_url || null,
-      status: form.value.status || 'active'
-    }) })
+    await api(`/api/church-events/${editing.value}`, { method: 'PUT', body: JSON.stringify(eventPayload()) })
+    await syncExceptions(editing.value)
     await fetchEvents(); editing.value = null
   } catch (e) { formError.value = e.message
   } finally { saving.value = false }
