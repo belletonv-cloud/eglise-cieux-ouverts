@@ -50,3 +50,7 @@ reggae-songmaker/
 
 # Scratch test files
 tests/scratch/
+
+# Audit artifacts
+fade_audit/
+audit-*.js
