@@ -49,6 +49,12 @@ export interface BlockInstance {
     tablet: boolean
     mobile: boolean
   }
+  // Per-device prop overrides merged on top of `props` at render time.
+  // Desktop always uses the base `props`; tablet/mobile may override any key.
+  responsive?: {
+    tablet?: Record<string, any>
+    mobile?: Record<string, any>
+  }
 }
 
 export interface EditorFieldProps {

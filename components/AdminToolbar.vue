@@ -195,6 +195,37 @@
             </button>
         </div>
         <div class="admin-sidebar-body">
+            <div v-if="!editingFooter" class="admin-responsive-panel">
+                <p class="admin-responsive-label">Visible sur</p>
+                <div class="admin-vis-toggles">
+                    <button
+                        v-for="d in ['desktop', 'tablet', 'mobile']"
+                        :key="d"
+                        class="admin-vis-btn"
+                        :class="{ off: deviceVisible(d) === false }"
+                        :title="deviceVisible(d) === false ? `Masqué sur ${deviceLabel(d)}` : `Visible sur ${deviceLabel(d)}`"
+                        @click="toggleDeviceVisibility(d)"
+                    >
+                        <span class="admin-vis-icon">{{ deviceIcon(d) }}</span>
+                        <span class="admin-vis-name">{{ deviceLabel(d) }}</span>
+                        <span class="admin-vis-state">{{ deviceVisible(d) === false ? '🚫' : '✓' }}</span>
+                    </button>
+                </div>
+                <div v-if="previewDevice !== 'desktop'" class="admin-responsive-editing">
+                    ✎ Vous modifiez la version <strong>{{ deviceLabel(previewDevice) }}</strong>.
+                    Les réglages s'appliquent à ce format uniquement.
+                    <button
+                        v-if="hasDeviceOverrides"
+                        class="admin-reset-overrides"
+                        @click="resetCurrentDeviceOverrides"
+                    >
+                        Réinitialiser ({{ deviceLabel(previewDevice) }})
+                    </button>
+                </div>
+                <p v-else class="admin-responsive-hint">
+                    Choisis Tablette/Mobile dans la barre du haut pour régler chaque format.
+                </p>
+            </div>
             <AutoEditor
                 :schema="sidebarSchema"
                 :model-value="sidebarBlock"
@@ -428,6 +459,8 @@ const {
     sidebarSchema,
     selectBlock,
     updateBlock,
+    updateVisibility,
+    resetResponsive,
     moveBlock,
     removeBlock,
     exitAdmin,
@@ -454,6 +487,37 @@ function setDevice(device) {
   previewDevice.value = device
   const newQuery = { ...route.query, device }
   router.replace({ query: newQuery }).catch(() => {})
+}
+
+// ─── Responsive / per-device controls (sidebar) ───
+const DEVICE_LABELS = { desktop: 'Ordinateur', tablet: 'Tablette', mobile: 'Mobile' }
+const DEVICE_ICONS = { desktop: '🖥', tablet: '▭', mobile: '▯' }
+function deviceLabel(d) { return DEVICE_LABELS[d] || d }
+function deviceIcon(d) { return DEVICE_ICONS[d] || '•' }
+
+function deviceVisible(d) {
+  const v = sidebarBlock.value?.visibility
+  return v?.[d] !== false
+}
+
+function toggleDeviceVisibility(d) {
+  const block = sidebarBlock.value
+  if (!block?.id) return
+  updateVisibility(block.id, { [d]: deviceVisible(d) === false })
+}
+
+const hasDeviceOverrides = computed(() => {
+  const block = activeBlock.value
+  const dev = previewDevice.value
+  if (!block || dev === 'desktop') return false
+  const o = block.responsive?.[dev]
+  return Boolean(o && Object.keys(o).length)
+})
+
+function resetCurrentDeviceOverrides() {
+  const block = activeBlock.value
+  if (!block?.id || previewDevice.value === 'desktop') return
+  resetResponsive(block.id, previewDevice.value)
 }
 const user = ref(null);
 const saving = ref(false);
@@ -1023,6 +1087,78 @@ async function saveChanges() {
 </script>
 
 <style scoped>
+/* ─── Responsive panel (sidebar) ─── */
+.admin-responsive-panel {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 14px;
+    background: #fafafc;
+}
+.admin-responsive-label {
+    font-size: 0.72em;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin: 0 0 8px;
+}
+.admin-vis-toggles {
+    display: flex;
+    gap: 6px;
+}
+.admin-vis-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 6px 4px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: #fff;
+    cursor: pointer;
+    font-size: 0.7em;
+    color: #374151;
+    transition: all 0.15s;
+}
+.admin-vis-btn:hover { border-color: #3b82f6; }
+.admin-vis-btn.off {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #b91c1c;
+    opacity: 0.85;
+}
+.admin-vis-icon { font-size: 1.1em; }
+.admin-vis-state { font-size: 0.85em; }
+.admin-responsive-editing {
+    margin-top: 10px;
+    padding: 8px;
+    border-radius: 6px;
+    background: #eff6ff;
+    color: #1e40af;
+    font-size: 0.74em;
+    line-height: 1.4;
+}
+.admin-responsive-editing strong { text-transform: capitalize; }
+.admin-reset-overrides {
+    display: inline-block;
+    margin-top: 6px;
+    padding: 3px 8px;
+    border: 1px solid #93c5fd;
+    border-radius: 5px;
+    background: #fff;
+    color: #1e40af;
+    font-size: 0.95em;
+    cursor: pointer;
+}
+.admin-reset-overrides:hover { background: #dbeafe; }
+.admin-responsive-hint {
+    margin: 8px 0 0;
+    font-size: 0.72em;
+    color: #9ca3af;
+    line-height: 1.4;
+}
 .admin-toolbar {
     position: fixed;
     top: 0;

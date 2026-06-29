@@ -1,5 +1,5 @@
 import { ref, computed } from "vue";
-import { BLOCK_TYPES } from "~/utils/blockTypes.js";
+import { BLOCK_TYPES, VISIBILITY_DEFAULTS } from "~/utils/blockTypes.js";
 import {
   DESIGN_DEFAULTS,
   DESIGN_FIELDS,
@@ -50,10 +50,17 @@ export function useAdmin() {
     () => localBlocks.value.find((b) => b.id === editingBlockId.value) || null,
   );
 
-  // The block being edited in the sidebar (page block or footer block)
+  // The block being edited in the sidebar (page block or footer block).
+  // When editing a non-desktop device, merge the device overrides on top of
+  // the base props so the editor reflects the value for the active device.
   const sidebarBlock = computed(() => {
-    if (editingFooter.value) return footerBlock.value;
-    return activeBlock.value;
+    const base = editingFooter.value ? footerBlock.value : activeBlock.value;
+    if (!base) return base;
+    const device = previewDevice.value;
+    if (device && device !== "desktop" && base.responsive?.[device]) {
+      return { ...base, props: { ...base.props, ...base.responsive[device] } };
+    }
+    return base;
   });
 
   // Schema used by the sidebar AutoEditor
@@ -108,12 +115,57 @@ export function useAdmin() {
   function updateBlock(id, props) {
     const idx = localBlocks.value.findIndex((b) => b.id === id);
     if (idx < 0) return;
-    const label = _blockLabel(localBlocks.value[idx]?.type);
+    const current = localBlocks.value[idx];
+    const label = _blockLabel(current?.type);
+    const device = previewDevice.value;
+    // When editing a non-desktop device, write the change as a per-device
+    // override (responsive[device]) instead of mutating the base props.
+    if (device && device !== "desktop") {
+      pushHistory(`Modification (${device}) du bloc « ${label} »`);
+      const responsive = { ...(current.responsive || {}) };
+      responsive[device] = { ...(responsive[device] || {}), ...props };
+      localBlocks.value[idx] = { ...current, responsive };
+      return;
+    }
     pushHistory(`Modification du bloc « ${label} »`);
     localBlocks.value[idx] = {
-      ...localBlocks.value[idx],
-      props: { ...localBlocks.value[idx].props, ...props },
+      ...current,
+      props: { ...current.props, ...props },
     };
+  }
+
+  // Toggle / set per-device visibility for a block.
+  function updateVisibility(id, patch) {
+    const idx = localBlocks.value.findIndex((b) => b.id === id);
+    if (idx < 0) return;
+    const current = localBlocks.value[idx];
+    const label = _blockLabel(current?.type);
+    pushHistory(`Visibilité du bloc « ${label} »`);
+    localBlocks.value[idx] = {
+      ...current,
+      visibility: {
+        ...VISIBILITY_DEFAULTS,
+        ...(current.visibility || {}),
+        ...patch,
+      },
+    };
+  }
+
+  // Reset all per-device overrides for the current device (or all) on a block.
+  function resetResponsive(id, device) {
+    const idx = localBlocks.value.findIndex((b) => b.id === id);
+    if (idx < 0) return;
+    const current = localBlocks.value[idx];
+    if (!current.responsive) return;
+    const label = _blockLabel(current?.type);
+    pushHistory(`Réinitialisation responsive « ${label} »`);
+    const responsive = { ...current.responsive };
+    if (device) {
+      delete responsive[device];
+    } else {
+      for (const k of Object.keys(responsive)) delete responsive[k];
+    }
+    localBlocks.value[idx] = { ...current, responsive };
   }
 
   function moveBlock(id, direction) {
@@ -296,6 +348,8 @@ export function useAdmin() {
     clearBlocks,
     selectBlock,
     updateBlock,
+    updateVisibility,
+    resetResponsive,
     moveBlock,
     removeBlock,
     addBlock,

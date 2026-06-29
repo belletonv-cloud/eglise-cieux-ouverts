@@ -54,6 +54,33 @@ export function normalizeBlocks(blocks: BlockInstance[]): BlockInstance[] {
   return (blocks || []).map(normalizeBlock);
 }
 
+type Device = "desktop" | "tablet" | "mobile";
+
+// Merge per-device overrides (block.responsive[device]) on top of base props.
+// Desktop uses the base props unchanged. Returns a new block when overrides
+// apply, otherwise the same block reference.
+export function resolveResponsive(
+  block: BlockInstance,
+  device: Device,
+): BlockInstance {
+  if (!block || device === "desktop") return block;
+  const overrides = (block as any).responsive?.[device];
+  if (!overrides || typeof overrides !== "object") return block;
+  const safe: Record<string, any> = {};
+  for (const [k, v] of Object.entries(overrides)) {
+    if (v !== "" && v !== null && v !== undefined) safe[k] = v;
+  }
+  if (Object.keys(safe).length === 0) return block;
+  return { ...block, props: { ...block.props, ...safe } };
+}
+
+export function resolveBlocksForDevice(
+  blocks: BlockInstance[],
+  device: Device,
+): BlockInstance[] {
+  return (blocks || []).map((b) => resolveResponsive(b, device));
+}
+
 export function filterByVisibility(
   blocks: BlockInstance[],
   device: "desktop" | "tablet" | "mobile",

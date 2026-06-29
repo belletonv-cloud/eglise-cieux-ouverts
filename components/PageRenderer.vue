@@ -15,9 +15,11 @@
             class="block-wrapper"
             :class="[
                 getAnimClass(block),
+                visibilityClass(block),
                 { triggered: isTriggered(block.id) },
                 { 'admin-selected': isSelected(block) },
             ]"
+            :style="wrapperStyle(block)"
             :ref="(el) => setWrapperRef(el, block.id)"
             :data-block-id="block.id"
             :data-block-type="block.type"
@@ -42,9 +44,11 @@
             class="block-wrapper"
             :class="[
                 getAnimClass(block),
+                visibilityClass(block),
                 { triggered: isTriggered(block.id) },
                 { 'admin-selected': isAdmin && isSelected(block) },
             ]"
+            :style="wrapperStyle(block)"
             :ref="(el) => setWrapperRef(el, block.id)"
             :data-block-id="block.id"
             :data-block-type="block.type"
@@ -77,6 +81,7 @@ import {
     getAnimClass,
     getAnimationStrategy,
     filterByVisibility,
+    resolveResponsive,
     shouldUseTrigger,
 } from "~/lib/blocks/renderer";
 import { useBlockAnimation } from "~/composables/useBlockAnimation";
@@ -155,8 +160,27 @@ const adminModeActive = computed(() =>
 
 const useTrigger = shouldUseTrigger;
 
+// Active device for resolving per-device overrides.
+// - In admin/editor: follows the chosen previewDevice.
+// - On the public site: follows the real viewport, but only after mount so the
+//   first client render matches the SSR (desktop) output (no hydration mismatch).
+const viewportDevice = ref("desktop");
+function computeViewportDevice() {
+    if (typeof window === "undefined") return "desktop";
+    const w = window.innerWidth;
+    if (w <= 480) return "mobile";
+    if (w <= 1024) return "tablet";
+    return "desktop";
+}
+const activeDevice = computed(() => {
+    if (isAdmin && isAdmin.value) return previewDevice.value || "desktop";
+    return isMounted.value ? viewportDevice.value : "desktop";
+});
+
 const fixedBlocks = computed(() => {
-    return (props.blocks || []).map(normalizeBlock);
+    return (props.blocks || [])
+        .map(normalizeBlock)
+        .map((b) => resolveResponsive(b, activeDevice.value));
 });
 
 const visibleBlocks = computed(() => {
@@ -165,6 +189,36 @@ const visibleBlocks = computed(() => {
         previewDevice.value || "desktop",
     );
 });
+
+function visibilityClass(block) {
+    const v = block?.visibility || {};
+    return {
+        "hide-mobile": v.mobile === false,
+        "hide-tablet": v.tablet === false,
+        "hide-desktop": v.desktop === false,
+    };
+}
+
+// Position / emplacement applied at the wrapper level (works for every block
+// type, and reflects per-device overrides since props are already resolved).
+function wrapperStyle(block) {
+    const p = block?.props || {};
+    const s = {};
+    if (p.maxWidth) s.maxWidth = p.maxWidth;
+    if (p.blockAlign === "center") {
+        s.marginLeft = "auto";
+        s.marginRight = "auto";
+    } else if (p.blockAlign === "right") {
+        s.marginLeft = "auto";
+        s.marginRight = "0";
+    } else if (p.blockAlign === "left") {
+        s.marginLeft = "0";
+        s.marginRight = "auto";
+    }
+    if (p.marginTop) s.marginTop = p.marginTop;
+    if (p.marginBottom) s.marginBottom = p.marginBottom;
+    return s;
+}
 
 // Local reactive selected id (mirrors injected editingBlockId ref)
 const selectedId = ref(null);
@@ -266,8 +320,15 @@ function setupElementReplayButtons() {
 }
 
 let animReplayCleanup = null
+let onViewportResize = null
 onMounted(() => {
     setupClient();
+    // Track viewport device on the public site for per-device overrides.
+    viewportDevice.value = computeViewportDevice();
+    onViewportResize = () => {
+        viewportDevice.value = computeViewportDevice();
+    };
+    window.addEventListener("resize", onViewportResize);
     if (isAdmin && isAdmin.value) {
         animReplayCleanup = setupElementReplayButtons()
     }
@@ -276,6 +337,7 @@ onMounted(() => {
 onUnmounted(() => {
     teardownClient();
     if (animReplayCleanup) animReplayCleanup()
+    if (onViewportResize) window.removeEventListener("resize", onViewportResize);
 });
 
 // Ensure clicks inside complex child components still select the block.
