@@ -17,7 +17,10 @@ export default defineNuxtConfig({
   },
   app: {
     head: {
-      htmlAttrs: { lang: 'fr' },
+      htmlAttrs: { lang: 'fr', class: 'no-js' },
+      // Retire la classe no-js dès que JS s'exécute : avec JS désactivé elle
+      // reste et active les fallbacks CSS (contenu/animations visibles, SEO).
+      script: [{ innerHTML: "document.documentElement.classList.remove('no-js')", tagPosition: 'head' }],
       meta: process.env.CF_PAGES_BRANCH === 'recette'
         ? [{ name: 'robots', content: 'noindex, nofollow' }]
         : [],

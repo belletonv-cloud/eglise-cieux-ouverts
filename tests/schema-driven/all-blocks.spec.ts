@@ -166,14 +166,15 @@ test.describe('1. Schema integrity for ALL blocks', () => {
 test.describe('2. Admin rendering for ALL blocks', () => {
 
   test('all block types render on at least one page', async ({ page }) => {
-    await page.goto('/?admin=true')
+    // Page fixture contenant un bloc de chaque type.
+    await page.goto('/test-blocks?admin=true')
     await page.waitForTimeout(3000)
     const blockCount = await page.locator('.block-wrapper').count()
     expect(blockCount).toBeGreaterThanOrEqual(Object.keys(BLOCK_TYPES).length)
   })
 
   test('each block type is selectable', async ({ page }) => {
-    await page.goto('/?admin=true')
+    await page.goto('/test-blocks?admin=true')
     await page.waitForTimeout(3000)
     for (const type of Object.keys(BLOCK_TYPES)) {
       const sel = getBlockCssSelector(type)
@@ -277,8 +278,9 @@ test.describe('3. SSR rendering (no JavaScript)', () => {
     const context = await browser.newContext({ javaScriptEnabled: false })
     const page = await context.newPage()
     await page.goto('/messages')
+    // La page Messages contient un bloc textImage et un bloc youtube.
     await expect(page.locator('.block-textimage')).toBeVisible({ timeout: 10000 })
-    await expect(page.locator('.block-richtext')).toBeVisible({ timeout: 5000 })
+    await expect(page.locator('.block-youtube')).toBeVisible({ timeout: 5000 })
     await context.close()
   })
 
@@ -360,7 +362,7 @@ test.describe('4. Hydration and JS runtime', () => {
 test.describe('5. Animation system', () => {
 
   test('all animation CSS classes exist in the DOM', async ({ page }) => {
-    await page.goto('/?admin=true')
+    await page.goto('/test-blocks?admin=true')
     await page.waitForTimeout(3000)
     const foundAnims = new Set<string>()
     for (const animId of ANIMATION_IDS) {
@@ -372,9 +374,9 @@ test.describe('5. Animation system', () => {
   })
 
   test('fadeIn, slideLeft, portal are present on home page', async ({ page }) => {
-    await page.goto('/')
+    // Page fixture qui utilise ces trois animations wrapper.
+    await page.goto('/test-blocks')
     await page.waitForTimeout(2000)
-    // These animations are on the home page by default
     await expect(page.locator('.block-anim-portal').first()).toBeVisible({ timeout: 3000 })
     await expect(page.locator('.block-anim-slideLeft').first()).toBeVisible({ timeout: 3000 })
     await expect(page.locator('.block-anim-fadeIn').first()).toBeVisible({ timeout: 3000 })
