@@ -22,11 +22,14 @@ test.describe('Undo/Redo system', () => {
     await page.goto('/?admin=true')
     await page.waitForTimeout(1500)
     const wrapper = page.locator('.block-wrapper').first()
-    await wrapper.click()
+    // force: animations scroll-driven → élément jamais « stable » pour Playwright.
+    await wrapper.click({ force: true })
     await page.waitForTimeout(300)
-    const moveUp = page.locator('.admin-action-btn').first()
-    if (await moveUp.isVisible()) {
-      await moveUp.click()
+    // Le premier bloc ne peut pas « monter » (no-op) → on utilise « Descendre »
+    // (2e bouton) pour produire une modification qui active l'undo.
+    const moveDown = page.locator('.admin-action-btn').nth(1)
+    if (await moveDown.isVisible()) {
+      await moveDown.click({ force: true })
       await page.waitForTimeout(200)
       const undoBtn = page.locator('.admin-icon-btn').first()
       await expect(undoBtn).not.toBeDisabled()
@@ -138,17 +141,22 @@ test.describe('Page transitions', () => {
 
 test.describe('Auto-save', () => {
 
-  test('login button is visible in admin toolbar when logged out', async ({ page }) => {
-    // Force l'état déconnecté (le mock auth fournit un user par défaut).
+  test('logged out: ?admin=true redirects to the login page with sign-in button', async ({ page }) => {
+    // Comportement auth-gated réel : un visiteur déconnecté qui demande le
+    // mode édition est redirigé vers /admin (page de connexion).
     await page.addInitScript(() => { (window as any).__MOCK_AUTH_RESULT = null })
     await page.goto('/?admin=true')
-    await page.waitForTimeout(1500)
-    await expect(page.locator('.admin-btn-login')).toBeVisible()
+    await page.waitForURL(/\/admin/, { timeout: 15000 })
+    await expect(page.locator('.admin-login-card')).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Se connecter avec Google' })).toBeVisible()
   })
 
-  test('save button is visible inside ClientOnly block when logged in', async ({ page }) => {
+  test('logged out: no page-save button is reachable', async ({ page }) => {
+    // Sans connexion, la barre d'édition et son bouton de sauvegarde ne sont
+    // jamais accessibles (redirection vers la page de connexion).
+    await page.addInitScript(() => { (window as any).__MOCK_AUTH_RESULT = null })
     await page.goto('/?admin=true')
-    await page.waitForTimeout(1500)
+    await page.waitForURL(/\/admin/, { timeout: 15000 })
     const saveBtn = page.locator('.admin-btn:not(.admin-btn-secondary):not(.admin-btn-login)')
     await expect(saveBtn).not.toBeVisible()
   })
