@@ -102,7 +102,6 @@ const previewSlug = ref(currentPageSlug.value)
 const previewIframeSrc = computed(() => {
     const path = previewSlug.value === "accueil" ? "/" : `/${previewSlug.value}`
     const params = new URLSearchParams({
-        admin: "true",
         "preview-inner": "1",
         device: previewDevice.value,
     })

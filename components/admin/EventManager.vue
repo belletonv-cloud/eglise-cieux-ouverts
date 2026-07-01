@@ -21,7 +21,7 @@
                 <div class="event-row-meta">
                   <span v-if="evt.heure">{{ evt.heure }}</span>
                   <span v-if="evt.lieu">{{ evt.lieu }}</span>
-                  <span v-if="evt.repeat_period" class="event-badge">chaque {{ evt.repeat_period === 'week' ? 'semaine' : 'mois' }}</span>
+                  <span v-if="evt.repeat_period" class="event-badge">{{ formatRepeatPeriod(evt.repeat_period) }}</span>
                 </div>
               </div>
               <button class="event-delete-btn" @click.stop="deleting = evt" title="Supprimer">&times;</button>
@@ -44,13 +44,37 @@
               <label>Fin <input v-model="form.end_time" type="time" /></label>
             </div>
             <label>Lieu <input v-model="form.location" type="text" /></label>
-            <label>Répétition
-              <select v-model="form.repeat_period">
-                <option value="">Aucune</option>
-                <option value="week">Chaque semaine</option>
-                <option value="month">Chaque mois</option>
-              </select>
-            </label>
+            <div class="event-recurrence">
+              <label>Répétition
+                <select v-model="repeatType">
+                  <option value="">Aucune</option>
+                  <option value="week">Chaque semaine</option>
+                  <option value="biweek">Toutes les 2 semaines</option>
+                  <option value="month">Chaque mois (même date)</option>
+                  <option value="monthly_weekday">Même jour de la semaine du mois…</option>
+                </select>
+              </label>
+              <div v-if="repeatType === 'monthly_weekday'" class="monthly-weekday-row">
+                <span>Chaque</span>
+                <select v-model="repeatOrdinal">
+                  <option :value="1">1er</option>
+                  <option :value="2">2e</option>
+                  <option :value="3">3e</option>
+                  <option :value="4">4e</option>
+                  <option :value="-1">Dernier</option>
+                </select>
+                <select v-model="repeatWeekday">
+                  <option :value="1">Lundi</option>
+                  <option :value="2">Mardi</option>
+                  <option :value="3">Mercredi</option>
+                  <option :value="4">Jeudi</option>
+                  <option :value="5">Vendredi</option>
+                  <option :value="6">Samedi</option>
+                  <option :value="0">Dimanche</option>
+                </select>
+                <span>du mois</span>
+              </div>
+            </div>
             <label>Emoji <input v-model="form.emoji" type="text" maxlength="5" /></label>
             <div class="event-image-section">
               <label class="event-image-label">Image</label>
@@ -155,28 +179,134 @@ const showUploadedList = ref(false)
 const imagesLoading = ref(false)
 const uploadSaving = ref(false)
 
+// ── Recurrence helpers ──────────────────────────────────────────────
+function parseRepeatPeriod(rp) {
+  if (!rp) return null
+  if (rp === 'week') return { type: 'week', interval: 1 }
+  if (rp === 'biweek') return { type: 'week', interval: 2 }
+  if (rp === 'month') return { type: 'month' }
+  if (rp.startsWith('monthly_weekday:')) {
+    const parts = rp.split(':')
+    return { type: 'monthly_weekday', ordinal: parseInt(parts[1]) || 1, weekday: parseInt(parts[2]) ?? 1 }
+  }
+  return null
+}
+
+function getNthWeekdayOfMonth(year, month, weekday, ordinal) {
+  if (ordinal === -1) {
+    const last = new Date(year, month + 1, 0)
+    const diff = (last.getDay() - weekday + 7) % 7
+    return new Date(year, month, last.getDate() - diff)
+  }
+  const first = new Date(year, month, 1)
+  const diff = (weekday - first.getDay() + 7) % 7
+  const date = 1 + diff + (ordinal - 1) * 7
+  if (date > new Date(year, month + 1, 0).getDate()) return null
+  return new Date(year, month, date)
+}
+
+const ORDINAL_FR = { 1: '1er', 2: '2e', 3: '3e', 4: '4e', '-1': 'dernier' }
+const DAY_FR_SHORT = ['dim.', 'lun.', 'mar.', 'mer.', 'jeu.', 'ven.', 'sam.']
+
+function formatRepeatPeriod(rp) {
+  if (!rp) return ''
+  if (rp === 'week') return 'chaque semaine'
+  if (rp === 'biweek') return 'toutes les 2 sem.'
+  if (rp === 'month') return 'chaque mois'
+  if (rp.startsWith('monthly_weekday:')) {
+    const parts = rp.split(':')
+    const n = parseInt(parts[1])
+    const d = parseInt(parts[2])
+    return `chaque ${ORDINAL_FR[n] || n + 'e'} ${DAY_FR_SHORT[d] || ''} du mois`
+  }
+  return rp
+}
+
+// Writable computed for the repeat type selector
+const repeatType = computed({
+  get() {
+    const rp = form.value.repeat_period
+    if (!rp) return ''
+    if (rp === 'week' || rp === 'biweek' || rp === 'month') return rp
+    if (rp.startsWith('monthly_weekday:')) return 'monthly_weekday'
+    return ''
+  },
+  set(val) {
+    if (!val) { form.value.repeat_period = ''; return }
+    if (val === 'week' || val === 'biweek' || val === 'month') { form.value.repeat_period = val; return }
+    if (val === 'monthly_weekday') {
+      if (form.value.start_date) {
+        const d = new Date(form.value.start_date + 'T00:00:00')
+        const weekday = d.getDay()
+        const ordinal = Math.min(Math.ceil(d.getDate() / 7), 4)
+        form.value.repeat_period = `monthly_weekday:${ordinal}:${weekday}`
+      } else {
+        form.value.repeat_period = 'monthly_weekday:1:1'
+      }
+    }
+  }
+})
+
+const repeatOrdinal = computed({
+  get() {
+    const rp = form.value.repeat_period
+    if (!rp?.startsWith('monthly_weekday:')) return 1
+    return parseInt(rp.split(':')[1]) || 1
+  },
+  set(val) {
+    const rp = form.value.repeat_period
+    if (!rp?.startsWith('monthly_weekday:')) return
+    const parts = rp.split(':')
+    form.value.repeat_period = `monthly_weekday:${val}:${parts[2]}`
+  }
+})
+
+const repeatWeekday = computed({
+  get() {
+    const rp = form.value.repeat_period
+    if (!rp?.startsWith('monthly_weekday:')) return 1
+    return parseInt(rp.split(':')[2]) ?? 1
+  },
+  set(val) {
+    const rp = form.value.repeat_period
+    if (!rp?.startsWith('monthly_weekday:')) return
+    const parts = rp.split(':')
+    form.value.repeat_period = `monthly_weekday:${parts[1]}:${val}`
+  }
+})
+
 const nextOccurrences = computed(() => {
   if (!form.value.repeat_period || !form.value.start_date) return []
-  const now = new Date()
-  now.setHours(0, 0, 0, 0)
+  const rule = parseRepeatPeriod(form.value.repeat_period)
+  if (!rule) return []
+  const now = new Date(); now.setHours(0, 0, 0, 0)
   const start = new Date(form.value.start_date + 'T00:00:00')
+  const exceptions = form.value.exceptions || []
+  const isCancelled = (d) => exceptions.some(ex => ex.exception_date === d.toISOString().slice(0, 10) && ex.type === 'cancelled')
   const results = []
-  let d = new Date(start)
-  if (d < now) {
-    if (form.value.repeat_period === 'week') { while (d < now) d.setDate(d.getDate() + 7) }
-    else if (form.value.repeat_period === 'month') { while (d < now) d.setMonth(d.getMonth() + 1) }
-  }
-  let count = 0
-  while (count < 6 && count < 100) {
-    const dateStr = d.toISOString().slice(0, 10)
-    const cancelled = (form.value.exceptions || []).some(ex => ex.exception_date === dateStr && ex.type === 'cancelled')
-    if (!cancelled) {
-      results.push(new Date(d))
-      count++
+  let safety = 0
+
+  if (rule.type === 'week') {
+    let d = new Date(start)
+    while (d < now) d.setDate(d.getDate() + 7 * rule.interval)
+    while (results.length < 6 && safety++ < 200) {
+      if (!isCancelled(d)) results.push(new Date(d))
+      d.setDate(d.getDate() + 7 * rule.interval)
     }
-    if (form.value.repeat_period === 'week') d.setDate(d.getDate() + 7)
-    else if (form.value.repeat_period === 'month') d.setMonth(d.getMonth() + 1)
-    else break
+  } else if (rule.type === 'month') {
+    let d = new Date(start)
+    while (d < now) d.setMonth(d.getMonth() + 1)
+    while (results.length < 6 && safety++ < 200) {
+      if (!isCancelled(d)) results.push(new Date(d))
+      d.setMonth(d.getMonth() + 1)
+    }
+  } else if (rule.type === 'monthly_weekday') {
+    let year = start.getFullYear(), month = start.getMonth()
+    while (results.length < 6 && safety++ < 200) {
+      const occ = getNthWeekdayOfMonth(year, month, rule.weekday, rule.ordinal)
+      if (occ && occ >= now && !isCancelled(occ)) results.push(occ)
+      if (++month > 11) { month = 0; year++ }
+    }
   }
   return results
 })
@@ -432,6 +562,9 @@ watch(() => props.open, (v) => { if (v) fetchEvents() })
 }
 .event-delete-btn:hover { color: #ef4444; }
 .event-form-title { font-size: 1em; font-weight: 700; color: #111827; margin: 0 0 16px; }
+.event-recurrence { display: flex; flex-direction: column; gap: 6px; }
+.monthly-weekday-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 0.85em; font-weight: 600; color: #374151; }
+.monthly-weekday-row select { padding: 4px 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9em; background: white; }
 .event-form { display: flex; flex-direction: column; gap: 14px; }
 .event-form label { display: flex; flex-direction: column; gap: 4px; font-size: 0.85em; font-weight: 600; color: #374151; }
 .event-form input, .event-form select, .event-form textarea {

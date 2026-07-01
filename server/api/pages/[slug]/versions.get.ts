@@ -9,29 +9,61 @@ function summarizeBlocks(blocks: any[]) {
   return { blockCount: blocks?.length || 0, typeCounts }
 }
 
+function blockLabel(b: any): string {
+  const t = b?.type || 'inconnu'
+  const title = b?.props?.title || b?.props?.heading || b?.props?.text?.slice?.(0, 30) || ''
+  return title ? `${t} « ${title} »` : t
+}
+
 function computeChanges(newerBlocks: any[], olderBlocks: any[]) {
-  const newTypes = newerBlocks.map(b => b?.type || 'inconnu')
-  const oldTypes = olderBlocks.map(b => b?.type || 'inconnu')
+  const newMap = new Map(newerBlocks.filter(b => b?.id).map(b => [b.id, b]))
+  const oldMap = new Map(olderBlocks.filter(b => b?.id).map(b => [b.id, b]))
 
-  // Compare position by position
-  const maxLen = Math.max(newTypes.length, oldTypes.length)
-  let modified = 0
-  let added = 0
-  let removed = 0
+  const addedLabels: string[] = []
+  const removedLabels: string[] = []
+  const modifiedLabels: string[] = []
 
-  for (let i = 0; i < maxLen; i++) {
-    if (i >= newTypes.length) { removed++; continue }
-    if (i >= oldTypes.length) { added++; continue }
-    if (newTypes[i] !== oldTypes[i]) modified++
+  for (const [id, nb] of newMap) {
+    if (!oldMap.has(id)) {
+      addedLabels.push(blockLabel(nb))
+    } else {
+      const ob = oldMap.get(id)
+      if (JSON.stringify(nb.props) !== JSON.stringify(ob.props) ||
+          JSON.stringify(nb.visibility) !== JSON.stringify(ob.visibility) ||
+          JSON.stringify(nb.responsive) !== JSON.stringify(ob.responsive)) {
+        modifiedLabels.push(blockLabel(nb))
+      }
+    }
+  }
+  for (const [id, ob] of oldMap) {
+    if (!newMap.has(id)) removedLabels.push(blockLabel(ob))
+  }
+
+  // Fallback: if no IDs, compare by position
+  if (newMap.size === 0 && oldMap.size === 0) {
+    const maxLen = Math.max(newerBlocks.length, olderBlocks.length)
+    for (let i = 0; i < maxLen; i++) {
+      if (i >= newerBlocks.length) { removedLabels.push(blockLabel(olderBlocks[i])); continue }
+      if (i >= olderBlocks.length) { addedLabels.push(blockLabel(newerBlocks[i])); continue }
+      if (JSON.stringify(newerBlocks[i]) !== JSON.stringify(olderBlocks[i])) {
+        modifiedLabels.push(blockLabel(newerBlocks[i]))
+      }
+    }
   }
 
   const parts: string[] = []
-  if (added) parts.push(`+${added}`)
-  if (removed) parts.push(`-${removed}`)
-  if (modified) parts.push(`~${modified}`)
-  if (!parts.length) { added = newerBlocks.length; parts.push(`+${added}`) }
+  if (addedLabels.length) parts.push(`+${addedLabels.length}`)
+  if (removedLabels.length) parts.push(`-${removedLabels.length}`)
+  if (modifiedLabels.length) parts.push(`~${modifiedLabels.length}`)
+  if (!parts.length && newerBlocks.length) parts.push(`${newerBlocks.length} blocs (inchangés)`)
 
-  return { added, removed, modified, summary: parts.join(' ') }
+  return {
+    added: addedLabels.length,
+    removed: removedLabels.length,
+    modified: modifiedLabels.length,
+    summary: parts.join(' '),
+    details: { added: addedLabels, removed: removedLabels, modified: modifiedLabels },
+  }
 }
 
 export default defineEventHandler(async (event) => {

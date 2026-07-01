@@ -1,3 +1,4 @@
 /*
   cache-control: no-cache
   x-fresh: 1
+  x-frame-options: SAMEORIGIN

@@ -14,6 +14,7 @@ export default defineNuxtConfig({
   },
   routeRules: {
     '/billetterie': { redirect: '/event-list' },
+    '/**': { headers: { 'x-frame-options': 'SAMEORIGIN' } },
   },
   app: {
     head: {

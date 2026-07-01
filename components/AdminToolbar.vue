@@ -340,12 +340,16 @@
                                 <span class="version-date">{{ formatDate(v.savedAt) }}</span>
                                 <span class="version-author">{{ v.savedBy }}</span>
                                 <div class="version-meta">
-                                    <span class="version-blocks">{{ v.blockCount }} blocs</span>
-                                    <span v-if="v.blockTypes" class="version-types">{{ getBlockTypesLabel(v.blockTypes) }}</span>
-                                    <span v-if="v.changes" class="version-changes" :class="{ 'version-added': v.changes.added > 0, 'version-removed': v.changes.removed > 0, 'version-modified': v.changes.modified > 0 && !v.changes.added && !v.changes.removed }">
-                                        {{ v.changes.summary }}
-                                    </span>
+                                    <span class="version-blocks">{{ v.blockCount }} bloc{{ v.blockCount !== 1 ? 's' : '' }}</span>
                                     <span v-if="v === versions[0]" class="version-current">Actuelle</span>
+                                </div>
+                                <div v-if="v.changes && (v.changes.added || v.changes.removed || v.changes.modified)" class="version-diff">
+                                    <span v-if="v.changes.added" class="vd-added">+{{ v.changes.added }} ajouté{{ v.changes.added > 1 ? 's' : '' }}</span>
+                                    <span v-if="v.changes.removed" class="vd-removed">−{{ v.changes.removed }} supprimé{{ v.changes.removed > 1 ? 's' : '' }}</span>
+                                    <span v-if="v.changes.modified" class="vd-modified">~{{ v.changes.modified }} modifié{{ v.changes.modified > 1 ? 's' : '' }}</span>
+                                    <span v-if="v.changes.details?.modified?.length" class="vd-detail">{{ v.changes.details.modified.join(' · ') }}</span>
+                                    <span v-if="v.changes.details?.added?.length" class="vd-detail vd-added-detail">{{ v.changes.details.added.join(' · ') }}</span>
+                                    <span v-if="v.changes.details?.removed?.length" class="vd-detail vd-removed-detail">{{ v.changes.details.removed.join(' · ') }}</span>
                                 </div>
                             </div>
                             <button
@@ -1023,18 +1027,8 @@ async function navigateToPage(slug) {
         return
     }
     // Desktop mode: client-side navigation
-    clearBlocks();
-    const newQuery = { ...route.query, admin: "true", device: previewDevice.value };
-    try {
-        if (isAdminMode) isAdminMode.value = true;
-        const root =
-            document.getElementById("app-root") ||
-            document.getElementById("__nuxt");
-        if (root && !root.classList.contains("admin-mode"))
-            root.classList.add("admin-mode");
-    } catch (e) {
-        console.warn("navigateToPage: could not set admin-mode class", e);
-    }
+    const newQuery = { ...route.query, admin: "true" };
+    delete newQuery.device;
     try {
         await router.push({ path: slug === "accueil" ? "/" : `/${slug}`, query: newQuery });
         try { window.scrollTo(0, 0) } catch (e) { console.warn(e) }
@@ -1602,24 +1596,33 @@ async function saveChanges() {
     font-size: 11px;
     color: #555;
 }
-.version-changes {
+.version-diff {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 4px;
+    align-items: baseline;
+}
+.vd-added, .vd-removed, .vd-modified {
     font-size: 11px;
     font-weight: 600;
     padding: 1px 5px;
     border-radius: 3px;
 }
-.version-changes.version-added {
-    color: #059669;
-    background: #ecfdf5;
+.vd-added { color: #059669; background: #ecfdf5; }
+.vd-removed { color: #dc2626; background: #fef2f2; }
+.vd-modified { color: #d97706; background: #fffbeb; }
+.vd-detail {
+    font-size: 10px;
+    color: #6b7280;
+    font-style: italic;
+    max-width: 260px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
-.version-changes.version-removed {
-    color: #dc2626;
-    background: #fef2f2;
-}
-.version-changes.version-modified {
-    color: #d97706;
-    background: #fffbeb;
-}
+.vd-added-detail { color: #059669; }
+.vd-removed-detail { color: #dc2626; }
 .version-current {
     font-size: 10px;
     font-weight: 700;
