@@ -12,7 +12,6 @@
                 <option value="messages">Messages</option>
                 <option value="event-list">Événements</option>
                 <option value="agenda">Agenda</option>
-                <option value="photos">Photos</option>
                 <option v-for="p in customPages" :key="p.slug" :value="p.slug">{{ p.slug }}</option>
             </select>
         </div>
@@ -1014,7 +1013,7 @@ function loadCustomPages() {
     fetch('/api/pages')
         .then(res => res.json())
         .then(data => {
-            const hardcoded = ['accueil', 'contact', 'messages', 'event-list', 'agenda']
+            const hardcoded = ['accueil', 'contact', 'messages', 'event-list', 'agenda', 'photos']
             customPages.value = (data.pages || []).filter(p => !hardcoded.includes(p.slug))
         })
         .catch(() => { customPages.value = [] })
