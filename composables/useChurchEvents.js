@@ -66,6 +66,23 @@ export function useChurchEvents(options = {}) {
     const start = new Date(ev.start_date + 'T00:00:00')
     const results = []
 
+    // Multi-rule: '|'-separated, expand each and merge
+    if (rp.includes('|')) {
+      const allResults = []
+      for (const ruleStr of rp.split('|').filter(Boolean)) {
+        const tempEv = { ...ev, repeat_period: ruleStr }
+        allResults.push(...expandRecurring(tempEv, now, maxCount))
+      }
+      allResults.sort((a, b) => a.date - b.date)
+      const seen = new Set()
+      const unique = []
+      for (const r of allResults) {
+        const key = r.date.toISOString().slice(0, 10)
+        if (!seen.has(key)) { seen.add(key); unique.push(r) }
+      }
+      return unique.slice(0, maxCount)
+    }
+
     if (rp === 'month') {
       let d = new Date(start)
       while (d < now) d.setMonth(d.getMonth() + 1)

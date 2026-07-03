@@ -12,7 +12,7 @@
             <ClientOnly>
                 <AdminToolbar
                     v-if="isMounted && isAdminMode && !isPreviewMode && !isInnerPreview"
-                    :page-slug="currentPageSlug"
+                    :page-slug="effectiveSlug"
                     @navigate-preview="onNavigatePreview"
                 />
             </ClientOnly>
@@ -98,6 +98,12 @@ const deviceClass = computed(() => {
 
 // Slug used by the iframe (can differ from current page when dropdown changes)
 const previewSlug = ref(currentPageSlug.value)
+
+// In tablet/mobile, the "current page" for the admin dropdown is previewSlug (iframe page),
+// not the route (which never changes during tablet navigation).
+const effectiveSlug = computed(() => {
+    return previewDevice.value !== 'desktop' ? previewSlug.value : currentPageSlug.value
+})
 
 const previewIframeSrc = computed(() => {
     const path = previewSlug.value === "accueil" ? "/" : `/${previewSlug.value}`

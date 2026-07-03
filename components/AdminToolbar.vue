@@ -335,29 +335,56 @@
                             :key="v.id"
                             class="version-item"
                         >
-                            <div class="version-info">
-                                <span class="version-date">{{ formatDate(v.savedAt) }}</span>
-                                <span class="version-author">{{ v.savedBy }}</span>
-                                <div class="version-meta">
-                                    <span class="version-blocks">{{ v.blockCount }} bloc{{ v.blockCount !== 1 ? 's' : '' }}</span>
-                                    <span v-if="v === versions[0]" class="version-current">Actuelle</span>
+                            <div class="version-item-row">
+                                <div
+                                    class="version-info"
+                                    :style="{ cursor: v.changes ? 'pointer' : 'default' }"
+                                    @click="v.changes && toggleVersionExpand(v.id)"
+                                >
+                                    <span class="version-date">{{ formatDate(v.savedAt) }}</span>
+                                    <span class="version-author">{{ v.savedBy }}</span>
+                                    <div class="version-meta">
+                                        <span class="version-blocks">{{ v.blockCount }} bloc{{ v.blockCount !== 1 ? 's' : '' }}</span>
+                                        <span v-if="v === versions[0]" class="version-current">Actuelle</span>
+                                        <span v-if="v.changes" class="version-expand-arrow">{{ expandedVersion === v.id ? '▲' : '▼' }}</span>
+                                    </div>
+                                    <div v-if="v.changes && (v.changes.added || v.changes.removed || v.changes.modified)" class="version-diff">
+                                        <span v-if="v.changes.added" class="vd-added">+{{ v.changes.added }} ajouté{{ v.changes.added > 1 ? 's' : '' }}</span>
+                                        <span v-if="v.changes.removed" class="vd-removed">−{{ v.changes.removed }} supprimé{{ v.changes.removed > 1 ? 's' : '' }}</span>
+                                        <span v-if="v.changes.modified" class="vd-modified">~{{ v.changes.modified }} modifié{{ v.changes.modified > 1 ? 's' : '' }}</span>
+                                    </div>
                                 </div>
-                                <div v-if="v.changes && (v.changes.added || v.changes.removed || v.changes.modified)" class="version-diff">
-                                    <span v-if="v.changes.added" class="vd-added">+{{ v.changes.added }} ajouté{{ v.changes.added > 1 ? 's' : '' }}</span>
-                                    <span v-if="v.changes.removed" class="vd-removed">−{{ v.changes.removed }} supprimé{{ v.changes.removed > 1 ? 's' : '' }}</span>
-                                    <span v-if="v.changes.modified" class="vd-modified">~{{ v.changes.modified }} modifié{{ v.changes.modified > 1 ? 's' : '' }}</span>
-                                    <span v-if="v.changes.details?.modified?.length" class="vd-detail">{{ v.changes.details.modified.join(' · ') }}</span>
-                                    <span v-if="v.changes.details?.added?.length" class="vd-detail vd-added-detail">{{ v.changes.details.added.join(' · ') }}</span>
-                                    <span v-if="v.changes.details?.removed?.length" class="vd-detail vd-removed-detail">{{ v.changes.details.removed.join(' · ') }}</span>
+                                <div class="version-actions">
+                                    <button
+                                        class="admin-btn admin-btn-secondary version-restore-btn"
+                                        @click.stop="restoreVersion(v.id)"
+                                        :disabled="restoring === v.id || deletingVersion === v.id"
+                                    >
+                                        {{ restoring === v.id ? "..." : "Restaurer" }}
+                                    </button>
+                                    <button
+                                        class="version-del-btn"
+                                        @click.stop="deleteVersion(v.id)"
+                                        :disabled="deletingVersion === v.id || restoring === v.id"
+                                        title="Supprimer cette version"
+                                    >{{ deletingVersion === v.id ? "…" : "✕" }}</button>
                                 </div>
                             </div>
-                            <button
-                                class="admin-btn admin-btn-secondary"
-                                @click="restoreVersion(v.id)"
-                                :disabled="restoring === v.id"
-                            >
-                                {{ restoring === v.id ? "Restauration..." : "Restaurer" }}
-                            </button>
+                            <div v-if="expandedVersion === v.id && v.changes" class="version-detail-panel">
+                                <div v-if="v.changes.details?.modified?.length" class="vd-detail-group">
+                                    <span class="vd-detail-label">~ Modifiés</span>
+                                    <span v-for="label in v.changes.details.modified" :key="label" class="vd-detail-item vd-modified">{{ label }}</span>
+                                </div>
+                                <div v-if="v.changes.details?.added?.length" class="vd-detail-group">
+                                    <span class="vd-detail-label">+ Ajoutés</span>
+                                    <span v-for="label in v.changes.details.added" :key="label" class="vd-detail-item vd-added">{{ label }}</span>
+                                </div>
+                                <div v-if="v.changes.details?.removed?.length" class="vd-detail-group">
+                                    <span class="vd-detail-label">− Supprimés</span>
+                                    <span v-for="label in v.changes.details.removed" :key="label" class="vd-detail-item vd-removed">{{ label }}</span>
+                                </div>
+                                <p v-if="!v.changes.details?.modified?.length && !v.changes.details?.added?.length && !v.changes.details?.removed?.length" class="vd-no-detail">Aucun changement détecté</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -408,13 +435,11 @@
                             >
                                 <span class="admin-mgr-uid">{{ email }}</span>
                                 <button
-                                    class="admin-action-btn admin-action-danger"
+                                    class="admin-mgr-del-btn"
                                     @click="removeAdmin(email)"
                                     title="Retirer"
                                     :disabled="removingAdmin === email"
-                                >
-                                    {{ removingAdmin === email ? "..." : "✕" }}
-                                </button>
+                                >{{ removingAdmin === email ? "…" : "✕" }}</button>
                             </div>
                         </div>
                     </div>
@@ -537,6 +562,28 @@ const showVersionHistory = ref(false);
 const versions = ref([]);
 const versionsLoading = ref(false);
 const restoring = ref(null);
+const expandedVersion = ref(null);
+const deletingVersion = ref(null);
+
+function toggleVersionExpand(id) {
+    expandedVersion.value = expandedVersion.value === id ? null : id
+}
+
+async function deleteVersion(versionId) {
+    if (!confirm('Supprimer cette version ?')) return
+    deletingVersion.value = versionId
+    try {
+        const res = await fetch(`/api/pages/${props.pageSlug}/versions/${versionId}`, { method: 'DELETE' })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        versions.value = versions.value.filter(v => v.id !== versionId)
+        if (expandedVersion.value === versionId) expandedVersion.value = null
+    } catch (e) {
+        console.error('[admin] deleteVersion failed:', e)
+        showToast("Erreur : " + (e.message || e), 'toast-error')
+    } finally {
+        deletingVersion.value = null
+    }
+}
 
 watch(showVersionHistory, (show) => {
     if (show) loadVersions()
@@ -1555,14 +1602,7 @@ async function saveChanges() {
     flex-direction: column;
     gap: 8px;
 }
-.version-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 12px;
-    background: #f8f9fa;
-    border-radius: 8px;
-}
+/* .version-item moved above with expandable layout */
 .version-info {
     display: flex;
     flex-direction: column;
@@ -1673,14 +1713,80 @@ async function saveChanges() {
 .admin-mgr-uid {
     word-break: break-all;
     color: #555;
+    flex: 1;
+    min-width: 0;
 }
-.admin-mgr-item button {
-    flex: 0 0 22px;
-    padding: 2px;
+.admin-mgr-del-btn {
+    flex-shrink: 0;
+    padding: 2px 7px;
+    border: 1px solid #fecaca;
+    border-radius: 4px;
+    background: white;
+    color: #ef4444;
+    cursor: pointer;
     font-size: 11px;
-    border-radius: 3px;
-    line-height: 1;
+    line-height: 1.4;
+    white-space: nowrap;
+    margin-left: 8px;
 }
+.admin-mgr-del-btn:hover { background: #fef2f2; }
+.admin-mgr-del-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Version history expandable */
+.version-item {
+    display: flex;
+    flex-direction: column;
+    background: #f8f9fa;
+    border-radius: 8px;
+    overflow: hidden;
+}
+.version-item-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 12px;
+}
+.version-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.version-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-end;
+    flex-shrink: 0;
+}
+.version-restore-btn { font-size: 0.78em; padding: 4px 10px; }
+.version-del-btn {
+    background: none;
+    border: 1px solid #fecaca;
+    border-radius: 4px;
+    color: #ef4444;
+    cursor: pointer;
+    font-size: 10px;
+    padding: 2px 6px;
+    line-height: 1.4;
+}
+.version-del-btn:hover { background: #fef2f2; }
+.version-del-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.version-expand-arrow { font-size: 10px; color: #9ca3af; margin-left: 4px; }
+.version-detail-panel {
+    padding: 8px 12px 10px;
+    border-top: 1px solid #e5e7eb;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.vd-detail-group { display: flex; flex-wrap: wrap; gap: 4px; align-items: baseline; }
+.vd-detail-label {
+    font-size: 10px; font-weight: 700; color: #9ca3af;
+    text-transform: uppercase; letter-spacing: 0.04em;
+    width: 100%; margin-bottom: 2px;
+}
+.vd-detail-item {
+    font-size: 11px; padding: 2px 6px; border-radius: 3px;
+}
+.vd-no-detail { font-size: 11px; color: #9ca3af; margin: 0; font-style: italic; }
 
 /* Global fallback: ensure site header is offset below admin toolbar when in admin mode */
 #app-root.admin-mode .site-header {

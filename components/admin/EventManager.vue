@@ -45,46 +45,62 @@
             </div>
             <label>Lieu <input v-model="form.location" type="text" /></label>
             <div class="event-recurrence">
-              <label>Répétition
-                <select v-model="repeatType">
-                  <option value="">Aucune</option>
-                  <option value="weekly">Chaque semaine</option>
-                  <option value="biweekly">Toutes les 2 semaines</option>
-                  <option value="month">Chaque mois (même date)</option>
-                  <option value="monthly_weekday">Même jour du mois…</option>
-                </select>
-              </label>
-              <!-- Pastilles jours pour hebdo / bimensuel -->
-              <div v-if="repeatType === 'weekly' || repeatType === 'biweekly'" class="day-pills">
-                <button
-                  v-for="(label, di) in DAY_PILL_LABELS"
-                  :key="di"
-                  type="button"
-                  class="day-pill"
-                  :class="{ active: repeatDays.includes(DAY_PILL_WEEKDAYS[di]) }"
-                  @click="toggleDay(DAY_PILL_WEEKDAYS[di])"
-                >{{ label }}</button>
-              </div>
-              <!-- Ordinal + pastilles jour pour mensuel par jour de semaine -->
-              <div v-if="repeatType === 'monthly_weekday'" class="monthly-weekday-row">
-                <select v-model="repeatOrdinal">
-                  <option :value="1">1er</option>
-                  <option :value="2">2e</option>
-                  <option :value="3">3e</option>
-                  <option :value="4">4e</option>
-                  <option :value="-1">Dernier</option>
-                </select>
-                <div class="day-pills">
+              <div v-for="(ruleStr, ri) in rules" :key="ri" class="recurrence-rule">
+                <div class="recurrence-rule-head">
+                  <select
+                    :value="getRuleType(ruleStr)"
+                    @change="setRuleType(ri, $event.target.value)"
+                    class="recurrence-type-select"
+                  >
+                    <option value="weekly">Chaque semaine</option>
+                    <option value="biweekly">Toutes les 2 semaines</option>
+                    <option value="month">Chaque mois (même date)</option>
+                    <option value="monthly_weekday">Même jour du mois…</option>
+                  </select>
+                  <button type="button" class="rule-remove-btn" @click="removeRule(ri)" title="Supprimer cette règle">×</button>
+                </div>
+                <div v-if="getRuleType(ruleStr) === 'weekly' || getRuleType(ruleStr) === 'biweekly'" class="day-pills">
                   <button
-                    v-for="(label, di) in DAY_PILL_LABELS"
-                    :key="di"
+                    v-for="(label, di) in DAY_PILL_LABELS" :key="di"
                     type="button"
                     class="day-pill"
-                    :class="{ active: repeatWeekday === DAY_PILL_WEEKDAYS[di] }"
-                    @click="repeatWeekday = DAY_PILL_WEEKDAYS[di]"
+                    :class="{ active: getRuleDays(ruleStr).includes(DAY_PILL_WEEKDAYS[di]) }"
+                    @click="toggleRuleDay(ri, DAY_PILL_WEEKDAYS[di])"
                   >{{ label }}</button>
                 </div>
-                <span class="monthly-suffix">du mois</span>
+                <div v-if="getRuleType(ruleStr) === 'monthly_weekday'" class="monthly-weekday-row">
+                  <select
+                    :value="getRuleOrdinal(ruleStr)"
+                    @change="setRuleOrdinal(ri, parseInt($event.target.value))"
+                  >
+                    <option value="1">1er</option>
+                    <option value="2">2e</option>
+                    <option value="3">3e</option>
+                    <option value="4">4e</option>
+                    <option value="-1">Dernier</option>
+                  </select>
+                  <div class="day-pills">
+                    <button
+                      v-for="(label, di) in DAY_PILL_LABELS" :key="di"
+                      type="button"
+                      class="day-pill"
+                      :class="{ active: getRuleWeekday(ruleStr) === DAY_PILL_WEEKDAYS[di] }"
+                      @click="setRuleWeekday(ri, DAY_PILL_WEEKDAYS[di])"
+                    >{{ label }}</button>
+                  </div>
+                  <span class="monthly-suffix">du mois</span>
+                </div>
+              </div>
+              <button type="button" class="rule-add-btn" @click="addRule">
+                + {{ rules.length === 0 ? 'Ajouter une répétition' : 'Ajouter une règle' }}
+              </button>
+              <div v-if="rules.length > 0 && nextOccurrences.length > 0" class="next-dates-preview">
+                <div class="next-dates-preview-label">Prochaines occurrences :</div>
+                <div class="next-dates-chips">
+                  <span v-for="(d, i) in nextOccurrences" :key="i" class="next-date-chip">
+                    {{ d.toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: 'short' }) }}
+                  </span>
+                </div>
               </div>
             </div>
             <label>Emoji <input v-model="form.emoji" type="text" maxlength="5" /></label>
@@ -114,17 +130,6 @@
                 <option value="cancelled">Annulé</option>
               </select>
             </label>
-
-            <div v-if="form.repeat_period" class="event-section">
-              <h4>Prochaines dates</h4>
-              <div class="next-dates-list">
-                <div v-for="(d, i) in nextOccurrences" :key="i" class="next-date-item">
-                  <span class="next-date-num">{{ i + 1 }}.</span>
-                  <span>{{ formatDateShort(d) }}</span>
-                  <span class="next-date-day">{{ d.toLocaleDateString('fr-FR', { weekday: 'long' }) }}</span>
-                </div>
-              </div>
-            </div>
 
             <div v-if="editing" class="event-section">
               <h4>Exceptions</h4>
@@ -227,6 +232,11 @@ function getNthWeekdayOfMonth(year, month, weekday, ordinal) {
 
 function formatRepeatPeriod(rp) {
   if (!rp) return ''
+  return rp.split('|').filter(Boolean).map(formatSingleRule).join(' + ')
+}
+
+function formatSingleRule(rp) {
+  if (!rp) return ''
   if (rp === 'week')   return 'chaque semaine'
   if (rp === 'biweek') return 'toutes les 2 sem.'
   if (rp === 'month')  return 'chaque mois'
@@ -241,122 +251,140 @@ function formatRepeatPeriod(rp) {
   if (rp.startsWith('monthly_weekday:')) {
     const p = rp.split(':')
     const n = parseInt(p[1]), d = parseInt(p[2])
-    return `chaque ${ORDINAL_FR[n] || n + 'e'} ${DAY_FR_SHORT[d] || ''} du mois`
+    return `${ORDINAL_FR[n] || n + 'e'} ${DAY_FR_SHORT[d] || ''} du mois`
   }
   return rp
 }
 
-// repeatType: 'weekly' | 'biweekly' | 'month' | 'monthly_weekday' | ''
-const repeatType = computed({
-  get() {
-    const rp = form.value.repeat_period
-    if (!rp) return ''
-    if (rp === 'week'  || rp.startsWith('weekly:'))   return 'weekly'
-    if (rp === 'biweek'|| rp.startsWith('biweekly:')) return 'biweekly'
-    if (rp === 'month') return 'month'
-    if (rp.startsWith('monthly_weekday:')) return 'monthly_weekday'
-    return ''
-  },
-  set(val) {
-    if (!val) { form.value.repeat_period = ''; return }
-    if (val === 'month') { form.value.repeat_period = 'month'; return }
-    if (val === 'weekly' || val === 'biweekly') {
-      const defaultDay = form.value.start_date
-        ? new Date(form.value.start_date + 'T00:00:00').getDay()
-        : 1
-      form.value.repeat_period = `${val}:${defaultDay}`
-      return
-    }
-    if (val === 'monthly_weekday') {
-      if (form.value.start_date) {
-        const d = new Date(form.value.start_date + 'T00:00:00')
-        form.value.repeat_period = `monthly_weekday:${Math.min(Math.ceil(d.getDate() / 7), 4)}:${d.getDay()}`
-      } else {
-        form.value.repeat_period = 'monthly_weekday:1:1'
-      }
-    }
-  }
-})
+// ── Multi-rule helpers ──────────────────────────────────────────────
+// repeat_period stores one or more rule strings separated by '|'
+// e.g. 'weekly:2|monthly_weekday:3:0' = "every Tuesday + 3rd Sunday"
 
-// Selected JS weekdays for weekly/biweekly (array, possibly multiple days)
-const repeatDays = computed(() => {
+const rules = computed(() => {
   const rp = form.value.repeat_period
   if (!rp) return []
-  if (rp === 'week' || rp === 'biweek') {
+  return rp.split('|').filter(Boolean)
+})
+
+function setRulesArray(arr) {
+  form.value.repeat_period = arr.filter(Boolean).join('|')
+}
+
+function addRule() {
+  const defaultDay = form.value.start_date
+    ? new Date(form.value.start_date + 'T00:00:00').getDay()
+    : 1
+  const arr = form.value.repeat_period ? form.value.repeat_period.split('|').filter(Boolean) : []
+  arr.push(`weekly:${defaultDay}`)
+  setRulesArray(arr)
+}
+
+function removeRule(index) {
+  const arr = (form.value.repeat_period || '').split('|').filter(Boolean)
+  arr.splice(index, 1)
+  setRulesArray(arr)
+}
+
+function getRuleType(ruleStr) {
+  if (!ruleStr) return ''
+  if (ruleStr === 'week' || ruleStr.startsWith('weekly:'))   return 'weekly'
+  if (ruleStr === 'biweek' || ruleStr.startsWith('biweekly:')) return 'biweekly'
+  if (ruleStr === 'month') return 'month'
+  if (ruleStr.startsWith('monthly_weekday:')) return 'monthly_weekday'
+  return ''
+}
+
+function setRuleType(index, val) {
+  const arr = (form.value.repeat_period || '').split('|').filter(Boolean)
+  const defaultDay = form.value.start_date
+    ? new Date(form.value.start_date + 'T00:00:00').getDay()
+    : 1
+  let newRule = ''
+  if (val === 'month') newRule = 'month'
+  else if (val === 'weekly')   newRule = `weekly:${defaultDay}`
+  else if (val === 'biweekly') newRule = `biweekly:${defaultDay}`
+  else if (val === 'monthly_weekday') {
+    if (form.value.start_date) {
+      const d = new Date(form.value.start_date + 'T00:00:00')
+      newRule = `monthly_weekday:${Math.min(Math.ceil(d.getDate() / 7), 4)}:${d.getDay()}`
+    } else {
+      newRule = 'monthly_weekday:1:1'
+    }
+  }
+  arr[index] = newRule
+  setRulesArray(arr)
+}
+
+function getRuleDays(ruleStr) {
+  if (!ruleStr) return []
+  if (ruleStr === 'week' || ruleStr === 'biweek') {
     if (!form.value.start_date) return []
     return [new Date(form.value.start_date + 'T00:00:00').getDay()]
   }
-  if (rp.startsWith('weekly:') || rp.startsWith('biweekly:'))
-    return rp.split(':')[1].split(',').map(Number)
+  if (ruleStr.startsWith('weekly:') || ruleStr.startsWith('biweekly:'))
+    return ruleStr.split(':')[1].split(',').map(Number)
   return []
-})
+}
 
-function toggleDay(jsWeekday) {
-  const rp = form.value.repeat_period
-  if (!rp) return
-  const prefix = (rp.startsWith('biweekly:') || rp === 'biweek') ? 'biweekly' : 'weekly'
-  let days = [...repeatDays.value]
+function toggleRuleDay(index, jsWeekday) {
+  const arr = (form.value.repeat_period || '').split('|').filter(Boolean)
+  const ruleStr = arr[index]
+  if (!ruleStr) return
+  const prefix = (ruleStr.startsWith('biweekly:') || ruleStr === 'biweek') ? 'biweekly' : 'weekly'
+  const days = [...getRuleDays(ruleStr)]
   const idx = days.indexOf(jsWeekday)
   if (idx >= 0) {
-    if (days.length <= 1) return  // au moins 1 jour
+    if (days.length <= 1) return
     days.splice(idx, 1)
   } else {
     days.push(jsWeekday)
   }
   days.sort((a, b) => a - b)
-  form.value.repeat_period = `${prefix}:${days.join(',')}`
+  arr[index] = `${prefix}:${days.join(',')}`
+  setRulesArray(arr)
 }
 
-// Ordinal for monthly_weekday (1er/2e/…/Dernier)
-const repeatOrdinal = computed({
-  get() {
-    const rp = form.value.repeat_period
-    if (!rp?.startsWith('monthly_weekday:')) return 1
-    return parseInt(rp.split(':')[1]) || 1
-  },
-  set(val) {
-    const rp = form.value.repeat_period
-    if (!rp?.startsWith('monthly_weekday:')) return
-    const p = rp.split(':')
-    form.value.repeat_period = `monthly_weekday:${val}:${p[2]}`
-  }
-})
+function getRuleOrdinal(ruleStr) {
+  if (!ruleStr?.startsWith('monthly_weekday:')) return 1
+  return parseInt(ruleStr.split(':')[1]) || 1
+}
 
-// Day-of-week for monthly_weekday (single selection via pill)
-const repeatWeekday = computed({
-  get() {
-    const rp = form.value.repeat_period
-    if (!rp?.startsWith('monthly_weekday:')) return 1
-    return parseInt(rp.split(':')[2]) ?? 1
-  },
-  set(val) {
-    const rp = form.value.repeat_period
-    if (!rp?.startsWith('monthly_weekday:')) return
-    const p = rp.split(':')
-    form.value.repeat_period = `monthly_weekday:${p[1]}:${val}`
-  }
-})
+function setRuleOrdinal(index, val) {
+  const arr = (form.value.repeat_period || '').split('|').filter(Boolean)
+  const ruleStr = arr[index]
+  if (!ruleStr?.startsWith('monthly_weekday:')) return
+  const p = ruleStr.split(':')
+  arr[index] = `monthly_weekday:${val}:${p[2]}`
+  setRulesArray(arr)
+}
 
-const nextOccurrences = computed(() => {
-  if (!form.value.repeat_period || !form.value.start_date) return []
-  const rule = parseRepeatPeriod(form.value.repeat_period)
+function getRuleWeekday(ruleStr) {
+  if (!ruleStr?.startsWith('monthly_weekday:')) return 1
+  return parseInt(ruleStr.split(':')[2]) ?? 1
+}
+
+function setRuleWeekday(index, val) {
+  const arr = (form.value.repeat_period || '').split('|').filter(Boolean)
+  const ruleStr = arr[index]
+  if (!ruleStr?.startsWith('monthly_weekday:')) return
+  const p = ruleStr.split(':')
+  arr[index] = `monthly_weekday:${p[1]}:${val}`
+  setRulesArray(arr)
+}
+
+function getOccurrencesForRule(ruleStr, start, now, isCancelled) {
+  const rule = parseRepeatPeriod(ruleStr)
   if (!rule) return []
-  const now = new Date(); now.setHours(0, 0, 0, 0)
-  const start = new Date(form.value.start_date + 'T00:00:00')
-  const excs = form.value.exceptions || []
-  const isCancelled = (d) => excs.some(ex => ex.exception_date === d.toISOString().slice(0, 10) && ex.type === 'cancelled')
   const results = []
   let safety = 0
-
   if (rule.type === 'weekly') {
     const days = (rule.days ?? [start.getDay()]).slice().sort((a, b) => a - b)
     const interval = rule.interval || 1
-    // Monday of start's week
     const dow = start.getDay()
     const startMon = new Date(start)
     startMon.setDate(start.getDate() - (dow === 0 ? 6 : dow - 1))
     let curMon = new Date(startMon)
-    while (results.length < 6 && safety++ < 300) {
+    while (results.length < 10 && safety++ < 300) {
       for (const day of days) {
         const offset = day === 0 ? 6 : day - 1
         const date = new Date(curMon)
@@ -367,23 +395,45 @@ const nextOccurrences = computed(() => {
       curMon.setDate(curMon.getDate() + 7 * interval)
     }
     results.sort((a, b) => a - b)
-    results.splice(6)
+    results.splice(10)
   } else if (rule.type === 'month') {
     let d = new Date(start)
     while (d < now) d.setMonth(d.getMonth() + 1)
-    while (results.length < 6 && safety++ < 200) {
+    while (results.length < 10 && safety++ < 200) {
       if (!isCancelled(d)) results.push(new Date(d))
       d.setMonth(d.getMonth() + 1)
     }
   } else if (rule.type === 'monthly_weekday') {
     let year = start.getFullYear(), month = start.getMonth()
-    while (results.length < 6 && safety++ < 200) {
+    while (results.length < 10 && safety++ < 200) {
       const occ = getNthWeekdayOfMonth(year, month, rule.weekday, rule.ordinal)
       if (occ && occ >= now && !isCancelled(occ)) results.push(occ)
       if (++month > 11) { month = 0; year++ }
     }
   }
   return results
+}
+
+const nextOccurrences = computed(() => {
+  if (!form.value.repeat_period || !form.value.start_date) return []
+  const ruleStrings = form.value.repeat_period.split('|').filter(Boolean)
+  if (!ruleStrings.length) return []
+  const now = new Date(); now.setHours(0, 0, 0, 0)
+  const start = new Date(form.value.start_date + 'T00:00:00')
+  const excs = form.value.exceptions || []
+  const isCancelled = (d) => excs.some(ex => ex.exception_date === d.toISOString().slice(0, 10) && ex.type === 'cancelled')
+  const allDates = []
+  for (const ruleStr of ruleStrings) {
+    allDates.push(...getOccurrencesForRule(ruleStr, start, now, isCancelled))
+  }
+  allDates.sort((a, b) => a - b)
+  const seen = new Set()
+  const unique = []
+  for (const d of allDates) {
+    const key = d.toISOString().slice(0, 10)
+    if (!seen.has(key)) { seen.add(key); unique.push(d) }
+  }
+  return unique.slice(0, 8)
 })
 
 const form = ref({
@@ -699,8 +749,37 @@ watch(() => props.open, (v) => { if (v) fetchEvents() })
 .event-uploaded-item.selected { border-color: #2563eb; }
 .event-uploaded-item img { width: 100%; height: 60px; object-fit: cover; display: block; }
 
-.next-dates-list { display: flex; flex-direction: column; gap: 4px; }
-.next-date-item { display: flex; align-items: center; gap: 8px; font-size: 0.85em; color: #374151; padding: 4px 8px; background: #f9fafb; border-radius: 4px; }
-.next-date-num { font-weight: 700; color: #2563eb; min-width: 16px; }
-.next-date-day { color: #6b7280; font-size: 0.9em; }
+.recurrence-rule {
+  border: 1px solid #e5e7eb; border-radius: 8px;
+  padding: 10px 12px; display: flex; flex-direction: column; gap: 8px;
+}
+.recurrence-rule-head { display: flex; align-items: center; gap: 8px; }
+.recurrence-type-select {
+  flex: 1; padding: 6px 8px; border: 1px solid #d1d5db; border-radius: 6px;
+  font-size: 0.85em; background: white;
+}
+.rule-remove-btn {
+  width: 24px; height: 24px; border: 1px solid #fecaca; border-radius: 50%;
+  background: white; color: #ef4444; cursor: pointer; font-size: 0.9em;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0; padding: 0;
+}
+.rule-remove-btn:hover { background: #fef2f2; }
+.rule-add-btn {
+  padding: 7px 14px; background: #f3f4f6; color: #374151;
+  border: 1.5px dashed #d1d5db; border-radius: 8px;
+  font-size: 0.83em; font-weight: 600; cursor: pointer; text-align: left;
+}
+.rule-add-btn:hover { background: #e5e7eb; border-color: #9ca3af; }
+.next-dates-preview {
+  padding: 10px 12px; background: #eff6ff; border-radius: 8px;
+}
+.next-dates-preview-label {
+  font-weight: 600; color: #1d4ed8; font-size: 0.8em;
+  text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px;
+}
+.next-dates-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.next-date-chip {
+  padding: 3px 9px; background: white; border: 1px solid #bfdbfe;
+  border-radius: 12px; color: #1e40af; font-size: 0.82em; font-weight: 500;
+}
 </style>
