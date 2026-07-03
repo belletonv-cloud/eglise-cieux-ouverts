@@ -137,7 +137,17 @@ watch(previewSlug, async (slug) => {
 })
 
 watch(previewDevice, async (device) => {
+    if (device !== 'desktop') {
+        // Entering tablet/mobile: always start from the current outer page,
+        // not from a stale slug left over from a previous tablet session.
+        previewSlug.value = currentPageSlug.value
+    }
     await syncPreviewBlocks(previewSlug.value, device)
+})
+
+// Keep previewSlug in sync when navigating in desktop mode (router.push).
+watch(currentPageSlug, (slug) => {
+    if (previewDevice.value === 'desktop') previewSlug.value = slug
 })
 
 async function waitForAuth() {
