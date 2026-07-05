@@ -6,6 +6,10 @@
 .cache
 dist
 
+# Régénéré à chaque build (hook build:before dans nuxt.config.ts) — ne
+# doit jamais être commité avec une valeur figée
+public/version.txt
+
 # Node dependencies
 node_modules
 

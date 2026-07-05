@@ -43,8 +43,15 @@ export default defineNuxtConfig({
   },
   hooks: {
     'build:before': async () => {
-      const { mkdirSync } = await import('node:fs')
+      const { mkdirSync, writeFileSync } = await import('node:fs')
       mkdirSync('.nuxt/dist/server', { recursive: true })
+      // Horodatage de build lu par plugins/deployment-check.client.ts pour
+      // détecter un nouveau déploiement et forcer un reload. Placé ici (hook
+      // Nuxt) plutôt que dans un script npm : `nuxt build` est invoqué
+      // directement par plusieurs scripts (deploy, build:e2e) qui ne
+      // passaient pas tous par le script `build` — le fichier n'était donc
+      // jamais rafraîchi lors d'un vrai déploiement.
+      writeFileSync('public/version.txt', Date.now().toString())
     }
   },
   watchers: {

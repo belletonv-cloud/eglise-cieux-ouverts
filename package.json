@@ -9,7 +9,7 @@
   "scripts": {
     "preinstall": "node -e \"if (!/^22\\\\./.test(process.versions.node)) { console.error('❌ Node 22.x.x requis. Utilisez nvm, volta, ou nodenv.'); process.exit(1); }\"",
     "dev": "nuxt dev",
-    "build": "node -e \"require('fs').writeFileSync('public/version.txt', Date.now().toString())\" && nuxt build",
+    "build": "nuxt build",
     "build:e2e": "PW_TEST=1 nuxt build",
     "test:e2e": "npm run build:e2e && playwright test",
     "test:e2e:quick": "playwright test",
