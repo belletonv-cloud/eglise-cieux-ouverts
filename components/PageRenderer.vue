@@ -5,9 +5,9 @@
             handle=".drag-handle"
             ghost-class="block-ghost"
             :animation="200"
+            :force-fallback="true"
             tag="div"
             :style="{ minHeight: '40px' }"
-            @update="onDragUpdate"
         >
         <div
             v-for="block in visibleBlocks"
@@ -126,22 +126,17 @@ const props = defineProps({
 
 const { reorderBlocks } = useAdmin();
 
-function onDragUpdate(evt) {
-    const { newIndex, oldIndex } = evt
-    if (newIndex === oldIndex) return
-    const movedBlock = visibleBlocks.value[oldIndex]
-    const reordered = fixedBlocks.value.slice()
-    const oldPos = reordered.findIndex(b => b.id === movedBlock.id)
-    if (oldPos === -1) return
-    const [item] = reordered.splice(oldPos, 1)
-    const insertAfter = newIndex < visibleBlocks.value.length - 1
-        ? visibleBlocks.value[newIndex >= oldIndex ? newIndex : newIndex]?.id
-        : null
-    const newPos = insertAfter
-        ? reordered.findIndex(b => b.id === insertAfter)
-        : reordered.length
-    reordered.splice(newPos >= 0 ? newPos : reordered.length, 0, item)
-    reorderBlocks(reordered)
+// Applique le nouvel ordre des blocs VISIBLES à la liste complète : les blocs
+// masqués (par device) gardent leur position, les visibles prennent l'ordre
+// issu du drag.
+function applyVisibleOrder(newVisibleOrder) {
+    if (!Array.isArray(newVisibleOrder) || !newVisibleOrder.length) return
+    const visibleIds = new Set(visibleBlocks.value.map((b) => b.id))
+    const queue = [...newVisibleOrder]
+    const merged = fixedBlocks.value.map((b) =>
+        visibleIds.has(b.id) ? (queue.shift() ?? b) : b,
+    )
+    reorderBlocks(merged)
 }
 
 const {
@@ -194,11 +189,14 @@ const visibleBlocks = computed(() => {
     );
 });
 
-// vue-draggable-plus TypeScript types require modelValue; mutations are handled
-// by onDragUpdate so the setter is intentionally a no-op.
+// v-model réel : c'est le flux prévu par vue-draggable-plus — Sortable
+// déplace le nœud DOM puis émet le tableau ré-ordonné via le setter. Un
+// setter no-op + ré-ordonnancement custom dans @update faisait re-rendre
+// à Vue un v-for keyé sur un DOM déjà muté hors de son contrôle → erreurs
+// de réconciliation intermittentes (nextSibling/insertBefore sur null).
 const draggableModel = computed({
     get: () => visibleBlocks.value,
-    set: () => {},
+    set: (newOrder) => applyVisibleOrder(newOrder),
 });
 
 function visibilityClass(block) {
@@ -363,6 +361,10 @@ if (typeof window !== "undefined" && import.meta.client) {
             if (!isAdmin || !isAdmin.value) return;
             const target = ev.target;
             if (!target) return;
+            // La poignée de drag appartient à Sortable : sélectionner le bloc
+            // au moment où on la saisit ouvre la sidebar + overlay plein
+            // écran qui avale le drag en cours
+            if (target.closest && target.closest(".drag-handle")) return;
             const wrapper = target.closest && target.closest(".block-wrapper");
             if (wrapper) {
                 const bid = wrapper.getAttribute("data-block-id");
@@ -402,6 +404,8 @@ if (typeof window !== "undefined" && import.meta.client) {
             if (!isAdmin || !isAdmin.value) return;
             const target = ev.target;
             if (!target) return;
+            // Idem docClickHandler : la poignée de drag ne sélectionne pas
+            if (target.closest && target.closest(".drag-handle")) return;
             const wrapper = target.closest && target.closest(".block-wrapper");
             if (wrapper) {
                 const bid = wrapper.getAttribute("data-block-id");
@@ -525,13 +529,21 @@ watch(
     white-space: nowrap;
 }
 .drag-handle {
+    /* À l'INTÉRIEUR du wrapper : les blocs occupent toute la largeur, un
+       offset négatif (ancien left:-28px) plaçait la poignée hors écran —
+       le drag & drop était inutilisable */
     position: absolute;
     top: 50%;
-    left: -28px;
+    left: 8px;
     transform: translateY(-50%);
     cursor: grab;
     font-size: 18px;
-    color: #6b7280;
+    color: #374151;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+    z-index: 20;
     opacity: 0;
     transition: opacity 0.15s;
     user-select: none;

@@ -2,7 +2,7 @@
   <section
     class="block-youtube"
     :style="{ background: backgroundColor }"
-    :class="[visibilityClasses, containerAnim.animClass, { triggered: containerAnim.triggered }]"
+    :class="[visibilityClasses, containerAnim.animClass, { triggered: containerAnim.triggered.value }]"
   >
     <div class="youtube-inner">
       <div class="youtube-player" v-if="videoId && hasValidId" :ref="containerAnim.setRef">

@@ -480,9 +480,14 @@ test.describe('7. Admin mode UI integrity', () => {
     await page.goto('/?admin=true')
     await page.waitForTimeout(2000)
     const options = page.locator('.admin-page-select option')
-    // 5 pages de base (Accueil, Contact, Messages, Événements, Agenda) ;
-    // les pages CMS custom s'ajoutent dynamiquement selon l'environnement
-    await expect(options).toHaveCount(5)
+    // 5 pages de base toujours présentes ; les pages CMS custom (dont la
+    // fixture test-blocks du mock) s'ajoutent dynamiquement — ne pas figer
+    // le compte exact
+    const values = await options.evaluateAll((els) => els.map((o) => (o as HTMLOptionElement).value))
+    for (const base of ['accueil', 'contact', 'messages', 'event-list', 'agenda']) {
+      expect(values).toContain(base)
+    }
+    expect(values.length).toBeGreaterThanOrEqual(5)
   })
 
   test('admin-toolbar is visible with page selector', async ({ page }) => {

@@ -18,8 +18,14 @@ test.describe('Mode édition', () => {
     await expect(select).toBeVisible()
 
     const options = page.locator('.admin-page-select option')
-    // Accueil, Contact, Messages, Événements, Agenda (Photos a été retiré du sélecteur)
-    await expect(options).toHaveCount(5)
+    // 5 pages de base toujours présentes ; les pages CMS custom du mock
+    // s'ajoutent après le fetch async — ne pas figer le compte exact
+    await page.waitForTimeout(1500)
+    const values = await options.evaluateAll((els) => els.map((o) => (o as HTMLOptionElement).value))
+    for (const base of ['accueil', 'contact', 'messages', 'event-list', 'agenda']) {
+      expect(values).toContain(base)
+    }
+    expect(values.length).toBeGreaterThanOrEqual(5)
   })
 
   test('l avatar du mock utilisateur est visible avec auth mock', async ({ page }) => {

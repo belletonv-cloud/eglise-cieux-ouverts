@@ -6,17 +6,20 @@
     ref="sectionRef"
   >
     <div class="vision-content" :style="contentStyle">
+      <!-- .value explicite : les refs dans un objet simple ne sont PAS
+           déballées en template — sans .value on teste l'objet Ref
+           (toujours truthy) au lieu de son état -->
       <p
         v-if="label"
         class="vision-label"
         :ref="labelAnim.setRef"
-        :class="[labelAnim.animClass, { triggered: labelAnim.triggered }]"
+        :class="[labelAnim.animClass, { triggered: labelAnim.triggered.value }]"
       >{{ label }}</p>
       <p
         v-if="quote"
         class="vision-quote"
         :ref="quoteAnim.setRef"
-        :class="[quoteAnim.animClass, { triggered: quoteAnim.triggered }]"
+        :class="[quoteAnim.animClass, { triggered: quoteAnim.triggered.value }]"
         v-html="sanitizedContent"
       ></p>
       <NuxtLink
@@ -24,7 +27,7 @@
         :to="ctaLink"
         class="btn btn-white"
         :ref="ctaAnim.setRef"
-        :class="[ctaAnim.animClass, { triggered: ctaAnim.triggered }]"
+        :class="[ctaAnim.animClass, { triggered: ctaAnim.triggered.value }]"
       >{{ ctaText }}</NuxtLink>
     </div>
   </section>
