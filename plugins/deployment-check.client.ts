@@ -1,4 +1,7 @@
+import { useAdmin } from '~/composables/useAdmin'
+
 export default defineNuxtPlugin((nuxtApp) => {
+  const { isAdminMode } = useAdmin()
   let knownVersion: string | null = null
   let reloading = false
   let lastCheckAt = 0
@@ -15,6 +18,12 @@ export default defineNuxtPlugin((nuxtApp) => {
 
   async function checkForNewDeployment(throttleMs: number) {
     if (reloading) return
+    // En admin, un reload forcé peut interrompre une action en cours
+    // (changement de device, navigation de page, édition non sauvegardée) :
+    // `page:finish` se déclenche à CHAQUE changement de route/query interne
+    // de la toolbar admin, pas seulement lors d'une vraie navigation —
+    // on saute la vérification tant que l'admin est actif.
+    if (isAdminMode.value) return
     const now = Date.now()
     if (now - lastCheckAt < throttleMs) return
     lastCheckAt = now
