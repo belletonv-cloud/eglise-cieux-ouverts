@@ -100,6 +100,22 @@
         :is-triggered="isTriggered"
         :data-admin="isAdmin || undefined"
     />
+    <BlockEquipe
+        v-else-if="btype === 'equipe'"
+        v-bind="sprops"
+        :block-id="bid"
+        :visibility="bvisibility"
+        :is-triggered="isTriggered"
+        :data-admin="isAdmin || undefined"
+    />
+    <BlockFaq
+        v-else-if="btype === 'faq'"
+        v-bind="sprops"
+        :block-id="bid"
+        :visibility="bvisibility"
+        :is-triggered="isTriggered"
+        :data-admin="isAdmin || undefined"
+    />
     <BlockFooter
         v-else-if="btype === 'footer'"
         v-bind="sprops"
@@ -129,6 +145,8 @@ import BlockFullWidthImage from "~/components/blocks/BlockFullWidthImage.vue";
 import BlockTextImage from "~/components/blocks/BlockTextImage.vue";
 import BlockYoutube from "~/components/blocks/BlockYoutube.vue";
 import BlockFooter from "~/components/blocks/BlockFooter.vue";
+import BlockEquipe from "~/components/blocks/BlockEquipe.vue";
+import BlockFaq from "~/components/blocks/BlockFaq.vue";
 
 const props = defineProps({
     block: { type: Object, required: true },

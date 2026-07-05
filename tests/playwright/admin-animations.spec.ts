@@ -12,7 +12,7 @@ test.describe('Animations des blocs en mode admin', () => {
     await page.waitForLoadState('domcontentloaded')
     // 1) adminEnabled
     const adminEnabled = await page.evaluate(() => {
-      return window.__adminEnabled ?? false
+      return (window as any).__adminEnabled ?? false
     })
     console.log('adminEnabled =', adminEnabled)
     // 2) toolbar visible ?

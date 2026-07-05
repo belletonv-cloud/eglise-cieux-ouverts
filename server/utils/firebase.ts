@@ -172,9 +172,16 @@ export async function setFirestoreDoc(
   accessToken: string,
   collection: string,
   docId: string,
-  data: Record<string, any>
+  data: Record<string, any>,
+  updateMask?: string[]
 ): Promise<void> {
-  const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/${collection}/${docId}`
+  // Sans updateMask, le PATCH Firestore remplace le document ENTIER
+  // (les champs absents de `data` sont perdus). Avec un mask, seuls
+  // les champs listés sont modifiés.
+  let url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/${collection}/${docId}`
+  if (updateMask?.length) {
+    url += '?' + updateMask.map(f => `updateMask.fieldPaths=${encodeURIComponent(f)}`).join('&')
+  }
 
   const response = await fetch(url, {
     method: 'PATCH',

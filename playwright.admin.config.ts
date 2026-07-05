@@ -10,7 +10,7 @@ export default defineConfig({
     headless: true,
   },
   webServer: {
-    command: 'npm run dev',
+    command: 'PW_TEST=1 npm run dev -- --port 3002',
     url: 'http://localhost:3002',
     reuseExistingServer: true,
     timeout: 120000,

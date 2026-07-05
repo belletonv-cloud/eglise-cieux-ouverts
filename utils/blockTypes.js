@@ -429,6 +429,82 @@ export const BLOCK_TYPES = {
     ],
   },
 
+  equipe: {
+    label: "Équipe (membres)",
+    icon: "👥",
+    category: "content",
+    animations: "wrapper",
+    defaults: {
+      title: "Notre équipe",
+      subtitle: "",
+      members: [
+        { name: "Prénom Nom", role: "Pasteur", photo: "", description: "" },
+      ],
+      columns: 3,
+      backgroundColor: "#ffffff",
+      textColor: "#064886",
+      animation: "fadeIn",
+    },
+    schema: [
+      { key: "title", label: "Titre", type: "text" },
+      { key: "subtitle", label: "Sous-titre", type: "text" },
+      {
+        key: "members",
+        label: "Membres",
+        type: "array",
+        subFields: [
+          { key: "name", label: "Nom", type: "text" },
+          { key: "role", label: "Rôle", type: "text" },
+          { key: "photo", label: "URL photo", type: "text" },
+          { key: "description", label: "Description", type: "textarea" },
+        ],
+      },
+      { key: "columns", label: "Colonnes", type: "number", min: 1, max: 4 },
+      { key: "backgroundColor", label: "Fond", type: "color" },
+      { key: "textColor", label: "Couleur texte", type: "color" },
+      { key: "animation", label: "Animation", type: "animation" },
+    ],
+  },
+
+  faq: {
+    label: "FAQ (accordéon)",
+    icon: "❓",
+    category: "content",
+    animations: "wrapper",
+    defaults: {
+      title: "Questions fréquentes",
+      subtitle: "",
+      items: [
+        {
+          question: "Comment se déroule une célébration ?",
+          answer:
+            "Accueil café à 9h30, puis célébration à 10h : louange, message et temps de prière. Les enfants sont accueillis dans des espaces dédiés.",
+        },
+      ],
+      openFirst: false,
+      backgroundColor: "#ffffff",
+      textColor: "#064886",
+      animation: "fadeIn",
+    },
+    schema: [
+      { key: "title", label: "Titre", type: "text" },
+      { key: "subtitle", label: "Sous-titre", type: "text" },
+      {
+        key: "items",
+        label: "Questions",
+        type: "array",
+        subFields: [
+          { key: "question", label: "Question", type: "text" },
+          { key: "answer", label: "Réponse", type: "textarea" },
+        ],
+      },
+      { key: "openFirst", label: "Première question ouverte", type: "boolean" },
+      { key: "backgroundColor", label: "Fond", type: "color" },
+      { key: "textColor", label: "Couleur texte", type: "color" },
+      { key: "animation", label: "Animation", type: "animation" },
+    ],
+  },
+
   footer: {
     label: "Footer",
     icon: "📋",

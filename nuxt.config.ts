@@ -12,6 +12,7 @@ export default defineNuxtConfig({
   experimental: {
     appManifest: false
   },
+  // @ts-expect-error: routeRules valid at runtime but absent from this Nuxt version's InputConfig type
   routeRules: {
     '/billetterie': { redirect: '/event-list' },
     '/**': { headers: { 'x-frame-options': 'SAMEORIGIN' } },
@@ -37,7 +38,6 @@ export default defineNuxtConfig({
     { path: '~/components', global: true },
     { path: '~/components/editor', global: true }
   ],
-  // @ts-expect-error: 'nitro' is valid at runtime but not in Nuxt 3.20's InputConfig type
   nitro: {
     preset: process.env.PW_TEST === '1' ? 'node-server' : 'cloudflare-pages',
   },

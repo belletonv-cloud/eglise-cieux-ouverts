@@ -1,24 +1,26 @@
 import { getFirestoreConfig, getAccessToken, getFirestoreDoc, setFirestoreDoc, parseFirestoreDoc } from '../../utils/firebase'
-import { verifyFirebaseToken, isUserAdmin } from '../../utils/firebase-admin'
+import { requireAdmin } from '../../utils/firebase-admin'
 
 export default defineEventHandler(async (event) => {
+  // En mode test, écrit dans le mock RAM — jamais dans la vraie base
+  const isTest = process.env.NODE_ENV === 'test' || process.env.PW_TEST === '1' || process.env.TEST_ENV === '1'
+  if (isTest) {
+    const { setPageDoc } = await import('../../utils/firestore-mock.js')
+    const slug = getRouterParam(event, 'slug')
+    const body = await readBody(event)
+    if (!slug || !body?.blocks) {
+      throw createError({ statusCode: 400, message: 'Données invalides' })
+    }
+    await setPageDoc(slug, { blocks: body.blocks })
+    return { success: true }
+  }
+
   const config = getFirestoreConfig(event)
   if (!config) {
     throw createError({ statusCode: 500, message: 'Firestore non configuré' })
   }
 
-  // Vérifier que l'utilisateur est admin
-  const authHeader = getHeader(event, 'authorization')
-  if (!authHeader?.startsWith('Bearer ')) {
-    throw createError({ statusCode: 401, message: 'Non authentifié' })
-  }
-  const userInfo = await verifyFirebaseToken(authHeader.slice(7))
-  if (!userInfo) {
-    throw createError({ statusCode: 401, message: 'Token invalide' })
-  }
-  if (!await isUserAdmin(event, userInfo.email)) {
-    throw createError({ statusCode: 403, message: 'Accès refusé' })
-  }
+  const userInfo = await requireAdmin(event)
 
   const slug = getRouterParam(event, 'slug')
   if (!slug) {
@@ -53,12 +55,19 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    // 3. Écrire les nouveaux blocks
-    await setFirestoreDoc(config.projectId, accessToken, 'pages', slug, {
+    // 3. Écrire les nouveaux blocks — updateMask pour ne pas effacer
+    // title/createdAt (un PATCH sans mask remplace tout le document)
+    const update: Record<string, any> = {
       blocks: body.blocks,
       updatedAt: new Date().toISOString(),
       updatedBy: userEmail,
-    })
+    }
+    const mask = ['blocks', 'updatedAt', 'updatedBy']
+    if (typeof body.title === 'string' && body.title.trim()) {
+      update.title = body.title.trim()
+      mask.push('title')
+    }
+    await setFirestoreDoc(config.projectId, accessToken, 'pages', slug, update, mask)
 
     return { success: true }
   } catch (err: any) {

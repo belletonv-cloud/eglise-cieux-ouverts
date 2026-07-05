@@ -1,4 +1,5 @@
 import { getFirestoreConfig, getAccessToken, parseFirestoreDoc } from '../../../utils/firebase'
+import { requireAdmin } from '../../../utils/firebase-admin'
 
 function summarizeBlocks(blocks: any[]) {
   const typeCounts: Record<string, number> = {}
@@ -11,8 +12,16 @@ function summarizeBlocks(blocks: any[]) {
 
 function blockLabel(b: any): string {
   const t = b?.type || 'inconnu'
-  const title = b?.props?.title || b?.props?.heading || b?.props?.text?.slice?.(0, 30) || ''
-  return title ? `${t} « ${title} »` : t
+  const p = b?.props || {}
+  const rawTitle = p.title || p.heading || p.name || ''
+  if (rawTitle) return `${t} « ${rawTitle} »`
+  // Strip HTML tags for richtext / content blocks
+  const rawContent = p.content || p.text || p.description || ''
+  if (rawContent) {
+    const stripped = String(rawContent).replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 40)
+    if (stripped) return `${t} « ${stripped}${stripped.length >= 40 ? '…' : ''} »`
+  }
+  return t
 }
 
 function computeChanges(newerBlocks: any[], olderBlocks: any[]) {
@@ -71,6 +80,8 @@ export default defineEventHandler(async (event) => {
   if (!config) {
     throw createError({ statusCode: 500, message: 'Firestore non configuré' })
   }
+
+  await requireAdmin(event)
 
   const slug = getRouterParam(event, 'slug')
   if (!slug) {

@@ -1,18 +1,21 @@
 export default defineEventHandler(async (event) => {
+  // En mode test (CI ou local), le mock prime TOUJOURS sur Firestore :
+  // sinon les tests locaux (où .env a de vrais credentials) tapent la
+  // vraie base et deviennent non déterministes
+  const isTest = process.env.NODE_ENV === 'test' || process.env.PW_TEST === '1' || process.env.TEST_ENV === '1'
+  if (isTest) {
+    const { getPageDoc } = await import('../../utils/firestore-mock.js')
+    const slug = getRouterParam(event, 'slug') || 'accueil'
+    return await getPageDoc(slug)
+  }
+
   const config = useRuntimeConfig(event)
   const projectId = (process.env.NUXT_FIREBASE_PROJECT_ID || config.firebaseProjectId) as string
   const clientEmail = (process.env.NUXT_FIREBASE_CLIENT_EMAIL || config.firebaseClientEmail) as string
   const privateKey = (process.env.NUXT_FIREBASE_PRIVATE_KEY || config.firebasePrivateKey) as string
 
   if (!projectId || !clientEmail || !privateKey) {
-    // En CI, TEST_ENV ou local : renvoie la RAM du mock si Firestore absent
-    const isTest = process.env.NODE_ENV === 'test' || process.env.PW_TEST === '1' || process.env.TEST_ENV === '1'
-    if (isTest) {
-      const { getPageDoc } = await import('../../utils/firestore-mock.js')
-      const slug = getRouterParam(event, 'slug') || 'accueil'
-      return await getPageDoc(slug)
-    }
-    // Sinon, fallback neutre → le frontend utilise getDefaultHomePage() etc.
+    // Fallback neutre → le frontend utilise getDefaultHomePage() etc.
     return { blocks: [] }
   }
 

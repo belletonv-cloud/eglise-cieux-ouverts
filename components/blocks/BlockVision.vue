@@ -81,8 +81,10 @@ const sanitizedContent = computed(() => {
   return sanitizeHtml(formattedQuote.value)
 })
 
+// Même valeur initiale côté serveur et client (sinon hydration mismatch) ;
+// onScroll() recalcule la vraie progression dès le montage
 const sectionRef = ref(null)
-const scrollProgress = ref(import.meta.client ? 0 : 1)
+const scrollProgress = ref(1)
 
 const onScroll = () => {
   if (!sectionRef.value) return

@@ -12,7 +12,7 @@
                 <option value="messages">Messages</option>
                 <option value="event-list">Événements</option>
                 <option value="agenda">Agenda</option>
-                <option v-for="p in customPages" :key="p.slug" :value="p.slug">{{ p.slug }}</option>
+                <option v-for="p in customPages" :key="p.slug" :value="p.slug">{{ p.title || p.slug }}</option>
             </select>
         </div>
         <div class="admin-toolbar-center">
@@ -126,9 +126,17 @@
                         />
                         <span v-else class="admin-user">{{ user.email }}</span>
                         <button
+                            class="admin-btn admin-btn-add-block"
+                            @click="showBlockPicker = true"
+                            title="Ajouter un bloc à la page"
+                        >
+                            ＋ Bloc
+                        </button>
+                        <button
                             class="admin-btn"
                             @click="saveChanges"
                             :disabled="saving"
+                            title="Sauvegarder les modifications"
                         >
                             {{ saving ? "Sauvegarde..." : "Sauvegarder" }}
                         </button>
@@ -156,6 +164,7 @@
                         <button
                             class="admin-btn admin-btn-secondary"
                             @click="signOutAndExit"
+                            title="Quitter le mode admin"
                         >
                             Quitter
                         </button>
@@ -316,6 +325,35 @@
         </div>
     </div>
 
+    <!-- Block Picker Modal -->
+    <Teleport to="body">
+        <div v-if="showBlockPicker" class="version-modal-overlay" @click.self="showBlockPicker = false">
+            <div class="version-modal block-picker-modal">
+                <div class="version-modal-header">
+                    <div>
+                        <h3>Ajouter un bloc</h3>
+                        <p v-if="activeBlock" class="block-picker-subtitle">Sera inséré après « {{ getBlockLabel(activeBlock.type) }} »</p>
+                        <p v-else class="block-picker-subtitle">Sera ajouté en fin de page</p>
+                    </div>
+                    <button class="version-modal-close" @click="showBlockPicker = false" title="Fermer">✕</button>
+                </div>
+                <div class="version-modal-body">
+                    <div class="block-picker-grid">
+                        <button
+                            v-for="bt in pickableBlockTypes"
+                            :key="bt.key"
+                            class="block-picker-card"
+                            @click="pickBlock(bt.key)"
+                        >
+                            <span class="block-picker-icon">{{ bt.icon }}</span>
+                            <span class="block-picker-label">{{ bt.label }}</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </Teleport>
+
     <!-- Version History Modal -->
     <Teleport to="body">
         <div v-if="showVersionHistory" class="version-modal-overlay" @click.self="showVersionHistory = false">
@@ -339,6 +377,7 @@
                                 <div
                                     class="version-info"
                                     :style="{ cursor: v.changes ? 'pointer' : 'default' }"
+                                    :title="v.changes ? (expandedVersion === v.id ? 'Masquer les détails' : 'Voir les détails des changements') : undefined"
                                     @click="v.changes && toggleVersionExpand(v.id)"
                                 >
                                     <span class="version-date">{{ formatDate(v.savedAt) }}</span>
@@ -359,6 +398,7 @@
                                         class="admin-btn admin-btn-secondary version-restore-btn"
                                         @click.stop="restoreVersion(v.id)"
                                         :disabled="restoring === v.id || deletingVersion === v.id"
+                                        title="Restaurer cette version"
                                     >
                                         {{ restoring === v.id ? "..." : "Restaurer" }}
                                     </button>
@@ -506,9 +546,35 @@ const {
     closeFooterEditor,
     updateFooterBlock,
     saveFooterBlock,
+    addBlock,
 } = useAdmin();
 
+const { saveMenuToFirestore, customPages, loadCustomPages } = useMenuEditor();
+
+// Titre « propre » de la page courante (celui affiché dans la liste
+// déroulante), renvoyé au serveur à chaque sauvegarde pour réparer les
+// pages dont le titre a été écrasé
+const knownPageTitle = computed(() => {
+    const page = customPages.value.find(p => p.slug === props.pageSlug)
+    return page && page.title && page.title !== page.slug ? page.title : ''
+})
+
 const { $auth } = useNuxtApp();
+
+// ─── Block picker ─────────────────────────────────────────────────────────────
+const showBlockPicker = ref(false)
+
+const pickableBlockTypes = computed(() =>
+    Object.entries(BLOCK_TYPES)
+        .filter(([key]) => key !== 'footer')
+        .map(([key, def]) => ({ key, label: def.label || key, icon: def.icon || '📦', category: def.category || 'other' }))
+)
+
+async function pickBlock(type) {
+    showBlockPicker.value = false
+    const newBlock = await addBlock(type, activeBlock.value?.id)
+    if (newBlock) selectBlock(newBlock.id)
+}
 
 function setDevice(device) {
   previewDevice.value = device
@@ -573,7 +639,11 @@ async function deleteVersion(versionId) {
     if (!confirm('Supprimer cette version ?')) return
     deletingVersion.value = versionId
     try {
-        const res = await fetch(`/api/pages/${props.pageSlug}/versions/${versionId}`, { method: 'DELETE' })
+        const token = await getFirebaseToken()
+        const res = await fetch(`/api/pages/${props.pageSlug}/versions/${versionId}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token}` },
+        })
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         versions.value = versions.value.filter(v => v.id !== versionId)
         if (expandedVersion.value === versionId) expandedVersion.value = null
@@ -592,7 +662,10 @@ watch(showVersionHistory, (show) => {
 async function loadVersions() {
     versionsLoading.value = true
     try {
-        const res = await fetch(`/api/pages/${props.pageSlug}/versions`)
+        const token = await getFirebaseToken()
+        const res = await fetch(`/api/pages/${props.pageSlug}/versions`, {
+            headers: { Authorization: `Bearer ${token}` },
+        })
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         const data = await res.json()
         versions.value = data.versions || []
@@ -607,7 +680,11 @@ async function loadVersions() {
 async function restoreVersion(versionId) {
     restoring.value = versionId
     try {
-        const res = await fetch(`/api/pages/${props.pageSlug}/versions/${versionId}`, { method: 'PUT' })
+        const token = await getFirebaseToken()
+        const res = await fetch(`/api/pages/${props.pageSlug}/versions/${versionId}`, {
+            method: 'PUT',
+            headers: { Authorization: `Bearer ${token}` },
+        })
         if (!res.ok) {
             const err = await res.json().catch(() => ({}))
             throw new Error(err.message || `HTTP ${res.status}`)
@@ -817,7 +894,7 @@ onMounted(() => {
     };
     document.addEventListener("keydown", handler);
 
-    loadCustomPages();
+    if (!customPages.value.length) loadCustomPages();
 });
 
 onUnmounted(() => {
@@ -868,7 +945,12 @@ async function saveToServer() {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`,
             },
-            body: JSON.stringify({ blocks: localBlocks.value }),
+            body: JSON.stringify({
+                blocks: localBlocks.value,
+                // Renvoie le titre connu pour réparer les pages dont le titre
+                // a été écrasé par d'anciennes sauvegardes
+                title: knownPageTitle.value || undefined,
+            }),
         })
         if (!res.ok) {
             const err = await res.json().catch(() => ({}))
@@ -1052,17 +1134,6 @@ async function saveFooterChanges() {
     }
 }
 
-const customPages = ref([]);
-
-function loadCustomPages() {
-    fetch('/api/pages')
-        .then(res => res.json())
-        .then(data => {
-            const hardcoded = ['accueil', 'contact', 'messages', 'event-list', 'agenda', 'photos']
-            customPages.value = (data.pages || []).filter(p => !hardcoded.includes(p.slug))
-        })
-        .catch(() => { customPages.value = [] })
-}
 
 async function navigateToPage(slug) {
     if (previewDevice.value !== "desktop") {
@@ -1108,7 +1179,6 @@ async function saveChanges() {
     try {
         await saveToServer();
         // Also persist menu changes
-        const { saveMenuToFirestore } = useMenuEditor();
         await saveMenuToFirestore();
         markSaved();
         saveStatus.value = "Sauvegardé";
@@ -1787,6 +1857,57 @@ async function saveChanges() {
     font-size: 11px; padding: 2px 6px; border-radius: 3px;
 }
 .vd-no-detail { font-size: 11px; color: #9ca3af; margin: 0; font-style: italic; }
+
+/* Block picker */
+.block-picker-modal {
+    max-width: 640px;
+}
+.block-picker-subtitle {
+    margin: 2px 0 0;
+    font-size: 12px;
+    color: #888;
+}
+.block-picker-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 10px;
+}
+.block-picker-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 14px 10px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #fafafa;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, transform 0.1s;
+    font-family: inherit;
+}
+.block-picker-card:hover {
+    background: #eff6ff;
+    border-color: #3b82f6;
+    transform: translateY(-2px);
+}
+.block-picker-icon {
+    font-size: 24px;
+    line-height: 1;
+}
+.block-picker-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #374151;
+    text-align: center;
+    line-height: 1.3;
+}
+.admin-btn-add-block {
+    background: #10b981;
+    color: white;
+}
+.admin-btn-add-block:hover {
+    background: #059669;
+}
 
 /* Global fallback: ensure site header is offset below admin toolbar when in admin mode */
 #app-root.admin-mode .site-header {

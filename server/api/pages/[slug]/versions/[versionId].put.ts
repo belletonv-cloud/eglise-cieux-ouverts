@@ -1,10 +1,13 @@
 import { getFirestoreConfig, getAccessToken, getFirestoreDoc, setFirestoreDoc, parseFirestoreDoc } from '../../../../utils/firebase'
+import { requireAdmin } from '../../../../utils/firebase-admin'
 
 export default defineEventHandler(async (event) => {
   const config = getFirestoreConfig(event)
   if (!config) {
     throw createError({ statusCode: 500, message: 'Firestore non configuré' })
   }
+
+  const userInfo = await requireAdmin(event)
 
   const slug = getRouterParam(event, 'slug')
   const versionId = getRouterParam(event, 'versionId')
@@ -35,16 +38,16 @@ export default defineEventHandler(async (event) => {
       await setFirestoreDoc(config.projectId, accessToken, 'pages', `${slug}/versions/${newVersionId}`, {
         blocks: currentParsed.blocks,
         savedAt: new Date().toISOString(),
-        savedBy: 'restauration',
+        savedBy: userInfo.email || 'restauration',
       })
     }
 
-    // Écrire les blocks restaurés
+    // Écrire les blocks restaurés — updateMask pour préserver title/createdAt
     await setFirestoreDoc(config.projectId, accessToken, 'pages', slug, {
       blocks: versionParsed.blocks,
       updatedAt: new Date().toISOString(),
-      updatedBy: 'restauration',
-    })
+      updatedBy: userInfo.email || 'restauration',
+    }, ['blocks', 'updatedAt', 'updatedBy'])
 
     return { success: true, blocks: versionParsed.blocks }
   } catch (err: any) {

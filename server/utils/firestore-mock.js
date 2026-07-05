@@ -97,6 +97,8 @@ let PAGES = {
       { id: 'tb-youtube', type: 'youtube', props: { videoId: 'wZebQj0gR98', title: 'Démo' } },
       { id: 'tb-vision', type: 'vision', props: {} },
       { id: 'tb-fullWidthImage', type: 'fullWidthImage', props: { image: '/test-img.gif', animation: 'portal' } },
+      { id: 'tb-equipe', type: 'equipe', props: { members: [{ name: 'Jean Test', role: 'Pasteur', photo: '', description: 'Membre de démonstration' }] } },
+      { id: 'tb-faq', type: 'faq', props: { items: [{ question: 'Question de test ?', answer: 'Réponse de test.' }] } },
       { id: 'tb-footer', type: 'footer', props: {} },
     ],
   },

@@ -142,10 +142,10 @@ watch(previewSlug, async (slug) => {
     await syncPreviewBlocks(slug, previewDevice.value)
 })
 
-watch(previewDevice, async (device) => {
-    if (device !== 'desktop') {
-        // Entering tablet/mobile: always start from the current outer page,
-        // not from a stale slug left over from a previous tablet session.
+watch(previewDevice, async (device, prevDevice) => {
+    if (device !== 'desktop' && prevDevice === 'desktop') {
+        // Only reset previewSlug when entering non-desktop FROM desktop.
+        // Switching between tablet and mobile keeps the current iframe page.
         previewSlug.value = currentPageSlug.value
     }
     await syncPreviewBlocks(previewSlug.value, device)
@@ -275,6 +275,7 @@ onMounted(() => {
         previewDevice.value = route.query.device;
     }
     loadFooterBlock();
+    loadMenuFromFirestore();
 
     // Listen for messages from preview iframe
     function onIframeMessage(e) {

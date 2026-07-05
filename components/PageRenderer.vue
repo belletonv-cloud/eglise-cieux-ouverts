@@ -1,10 +1,10 @@
 <template>
     <div v-if="isAdmin && isMounted" class="page-renderer admin-mode">
         <VueDraggable
-            :list="visibleBlocks"
+            v-model="draggableModel"
             handle=".drag-handle"
             ghost-class="block-ghost"
-            animation="200"
+            :animation="200"
             tag="div"
             :style="{ minHeight: '40px' }"
             @update="onDragUpdate"
@@ -94,7 +94,7 @@ import { VueDraggable } from 'vue-draggable-plus';
 const isAdmin = inject("isAdmin", ref(false));
 const isEditor = inject("isEditor", ref(false));
 const editingBlockId = inject("editingBlockId", ref(null));
-const selectBlock = inject("selectBlock", () => {});
+const selectBlock = inject<(id: string) => void>("selectBlock", () => {});
 const previewDevice = inject("previewDevice", ref("desktop"));
 
 // In iframe preview mode, forward block clicks to parent
@@ -179,17 +179,26 @@ const activeDevice = computed(() => {
     return isMounted.value ? viewportDevice.value : "desktop";
 });
 
+type Device = "desktop" | "tablet" | "mobile";
+
 const fixedBlocks = computed(() => {
     return (props.blocks || [])
         .map(normalizeBlock)
-        .map((b) => resolveResponsive(b, activeDevice.value));
+        .map((b) => resolveResponsive(b, activeDevice.value as Device));
 });
 
 const visibleBlocks = computed(() => {
     return filterByVisibility(
         fixedBlocks.value,
-        previewDevice.value || "desktop",
+        (previewDevice.value || "desktop") as Device,
     );
+});
+
+// vue-draggable-plus TypeScript types require modelValue; mutations are handled
+// by onDragUpdate so the setter is intentionally a no-op.
+const draggableModel = computed({
+    get: () => visibleBlocks.value,
+    set: () => {},
 });
 
 function visibilityClass(block) {
@@ -205,7 +214,7 @@ function visibilityClass(block) {
 // type, and reflects per-device overrides since props are already resolved).
 function wrapperStyle(block) {
     const p = block?.props || {};
-    const s = {};
+    const s: Record<string, string> = {};
     if (p.maxWidth) s.maxWidth = p.maxWidth;
     if (p.blockAlign === "center") {
         s.marginLeft = "auto";
@@ -466,7 +475,7 @@ function isSelected(block) {
 }
 
 watch(
-    () => (props.blocks || []).map((b) => b.id).join(","),
+    () => (props.blocks as any[] || []).map((b: any) => b.id).join(","),
     async () => {
         try {
             await nextTick();

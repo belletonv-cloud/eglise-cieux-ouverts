@@ -1,5 +1,5 @@
 import { getFirestoreConfig, getAccessToken, setFirestoreDoc } from '../../utils/firebase'
-import { verifyFirebaseToken, isUserAdmin } from '../../utils/firebase-admin'
+import { requireAdmin } from '../../utils/firebase-admin'
 
 export default defineEventHandler(async (event) => {
   const config = getFirestoreConfig(event)
@@ -7,17 +7,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 500, message: 'Firestore non configuré' })
   }
 
-  const authHeader = getHeader(event, 'authorization')
-  if (!authHeader?.startsWith('Bearer ')) {
-    throw createError({ statusCode: 401, message: 'Non authentifié' })
-  }
-  const userInfo = await verifyFirebaseToken(authHeader.slice(7))
-  if (!userInfo) {
-    throw createError({ statusCode: 401, message: 'Token invalide' })
-  }
-  if (!await isUserAdmin(event, userInfo.email)) {
-    throw createError({ statusCode: 403, message: 'Accès refusé' })
-  }
+  const userInfo = await requireAdmin(event)
 
   const body = await readBody(event)
   if (!body || !body.slug) {

@@ -1,4 +1,5 @@
-import { test, Page, expect } from '@playwright/test'
+import { test, expect } from '@playwright/test'
+import type { Page } from '@playwright/test'
 import type { FieldSchema } from '../../lib/blocks/types'
 
 const ALL_VALID_TYPES = [

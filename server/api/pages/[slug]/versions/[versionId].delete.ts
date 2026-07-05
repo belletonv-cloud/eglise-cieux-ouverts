@@ -1,10 +1,13 @@
 import { getFirestoreConfig, getAccessToken } from '../../../../utils/firebase'
+import { requireAdmin } from '../../../../utils/firebase-admin'
 
 export default defineEventHandler(async (event) => {
   const config = getFirestoreConfig(event)
   if (!config) {
     throw createError({ statusCode: 500, message: 'Firestore non configuré' })
   }
+
+  await requireAdmin(event)
 
   const slug = getRouterParam(event, 'slug')
   const versionId = getRouterParam(event, 'versionId')

@@ -12,7 +12,7 @@ function base64UrlDecode(str: string): string {
   return atob(str)
 }
 
-export function verifyFirebaseToken(idToken: string): FirebaseUserInfo | null {
+function decodeTokenPayload(idToken: string): FirebaseUserInfo | null {
   try {
     const parts = idToken.split('.')
     if (parts.length !== 3) return null
@@ -29,6 +29,56 @@ export function verifyFirebaseToken(idToken: string): FirebaseUserInfo | null {
   } catch {
     return null
   }
+}
+
+export async function verifyFirebaseToken(idToken: string, event?: any): Promise<FirebaseUserInfo | null> {
+  // Validation côté serveur via l'API Identity Toolkit : c'est Google qui
+  // vérifie la signature du token. Un simple décodage du payload serait
+  // falsifiable par n'importe qui.
+  const apiKey = event
+    ? (useRuntimeConfig(event).public?.FIREBASE_API_KEY as string | undefined)
+    : process.env.NUXT_PUBLIC_FIREBASE_API_KEY
+  if (apiKey) {
+    try {
+      const res = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ idToken }),
+      })
+      if (!res.ok) return null
+      const data = await res.json()
+      const user = data.users?.[0]
+      if (!user) return null
+      return {
+        uid: user.localId,
+        email: user.email || null,
+        email_verified: !!user.emailVerified,
+      }
+    } catch {
+      return null
+    }
+  }
+  // Repli sans clé API (dev local) : décodage sans vérification de signature
+  return decodeTokenPayload(idToken)
+}
+
+/**
+ * Vérifie l'en-tête Authorization, valide le token Firebase et exige
+ * que l'utilisateur soit admin. Lève une erreur HTTP sinon.
+ */
+export async function requireAdmin(event: any): Promise<FirebaseUserInfo> {
+  const authHeader = getHeader(event, 'authorization')
+  if (!authHeader?.startsWith('Bearer ')) {
+    throw createError({ statusCode: 401, message: 'Non authentifié' })
+  }
+  const userInfo = await verifyFirebaseToken(authHeader.slice(7), event)
+  if (!userInfo) {
+    throw createError({ statusCode: 401, message: 'Token invalide' })
+  }
+  if (!await isUserAdmin(event, userInfo.email)) {
+    throw createError({ statusCode: 403, message: 'Accès refusé' })
+  }
+  return userInfo
 }
 
 export async function getAdminEmails(event: any): Promise<string[]> {

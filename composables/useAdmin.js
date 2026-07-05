@@ -275,24 +275,32 @@ export function useAdmin() {
 
   // ─── Footer block management ─────────────────────────────────
 
+  async function _getFirebaseToken() {
+    if (import.meta.server) return null;
+    const { $auth } = useNuxtApp();
+    const user = await new Promise((resolve) => {
+      if ($auth?.currentUser) { resolve($auth.currentUser); return; }
+      const unsub = $auth?.onAuthStateChanged((u) => { resolve(u); if (typeof unsub === 'function') unsub(); });
+    });
+    if (!user) return null;
+    try { return await user.getIdToken(); } catch { return null; }
+  }
+
   async function loadFooterBlock() {
     if (_footerLoaded) return;
     try {
-      const { getDoc, doc } = await import("firebase/firestore");
-      const { $db } = useNuxtApp();
-      const snap = await getDoc(doc($db, "settings", "footer"));
-      if (snap.exists()) {
-        const data = snap.data();
+      const res = await fetch('/api/footer');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (data.props) {
         footerBlock.value = mergeDesignDefaults({
           id: "block-footer",
           type: "footer",
-          props: { ...data },
+          props: { ...data.props },
         });
       }
-      // else keep defaults
     } catch (e) {
       console.warn("useAdmin: could not load footer block", e);
-      // keep defaults
     } finally {
       _footerLoaded = true;
     }
@@ -300,16 +308,16 @@ export function useAdmin() {
 
   async function saveFooterBlock() {
     if (!footerBlock.value) return;
-    try {
-      const { setDoc, doc } = await import("firebase/firestore");
-      const { $db } = useNuxtApp();
-      await setDoc(doc($db, "settings", "footer"), {
-        ...footerBlock.value.props,
-        updatedAt: new Date().toISOString(),
-      });
-    } catch (e) {
-      console.error("useAdmin: failed to save footer", e);
-      throw e;
+    const token = await _getFirebaseToken();
+    if (!token) throw new Error('Non authentifié');
+    const res = await fetch('/api/footer', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ props: { ...footerBlock.value.props } }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || `HTTP ${res.status}`);
     }
   }
 

@@ -110,7 +110,7 @@ test.describe('Drag-and-drop', () => {
       for (const sheet of document.styleSheets) {
         try {
           for (const rule of sheet.cssRules || []) {
-            if (rule.selectorText && rule.selectorText.includes('.block-ghost')) return true
+            if ((rule as CSSStyleRule).selectorText?.includes('.block-ghost')) return true
           }
         } catch (_) {}
       }
@@ -129,7 +129,7 @@ test.describe('Page transitions', () => {
       for (const sheet of document.styleSheets) {
         try {
           for (const rule of sheet.cssRules || []) {
-            if (rule.selectorText && rule.selectorText.includes('page-enter-active')) return true
+            if ((rule as CSSStyleRule).selectorText?.includes('page-enter-active')) return true
           }
         } catch (_) {}
       }

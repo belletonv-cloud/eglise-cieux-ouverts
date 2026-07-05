@@ -277,6 +277,16 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
 
   function setup(blocks) {
     blocksCache = blocks || []
+    if (import.meta.server) {
+      // triggeredBlocks est un état de module PARTAGÉ entre les requêtes SSR
+      // du process Node : sans reset, un rendu ?admin=true (tout déclenché)
+      // pollue les rendus publics suivants → hydration mismatch chez tous
+      // les visiteurs
+      triggeredBlocks.value = (isAdmin.value || isServerAdminRef?.value)
+        ? (blocks || []).filter((b) => !shouldSkipTrigger(b.type, isAdmin)).map((b) => b.id).filter(Boolean)
+        : []
+      return
+    }
     if (isAdmin.value || isServerAdminRef?.value) {
       initAdminTrigger(blocks)
       return
