@@ -178,6 +178,43 @@ export function useMenuEditor() {
     }
   }
 
+  // Retire récursivement les items dont pageSlug pointe vers une page
+  // supprimée/inexistante (menu item orphelin — la page a été supprimée
+  // sans que la suppression de son entrée de menu soit sauvegardée)
+  function stripOrphanPageItems(items, deletedOrMissingSlugs) {
+    return items
+      .filter(item => !item.pageSlug || !deletedOrMissingSlugs.has(item.pageSlug))
+      .map(item => item.children?.length
+        ? { ...item, children: stripOrphanPageItems(item.children, deletedOrMissingSlugs) }
+        : item
+      )
+  }
+
+  async function pruneOrphanMenuItems() {
+    try {
+      const res = await fetch('/api/pages')
+      if (!res.ok) return
+      const data = await res.json()
+      const existingSlugs = new Set(
+        (data.pages || []).filter(p => !p._deleted).map(p => p.slug)
+      )
+      const referencedSlugs = new Set()
+      const collect = (items) => {
+        for (const item of items) {
+          if (item.pageSlug) referencedSlugs.add(item.pageSlug)
+          if (item.children?.length) collect(item.children)
+        }
+      }
+      collect(menuItems.value)
+      const orphanSlugs = new Set([...referencedSlugs].filter(s => !existingSlugs.has(s)))
+      if (orphanSlugs.size) {
+        menuItems.value = stripOrphanPageItems(menuItems.value, orphanSlugs)
+      }
+    } catch (e) {
+      console.warn('MenuEditor: failed to prune orphan menu items', e)
+    }
+  }
+
   // ── Firestore persistence (via server API — bypasses client security rules) ──
   async function loadMenuFromFirestore() {
     if (menuLoaded.value) return
@@ -192,6 +229,9 @@ export function useMenuEditor() {
         menuItems.value = JSON.parse(JSON.stringify(data.menuItems)).filter(
           item => item.to !== '/accueil'
         )
+        // Auto-guérison : retire les entrées pointant vers une page supprimée
+        // (ex: page supprimée sans que le retrait du menu ait été sauvegardé)
+        await pruneOrphanMenuItems()
       }
       if (data.menuBgImage) menuBgImage.value = data.menuBgImage
     } catch (e) {
