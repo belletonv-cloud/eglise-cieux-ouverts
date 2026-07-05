@@ -1,6 +1,21 @@
 import { getFirestoreConfig, getAccessToken, listFirestoreCollection, parseFirestoreDoc } from '../../utils/firebase'
 
 export default defineEventHandler(async (event) => {
+  // En mode test, liste le mock RAM — jamais la vraie base
+  const isTest = process.env.NODE_ENV === 'test' || process.env.PW_TEST === '1' || process.env.TEST_ENV === '1'
+  if (isTest) {
+    const { getPages } = await import('../../utils/firestore-mock.js')
+    const pages = Object.entries(getPages()).map(([slug, data]: [string, any]) => ({
+      slug,
+      title: data.title || slug,
+      updatedAt: data.updatedAt || null,
+      updatedBy: data.updatedBy || null,
+      blockCount: data.blocks?.length || 0,
+      _deleted: data._deleted || false,
+    }))
+    return { pages }
+  }
+
   const config = getFirestoreConfig(event)
   if (!config) {
     return { pages: [] }

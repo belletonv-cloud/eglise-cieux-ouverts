@@ -159,3 +159,28 @@ export async function setPageDoc(slug, data) {
   PAGES[slug] = JSON.parse(JSON.stringify(data))
   return { success: true }
 }
+
+// Mock du menu (settings/menu) — évite que menu.get/put tapent la vraie
+// base pendant les tests (le menu réel de prod ne doit jamais être touché)
+let MENU = { menuItems: null, menuBgImage: '' }
+
+export function getMenuMock() {
+  return JSON.parse(JSON.stringify(MENU))
+}
+
+export async function setMenuMock(data) {
+  MENU = JSON.parse(JSON.stringify(data))
+  return { success: true }
+}
+
+// Mock du footer (settings/footer)
+let FOOTER = null
+
+export function getFooterMock() {
+  return FOOTER ? JSON.parse(JSON.stringify(FOOTER)) : null
+}
+
+export async function setFooterMock(data) {
+  FOOTER = JSON.parse(JSON.stringify(data))
+  return { success: true }
+}

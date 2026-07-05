@@ -277,6 +277,16 @@ async function removeItem(item) {
       alert(`Erreur : ${e.message}`)
       return
     }
+    // Retire immédiatement la page de la liste partagée (dropdown admin) :
+    // sans ça elle ne disparaît qu'au prochain rechargement de loadCustomPages()
+    customPages.value = customPages.value.filter((p) => p.slug !== item.pageSlug)
+
+    // Si on est en train de visiter/éditer la page supprimée, on n'y reste pas
+    // (elle est vide côté serveur désormais) : retour à l'accueil
+    const currentPath = route.path.replace(/^\//, '') || 'accueil'
+    if (currentPath === item.pageSlug) {
+      await navigateToPage('accueil')
+    }
   } else {
     if (!confirm(`Retirer « ${item.label} » du menu ?`)) return
   }

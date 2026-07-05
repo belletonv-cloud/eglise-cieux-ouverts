@@ -18,8 +18,8 @@ test.describe('Mode édition', () => {
     await expect(select).toBeVisible()
 
     const options = page.locator('.admin-page-select option')
-    // Accueil, Contact, Messages, Événements, Agenda, Photos
-    await expect(options).toHaveCount(6)
+    // Accueil, Contact, Messages, Événements, Agenda (Photos a été retiré du sélecteur)
+    await expect(options).toHaveCount(5)
   })
 
   test('l avatar du mock utilisateur est visible avec auth mock', async ({ page }) => {
