@@ -1,12 +1,26 @@
 # Eglise Cieux Ouverts – Admin Builder
 
-## Fonctionnalités principales
+Modern CMS & admin builder for [cieuxouverts.bzh](https://cieuxouverts.bzh), a French church website. Built with **Nuxt 3**, **Vue 3**, **Firebase**, and **Cloudflare Pages**.
 
-- **Builder admin moderne** façon Wix (Vue3/Nuxt3)
-- Sidebar collapsible, CRUD pages/blocs, preview responsive (devices), animations
-- **Drag-and-drop** : réordonnancement des blocs via `vue-draggable-plus` (admin mode)
-- **Undo/Redo** : historique 50 entrées, boutons toolbar + Ctrl+Z / Ctrl+Shift+Z
-- **Persistance Cloud** : Firestore, auto-save avec debounce 3s, sauvegarde manuelle
+**Table of contents:**
+- [Features](#features)
+- [Quick Start](#quick-start)
+- [Architecture](#architecture-overview)
+- [Development](#development)
+- [Testing](#testing)
+- [Deployment](#deployment)
+- [Documentation](#full-documentation)
+
+## Features
+
+- **🎨 Modern admin builder** (Wix-like) with live preview
+- **🔧 Schema-driven blocks**: 13+ block types with auto-generated editors
+- **✏️ Drag-and-drop**: Reorder blocks instantly via `vue-draggable-plus`
+- **↩️ Undo/Redo**: 50-entry history + Ctrl+Z / Ctrl+Shift+Z
+- **☁️ Cloud sync**: Firestore auto-save (3s debounce) + manual save
+- **📱 Responsive preview**: Desktop/Tablet/Mobile in editor
+- **🎬 Scroll animations**: CSS `animation-timeline` (Safari fallback)
+- **📄 Full SSR**: Works without JavaScript, graceful animation degradation
 
 ---
 
@@ -37,47 +51,148 @@ Ce projet utilise [Volta](https://volta.sh) pour garantir que **toutes les comma
 
 ---
 
-## Installation
+## Quick Start
 
-1. **Cloner le repo** et installer les dépendances
-   ```bash
-   git clone ...
-   cd eglise-cieux-ouverts
-   npm install
-   ```
-2. **Configurer les secrets Firebase**
-   - Crée `.env` à la racine :
-     ```ini
-     PUBLIC_FIREBASE_API_KEY=XXX
-     PUBLIC_FIREBASE_AUTH_DOMAIN=XXX
-     PUBLIC_FIREBASE_PROJECT_ID=XXX
-     ```
-   - Les valeurs sont dispo dans [console.firebase.google.com](https://console.firebase.google.com)
-3. **Démarrer**
-   ```bash
-   npm run dev
-   ```
+### Prerequisites
+- **Node 22.x** (managed by Volta – see README below)
+- **Firebase project** with Firestore database
+- **git**
 
----
+### Installation
 
-## Fonctionnement de la persistance Firestore (cloud-sync)
+```bash
+# Clone and install
+git clone <repo>
+cd eglise-cieux-ouverts
+npm install
 
-- Auto-save avec debounce 3s : toute modification des blocs est persistée dans le document Firestore `pages/{pageSlug}`
-- Sauvegarde manuelle dispo via bouton "Sauvegarder" (persiste aussi le menu)
-- Undo/redo local (historique 50 entrées)
+# Configure Firebase secrets (.env)
+cp .env.example .env
+# Edit .env with your Firebase credentials from console.firebase.google.com
 
-La persistance Firestore est gérée par `AdminToolbar.vue`.
+# Start dev server
+npm run dev
+# ➔ http://localhost:3000
+```
 
----
+### Commands
 
-## Recommandé : organisation des fichiers
+| Command | Purpose |
+|---------|---------|
+| `npm run dev` | Start dev server (hot reload) |
+| `npm run build` | Build for production (SSR) |
+| `npm run preview` | Preview production build |
+| `npm run test:e2e` | Full E2E test suite |
+| `npm run test:e2e:quick` | Quick E2E (no rebuild) |
+| `npm run test:admin` | Admin-specific tests |
+| `npm run deploy` | Build & deploy to Cloudflare Pages |
 
-- `/pages/`  ← Pages publiques
-- `/components/` ← Composants Vue
-- `/composables/` ← Composables réutilisables
-- `/server/` ← API endpoints Nuxt
-- `/plugins/` ← Plugins (Firebase, etc.)
+## Architecture Overview
 
----
+### Block System (Schema-Driven)
+Content is composed of **blocks**, each with a schema that auto-generates editor fields. Types include:
+- **Hero** — Landing section with image, title, CTA
+- **Text** — Rich text with styling
+- **Gallery** — Image carousel with lightbox
+- **Contact** — Contact form with Firestore/email integration
+- **Calendar** — Event calendar (4 views: month/week/cards/agenda)
+- And 8 more... (see `lib/blocks/types.ts`)
 
-Licence MIT
+### Admin Editor Flow
+1. **Edit** → Sidebar auto-generates form from block schema
+2. **Preview** → Live preview updates with responsive preview (desktop/tablet/mobile)
+3. **Save** → Firestore with auto-save (3s) or manual button
+4. **Undo/Redo** → 50-entry history locally
+
+### Firestore Collections
+- `pages/{slug}` — Page blocks & metadata
+- `menu/{slug}` — Navigation menu items
+- `footer` — Shared footer block
+
+## Development
+
+### Project Structure
+```
+eglise-cieux-ouverts/
+├── components/
+│   ├── blocks/          # Block implementations
+│   ├── editor/          # Editor/sidebar components
+│   └── admin/           # Admin-only components
+├── composables/         # Reusable state & logic
+├── lib/blocks/          # Block registry & types
+├── pages/               # Routes (including [slug].vue for dynamic pages)
+├── server/api/          # Firestore CRUD endpoints
+├── assets/css/          # Styles (animations, layouts)
+├── tests/playwright/    # E2E & admin tests (30+)
+└── plugins/             # Firebase init, etc.
+```
+
+### Adding a New Block Type
+1. Define schema in `lib/blocks/types.ts`
+2. Create `components/blocks/BlockMyType.vue`
+3. Auto-registers via component discovery
+4. Add tests in `tests/playwright/`
+
+See [CLAUDE.md](./CLAUDE.md) for detailed examples.
+
+## Testing
+
+Playwright test suite with 3 configurations:
+
+```bash
+npm run test:e2e        # All E2E tests (with build)
+npm run test:e2e:quick  # E2E tests (no rebuild)
+npm run test:admin      # Admin editor workflows
+npm run test:unit       # Isolated component tests
+```
+
+**Test coverage:**
+- ✅ Admin editor (drag, edit, save, undo/redo)
+- ✅ Block rendering & animations
+- ✅ Responsive layouts
+- ✅ Firestore persistence
+- ✅ Accessibility (A11y)
+- ✅ Error pages & edge cases
+
+Tests run in mock mode (`PW_TEST=1`) with Firestore fixtures.
+
+## Deployment
+
+### Cloudflare Pages
+```bash
+npm run deploy
+```
+
+- Builds with Nuxt (SSR)
+- Deploys to Cloudflare Pages via Wrangler
+- Auto-generates version timestamp (detects new deployments)
+- Fails early if Firebase API key missing
+
+### Environment Setup
+Set in **Pages environment variables**:
+- `NUXT_PUBLIC_FIREBASE_API_KEY`
+- `NUXT_PUBLIC_FIREBASE_PROJECT_ID`
+- `NUXT_PUBLIC_FIREBASE_AUTH_DOMAIN`
+- (Others optional, see `.env.example`)
+
+## Full Documentation
+
+See **[CLAUDE.md](./CLAUDE.md)** for:
+- High-level architecture deep-dive
+- Block system & schema definitions
+- Firestore persistence patterns
+- Admin editor internals (undo/redo, auto-save)
+- Animation system (scroll-driven CSS + fallbacks)
+- Testing patterns & examples
+- Troubleshooting guide
+
+## Contributing
+
+1. Fork and create feature branch
+2. Make changes; run tests (`npm run test:e2e`)
+3. Commit with clear message
+4. Push and create PR
+
+## License
+
+MIT
