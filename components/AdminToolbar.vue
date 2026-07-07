@@ -205,21 +205,17 @@
         </div>
         <div class="admin-sidebar-body">
             <div v-if="!editingFooter" class="admin-responsive-panel">
-                <p class="admin-responsive-label">Visible sur</p>
-                <div class="admin-vis-toggles">
-                    <button
-                        v-for="d in ['desktop', 'tablet', 'mobile']"
-                        :key="d"
-                        class="admin-vis-btn"
-                        :class="{ off: deviceVisible(d) === false }"
-                        :title="deviceVisible(d) === false ? `Masqué sur ${deviceLabel(d)}` : `Visible sur ${deviceLabel(d)}`"
-                        @click="toggleDeviceVisibility(d)"
-                    >
-                        <span class="admin-vis-icon">{{ deviceIcon(d) }}</span>
-                        <span class="admin-vis-name">{{ deviceLabel(d) }}</span>
-                        <span class="admin-vis-state">{{ deviceVisible(d) === false ? '🚫' : '✓' }}</span>
-                    </button>
-                </div>
+                <p class="admin-responsive-label">Visible sur {{ deviceLabel(previewDevice) }}</p>
+                <button
+                    class="admin-vis-btn"
+                    :class="{ off: deviceVisible(previewDevice) === false }"
+                    :title="deviceVisible(previewDevice) === false ? `Masqué sur ${deviceLabel(previewDevice)}` : `Visible sur ${deviceLabel(previewDevice)}`"
+                    @click="toggleDeviceVisibility(previewDevice)"
+                >
+                    <span class="admin-vis-icon">{{ deviceIcon(previewDevice) }}</span>
+                    <span class="admin-vis-name">{{ deviceLabel(previewDevice) }}</span>
+                    <span class="admin-vis-state">{{ deviceVisible(previewDevice) === false ? '🚫 Masqué' : '✓ Visible' }}</span>
+                </button>
                 <div v-if="previewDevice !== 'desktop'" class="admin-responsive-editing">
                     ✎ Vous modifiez la version <strong>{{ deviceLabel(previewDevice) }}</strong>.
                     Les réglages s'appliquent à ce format uniquement.
@@ -1267,22 +1263,19 @@ async function saveChanges() {
     letter-spacing: 0.04em;
     margin: 0 0 8px;
 }
-.admin-vis-toggles {
-    display: flex;
-    gap: 6px;
-}
 .admin-vis-btn {
-    flex: 1;
+    width: 100%;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
-    gap: 2px;
-    padding: 6px 4px;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px;
     border: 1px solid #d1d5db;
     border-radius: 6px;
     background: #fff;
     cursor: pointer;
-    font-size: 0.7em;
+    font-size: 0.78em;
     color: #374151;
     transition: all 0.15s;
 }
