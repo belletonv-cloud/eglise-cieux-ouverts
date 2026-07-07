@@ -1,4 +1,5 @@
 import { ref, provide, watch, inject, computed } from 'vue'
+import { HARDCODED_SLUGS } from '~/utils/blockTypes.js'
 
 const DEFAULT_MENU_ITEMS = [
   { id: 'accueil', label: 'Accueil', to: '/', visible: true, children: [] },
@@ -10,7 +11,7 @@ const DEFAULT_MENU_ITEMS = [
 
 const MENU_EDITOR_KEY = Symbol('menu-editor')
 
-export const HARDCODED_SLUGS = ['accueil', 'contact', 'messages', 'event-list', 'agenda', 'photos']
+export { HARDCODED_SLUGS }
 
 const menuItems = ref(JSON.parse(JSON.stringify(DEFAULT_MENU_ITEMS)))
 const customPages = ref([])

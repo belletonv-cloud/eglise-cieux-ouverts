@@ -1,5 +1,6 @@
 import { getFirestoreConfig, getAccessToken, getFirestoreDoc, setFirestoreDoc } from '../../utils/firebase'
 import { requireAdmin } from '../../utils/firebase-admin'
+import { HARDCODED_SLUGS } from '../../../utils/blockTypes.js'
 
 export default defineEventHandler(async (event) => {
   const slug = getRouterParam(event, 'slug')
@@ -7,7 +8,11 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'Slug manquant' })
   }
 
-  const reservedSlugs = ['admin', 'api', '_nuxt', 'favicon.ico', 'robots.txt']
+  // Les pages statiques (accueil, contact, messages, event-list, agenda,
+  // photos) ne sont pas des "custom pages" supprimables : soft-delete leur
+  // doc Firestore effacerait le vrai contenu édité de ces pages (title
+  // conservé mais blocks:[] écrasés), pas juste retirer une page fantôme.
+  const reservedSlugs = ['admin', 'api', '_nuxt', 'favicon.ico', 'robots.txt', ...HARDCODED_SLUGS]
   if (reservedSlugs.includes(slug)) {
     throw createError({ statusCode: 400, message: 'Impossible de supprimer cette page' })
   }

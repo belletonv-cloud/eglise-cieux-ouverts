@@ -44,4 +44,26 @@ test.describe('Gestion des pages depuis le menu', () => {
     // La page a disparu du sélecteur immédiatement (pas besoin de recharger)
     await expect(page.locator('.admin-page-select option', { hasText: 'Page Test Suppression E2E' })).toHaveCount(0)
   })
+
+  // Les slugs accueil/contact/messages/event-list/agenda/photos ont chacun
+  // leur propre fichier pages/*.vue avec du vrai contenu Firestore. Sans
+  // cette protection, créer une page custom avec un de ces titres
+  // écraserait silencieusement (setFirestoreDoc) le document réel de la
+  // page statique — pas juste un doublon inatteignable, une vraie perte de
+  // contenu en production.
+  for (const slug of ['accueil', 'contact', 'messages', 'event-list', 'agenda', 'photos']) {
+    test(`création d'une page custom avec le slug réservé "${slug}" est refusée`, async ({ page }) => {
+      const res = await page.request.post('/api/pages', { data: { slug, title: slug } })
+      expect(res.status()).toBe(400)
+      const body = await res.json()
+      expect(body.message).toBe('Ce slug est réservé')
+    })
+
+    test(`suppression de la page réservée "${slug}" est refusée`, async ({ page }) => {
+      const res = await page.request.delete(`/api/pages/${slug}`)
+      expect(res.status()).toBe(400)
+      const body = await res.json()
+      expect(body.message).toBe('Impossible de supprimer cette page')
+    })
+  }
 })

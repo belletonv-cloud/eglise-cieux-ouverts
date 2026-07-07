@@ -3,6 +3,16 @@
  * Chaque bloc a : type, label, icône, props par défaut, schema de propriétés éditables
  */
 
+// Slugs occupés par une route statique dédiée (pages/*.vue) : jamais
+// atteignables via le catch-all pages/[slug].vue. Source de vérité unique,
+// importée à la fois côté client (useMenuEditor, pour filtrer/masquer ces
+// entrées de la liste des pages custom) et côté serveur
+// (server/api/pages/index.post.ts, pour interdire leur création — sans ça
+// un admin pouvait créer une page "Contact" ou "Photos" en Firestore qui
+// n'était jamais rendue nulle part, l'URL restant capturée par le fichier
+// statique).
+export const HARDCODED_SLUGS = ["accueil", "contact", "messages", "event-list", "agenda", "photos"];
+
 export const ANIMATIONS = [
   { id: "none", label: "Aucune", css: "" },
   { id: "fadeIn", label: "Apparition", css: "anim-fadeIn" },

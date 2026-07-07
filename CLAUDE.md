@@ -105,9 +105,10 @@ All content is composed of **blocks**, each with:
 1. Fetch page blocks from Firestore (or mock data in test mode)
 2. `GET /api/pages/:slug` also returns `exists: boolean` — `false` when there's no Firestore doc for that slug, or when it was soft-deleted (`_deleted: true`). `[slug].vue` throws a real `createError({ statusCode: 404 })` when `exists === false`, which Nuxt routes to `error.vue`. This is safe because `MenuEditor.createPage()` always `POST /api/pages` (creating the doc) *before* navigating to the new slug — so a legitimately new admin page always has `exists: true` by the time it's rendered.
    - **Trap**: `[slug].vue` is Nuxt's catch-all, so any request path that isn't a real page route or a real static file (e.g. a typo'd image src) also lands here as a "slug" and now genuinely 404s. If you add a test-fixture image reference in mock data (`server/utils/firestore-mock.js`), make sure the file actually exists under `public/` — a missing one used to fail silently (blank page, broken `<img>`) and now surfaces as a real network 404 that error-collecting tests will catch.
-3. Render each block via `BlockRenderer.vue`
-4. In admin mode, enable editing via sidebar
-5. Auto-save changes on 3s debounce
+3. `HARDCODED_SLUGS` (`utils/blockTypes.js`: `accueil`, `contact`, `messages`, `event-list`, `agenda`, `photos`) are reserved on `POST /api/pages` and `DELETE /api/pages/:slug` (`server/api/pages/index.post.ts` / `[slug].delete.ts`). Without this, an admin naming a custom page "Contact" would `setFirestoreDoc` straight over the *real* `pages/contact` document — silently wiping its live content back to `blocks: []`, not just creating an unreachable dupe. `PUT /api/pages/:slug` is intentionally *not* blocked for these slugs — that's the normal edit path for `contact`/`messages`/`agenda`/`event-list`'s own real content.
+4. Render each block via `BlockRenderer.vue`
+5. In admin mode, enable editing via sidebar
+6. Auto-save changes on 3s debounce
 
 **Key composables:**
 - `useAdmin()` — Admin state (isAdminMode, editingBlockId, undo/redo, unsavedChanges)

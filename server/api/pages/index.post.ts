@@ -1,11 +1,17 @@
 import { getFirestoreConfig, getAccessToken, setFirestoreDoc } from '../../utils/firebase'
 import { requireAdmin } from '../../utils/firebase-admin'
+import { HARDCODED_SLUGS } from '../../../utils/blockTypes.js'
 
 function sanitizeSlug(rawSlug: string): string {
   return String(rawSlug).toLowerCase().replace(/[^a-z0-9-]/g, '').replace(/^-+|-+$/g, '')
 }
 
-const RESERVED_SLUGS = ['admin', 'api', '_nuxt', 'favicon.ico', 'robots.txt']
+// HARDCODED_SLUGS (accueil, contact, messages, event-list, agenda, photos) :
+// ces routes ont leur propre fichier pages/*.vue, une page custom créée
+// avec le même slug serait enregistrée en Firestore mais jamais rendue
+// nulle part (l'URL reste capturée par le fichier statique) — on bloque
+// donc leur création à la source plutôt que de laisser un piège silencieux.
+const RESERVED_SLUGS = ['admin', 'api', '_nuxt', 'favicon.ico', 'robots.txt', ...HARDCODED_SLUGS]
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
