@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Église Cieux Ouverts** is a modern admin builder (Wix-like) for a church website, built with **Nuxt 3**, **Vue 3**, and **Firebase/Firestore**. It features:
 
-- **Schema-driven block system**: 13+ block types (Hero, Text, Gallery, Events, etc.) with auto-generated editors
+- **Schema-driven block system**: 17 block types (Hero, Text, Gallery, Events, etc.) with auto-generated editors
 - **Live editing**: Drag-and-drop reordering, undo/redo (50-entry history), auto-save with debounce
 - **Responsive preview**: Desktop/Tablet/Mobile preview in a split pane
 - **Cloud persistence**: Firestore with auto-save (3s debounce) + manual save
@@ -73,10 +73,11 @@ All content is composed of **blocks**, each with:
 - **Responsive overrides**: Device-specific props (desktop/tablet/mobile)
 
 **Key files:**
-- `lib/blocks/types.ts` — Block type definitions and schema
-- `lib/blocks/renderer.ts` — Maps block type → Vue component
+- `utils/blockTypes.js` — `BLOCK_TYPES`: schema, defaults and labels for every block type (the source of truth for editors)
+- `lib/blocks/types.ts` — TypeScript types for blocks
+- `lib/blocks/renderer.ts` — Maps block type → Vue component, resolves responsive overrides
 - `lib/blocks/component-registry.ts` — Auto-discovers block components
-- `components/blocks/Block*.vue` — Individual block components (13 total)
+- `components/blocks/Block*.vue` — Individual block components
 
 **Example block structure:**
 ```json
@@ -197,17 +198,16 @@ debounce(() => {
 - `accessibility.spec.ts` — A11y checks
 - `responsive-*.spec.ts` — Responsive layout tests
 
-**Key test patterns:**
+**Key test patterns** (use the shared helpers in `tests/playwright/helpers/`):
 ```ts
-// Admin mode: edit and save
-await page.goto('/admin')
-await page.click('[data-edit-block-id="block-hero-1"]')
-await page.fill('input[name="title"]', 'New Title')
-await page.click('[data-save-button]')
+import { loginAsAdmin } from './helpers/admin'
+import { openBlockEditor, editBlockTitle } from './helpers/blocks'
+import { resetMock } from './helpers/reset'
 
-// Public preview
-await page.goto('/')
-await expect(page.locator('h1')).toContainText('New Title')
+await resetMock(request)              // reset the RAM mock between tests
+await loginAsAdmin(page)              // goto ?admin=true + wait for .admin-toolbar
+await openBlockEditor(page, blockId)  // click .block-wrapper[data-block-id] + wait sidebar
+await editBlockTitle(page, 'Titre')   // fill + blur to trigger auto-save (.auto-saved)
 ```
 
 **Test environment:**
@@ -232,7 +232,7 @@ await expect(page.locator('h1')).toContainText('New Title')
 
 ### Adding a New Block Type
 
-1. Define schema in `lib/blocks/types.ts`:
+1. Define schema in `utils/blockTypes.js` (`BLOCK_TYPES`):
    ```ts
    MyBlock: {
      label: 'My Block',
@@ -252,32 +252,7 @@ await expect(page.locator('h1')).toContainText('New Title')
 
 ### Testing Block Rendering
 
-```ts
-test('BlockMyBlock renders title', async ({ page }) => {
-  // Load page with block via fixture
-  const snapshot = await page.evaluate(() => {
-    return window.__FIXTURES__.pages.home.blocks
-  })
-  
-  // Edit in admin
-  await page.click('[data-edit-block-id="block-my-1"]')
-  await page.fill('input[name="title"]', 'Updated')
-  
-  // Verify render
-  await expect(page.locator('text=Updated')).toBeVisible()
-})
-```
-
-### Debugging Admin State
-
-Open browser console during admin edit:
-```js
-// Check current blocks state
-window.__NUXT__?.$root?.$data?.localBlocks
-
-// Check undo/redo stacks
-window.__NUXT__?.$root?.$data?.undoStack
-```
+Tests run against the built server in mock mode (`PW_TEST=1`): all Firestore reads/writes hit an in-RAM mock (`server/utils/firestore-mock.js`), never the real database. Call `resetMock(request)` in `beforeEach` when a test mutates state — the mock server is shared between parallel workers, so un-reset mutations leak into other tests.
 
 ## Environment Variables
 

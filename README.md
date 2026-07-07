@@ -14,7 +14,7 @@ Modern CMS & admin builder for [cieuxouverts.bzh](https://cieuxouverts.bzh), a F
 ## Features
 
 - **🎨 Modern admin builder** (Wix-like) with live preview
-- **🔧 Schema-driven blocks**: 13+ block types with auto-generated editors
+- **🔧 Schema-driven blocks**: 17 block types with auto-generated editors
 - **✏️ Drag-and-drop**: Reorder blocks instantly via `vue-draggable-plus`
 - **↩️ Undo/Redo**: 50-entry history + Ctrl+Z / Ctrl+Shift+Z
 - **☁️ Cloud sync**: Firestore auto-save (3s debounce) + manual save
@@ -96,7 +96,7 @@ Content is composed of **blocks**, each with a schema that auto-generates editor
 - **Gallery** — Image carousel with lightbox
 - **Contact** — Contact form with Firestore/email integration
 - **Calendar** — Event calendar (4 views: month/week/cards/agenda)
-- And 8 more... (see `lib/blocks/types.ts`)
+- And more... (see `BLOCK_TYPES` in `utils/blockTypes.js`)
 
 ### Admin Editor Flow
 1. **Edit** → Sidebar auto-generates form from block schema
@@ -128,7 +128,7 @@ eglise-cieux-ouverts/
 ```
 
 ### Adding a New Block Type
-1. Define schema in `lib/blocks/types.ts`
+1. Define schema in `utils/blockTypes.js` (`BLOCK_TYPES`)
 2. Create `components/blocks/BlockMyType.vue`
 3. Auto-registers via component discovery
 4. Add tests in `tests/playwright/`

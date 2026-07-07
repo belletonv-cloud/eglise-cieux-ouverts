@@ -24,12 +24,10 @@
 
 ### Specific Test Suites
 - [ ] no-hard-refresh.spec.ts — PASS
-- [ ] critical-flows.spec.ts — PASS
-- [ ] admin-comprehensive.spec.ts — PASS
-- [ ] performance-stability.spec.ts — PASS
-- [ ] security-validation.spec.ts — PASS
-- [ ] api-firestore.spec.ts — PASS
-- [ ] performance-advanced.spec.ts — PASS
+- [ ] admin-mode.spec.ts / admin-autosave.spec.ts — PASS
+- [ ] auth-guard.spec.ts — PASS
+- [ ] page-transitions.spec.ts — PASS
+- [ ] Écarts vs baseline connue (~12 échecs préexistants) documentés
 
 ---
 

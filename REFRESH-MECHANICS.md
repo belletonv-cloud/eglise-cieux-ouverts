@@ -245,19 +245,16 @@ window.addEventListener('message', (e) => {
 
 ## 8. Test Coverage
 
-**New test suite**: `tests/playwright/no-hard-refresh.spec.ts`
+**Dedicated suite**: `tests/playwright/no-hard-refresh.spec.ts` (uses a `window` marker: if it survives an action, no full reload happened)
 
 Tests validate:
-- ✅ SPA navigation (accueil → contact → agenda)
-- ✅ Page transitions animate smoothly (not instant)
-- ✅ Iframe preview updates (tablet/mobile)
-- ✅ Iframe navigation (links inside iframe work)
-- ✅ Admin edits (no reload on drag/undo/redo)
-- ✅ Save button (no reload)
-- ✅ Version check (detects deployment)
-- ✅ bfcache restoration (back/forward reload)
-- ✅ Responsive overrides (tablet props isolated from desktop)
-- ✅ Page dropdown updates iframe
+- ✅ Public SPA navigation / → /contact → /agenda without reload
+- ✅ `version.txt` served with a valid timestamp (deployment detection prerequisite)
+- ✅ Admin edit + auto-save without reload
+- ✅ Device switch desktop → tablet (iframe) without reloading the parent
+- ✅ No horizontal overflow at 375px
+
+Related existing suites: `page-transitions.spec.ts` (transition animations), `admin-animations.spec.ts` (iframe preview at 768px/375px), `admin-autosave.spec.ts` (save feedback), `admin-mode.spec.ts` (client-side navigation keeps the toolbar).
 
 ---
 
