@@ -11,16 +11,16 @@
         />
 
         <div class="bienvenue-content">
-            <div class="hero-bienvenue-portal" aria-label="BIENVENUE">
+            <div class="hero-bienvenue-portal" :aria-label="title">
                 <span
                     v-for="(char, i) in wordArr"
                     :key="i"
                     class="hero-bienvenue-char"
                     :style="getLetterVars(i)"
-                    >{{ char }}</span
+                    >{{ char === ' ' ? ' ' : char }}</span
                 >
             </div>
-            <p class="hero-subtitle">à l'Église Cieux Ouverts à Morlaix</p>
+            <p class="hero-subtitle">{{ subtitle }}</p>
             <div class="hero-socials">
                 <a
                     href="https://www.instagram.com/eglise_cieux_ouverts/"
@@ -66,11 +66,22 @@
 <script setup>
 import { computed, inject, ref } from "vue";
 
-const props = defineProps({
+// Défauts alignés sur le contenu actuellement affiché en dur (avant ce
+// fix) : un bloc réel sans title/subtitle explicite en Firestore doit
+// continuer à afficher exactement le même texte qu'avant, pas basculer
+// vers BLOCK_TYPES.bienvenue.defaults (déjà neutralisé pour les
+// *nouveaux* blocs — voir utils/blockTypes.js). Déstructuré directement
+// depuis defineProps() (comme BlockGallery.vue) pour que title/subtitle
+// soient à la fois réactifs et exposés tels quels au template.
+const {
+    title = "BIENVENUE",
+    subtitle = "à l'Église Cieux Ouverts à Morlaix",
+    visibility = {},
+} = defineProps({
+    title: { type: String, default: "BIENVENUE" },
+    subtitle: { type: String, default: "à l'Église Cieux Ouverts à Morlaix" },
     visibility: { type: Object, default: () => ({}) },
 });
-
-const { visibility = {} } = props;
 
 const isAdmin = inject("isAdmin", ref(false));
 
@@ -80,13 +91,16 @@ const visibilityClasses = computed(() => ({
     "hide-desktop": visibility.desktop === false,
 }));
 
-const wordArr = ["B", "I", "E", "N", "V", "E", "N", "U", "E"];
-const center = (wordArr.length - 1) / 2;
+// L'animation fan-out est calculée par lettre ; [...title] (plutôt que
+// split('')) gère correctement les caractères accentués et emoji.
+const wordArr = computed(() => [...(title || "")]);
+const center = computed(() => (wordArr.value.length - 1) / 2);
 
 function getLetterVars(i) {
-    const dist = Math.abs(i - center);
-    const sign = i === center ? 0 : (i - center) / dist;
-    const extreme = i === 0 || i === wordArr.length - 1 ? 1.0 : 1;
+    const c = center.value;
+    const dist = Math.abs(i - c);
+    const sign = i === c ? 0 : (i - c) / dist;
+    const extreme = i === 0 || i === wordArr.value.length - 1 ? 1.0 : 1;
     return {
         "--dist": dist,
         "--sign": sign,
