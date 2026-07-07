@@ -36,6 +36,7 @@
             <span v-if="!getAnimClass(block) && getAnimationStrategy(block.type) !== 'wrapper'" class="anim-native-badge">
                 {{ getAnimationStrategy(block.type) === 'none' ? 'Aucune animation' : 'Animation native' }}
             </span>
+            <span v-if="hasOpenComment(block)" class="dev-comment-badge" title="Demande développeur en attente">💬</span>
         </div>
     </VueDraggable>
     </div>
@@ -64,6 +65,7 @@
             <span v-if="isAdmin && !getAnimClass(block) && getAnimationStrategy(block.type) !== 'wrapper'" class="anim-native-badge">
                 {{ getAnimationStrategy(block.type) === 'none' ? 'Aucune animation' : 'Animation native' }}
             </span>
+            <span v-if="isAdmin && hasOpenComment(block)" class="dev-comment-badge" title="Demande développeur en attente">💬</span>
         </div>
     </div>
 </template>
@@ -96,6 +98,11 @@ const isEditor = inject("isEditor", ref(false));
 const editingBlockId = inject("editingBlockId", ref(null));
 const selectBlock = inject<(id: string) => void>("selectBlock", () => {});
 const previewDevice = inject("previewDevice", ref("desktop"));
+const commentBlockIds = inject<any>("commentBlockIds", ref([]));
+
+function hasOpenComment(block: any) {
+    return commentBlockIds.value?.includes(block.id);
+}
 
 // In iframe preview mode, forward block clicks to parent
 function onBlockSelected(id) {
@@ -527,6 +534,14 @@ watch(
     border-radius: 10px;
     pointer-events: none;
     white-space: nowrap;
+}
+.dev-comment-badge {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    z-index: 10;
+    font-size: 0.9em;
+    pointer-events: none;
 }
 .drag-handle {
     /* À l'INTÉRIEUR du wrapper : les blocs occupent toute la largeur, un

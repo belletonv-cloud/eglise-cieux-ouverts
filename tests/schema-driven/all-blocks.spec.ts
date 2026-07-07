@@ -1263,3 +1263,35 @@ test.describe('20. Animation wrapper vs internal enforcement', () => {
     expect(wrappersWithAnim, 'At least one wrapper-animated block should have wrapper animation classes').toBeGreaterThan(0)
   })
 })
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION 21: Spacer backward compatibility — text/image are optional additions,
+// an existing spacer with no text/image must render byte-identically to before
+// (bare div, zero children) — no wrapper/placeholder markup introduced.
+// ═══════════════════════════════════════════════════════════════════════════
+
+test.describe('21. Spacer backward compatibility', () => {
+  test('spacer without text/image renders as a bare div with zero children', async ({ page }) => {
+    // Mock fixture 'event-list' seeds a spacer with only { height: 25 } —
+    // no text/image key at all, matching real legacy Firestore documents.
+    await page.goto('/event-list')
+    const spacer = page.locator('.block-spacer').first()
+    await expect(spacer).toBeVisible({ timeout: 5000 })
+    expect(await spacer.locator('*').count()).toBe(0)
+  })
+
+  test('spacer with text renders content and switches to min-height', async ({ page }) => {
+    await page.goto('/test-blocks?admin=true')
+    await page.waitForSelector('.block-wrapper[data-block-type="spacer"]', { timeout: 5000 })
+    await page.locator('.block-wrapper[data-block-type="spacer"]').click()
+    const textarea = page.locator('.auto-field', { has: page.locator('.field-label', { hasText: /^Texte/ }) }).locator('textarea')
+    await textarea.fill('Test rétrocompat')
+    await page.locator('body').click({ position: { x: 10, y: 10 } })
+
+    const spacer = page.locator('.block-wrapper[data-block-type="spacer"] .block-spacer')
+    await expect(spacer.locator('.spacer-text')).toHaveText('Test rétrocompat')
+    const style = await spacer.getAttribute('style')
+    expect(style).toContain('min-height')
+    expect(style).not.toMatch(/[^-]height:/)
+  })
+})

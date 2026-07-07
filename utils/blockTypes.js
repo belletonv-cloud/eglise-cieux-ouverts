@@ -390,6 +390,8 @@ export const BLOCK_TYPES = {
     defaults: {
       height: 60,
       backgroundColor: "transparent",
+      text: "",
+      image: "",
     },
     schema: [
       {
@@ -400,6 +402,8 @@ export const BLOCK_TYPES = {
         max: 400,
       },
       { key: "backgroundColor", label: "Fond", type: "color" },
+      { key: "text", label: "Texte (optionnel)", type: "textarea" },
+      { key: "image", label: "Image (optionnelle)", type: "image" },
     ],
   },
 

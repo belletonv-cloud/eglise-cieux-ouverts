@@ -155,6 +155,7 @@ export function resetMock() {
     },
     accueil: { blocks: accueilBlocks },
   }
+  COMMENTS = {}
 }
 
 export function getPages() {
@@ -189,5 +190,27 @@ export function getFooterMock() {
 
 export async function setFooterMock(data) {
   FOOTER = JSON.parse(JSON.stringify(data))
+  return { success: true }
+}
+
+// Mock des demandes développeur (collection top-level 'comments') — notes
+// admin-only attachées à un bloc, jamais rendues côté public.
+let COMMENTS = {}
+
+export function getComments() {
+  return Object.values(JSON.parse(JSON.stringify(COMMENTS)))
+}
+
+export function getComment(id) {
+  return COMMENTS[id] ? JSON.parse(JSON.stringify(COMMENTS[id])) : null
+}
+
+export function setComment(id, data) {
+  COMMENTS[id] = JSON.parse(JSON.stringify(data))
+  return { success: true }
+}
+
+export function deleteComment(id) {
+  delete COMMENTS[id]
   return { success: true }
 }

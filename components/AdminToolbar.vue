@@ -156,6 +156,13 @@
                         </button>
                         <button
                             class="admin-btn admin-btn-secondary"
+                            @click="showComments = true"
+                            title="Demandes développeur"
+                        >
+                            💬 Demandes<span v-if="unresolvedCommentCount" class="admin-comment-count">{{ unresolvedCommentCount }}</span>
+                        </button>
+                        <button
+                            class="admin-btn admin-btn-secondary"
                             @click="showEventManager = true"
                             title="Gérer les événements"
                         >
@@ -243,6 +250,43 @@
                 </div>
                 <p v-else class="admin-responsive-hint">
                     Choisis Tablette/Mobile dans la barre du haut pour régler chaque format.
+                </p>
+            </div>
+            <div v-if="sidebarBlock" class="admin-comment-panel">
+                <p class="admin-comment-label">💬 Note pour le développeur</p>
+                <textarea
+                    v-model="commentDraft"
+                    class="admin-comment-textarea"
+                    placeholder="Ex : « J'aimerais un compteur ici — ça demande du code »"
+                    rows="3"
+                ></textarea>
+                <div class="admin-comment-actions">
+                    <button
+                        class="admin-btn admin-btn-secondary"
+                        @click="saveComment"
+                        :disabled="!commentDraft.trim() || savingComment"
+                    >
+                        {{ savingComment ? "..." : (activeComment ? "Mettre à jour" : "Créer la demande") }}
+                    </button>
+                    <button
+                        v-if="activeComment && !activeComment.resolved"
+                        class="admin-btn admin-btn-secondary"
+                        @click="toggleCommentResolved(true)"
+                    >✓ Marquer résolu</button>
+                    <button
+                        v-if="activeComment && activeComment.resolved"
+                        class="admin-btn admin-btn-secondary"
+                        @click="toggleCommentResolved(false)"
+                    >↺ Rouvrir</button>
+                    <button
+                        v-if="activeComment"
+                        class="admin-comment-del-btn"
+                        @click="deleteActiveComment"
+                        title="Supprimer"
+                    >✕</button>
+                </div>
+                <p v-if="activeComment?.resolved" class="admin-comment-resolved-note">
+                    Résolu{{ activeComment.resolvedBy ? ' par ' + activeComment.resolvedBy : '' }}
                 </p>
             </div>
             <AutoEditor
@@ -532,12 +576,50 @@
         </div>
     </Teleport>
 
+    <!-- Comments (Developer Requests) Modal -->
+    <Teleport to="body">
+        <div v-if="showComments" class="version-modal-overlay" @click.self="showComments = false">
+            <div class="version-modal">
+                <div class="version-modal-header">
+                    <h3>Demandes développeur <span v-if="allComments.length" class="version-count">{{ allComments.length }}</span></h3>
+                    <button class="version-modal-close" @click="showComments = false">✕</button>
+                </div>
+                <div class="version-modal-body">
+                    <div v-if="commentsLoading" class="version-loading">Chargement...</div>
+                    <div v-else-if="allComments.length === 0" class="version-empty">Aucune demande</div>
+                    <div v-else class="version-list">
+                        <div
+                            v-for="c in sortedComments"
+                            :key="c.id"
+                            class="version-item"
+                            :class="{ 'comment-resolved': c.resolved }"
+                        >
+                            <div class="version-item-row">
+                                <div class="version-info" style="cursor:pointer" @click="goToComment(c)">
+                                    <span class="version-date">{{ new Date(c.createdAt).toLocaleString('fr-FR') }}</span>
+                                    <span class="version-author">{{ c.pageSlug }} — {{ c.blockLabel || c.blockType }}</span>
+                                    <div class="version-meta">{{ c.message }}</div>
+                                </div>
+                                <div class="version-actions">
+                                    <button class="admin-btn admin-btn-secondary" @click.stop="toggleGlobalCommentResolved(c)">
+                                        {{ c.resolved ? "↺ Rouvrir" : "✓ Résolu" }}
+                                    </button>
+                                    <button class="version-del-btn" @click.stop="deleteGlobalComment(c.id)" title="Supprimer">✕</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </Teleport>
+
     <AdminEventManager :open="showEventManager" @close="showEventManager = false" />
 
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, inject } from "vue";
+import { ref, computed, watch, onMounted, onUnmounted, inject } from "vue";
 import {
     GoogleAuthProvider,
     signInWithPopup,
@@ -692,6 +774,175 @@ const checkingAdmin = ref(true);
 
 let unsubscribe = null;
 let autoSaveTimer = null;
+
+// ─── Developer comments (per-block note) ───
+const pageComments = ref([]) // toutes les demandes de la page courante (chargées à la demande)
+const commentDraft = ref('')
+const savingComment = ref(false)
+// Même ref réactive que layouts/default.vue provide/injecte pour le badge
+// 💬 sur les blocs (PageRenderer.vue) — la mettre à jour ici évite d'attendre
+// un changement de page pour que le badge reflète une création/résolution
+// tout juste faite dans cette même session d'édition.
+const commentBlockIds = inject('commentBlockIds', ref([]))
+
+const activeComment = computed(() =>
+    pageComments.value.find(c => c.blockId === sidebarBlock.value?.id && !c.resolved) ||
+    pageComments.value.find(c => c.blockId === sidebarBlock.value?.id) || null
+)
+
+watch(sidebarBlock, async (block) => {
+    commentDraft.value = ''
+    if (!block) return
+    await loadPageComments()
+    commentDraft.value = activeComment.value?.message || ''
+})
+
+async function loadPageComments() {
+    try {
+        const token = await getFirebaseToken()
+        const res = await fetch('/api/comments', { headers: { Authorization: `Bearer ${token}` } })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const data = await res.json()
+        pageComments.value = (data.comments || []).filter(c => c.pageSlug === props.pageSlug)
+        commentBlockIds.value = pageComments.value.filter(c => !c.resolved).map(c => c.blockId)
+    } catch (e) {
+        console.error('[admin] load comments failed:', e)
+    }
+}
+
+async function saveComment() {
+    const block = sidebarBlock.value
+    if (!block || !commentDraft.value.trim()) return
+    savingComment.value = true
+    try {
+        const token = await getFirebaseToken()
+        if (activeComment.value) {
+            const res = await fetch(`/api/comments/${activeComment.value.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ resolved: activeComment.value.resolved, message: commentDraft.value.trim() }),
+            })
+            if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        } else {
+            const res = await fetch('/api/comments', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                body: JSON.stringify({
+                    pageSlug: props.pageSlug,
+                    blockId: block.id,
+                    blockType: block.type,
+                    blockLabel: getBlockLabel(block.type),
+                    message: commentDraft.value.trim(),
+                }),
+            })
+            if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        }
+        await loadPageComments()
+        showToast('Note enregistrée', 'toast-success')
+    } catch (e) {
+        showToast('Erreur : ' + (e.message || e), 'toast-error')
+    } finally {
+        savingComment.value = false
+    }
+}
+
+async function toggleCommentResolved(resolved) {
+    if (!activeComment.value) return
+    try {
+        const token = await getFirebaseToken()
+        const res = await fetch(`/api/comments/${activeComment.value.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ resolved }),
+        })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        await loadPageComments()
+    } catch (e) {
+        showToast('Erreur : ' + (e.message || e), 'toast-error')
+    }
+}
+
+async function deleteActiveComment() {
+    if (!activeComment.value || !confirm('Supprimer cette demande ?')) return
+    try {
+        const token = await getFirebaseToken()
+        const res = await fetch(`/api/comments/${activeComment.value.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        commentDraft.value = ''
+        await loadPageComments()
+    } catch (e) {
+        showToast('Erreur : ' + (e.message || e), 'toast-error')
+    }
+}
+
+// Liste centralisée des demandes (modale "💬 Demandes"), toutes pages confondues
+const showComments = ref(false)
+const allComments = ref([])
+const commentsLoading = ref(false)
+
+const unresolvedCommentCount = computed(() => allComments.value.filter(c => !c.resolved).length)
+const sortedComments = computed(() =>
+    [...allComments.value].sort((a, b) => {
+        if (a.resolved !== b.resolved) return a.resolved ? 1 : -1
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    })
+)
+
+watch(showComments, (show) => { if (show) loadAllComments() })
+
+async function loadAllComments() {
+    commentsLoading.value = true
+    try {
+        const token = await getFirebaseToken()
+        const res = await fetch('/api/comments', { headers: { Authorization: `Bearer ${token}` } })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const data = await res.json()
+        allComments.value = data.comments || []
+    } catch (e) {
+        console.error('[admin] load comments failed:', e)
+        allComments.value = []
+    } finally {
+        commentsLoading.value = false
+    }
+}
+
+async function toggleGlobalCommentResolved(c) {
+    try {
+        const token = await getFirebaseToken()
+        const res = await fetch(`/api/comments/${c.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ resolved: !c.resolved }),
+        })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        await loadAllComments()
+        if (c.pageSlug === props.pageSlug) await loadPageComments()
+    } catch (e) {
+        showToast('Erreur : ' + (e.message || e), 'toast-error')
+    }
+}
+
+async function deleteGlobalComment(id) {
+    if (!confirm('Supprimer cette demande ?')) return
+    try {
+        const token = await getFirebaseToken()
+        const res = await fetch(`/api/comments/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        allComments.value = allComments.value.filter(x => x.id !== id)
+        await loadPageComments()
+    } catch (e) {
+        showToast('Erreur : ' + (e.message || e), 'toast-error')
+    }
+}
+
+function goToComment(c) {
+    showComments.value = false
+    navigateToPage(c.pageSlug, c.blockId)
+}
+
+// Charge le compte de demandes non résolues dès l'auth admin confirmée,
+// pour que le badge sur "💬 Demandes" soit visible sans ouvrir la modale.
+watch(isAdminUser, (val) => { if (val) loadAllComments() }, { immediate: true })
 
 // Version history
 const showVersionHistory = ref(false);
@@ -1205,7 +1456,14 @@ async function saveFooterChanges() {
 }
 
 
-async function navigateToPage(slug) {
+async function navigateToPage(slug, focusBlockId) {
+    // Sauter vers un bloc précis (depuis la modale Demandes) : portée v1
+    // limitée au desktop — la préview tablette/mobile passe par un iframe,
+    // relayer focusBlock jusque dans son contexte est une extension possible
+    // mais pas nécessaire pour ce premier jet. On bascule en desktop d'abord.
+    if (focusBlockId && previewDevice.value !== "desktop") {
+        previewDevice.value = "desktop"
+    }
     if (previewDevice.value !== "desktop") {
         emit('navigate-preview', slug)
         return
@@ -1213,9 +1471,11 @@ async function navigateToPage(slug) {
     // Desktop mode: client-side navigation
     const newQuery = { ...route.query, admin: "true" };
     delete newQuery.device;
+    if (focusBlockId) newQuery.focusBlock = focusBlockId
+    else delete newQuery.focusBlock
     try {
         await router.push({ path: slug === "accueil" ? "/" : `/${slug}`, query: newQuery });
-        try { window.scrollTo(0, 0) } catch (e) { console.warn(e) }
+        if (!focusBlockId) { try { window.scrollTo(0, 0) } catch (e) { console.warn(e) } }
     } catch (err) {
         console.error("navigateToPage: router.push failed", err);
     }
@@ -1265,6 +1525,67 @@ async function saveChanges() {
 </script>
 
 <style scoped>
+/* ─── Developer comment panel (sidebar) ─── */
+.admin-comment-panel {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 14px;
+    background: #fffbea;
+}
+.admin-comment-label {
+    font-size: 0.72em;
+    font-weight: 600;
+    color: #92400e;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin: 0 0 8px;
+}
+.admin-comment-textarea {
+    width: 100%;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    padding: 8px;
+    font-size: 0.85em;
+    font-family: inherit;
+    resize: vertical;
+}
+.admin-comment-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+}
+.admin-comment-del-btn {
+    background: none;
+    border: 1px solid #fecaca;
+    border-radius: 6px;
+    color: #b91c1c;
+    cursor: pointer;
+    padding: 0 10px;
+}
+.admin-comment-del-btn:hover { background: #fef2f2; }
+.admin-comment-resolved-note {
+    margin: 8px 0 0;
+    font-size: 0.72em;
+    color: #16a34a;
+}
+.admin-comment-count {
+    display: inline-block;
+    margin-left: 4px;
+    background: #ef4444;
+    color: white;
+    border-radius: 10px;
+    padding: 1px 6px;
+    font-size: 0.85em;
+}
+.comment-resolved {
+    opacity: 0.55;
+}
+.comment-resolved .version-meta {
+    text-decoration: line-through;
+}
+
 /* ─── Responsive panel (sidebar) ─── */
 .admin-responsive-panel {
     border: 1px solid #e5e7eb;

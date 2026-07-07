@@ -52,7 +52,7 @@
 </template>
 
 <script setup>
-import { provide, ref, onMounted, onUnmounted, computed } from "vue";
+import { provide, ref, onMounted, onUnmounted, computed, watch, nextTick } from "vue";
 import BlockFooter from "~/components/blocks/BlockFooter.vue";
 
 useSeoMeta({
@@ -72,6 +72,8 @@ const {
     footerBlock,
     loadFooterBlock,
     selectFooter,
+    localBlocks,
+    localBlocksPage,
 } = useAdmin();
 
 provide("isAdmin", isAdminMode);
@@ -83,6 +85,7 @@ const isMounted = ref(false);
 const { loadMenuFromFirestore, saveMenuToFirestore, openMenuEditor } = useMenuEditor();
 
 const route = useRoute();
+const router = useRouter();
 const currentPageSlug = computed(() => {
     const path = route.path.replace("/", "");
     return path === "" ? "accueil" : path;
@@ -104,6 +107,54 @@ const previewSlug = ref(currentPageSlug.value)
 const effectiveSlug = computed(() => {
     return previewDevice.value !== 'desktop' ? previewSlug.value : currentPageSlug.value
 })
+
+// Demandes développeur ouvertes sur la page courante — alimente le badge
+// 💬 affiché sur chaque bloc concerné (PageRenderer.vue), pour repérer les
+// demandes en attente sans avoir à ouvrir chaque bloc.
+const commentBlockIds = ref([])
+provide("commentBlockIds", commentBlockIds)
+
+async function loadCommentBlockIds(slug) {
+    if (!slug) { commentBlockIds.value = []; return }
+    try {
+        const { $auth } = useNuxtApp()
+        const token = await $auth?.currentUser?.getIdToken()
+        if (!token) return
+        const res = await fetch('/api/comments', { headers: { Authorization: `Bearer ${token}` } })
+        if (!res.ok) return
+        const data = await res.json()
+        commentBlockIds.value = (data.comments || [])
+            .filter((c) => c.pageSlug === slug && !c.resolved)
+            .map((c) => c.blockId)
+    } catch {
+        commentBlockIds.value = []
+    }
+}
+
+watch(effectiveSlug, (slug) => { if (isAdminMode.value) loadCommentBlockIds(slug) })
+watch(isAdminMode, (val) => { if (val) loadCommentBlockIds(effectiveSlug.value) })
+
+// Navigation "aller au bloc" depuis la modale Demandes (?focusBlock=<id>) :
+// on attend que les blocs de la page CIBLE soient effectivement chargés
+// (localBlocksPage === effectiveSlug) avant de sélectionner/scroller, pour
+// ne pas agir sur les blocs de la page qu'on vient de quitter.
+watch(
+    () => [route.query.focusBlock, localBlocks.value.length, localBlocksPage.value],
+    async ([focusId, , loadedSlug]) => {
+        if (!focusId || !isAdminMode.value) return
+        if (loadedSlug !== effectiveSlug.value) return
+        const found = localBlocks.value.find((b) => b.id === focusId)
+        if (!found) return
+        selectBlock(focusId)
+        await nextTick()
+        const el = document.querySelector(`[data-block-id="${focusId}"]`)
+        el?.scrollIntoView({ behavior: "smooth", block: "center" })
+        const q = { ...route.query }
+        delete q.focusBlock
+        router.replace({ query: q }).catch(() => {})
+    },
+    { immediate: true }
+)
 
 const previewIframeSrc = computed(() => {
     const path = previewSlug.value === "accueil" ? "/" : `/${previewSlug.value}`
