@@ -104,7 +104,7 @@ test.describe('Navigation /agenda : intégrité du rendu après navigation', () 
     await expectAgendaIntact(page)
   })
 
-  test('/agenda vue cartes -> / -> /agenda (conservation vue mois)', async ({ page }) => {
+  test('/agenda vue cartes -> / -> /agenda (vue cartes persistée via localStorage)', async ({ page }) => {
     await page.goto('/agenda', { waitUntil: 'networkidle' })
     await expectAgendaIntact(page)
 
@@ -120,8 +120,10 @@ test.describe('Navigation /agenda : intégrité du rendu après navigation', () 
     await navigateAndWait(page, 'link', 'Agenda')
     await expect(page).toHaveURL(/agenda/)
 
-    // La vue devrait être revenue à 'month' (par défaut)
-    await expect(page.locator('.calendar-grid')).toBeVisible()
+    // pages/agenda.vue persiste volontairement le choix de vue dans
+    // localStorage ('agenda_view') : la vue cartes doit rester active,
+    // pas revenir à 'month' par défaut.
+    await expect(page.locator('.event-card').first()).toBeVisible({ timeout: 5000 })
   })
 
   test('Pas de leak du contenu agenda sur les autres pages', async ({ page }) => {

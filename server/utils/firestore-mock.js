@@ -105,8 +105,13 @@ let PAGES = {
 }
 
 export function getPageDoc(slug) {
+  const found = PAGES[slug]
+  // exists=false permet à pages/[slug].vue de distinguer "vraiment inconnu"
+  // (404) de "page réelle mais vide" (nouvelle page admin) ; une page
+  // soft-deleted (_deleted) compte comme inexistante pour le routage public.
+  const exists = !!found && !found._deleted
   // Deep clone pour éviter mutations
-  return JSON.parse(JSON.stringify(PAGES[slug] || { blocks: [] }))
+  return JSON.parse(JSON.stringify({ ...(found || { blocks: [] }), exists }))
 }
 
 export function resetMock() {
