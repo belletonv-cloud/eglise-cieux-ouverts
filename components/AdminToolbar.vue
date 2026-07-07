@@ -216,6 +216,20 @@
                     <span class="admin-vis-name">{{ deviceLabel(previewDevice) }}</span>
                     <span class="admin-vis-state">{{ deviceVisible(previewDevice) === false ? '🚫 Masqué' : '✓ Visible' }}</span>
                 </button>
+                <!-- Rappel passif (non cliquable) : évite de devoir changer de
+                     device juste pour vérifier si le bloc est masqué ailleurs.
+                     Seul le bouton ci-dessus (device actif) modifie l'état. -->
+                <div class="admin-vis-others">
+                    <span
+                        v-for="d in otherDevices"
+                        :key="d"
+                        class="admin-vis-mini"
+                        :class="{ off: deviceVisible(d) === false }"
+                        :title="deviceVisible(d) === false ? `Masqué sur ${deviceLabel(d)}` : `Visible sur ${deviceLabel(d)}`"
+                    >
+                        {{ deviceIcon(d) }} {{ deviceVisible(d) === false ? '🚫' : '✓' }}
+                    </span>
+                </div>
                 <div v-if="previewDevice !== 'desktop'" class="admin-responsive-editing">
                     ✎ Vous modifiez la version <strong>{{ deviceLabel(previewDevice) }}</strong>.
                     Les réglages s'appliquent à ce format uniquement.
@@ -650,6 +664,10 @@ function toggleDeviceVisibility(d) {
   if (!block?.id) return
   updateVisibility(block.id, { [d]: deviceVisible(d) === false })
 }
+
+const otherDevices = computed(() =>
+  ['desktop', 'tablet', 'mobile'].filter((d) => d !== previewDevice.value)
+)
 
 const hasDeviceOverrides = computed(() => {
   const block = activeBlock.value
@@ -1288,6 +1306,18 @@ async function saveChanges() {
 }
 .admin-vis-icon { font-size: 1.1em; }
 .admin-vis-state { font-size: 0.85em; }
+.admin-vis-others {
+    display: flex;
+    gap: 8px;
+    margin-top: 6px;
+    justify-content: center;
+}
+.admin-vis-mini {
+    font-size: 0.68em;
+    color: #9ca3af;
+    cursor: default;
+}
+.admin-vis-mini.off { color: #b91c1c; }
 .admin-responsive-editing {
     margin-top: 10px;
     padding: 8px;

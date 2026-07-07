@@ -50,6 +50,7 @@ const props = defineProps({
   titleBoldStart: { type: Number, default: 11 },
   titleBoldEnd: { type: Number, default: 15 },
   blockId: { type: String, default: '' },
+  visibility: { type: Object, default: () => ({}) },
 })
 
 const { addElement } = useAnimatedElements(props.blockId)

@@ -16,6 +16,7 @@ defineProps({
   animation: { type: String, default: 'fadeIn' },
   isTriggered: { type: Boolean, default: false },
   blockId: { type: String, default: '' },
+  visibility: { type: Object, default: () => ({}) },
 })
 </script>
 
