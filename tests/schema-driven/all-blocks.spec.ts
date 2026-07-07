@@ -18,6 +18,7 @@ function buildBlockSchema(type: string, def: any): BlockSchema {
     defaults: def.defaults,
     schema: def.schema as FieldSchema[],
     component: 'Block' + type.charAt(0).toUpperCase() + type.slice(1),
+    templates: def.templates,
   }
 }
 
@@ -116,6 +117,25 @@ test.describe('1. Schema integrity for ALL blocks', () => {
           expect(
             field.options?.length, `${type}.${field.key}: no options`
           ).toBeGreaterThanOrEqual(1)
+        }
+      }
+    }
+  })
+
+  test('block templates (if any) reference only real schema keys and have id/label', () => {
+    for (const [type, def] of Object.entries(BLOCK_TYPES)) {
+      if (!def.templates) continue
+      const schemaKeys = new Set(def.schema.map((f: any) => f.key))
+      const ids = new Set<string>()
+      for (const tpl of def.templates) {
+        expect(tpl.id, `${type}: a template is missing an id`).toBeTruthy()
+        expect(ids.has(tpl.id), `${type}: duplicate template id "${tpl.id}"`).toBe(false)
+        ids.add(tpl.id)
+        expect(tpl.label, `${type}.${tpl.id}: template missing a label`).toBeTruthy()
+        for (const propKey of Object.keys(tpl.props || {})) {
+          expect(
+            schemaKeys.has(propKey), `${type}.${tpl.id}: template references unknown prop "${propKey}"`
+          ).toBe(true)
         }
       }
     }

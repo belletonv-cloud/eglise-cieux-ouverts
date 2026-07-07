@@ -25,6 +25,17 @@ export type FieldType =
 
 export type AnimationStrategy = 'wrapper' | 'internal' | 'none'
 
+// A named starting point for a block type, offered as a second step in the
+// admin block picker when a type defines more than one. `props` is a
+// partial override merged on top of `defaults` (see createBlock()) — it
+// does not need to repeat every schema field, only the ones it changes.
+export interface BlockTemplate {
+  id: string
+  label: string
+  icon?: string
+  props: Record<string, any>
+}
+
 export interface BlockSchema {
   type: string
   label: string
@@ -36,6 +47,7 @@ export interface BlockSchema {
   adminComponent?: string
   adminRenderer?: string
   animations: AnimationStrategy
+  templates?: BlockTemplate[]
 }
 
 export type BlockCategory = 'content' | 'layout' | 'media' | 'hero'
@@ -140,6 +152,28 @@ export function validateBlockSchema(schema: BlockSchema): ValidationError[] {
     }
     if (schema.animations === 'none' && field.type === 'animation') {
       errors.push({ type: schema.type, field: field.key, message: `block with animations='none' cannot have animation field "${field.key}"` })
+    }
+  }
+
+  if (schema.templates) {
+    const schemaKeys = new Set(schema.schema.map((f) => f.key))
+    const seenTemplateIds = new Set<string>()
+    for (const tpl of schema.templates) {
+      if (!tpl.id) {
+        errors.push({ type: schema.type, field: '(unnamed template)', message: 'template id is required' })
+      } else if (seenTemplateIds.has(tpl.id)) {
+        errors.push({ type: schema.type, field: tpl.id, message: `duplicate template id: ${tpl.id}` })
+      } else {
+        seenTemplateIds.add(tpl.id)
+      }
+      if (!tpl.label) {
+        errors.push({ type: schema.type, field: tpl.id || '(unnamed template)', message: `template "${tpl.id}" has no label` })
+      }
+      for (const propKey of Object.keys(tpl.props || {})) {
+        if (!schemaKeys.has(propKey)) {
+          errors.push({ type: schema.type, field: tpl.id || '(unnamed template)', message: `template "${tpl.id}" references unknown prop "${propKey}" (not in schema)` })
+        }
+      }
     }
   }
 

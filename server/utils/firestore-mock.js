@@ -99,6 +99,8 @@ let PAGES = {
       { id: 'tb-fullWidthImage', type: 'fullWidthImage', props: { image: '/test-img.gif', animation: 'portal' } },
       { id: 'tb-equipe', type: 'equipe', props: { members: [{ name: 'Jean Test', role: 'Pasteur', photo: '', description: 'Membre de démonstration' }] } },
       { id: 'tb-faq', type: 'faq', props: { items: [{ question: 'Question de test ?', answer: 'Réponse de test.' }] } },
+      { id: 'tb-stats', type: 'stats', props: {} },
+      { id: 'tb-quote', type: 'quote', props: {} },
       { id: 'tb-footer', type: 'footer', props: {} },
     ],
   },

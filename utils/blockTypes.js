@@ -27,9 +27,6 @@ export const ANIMATIONS = [
 
 const DEFAULT_MESSAGES_BODY = `<p>Les messages partages a l'eglise ne sont pas faits pour s'arreter au dimanche.</p><p>📺 Replonge dans la parole sur notre chaine YouTube :</p><ul><li>(Re)decouvre les messages qui t'ont touche.</li><li>Laisse Dieu te parler a nouveau, ou d'une maniere nouvelle.</li><li>Partage-les avec tes proches pour semer l'esperance autour de toi.</li></ul><p>Que ce soit pour approfondir, reentendre une parole qui t'a marque(e), ou rester connecte(e) dans la semaine, ces moments sont la pour toi.</p><p><strong>Abonne-toi des maintenant pour ne rien manquer et garde la flamme allumee.</strong></p>`;
 const DEFAULT_MESSAGES_GRADIENT = `radial-gradient(circle at 94.35% 89.61%, #054886 0%, 20%, rgba(5, 72, 134, 0) 40%), radial-gradient(circle at 9.07% 95.57%, rgba(238, 108, 113, 0.99) 0%, 25%, rgba(238, 108, 113, 0) 50%), radial-gradient(circle at 4.04% 13.51%, #054886 0%, 42%, rgba(5, 72, 134, 0) 70%), radial-gradient(circle at 93.32% 10.65%, #EF4B54 0%, 42%, rgba(239, 75, 84, 0) 70%), radial-gradient(circle at 48.90% 49.52%, #FFFFFF 0%, 100%, rgba(255, 255, 255, 0) 100%)`;
-const DEFAULT_CONTACT_MAP_EMBED_URL =
-  "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2688.0!2d-3.8275!3d48.5775!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4816a3c4e3d89c3b%3A0x1!2s2+Rue+Jean+Monnet%2C+29600+Morlaix!5e0!3m2!1sfr!2sfr!4v1700000000000";
-
 // ─── TYPES DE BLOCS ────────────────────────────────────────────────────────────
 export const BLOCK_TYPES = {
   hero: {
@@ -72,7 +69,7 @@ export const BLOCK_TYPES = {
     animations: "wrapper",
     defaults: {
       title: "BIENVENUE",
-      subtitle: "à l'Église Cieux Ouverts à Morlaix",
+      subtitle: "à votre église",
       backgroundColor: "#ffffff",
       textColor: "#1a1a2e",
       animation: "portal",
@@ -102,51 +99,21 @@ export const BLOCK_TYPES = {
     defaults: {
       items: [
         {
-          title: "Célébration dimanche",
+          title: "Rencontre du dimanche",
           description:
-            "Viens célébrer avec nous chaque dimanche !\n\nRejoins-nous pour un moment chaleureux, joyeux dans l'unité et la bienveillance.\n\nAu programme :\n✨ Un accueil convivial autour d’un café offert !\n🎵 Un temps de louange (chants rythmés) et d’adoration (chants plus doux) avec des chants qui disposent le cœur.\n📖 Un message inspirant, délivré par un prédicateur ou le pasteur, pour nourrir ta foi.\n🙏 Un temps de prière, si tu souhaites recevoir un soutien ou partager ton cœur.\n\nRendez-vous chaque semaine :\n\n9h30 : Accueil-café.\n10h00 : Début de la célébration.\n\nEt pour les enfants ?\nDe 1 à 18 ans, ils sont les bienvenus dans des espaces dédiés, encadrés par des moniteurs bienveillants et qualifiés.",
+            "Un temps hebdomadaire pour se retrouver, célébrer et échanger ensemble.\n\nDécrivez ici le déroulé type : accueil, temps de louange, message, temps de prière.",
           image: "/images/activites-celebration.jpg",
         },
         {
-          title: "Soirée Cieux Ouverts",
+          title: "Groupe de partage",
           description:
-            "Viens expérimenter Sa présence !\n\n🙌 As-tu envie de louer Dieu et de Le célébrer de tout ton être ?\n🙏 Ressens-tu le besoin d’un moment intime avec Lui ?\n❤️‍🩹 Aspires-tu à une guérison, une délivrance ou un nouveau départ ?\n\nNe manque pas nos Soirées Cieux Ouverts, des instants privilégiés où le ciel touche la terre et où la gloire de Dieu transforme les vies.\nUn moment unique pour te connecter à Son cœur et vivre Sa puissance à l'œuvre.\n\n👉 Nous t'attendons avec joie – sois le/la bienvenu(e) !",
-          image: "/images/activites-soiree.png",
-        },
-        {
-          title: "Groupe de prière",
-          description:
-            "Unissons nos voix chaque mercredi soir !\n\n🙏Rejoins-nous les mercredis à 20h pour un temps puissant de prières et d’intercessions. \n📣 Ensemble, nous élevons nos voix pour porter devant Dieu les sujets qui touchent nos cœurs et le monde qui nous entoure.\n\nViens participer à ce moment d’impact – ta prière compte !",
+            "Un petit groupe qui se réunit régulièrement pour discuter, prier et grandir ensemble.\n\nPrécisez ici le rythme, le lieu et le public visé.",
           image: "/images/activites-priere.jpg",
         },
         {
-          title: "Groupe de marche",
+          title: "Repas convivial",
           description:
-            "Rejoins-nous pour une marche conviviale chaque mois !\n\nUne belle occasion de :\n🤝 Créer des liens et partager des moments authentiques ensemble.\n🌍 Explorer une nouvelle commune ou un coin pittoresque de notre magnifique région.\n🚶‍♀️ Bouger à ton rythme, avec deux parcours adaptés pour que chacun y trouve son plaisir.\n\nEt si le soleil est au rendez-vous, nous prolongeons la journée avec un pique-nique avant le départ de la randonnée ! 🌞\n\nViens marcher, découvrir et partager avec nous – c’est ouvert à tous !",
-          image: "/images/activites-marche.jpeg",
-        },
-        {
-          title: "Groupes de maison",
-          description:
-            "Des groupes de maison près de chez toi !\n\nRejoins l’un de nos groupes de maison dans les communes de :\n📍 Carhaix\n📍 Pleyber-Christ\n📍 Plouénan\n📍 Plouvorn\n📍 Saint-Martin-des-Champs\n📍 Saint-Pol-de-Léon\n... et d'autres à venir !\n\nCes rencontres conviviales sont l’occasion de :\n💬 Échanger et répondre à tes questions.\n🤝 Partager nos expériences et notre foi.\n✨ Grandir ensemble dans la découverte de Christ.\n\nCes groupes sont ouverts à tous, en particulier aux personnes qui explorent leur cheminement spirituel ou souhaitent en savoir plus sur Jésus.\n\nViens comme tu es, une place t’attend !",
-          image: "/images/activites-maison.jpeg",
-        },
-        {
-          title: "Soirée femmes",
-          description:
-            "Rejoins les SentinElles !\n\nℹ️ Un jeudi par mois, de 18h30 à 21h, le groupe des SentinElles se rassemble pour vivre des moments uniques entre femmes.\n\n💬 C'est l'occasion de plonger dans des thèmes bibliques inspirants, d'échanger librement et de partager des expériences qui nous enrichissent mutuellement. 💫\n\nViens comme tu es, avec ton histoire, ton énergie ou ta curiosité – il y a une place pour toi parmi nous ! ✨",
-          image: "/images/activites-femmes.jpeg",
-        },
-        {
-          title: "Jeunesse",
-          description:
-            'Les "Potentiel" : un groupe pour les 12-18 ans !\n\nUn espace dédié aux ados pour :\n❓ Partager leurs questionnements et explorer leur foi en toute liberté.\n✨ Vivre des expériences fortes, qui marquent et transforment.\n🌱 Grandir ensemble, en apprenant à s’épanouir dans leur potentiel.\n🎉 Et surtout, s’amuser et créer des souvenirs mémorables !\n\nDes moments uniques pour se connecter, se découvrir et avancer dans un cadre bienveillant.\n\nSi tu as entre 12 et 18 ans, ce groupe est fait pour toi – viens nous rejoindre !',
-          image: "/images/activites-jeunesse.jpeg",
-        },
-        {
-          title: "Repas partagé",
-          description:
-            "Repas partagé – chaque dernier dimanche du mois !\n\nUn moment chaleureux et convivial où :\n🍲 Chacun apporte un plat, une boisson et/ ou un dessert à partager.\n🍽️ Un grand buffet est installé pour que tout le monde puisse se servir librement.\n🤝 Nous profitons ensemble d’un temps de communion fraternelle, riche en échanges et en joie.\n\nViens vivre ce moment de partage – ouvert à tous, dans une ambiance familiale et accueillante !",
+            "Un moment de partage autour d'un repas, ouvert à tous.\n\nIndiquez ici la fréquence et les modalités de participation.",
           image: "/images/activites-repas.jpg",
         },
       ],
@@ -190,6 +157,34 @@ export const BLOCK_TYPES = {
       { key: "textColor", label: "Couleur texte", type: "color" },
       { key: "animation", label: "Animation", type: "animation" },
     ],
+    templates: [
+      { id: "blank", label: "Vierge", icon: "📝", props: {} },
+      {
+        id: "ministry-presentation",
+        label: "Présentation d'un ministère",
+        icon: "🙌",
+        props: {
+          title: "Nom du ministère",
+          subtitle: "Une équipe à votre service",
+          body: "Présentez ici la mission et les activités de ce ministère.",
+          ctaText: "En savoir plus",
+          ctaLink: "/contact",
+        },
+      },
+      {
+        id: "event-highlight",
+        label: "Mise en avant d'un événement",
+        icon: "📅",
+        props: {
+          title: "Nom de l'événement",
+          subtitle: "Date à préciser",
+          body: "Décrivez l'événement, le lieu et comment s'inscrire.",
+          reverse: true,
+          ctaText: "S'inscrire",
+          ctaLink: "/contact",
+        },
+      },
+    ],
   },
 
   rejoins: {
@@ -200,7 +195,7 @@ export const BLOCK_TYPES = {
     defaults: {
       title: "Rejoins-nous",
       subtitle: "Chaque dimanche",
-      location: "à Morlaix",
+      location: "dans votre ville",
       horaires: [
         { heure: "9h30", label: "Accueil café" },
         { heure: "10h00", label: "Célébration" },
@@ -225,10 +220,10 @@ export const BLOCK_TYPES = {
     defaults: {
       title: "Nos aspirations",
       items: [
-        "Accueillir et vivre l'unité",
-        "Célébrer et cultiver la présence de Dieu",
-        "Accompagner et restaurer les vies",
-        "Témoigner et former des disciples",
+        "Accueillir chacun avec bienveillance",
+        "Célébrer et vivre notre foi ensemble",
+        "Accompagner et soutenir les uns les autres",
+        "Partager et transmettre nos convictions",
       ],
       backgroundColor: "#064886",
       textColor: "#ffffff",
@@ -325,6 +320,43 @@ export const BLOCK_TYPES = {
       },
       { key: "animation", label: "Animation", type: "animation" },
     ],
+    templates: [
+      { id: "blank", label: "Vierge", icon: "📄", props: {} },
+      {
+        id: "announcement",
+        label: "Annonce",
+        icon: "📢",
+        props: {
+          content:
+            "<h2>Titre de l'annonce</h2><p>Détails de l'annonce à venir.</p>",
+          backgroundColor: "#fff7e6",
+          textColor: "#7a4a00",
+          textAlign: "center",
+        },
+      },
+      {
+        id: "testimony",
+        label: "Témoignage",
+        icon: "💬",
+        props: {
+          content:
+            "<p><em>« Un témoignage marquant à partager ici. »</em></p><p>— Nom du témoin</p>",
+          backgroundColor: "#f8f9fa",
+          textAlign: "left",
+        },
+      },
+      {
+        id: "article",
+        label: "Article",
+        icon: "📰",
+        props: {
+          content:
+            "<h2>Titre de l'article</h2><p>Introduction...</p><p>Développement...</p>",
+          textAlign: "left",
+          padding: 80,
+        },
+      },
+    ],
   },
 
   gallery: {
@@ -398,7 +430,7 @@ export const BLOCK_TYPES = {
     defaults: {
       label: "Ce qui nous anime",
       quote:
-        "Voir la gloire, le royaume et la volonté de Dieu\nse manifester sur la terre comme aux Cieux",
+        "Notre vision : voir des vies transformées et une communauté qui grandit ensemble.",
       ctaText: "",
       ctaLink: "",
       backgroundGradient: "#f8f9fa",
@@ -486,9 +518,9 @@ export const BLOCK_TYPES = {
       subtitle: "",
       items: [
         {
-          question: "Comment se déroule une célébration ?",
+          question: "Comment se déroule un culte / une célébration ?",
           answer:
-            "Accueil café à 9h30, puis célébration à 10h : louange, message et temps de prière. Les enfants sont accueillis dans des espaces dédiés.",
+            "Décrivez ici le déroulé type : accueil, temps de louange, message et temps de prière.",
         },
       ],
       openFirst: false,
@@ -515,6 +547,60 @@ export const BLOCK_TYPES = {
     ],
   },
 
+  stats: {
+    label: "Chiffres clés",
+    icon: "📊",
+    category: "content",
+    animations: "wrapper",
+    defaults: {
+      title: "En quelques chiffres",
+      items: [
+        { value: "10", label: "Années d'existence" },
+        { value: "200", label: "Membres" },
+        { value: "5", label: "Groupes actifs" },
+      ],
+      backgroundColor: "#064886",
+      textColor: "#ffffff",
+      animation: "fadeIn",
+    },
+    schema: [
+      { key: "title", label: "Titre", type: "text" },
+      {
+        key: "items",
+        label: "Chiffres",
+        type: "array",
+        subFields: [
+          { key: "value", label: "Valeur", type: "text" },
+          { key: "label", label: "Libellé", type: "text" },
+        ],
+      },
+      { key: "backgroundColor", label: "Fond", type: "color" },
+      { key: "textColor", label: "Couleur texte", type: "color" },
+      { key: "animation", label: "Animation", type: "animation" },
+    ],
+  },
+
+  quote: {
+    label: "Citation",
+    icon: "💬",
+    category: "content",
+    animations: "wrapper",
+    defaults: {
+      quote: "Une citation inspirante à mettre en avant.",
+      author: "",
+      backgroundColor: "#f8f9fa",
+      textColor: "#064886",
+      animation: "fadeIn",
+    },
+    schema: [
+      { key: "quote", label: "Citation", type: "textarea" },
+      { key: "author", label: "Auteur / source", type: "text" },
+      { key: "backgroundColor", label: "Fond", type: "color" },
+      { key: "textColor", label: "Couleur texte", type: "color" },
+      { key: "animation", label: "Animation", type: "animation" },
+    ],
+  },
+
   footer: {
     label: "Footer",
     icon: "📋",
@@ -522,9 +608,9 @@ export const BLOCK_TYPES = {
     animations: "internal",
     defaults: {
       title: "Il y a une place pour toi !",
-      email: "contact@cieuxouverts.bzh",
-      schedule: "Rdv chaque dimanche | 10H",
-      address: "2 rue Jean Monnet | 29600 Morlaix, Bretagne",
+      email: "contact@votre-eglise.fr",
+      schedule: "Rdv chaque semaine | Horaire à préciser",
+      address: "Adresse de votre église à renseigner",
       bgColorStart: "#064886",
       bgColorMid: "#064886",
       bgColorEnd: "#5a9fcf",
@@ -662,9 +748,9 @@ export function getDefaultContactPage() {
   return [
     createBlock("contact", {
       title: "Nous contacter",
-      addressTitle: "Eglise Cieux Ouverts",
-      addressLine: "2 rue Jean Monnet | 29600 Morlaix",
-      mapEmbedUrl: DEFAULT_CONTACT_MAP_EMBED_URL,
+      addressTitle: "",
+      addressLine: "",
+      mapEmbedUrl: "",
       backgroundGradient: "#064886",
       showQuestions: false,
       showSocials: false,
@@ -769,11 +855,9 @@ function normalizeContactBlocks(blocks) {
       ...BLOCK_TYPES.contact.defaults,
       ...contactBlock.props,
       title: contactBlock.props?.title || "Nous contacter",
-      addressTitle: contactBlock.props?.addressTitle || "Eglise Cieux Ouverts",
-      addressLine:
-        contactBlock.props?.addressLine || "2 rue Jean Monnet | 29600 Morlaix",
-      mapEmbedUrl:
-        contactBlock.props?.mapEmbedUrl || DEFAULT_CONTACT_MAP_EMBED_URL,
+      addressTitle: contactBlock.props?.addressTitle || "",
+      addressLine: contactBlock.props?.addressLine || "",
+      mapEmbedUrl: contactBlock.props?.mapEmbedUrl || "",
       backgroundGradient: contactBlock.props?.backgroundGradient || "#064886",
       showQuestions: contactBlock.props?.showQuestions ?? false,
       showSocials: contactBlock.props?.showSocials ?? false,

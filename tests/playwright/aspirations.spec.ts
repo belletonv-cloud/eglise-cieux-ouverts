@@ -87,7 +87,7 @@ test.describe("Aspirations animation", () => {
     await expect(texts.nth(0)).toHaveText(/Accueillir/);
     await expect(texts.nth(1)).toHaveText(/Célébrer/);
     await expect(texts.nth(2)).toHaveText(/Accompagner/);
-    await expect(texts.nth(3)).toHaveText(/Témoigner/);
+    await expect(texts.nth(3)).toHaveText(/Partager/);
 
     expect(errors).toEqual([]);
   });

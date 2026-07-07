@@ -116,6 +116,20 @@
         :is-triggered="isTriggered"
         :data-admin="isAdmin || undefined"
     />
+    <BlockStats
+        v-else-if="btype === 'stats'"
+        v-bind="sprops"
+        :block-id="bid"
+        :is-triggered="isTriggered"
+        :data-admin="isAdmin || undefined"
+    />
+    <BlockQuote
+        v-else-if="btype === 'quote'"
+        v-bind="sprops"
+        :block-id="bid"
+        :is-triggered="isTriggered"
+        :data-admin="isAdmin || undefined"
+    />
     <BlockFooter
         v-else-if="btype === 'footer'"
         v-bind="sprops"
@@ -147,6 +161,8 @@ import BlockYoutube from "~/components/blocks/BlockYoutube.vue";
 import BlockFooter from "~/components/blocks/BlockFooter.vue";
 import BlockEquipe from "~/components/blocks/BlockEquipe.vue";
 import BlockFaq from "~/components/blocks/BlockFaq.vue";
+import BlockStats from "~/components/blocks/BlockStats.vue";
+import BlockQuote from "~/components/blocks/BlockQuote.vue";
 
 const props = defineProps({
     block: { type: Object, required: true },

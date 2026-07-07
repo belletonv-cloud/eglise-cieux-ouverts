@@ -188,9 +188,9 @@ export function useAdmin() {
     if (editingBlockId.value === id) editingBlockId.value = null;
   }
 
-  async function addBlock(type, afterId) {
+  async function addBlock(type, afterId, overrideProps) {
     const { createBlock } = await import("~/utils/blockTypes.js");
-    const newBlock = createBlock(type);
+    const newBlock = createBlock(type, overrideProps || {});
     if (!newBlock) return null;
     const label = _blockLabel(type);
     pushHistory(`Ajout du bloc « ${label} »`);
