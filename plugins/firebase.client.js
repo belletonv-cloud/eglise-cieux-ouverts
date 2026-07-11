@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app'
 import { getFirestore } from 'firebase/firestore'
-import { getAuth } from 'firebase/auth'
+import { getAuth, onAuthStateChanged } from 'firebase/auth'
 
 export default defineNuxtPlugin((nuxtApp) => {
   const config = useRuntimeConfig()
@@ -15,10 +15,19 @@ export default defineNuxtPlugin((nuxtApp) => {
       console.warn('[Firebase] Missing FIREBASE_API_KEY — skipping Firebase initialization')
     }
 
+    // Create a wrapper that mimics the Firebase Auth API (with onAuthStateChanged as method)
+    const mockAuthWrapper = {
+      currentUser: null,
+      onAuthStateChanged: (callback) => {
+        callback(null)
+        return () => {} // unsubscribe
+      }
+    }
+
     return {
       provide: {
         db: null,
-        ...(nuxtApp.$auth ? {} : { auth: null }),
+        ...(nuxtApp.$auth ? {} : { auth: mockAuthWrapper }),
       },
     }
   }
@@ -37,6 +46,13 @@ export default defineNuxtPlugin((nuxtApp) => {
     const db = getFirestore(app)
     const auth = getAuth(app)
 
+    // EventManager.vue attend $auth.onAuthStateChanged(callback) comme méthode
+    // (API compat Firebase v8). Ajoutée directement sur l'instance réelle plutôt
+    // que via spread — un spread copierait `currentUser` par valeur au moment du
+    // montage (donc null, avant toute connexion), et ce snapshot ne serait jamais
+    // rafraîchi ensuite.
+    auth.onAuthStateChanged = (callback) => onAuthStateChanged(auth, callback)
+
     return {
       provide: {
         db,
@@ -48,10 +64,17 @@ export default defineNuxtPlugin((nuxtApp) => {
     // app doesn't crash on mount (prevents hydration mismatches).
     // eslint-disable-next-line no-console
     console.error('[Firebase] Initialization failed:', err)
+    const mockAuthWrapper = {
+      currentUser: null,
+      onAuthStateChanged: (callback) => {
+        callback(null)
+        return () => {} // unsubscribe
+      }
+    }
     return {
       provide: {
         db: null,
-        ...(nuxtApp.$auth ? {} : { auth: null }),
+        ...(nuxtApp.$auth ? {} : { auth: mockAuthWrapper }),
       },
     }
   }

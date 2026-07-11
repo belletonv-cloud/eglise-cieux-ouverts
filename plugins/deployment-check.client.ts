@@ -52,6 +52,21 @@ export default defineNuxtPlugin((nuxtApp) => {
     if (document.visibilityState === 'visible') checkForNewDeployment(30_000)
   })
 
+  // Contenu (pas seulement code) : un onglet public laissé ouvert pendant
+  // qu'un admin édite ailleurs affichait l'ancien contenu jusqu'à un hard
+  // refresh. Au retour sur l'onglet, on rafraîchit les données de page
+  // (refetch des useAsyncData de la page courante) — throttle 30 s, jamais
+  // en mode admin (l'éditeur travaille sur localBlocks, pas sur le payload).
+  let lastDataRefreshAt = 0
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'visible') return
+    if (isAdminMode.value) return
+    const now = Date.now()
+    if (now - lastDataRefreshAt < 30_000) return
+    lastDataRefreshAt = now
+    refreshNuxtData().catch(() => {})
+  })
+
   // Vérification après chaque navigation SPA (throttle 60 s)
   nuxtApp.hook('page:finish', () => checkForNewDeployment(60_000))
 })

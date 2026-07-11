@@ -134,6 +134,17 @@ async function loadCommentBlockIds(slug) {
 watch(effectiveSlug, (slug) => { if (isAdminMode.value) loadCommentBlockIds(slug) })
 watch(isAdminMode, (val) => { if (val) loadCommentBlockIds(effectiveSlug.value) })
 
+// À la sortie du mode admin SANS navigation (Escape, bouton Quitter), le
+// composant de page ne se remonte pas : son useAsyncData garde les blocs
+// fetchés au chargement initial, d'AVANT les éditions — l'admin voyait
+// l'ancien contenu et croyait ses modifications perdues (d'où des hard
+// refresh à répétition). On rafraîchit les données de page à cet instant.
+watch(isAdminMode, (val, old) => {
+    if (old && !val && import.meta.client) {
+        refreshNuxtData().catch((e) => console.warn("refreshNuxtData après sortie admin :", e))
+    }
+})
+
 // Navigation "aller au bloc" depuis la modale Demandes (?focusBlock=<id>) :
 // on attend que les blocs de la page CIBLE soient effectivement chargés
 // (localBlocksPage === effectiveSlug) avant de sélectionner/scroller, pour
@@ -198,6 +209,17 @@ watch(previewDevice, async (device, prevDevice) => {
         // Only reset previewSlug when entering non-desktop FROM desktop.
         // Switching between tablet and mobile keeps the current iframe page.
         previewSlug.value = currentPageSlug.value
+    }
+    if (device === 'desktop' && prevDevice && prevDevice !== 'desktop' && previewSlug.value !== currentPageSlug.value) {
+        // Retour en desktop après avoir navigué DANS la préview (dropdown ou
+        // lien de l'iframe) : sans ceci, l'admin était silencieusement ramené
+        // à la page d'origine (la route ne change pas pendant la navigation
+        // iframe) — dropdown et page se "désynchronisaient" de sa position
+        // réelle. On reporte la navigation de préview vers la vraie route.
+        const path = previewSlug.value === 'accueil' ? '/' : `/${previewSlug.value}`
+        const q = { ...route.query, admin: 'true' }
+        delete q.device
+        router.push({ path, query: q }).catch(() => {})
     }
     await syncPreviewBlocks(previewSlug.value, device)
 })
