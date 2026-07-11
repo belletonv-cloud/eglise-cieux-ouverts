@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app'
 import { getFirestore } from 'firebase/firestore'
-import { getAuth, onAuthStateChanged } from 'firebase/auth'
+import { getAuth } from 'firebase/auth'
 
 export default defineNuxtPlugin((nuxtApp) => {
   const config = useRuntimeConfig()
@@ -46,12 +46,12 @@ export default defineNuxtPlugin((nuxtApp) => {
     const db = getFirestore(app)
     const auth = getAuth(app)
 
-    // EventManager.vue attend $auth.onAuthStateChanged(callback) comme méthode
-    // (API compat Firebase v8). Ajoutée directement sur l'instance réelle plutôt
-    // que via spread — un spread copierait `currentUser` par valeur au moment du
-    // montage (donc null, avant toute connexion), et ce snapshot ne serait jamais
-    // rafraîchi ensuite.
-    auth.onAuthStateChanged = (callback) => onAuthStateChanged(auth, callback)
+    // auth.onAuthStateChanged existe déjà nativement sur le SDK Firebase (méthode
+    // du prototype, compat v8) — ne JAMAIS réassigner cette propriété : la
+    // fonction libre onAuthStateChanged(auth, callback) délègue en interne à
+    // auth.onAuthStateChanged(callback), donc l'écraser crée une récursion
+    // infinie (RangeError: Maximum call stack size exceeded, déjà constaté en
+    // prod). $auth.onAuthStateChanged fonctionnait déjà sans rien ajouter ici.
 
     return {
       provide: {

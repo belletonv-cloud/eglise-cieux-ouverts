@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "eglise-test-preview",
+      "runtimeExecutable": "env",
+      "runtimeArgs": ["PW_TEST=1", "NITRO_PORT=3001", "NITRO_HOST=0.0.0.0", "node", ".output/server/index.mjs"],
+      "port": 3001
+    }
+  ]
+}
