@@ -626,9 +626,9 @@ export const BLOCK_TYPES = {
     animations: "internal",
     defaults: {
       title: "Il y a une place pour toi !",
-      email: "contact@votre-eglise.fr",
-      schedule: "Rdv chaque semaine | Horaire à préciser",
-      address: "Adresse de votre église à renseigner",
+      email: "contact@cieuxouverts.bzh",
+      schedule: "Rdv chaque dimanche | 10H",
+      address: "2 rue Jean Monnet | 29600 Morlaix, Bretagne",
       bgColorStart: "#064886",
       bgColorMid: "#064886",
       bgColorEnd: "#5a9fcf",
