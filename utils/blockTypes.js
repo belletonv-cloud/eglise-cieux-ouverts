@@ -392,6 +392,8 @@ export const BLOCK_TYPES = {
       backgroundColor: "transparent",
       text: "",
       image: "",
+      contentAlign: "center",
+      contentVerticalAlign: "middle",
     },
     schema: [
       {
@@ -404,6 +406,18 @@ export const BLOCK_TYPES = {
       { key: "backgroundColor", label: "Fond", type: "color" },
       { key: "text", label: "Texte (optionnel)", type: "textarea" },
       { key: "image", label: "Image (optionnelle)", type: "image" },
+      {
+        key: "contentAlign",
+        label: "Alignement horizontal",
+        type: "select",
+        options: ["left", "center", "right"],
+      },
+      {
+        key: "contentVerticalAlign",
+        label: "Alignement vertical",
+        type: "select",
+        options: ["top", "middle", "bottom"],
+      },
     ],
   },
 

@@ -6,7 +6,7 @@
   >
     <template v-if="text || image">
       <img v-if="image" :src="image" :alt="text" class="spacer-img" loading="lazy" />
-      <p v-if="text" class="spacer-text">{{ text }}</p>
+      <p v-if="text" class="spacer-text" :style="{ textAlign: contentAlign }">{{ text }}</p>
     </template>
   </div>
 </template>
@@ -14,11 +14,21 @@
 <script setup>
 import { computed } from 'vue'
 
-const { visibility = {}, height = 60, backgroundColor = 'transparent', text = '', image = '' } = defineProps({
+const {
+  visibility = {},
+  height = 60,
+  backgroundColor = 'transparent',
+  text = '',
+  image = '',
+  contentAlign = 'center',
+  contentVerticalAlign = 'middle',
+} = defineProps({
   height: { type: Number, default: 60 },
   backgroundColor: { type: String, default: 'transparent' },
   text: { type: String, default: '' },
   image: { type: String, default: '' },
+  contentAlign: { type: String, default: 'center' },
+  contentVerticalAlign: { type: String, default: 'middle' },
   visibility: { type: Object, default: () => ({}) },
   isTriggered: { type: Boolean, default: false },
   previewDevice: { type: String, default: 'desktop' },
@@ -28,14 +38,19 @@ const visibilityClasses = computed(() => ({
   'hide-tablet': visibility.tablet === false,
   'hide-desktop': visibility.desktop === false,
 }))
+const ALIGN_ITEMS_MAP = { left: 'flex-start', center: 'center', right: 'flex-end' }
+const JUSTIFY_CONTENT_MAP = { top: 'flex-start', middle: 'center', bottom: 'flex-end' }
 // Un espace vide "pur" garde height fixe (comportement historique inchangé).
 // Dès qu'il y a du contenu, height devient un minimum pour ne pas couper
-// le texte/l'image si la hauteur configurée est petite (ex: 60px par défaut).
+// le texte/l'image si la hauteur configurée est petite (ex: 60px par défaut),
+// et l'alignement devient pertinent (sans contenu, centré ou non ne change rien).
 const style = computed(() => {
   const hasContent = !!(text || image)
   return {
     [hasContent ? 'minHeight' : 'height']: height + 'px',
     background: backgroundColor || 'transparent',
+    alignItems: ALIGN_ITEMS_MAP[contentAlign] || 'center',
+    justifyContent: JUSTIFY_CONTENT_MAP[contentVerticalAlign] || 'center',
   }
 })
 </script>
@@ -44,8 +59,6 @@ const style = computed(() => {
 .block-spacer {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
   gap: 8px;
 }
 .spacer-img {

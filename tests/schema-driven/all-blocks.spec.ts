@@ -1294,4 +1294,24 @@ test.describe('21. Spacer backward compatibility', () => {
     expect(style).toContain('min-height')
     expect(style).not.toMatch(/[^-]height:/)
   })
+
+  test('alignement horizontal/vertical du contenu se répercute sur le style', async ({ page }) => {
+    await page.goto('/test-blocks?admin=true')
+    await page.waitForSelector('.block-wrapper[data-block-type="spacer"]', { timeout: 5000 })
+    await page.locator('.block-wrapper[data-block-type="spacer"]').click()
+
+    const textarea = page.locator('.auto-field', { has: page.locator('.field-label', { hasText: /^Texte/ }) }).locator('textarea')
+    await textarea.fill('Aligné')
+
+    const hSelect = page.locator('.auto-field', { has: page.locator('.field-label', { hasText: 'Alignement horizontal' }) }).locator('select')
+    const vSelect = page.locator('.auto-field', { has: page.locator('.field-label', { hasText: 'Alignement vertical' }) }).locator('select')
+    await hSelect.selectOption('right')
+    await vSelect.selectOption('top')
+    await page.locator('body').click({ position: { x: 10, y: 10 } })
+
+    const spacer = page.locator('.block-wrapper[data-block-type="spacer"] .block-spacer')
+    const style = await spacer.getAttribute('style')
+    expect(style).toContain('align-items: flex-end')
+    expect(style).toContain('justify-content: flex-start')
+  })
 })
