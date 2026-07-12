@@ -237,7 +237,10 @@ async function submitForm() {
     form.value = { prenom: '', nom: '', ville: '', email: '', message: '', newsletter: false, website: '' }
   } catch (e) {
     console.error(e)
-    errorMessage.value = e?.data?.statusMessage || 'L\'envoi a echoue. Verifie la connexion ou reessaie dans un instant.'
+    // createError({ message }) côté serveur (server/api/contact.post.ts) place le
+    // texte dans data.message — data.statusMessage ne contient que la formule HTTP
+    // générique associée au code (ex. "Server Error" pour 503), pas le vrai message.
+    errorMessage.value = e?.data?.message || 'L\'envoi a echoue. Verifie la connexion ou reessaie dans un instant.'
   } finally { sending.value = false }
 }
 </script>
