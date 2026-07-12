@@ -433,7 +433,7 @@ export const BLOCK_TYPES = {
       animation: "fadeIn",
     },
     schema: [
-      { key: "videoId", label: "ID vidéo YouTube", type: "text" },
+      { key: "videoId", label: "ID ou URL YouTube", type: "text", placeholder: "ID (ex: dQw4w9WgXcQ) ou lien complet youtube.com/watch?v=..." },
       { key: "title", label: "Titre", type: "text" },
       { key: "backgroundColor", label: "Fond", type: "color" },
       { key: "animation", label: "Animation", type: "animation" },

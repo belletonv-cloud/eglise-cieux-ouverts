@@ -668,6 +668,7 @@ const {
     updateFooterBlock,
     saveFooterBlock,
     addBlock,
+    localBlocksPage,
 } = useAdmin();
 
 const { saveMenuToFirestore, customPages, loadCustomPages } = useMenuEditor();
@@ -1257,6 +1258,16 @@ async function getFirebaseToken() {
 }
 
 async function saveToServer() {
+    // Garde-fou anti-corruption : localBlocks (composable partagé, mis à jour de façon
+    // asynchrone par la page qui vient de charger) peut rester momentanément sur
+    // l'ancienne page pendant que props.pageSlug (piloté par la route, synchrone) a déjà
+    // changé — ex. sauvegarde différée (3s) qui se déclenche après une navigation.
+    // Sans ce contrôle, on écrirait le contenu de l'ancienne page sur le slug de la
+    // nouvelle (constaté en prod : accueil écrasé par le contenu de messages).
+    if (localBlocksPage.value !== props.pageSlug) {
+        console.warn(`[admin] Sauvegarde annulée : localBlocksPage="${localBlocksPage.value}" ne correspond pas à props.pageSlug="${props.pageSlug}"`)
+        throw new Error('page-mismatch')
+    }
     const token = await getFirebaseToken()
     if (!token) throw new Error('Non authentifié')
     try {
@@ -1294,6 +1305,11 @@ async function autoSave() {
             saveStatus.value = "";
         }, 2000);
     } catch (e) {
+        // Changement de page pendant le délai de sauvegarde différée : ce n'est pas une
+        // vraie erreur, juste un skip volontaire. La page nouvellement affichée relancera
+        // son propre cycle d'auto-save si besoin. Pas de markSaved() : les changements
+        // restent "non sauvegardés" pour l'ancienne page tant qu'on ne l'a pas revisitée.
+        if (e.message === 'page-mismatch') return;
         saveStatus.value = "Erreur auto-save";
         setTimeout(() => {
             saveStatus.value = "";
@@ -1517,7 +1533,11 @@ async function saveChanges() {
         }, 2000);
     } catch (e) {
         console.error("Save error:", e);
-        showToast("Erreur lors de la sauvegarde : " + (e.message || e), 'toast-error');
+        if (e.message === 'page-mismatch') {
+            showToast("Page changée pendant la sauvegarde — réessaie depuis la page actuelle.", 'toast-error');
+        } else {
+            showToast("Erreur lors de la sauvegarde : " + (e.message || e), 'toast-error');
+        }
     } finally {
         saving.value = false;
     }

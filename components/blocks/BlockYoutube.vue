@@ -47,10 +47,19 @@ const visibilityClasses = computed(() => ({
   'hide-desktop': props.visibility?.desktop === false,
 }))
 
-const hasValidId = computed(() => props.videoId && props.videoId.trim().length > 0)
+// Accepte un ID brut ou une URL YouTube complète collée par erreur
+// (youtube.com/watch?v=, youtu.be/, youtube.com/embed/, etc.)
+const extractedId = computed(() => {
+  const raw = (props.videoId || '').trim()
+  if (!raw) return ''
+  const match = raw.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/)
+  return match ? match[1] : raw
+})
+
+const hasValidId = computed(() => extractedId.value.length > 0)
 
 const embedUrl = computed(() => {
-  return `https://www.youtube.com/embed/${props.videoId}?rel=0&showinfo=0`
+  return `https://www.youtube.com/embed/${extractedId.value}?rel=0&showinfo=0`
 })
 
 const placeholderText = 'Aucune vidéo configurée. En mode éditeur, entrez l\'ID YouTube.'
