@@ -60,7 +60,7 @@ const visibilityClasses = computed(() => ({
 }
 
 .block-faq-title {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--font-heading);
   font-size: clamp(1.6em, 3.2vw, 2.6em);
   text-align: center;
   margin-bottom: 8px;

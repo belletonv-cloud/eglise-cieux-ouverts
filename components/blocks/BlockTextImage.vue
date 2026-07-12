@@ -106,7 +106,7 @@ const sanitizedBody = computed(() => props.body ? sanitizeHtml(props.body) : '')
 }
 
 .style-messagesSeamless .ti-title {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--font-heading);
   font-size: 48px;
   font-style: italic;
   margin-bottom: 10px;

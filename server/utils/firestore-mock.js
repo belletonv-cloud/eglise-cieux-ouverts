@@ -193,6 +193,18 @@ export async function setFooterMock(data) {
   return { success: true }
 }
 
+// Mock de la typographie (settings/typography) — police de titres/texte du site
+let TYPOGRAPHY = null
+
+export function getTypographyMock() {
+  return TYPOGRAPHY ? JSON.parse(JSON.stringify(TYPOGRAPHY)) : null
+}
+
+export async function setTypographyMock(data) {
+  TYPOGRAPHY = JSON.parse(JSON.stringify(data))
+  return { success: true }
+}
+
 // Mock des demandes développeur (collection top-level 'comments') — notes
 // admin-only attachées à un bloc, jamais rendues côté public.
 let COMMENTS = {}

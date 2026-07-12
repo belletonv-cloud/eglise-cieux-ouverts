@@ -205,7 +205,7 @@ function goAdmin() {
   margin-bottom: 16px;
 }
 .admin-login-card h1 {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-heading);
   font-size: 28px;
   color: #064886;
   margin: 0 0 4px;

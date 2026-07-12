@@ -128,7 +128,7 @@ const contentStyle = computed(() => ({
 .vision-label {
   font-size: 1.4em;
   font-weight: 600;
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--font-heading);
   font-style: italic;
   margin-bottom: 20px;
   opacity: 1;
@@ -155,7 +155,7 @@ const contentStyle = computed(() => ({
 .vision-quote :deep(strong) {
   font-style: italic;
   font-weight: 600;
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--font-heading);
 }
 .btn-white {
   display: inline-block;

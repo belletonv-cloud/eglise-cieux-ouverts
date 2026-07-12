@@ -241,7 +241,7 @@ onMounted(() => {
 }
 .overlay-title {
   color: white;
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-heading);
   font-size: 1.2em;
   font-style: italic;
   font-weight: 700;
@@ -340,7 +340,7 @@ onMounted(() => {
 }
 .modal-close:hover { color: #333; }
 .modal-title {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-heading);
   font-size: 32px;
   font-style: italic;
   font-weight: 700;

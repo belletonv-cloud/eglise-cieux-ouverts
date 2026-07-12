@@ -134,7 +134,7 @@ const visibilityClasses = computed(() => ({
     z-index: 0;
 }
 .hero-title {
-    font-family: "Playfair Display", serif;
+    font-family: var(--font-heading);
     font-size: 3.2rem;
     margin: 0;
     text-align: center;

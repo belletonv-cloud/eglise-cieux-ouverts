@@ -130,7 +130,7 @@ function getShutterStyle(i) {
 }
 
 .footer-title {
-  font-family: 'Nunito', sans-serif;
+  font-family: var(--font-body);
   font-size: var(--bf-title-font-size, 24px);
   font-weight: 800;
   color: var(--bf-text-color, #ffffff);
@@ -195,7 +195,7 @@ function getShutterStyle(i) {
   gap: 6px;
   font-weight: 800;
   text-align: left;
-  font-family: 'Nunito', sans-serif;
+  font-family: var(--font-body);
   font-size: 19px;
   -webkit-font-smoothing: antialiased;
 }

@@ -66,7 +66,7 @@ function getShutterStyle(i) {
 }
 
 .footer-title {
-  font-family: 'Nunito', sans-serif;
+  font-family: var(--font-body);
   font-size: 24px;
   font-weight: 400;
   color: #ffffff;
@@ -124,7 +124,7 @@ function getShutterStyle(i) {
   font-weight: 700;
   color: white;
   text-align: left;
-  font-family: 'Nunito', sans-serif;
+  font-family: var(--font-body);
 }
 
 .footer-email {

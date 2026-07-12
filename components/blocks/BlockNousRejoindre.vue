@@ -93,7 +93,7 @@ const visibilityClasses = computed(() => ({
     position: relative;
     z-index: 1;
     color: white;
-    font-family: "Playfair Display", Georgia, serif;
+    font-family: var(--font-heading);
     font-style: italic;
     font-size: clamp(2em, 5vw, 4em);
     font-weight: 700;

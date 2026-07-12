@@ -149,7 +149,7 @@ const visibilityClasses = computed(() => ({
 }
 .rejoins-subtitle,
 .rejoins-location {
-    font-family: "Playfair Display", serif;
+    font-family: var(--font-heading);
     font-size: 75px;
     font-weight: 700;
     font-style: italic;
@@ -165,7 +165,7 @@ const visibilityClasses = computed(() => ({
     color: white;
 }
 .horaire-label {
-    font-family: "Playfair Display", serif;
+    font-family: var(--font-heading);
     font-size: 30px;
     font-weight: 700;
     font-style: normal;

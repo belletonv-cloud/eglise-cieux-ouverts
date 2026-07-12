@@ -80,7 +80,7 @@ const visibilityClasses = computed(() => ({
 }
 
 .block-equipe-title {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--font-heading);
   font-size: clamp(1.6em, 3.2vw, 2.6em);
   margin-bottom: 8px;
 }
@@ -126,7 +126,7 @@ const visibilityClasses = computed(() => ({
   color: #fff;
   font-size: 2em;
   font-weight: 700;
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--font-heading);
 }
 
 .equipe-name {

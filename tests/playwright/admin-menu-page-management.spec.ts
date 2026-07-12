@@ -13,7 +13,7 @@ test.describe('Gestion des pages depuis le menu', () => {
     // ouvre l'éditeur de menu au lieu de naviguer (le burger mobile est
     // masqué en CSS à cette largeur)
     await page.locator('.nav-desktop a, nav a').first().click()
-    await page.waitForSelector('.menu-editor-panel', { timeout: 5000 })
+    await page.waitForSelector('.menu-editor-modal', { timeout: 5000 })
 
     // Crée une page de test
     await page.locator('.btn-add-page').click()
@@ -28,12 +28,12 @@ test.describe('Gestion des pages depuis le menu', () => {
 
     // La création ferme la modale mais laisse le panneau de gestion du menu
     // ouvert : on le ferme avant de le rouvrir pour ne pas bloquer les clics
-    await page.locator('.menu-editor-header button', { hasText: '✕' }).click()
-    await page.waitForSelector('.menu-editor-panel', { state: 'detached', timeout: 3000 })
+    await page.locator('.menu-editor-modal .version-modal-close').click()
+    await page.waitForSelector('.menu-editor-modal', { state: 'detached', timeout: 3000 })
 
     // Rouvre le menu et supprime la page pendant qu'on la visite
     await page.locator('.nav-desktop a, nav a').first().click()
-    await page.waitForSelector('.menu-editor-panel', { timeout: 5000 })
+    await page.waitForSelector('.menu-editor-modal', { timeout: 5000 })
 
     const item = page.locator('.menu-editor-item', { hasText: 'Page Test Suppression E2E' })
     await item.locator('.btn-mini', { hasText: '🗑' }).click()

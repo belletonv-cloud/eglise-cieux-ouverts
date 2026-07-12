@@ -1,0 +1,41 @@
+// Polices sélectionnables pour la typographie du site (titres/texte).
+// Liste fermée volontairement : chaque entrée doit exister sur Google Fonts
+// et est chargée dynamiquement via un <link> quand elle est utilisée
+// (voir plugins/typography.client.js). N'accepter que ces valeurs empêche
+// l'injection de CSS/URL arbitraire via le champ police (admin-only mais
+// vaut mieux valider à la frontière).
+export const AVAILABLE_FONTS = [
+  { value: "Nunito", label: "Nunito (actuel — texte)", stack: "'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif" },
+  { value: "Playfair Display", label: "Playfair Display (actuel — titres)", stack: "'Playfair Display', serif" },
+  { value: "Montserrat", label: "Montserrat", stack: "'Montserrat', sans-serif" },
+  { value: "Poppins", label: "Poppins", stack: "'Poppins', sans-serif" },
+  { value: "Open Sans", label: "Open Sans", stack: "'Open Sans', sans-serif" },
+  { value: "Lora", label: "Lora", stack: "'Lora', serif" },
+  { value: "Merriweather", label: "Merriweather", stack: "'Merriweather', serif" },
+  { value: "Roboto", label: "Roboto", stack: "'Roboto', sans-serif" },
+]
+
+export const DEFAULT_TYPOGRAPHY = {
+  headingFont: "Playfair Display",
+  bodyFont: "Nunito",
+}
+
+export function isValidFont(name) {
+  return AVAILABLE_FONTS.some((f) => f.value === name)
+}
+
+export function fontStack(name) {
+  return AVAILABLE_FONTS.find((f) => f.value === name)?.stack || null
+}
+
+// Injecte le <link> Google Fonts pour une police si ce n'est pas déjà fait
+// (idempotent — vérifie le href avant d'ajouter). Client uniquement.
+export function ensureFontLoaded(name) {
+  if (!isValidFont(name) || typeof document === "undefined") return
+  const href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(name).replace(/%20/g, "+")}:wght@400;600;700&display=swap`
+  if (document.querySelector(`link[href="${href}"]`)) return
+  const link = document.createElement("link")
+  link.rel = "stylesheet"
+  link.href = href
+  document.head.appendChild(link)
+}

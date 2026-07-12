@@ -427,7 +427,7 @@ function formatDayModalDate(date) {
 <style scoped>
 .page-agenda { background: #fff; min-height: 100vh; }
 .agenda-header { background: #fff; padding: 50px 48px 20px; border-bottom: 1px solid #e5e7eb; }
-.agenda-title { font-family: 'Playfair Display', Georgia, serif; font-size: 2.8em; font-weight: 700; font-style: italic; color: #064886; margin: 0 0 4px; }
+.agenda-title { font-family: var(--font-heading); font-size: 2.8em; font-weight: 700; font-style: italic; color: #064886; margin: 0 0 4px; }
 .agenda-subtitle { font-size: 0.9em; color: #6b7280; margin: 0; }
 .agenda-calendar { padding: 0 24px 40px; max-width: 1100px; margin: 0 auto; }
 .calendar-nav { display: flex; align-items: center; gap: 12px; padding: 20px 0 16px; border-bottom: 1px solid #e5e7eb; }

@@ -152,7 +152,7 @@ function getLetterVars(i) {
     display: flex;
     justify-content: center;
     align-items: center;
-    font-family: "Playfair Display", serif;
+    font-family: var(--font-heading);
     font-size: clamp(40px, 8vw, 80px);
     line-height: 1.3;
     margin-bottom: 20px;

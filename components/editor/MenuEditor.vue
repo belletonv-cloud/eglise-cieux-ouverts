@@ -1,21 +1,21 @@
 <template>
   <ClientOnly>
-    <Transition name="panel-slide">
-      <div v-if="menuEditorOpen" class="menu-editor-overlay" @click.self="onClose">
-        <div class="menu-editor-panel">
+    <div v-if="menuEditorOpen" class="version-modal-overlay" @click.self="onClose">
+      <div class="version-modal menu-editor-modal">
 
-          <div class="menu-editor-header">
-            <h3>Gestion du menu</h3>
-            <div class="menu-editor-header-actions">
-              <span v-if="menuChanged" class="unsaved-badge">⚠ Non sauvegardé</span>
-              <button class="btn-icon btn-save" @click="saveMenu" :disabled="menuSaving || !menuChanged" title="Sauvegarder">
-                {{ menuSaving ? '…' : '💾' }}
-              </button>
-              <button class="btn-icon" @click="resetToDefault" title="Réinitialiser au menu par défaut">↺</button>
-              <button class="btn-icon" @click="onClose" title="Fermer">✕</button>
-            </div>
+        <div class="version-modal-header">
+          <h3>Gestion du menu</h3>
+          <div class="menu-editor-header-actions">
+            <span v-if="menuChanged" class="unsaved-badge">⚠ Non sauvegardé</span>
+            <button class="btn-icon btn-save" @click="saveMenu" :disabled="menuSaving || !menuChanged" title="Sauvegarder">
+              {{ menuSaving ? '…' : '💾' }}
+            </button>
+            <button class="btn-icon" @click="resetToDefault" title="Réinitialiser au menu par défaut">↺</button>
+            <button class="version-modal-close" @click="onClose" title="Fermer">✕</button>
           </div>
+        </div>
 
+        <div class="version-modal-body">
           <div class="menu-editor-list">
             <div v-if="loadingPages" class="menu-loading">Chargement…</div>
             <template v-else>
@@ -77,19 +77,19 @@
               <img :src="menuBgImage" alt="aperçu fond mobile" />
             </div>
           </div>
-
-          <div class="menu-editor-footer">
-            <button class="btn-add btn-add-page" @click="showCreateModal = true" title="Créer une nouvelle page de contenu">
-              📄 Créer une page
-            </button>
-            <button class="btn-add" @click="addMenuItem()" title="Ajouter un lien vers n'importe quelle URL">
-              🔗 Ajouter un lien
-            </button>
-          </div>
-
         </div>
+
+        <div class="menu-editor-footer">
+          <button class="btn-add btn-add-page" @click="showCreateModal = true" title="Créer une nouvelle page de contenu">
+            📄 Créer une page
+          </button>
+          <button class="btn-add" @click="addMenuItem()" title="Ajouter un lien vers n'importe quelle URL">
+            🔗 Ajouter un lien
+          </button>
+        </div>
+
       </div>
-    </Transition>
+    </div>
 
     <!-- Create Page Modal -->
     <Teleport to="body">
@@ -311,18 +311,15 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.menu-editor-overlay { position:fixed; inset:0; background:rgba(0,0,0,.3); z-index:10001; display:flex; justify-content:flex-end; }
-.menu-editor-panel { width:380px; max-width:100vw; height:100vh; background:#fff; display:flex; flex-direction:column; box-shadow:-4px 0 24px rgba(0,0,0,.2); overflow:hidden; }
+.menu-editor-modal { width:90%; max-width:640px; }
 
-.menu-editor-header { display:flex; align-items:center; justify-content:space-between; padding:14px 16px; background:#1a1a2e; color:#fff; flex-shrink:0; }
-.menu-editor-header h3 { margin:0; font-size:.95em; font-weight:600; }
 .menu-editor-header-actions { display:flex; gap:6px; align-items:center; }
-.unsaved-badge { font-size:.7em; color:#fbbf24; white-space:nowrap; }
-.btn-icon { background:rgba(255,255,255,.15); border:none; color:#fff; width:30px; height:30px; border-radius:6px; cursor:pointer; font-size:.95em; display:flex; align-items:center; justify-content:center; }
-.btn-icon:hover { background:rgba(255,255,255,.25); }
+.unsaved-badge { font-size:.7em; color:#b45309; white-space:nowrap; }
+.btn-icon { background:#f3f4f6; border:1px solid #e5e7eb; color:#374151; width:30px; height:30px; border-radius:6px; cursor:pointer; font-size:.95em; display:flex; align-items:center; justify-content:center; }
+.btn-icon:hover { background:#e5e7eb; }
 .btn-icon:disabled { opacity:.4; cursor:not-allowed; }
 
-.menu-editor-list { flex:1; overflow-y:auto; padding:8px; }
+.menu-editor-list { padding:0 0 8px; }
 .menu-loading { padding:24px; text-align:center; color:#999; font-size:.85em; }
 
 .menu-editor-item { border:1px solid #e5e7eb; border-radius:8px; margin-bottom:6px; transition:border-color .15s; }
@@ -361,18 +358,11 @@ onMounted(() => {
 .menu-bg-preview { margin-top:7px; border-radius:6px; overflow:hidden; }
 .menu-bg-preview img { width:100%; max-height:80px; object-fit:cover; border-radius:6px; }
 
-.menu-editor-footer { padding:10px 12px; border-top:1px solid #e5e7eb; display:flex; gap:8px; flex-shrink:0; }
+.menu-editor-footer { padding:12px 20px; border-top:1px solid #eee; display:flex; gap:8px; flex-shrink:0; }
 .btn-add { flex:1; padding:9px 10px; background:#f3f4f6; color:#374151; border:2px dashed #d1d5db; border-radius:8px; font-size:.82em; font-weight:600; cursor:pointer; transition:all .15s; }
 .btn-add:hover { background:#e0e7ff; border-color:#3B82F6; color:#3B82F6; }
 .btn-add-page { background:#f0fdf4; border-color:#bbf7d0; color:#15803d; }
 .btn-add-page:hover { background:#dcfce7; border-color:#4ade80; color:#15803d; }
-
-.panel-slide-enter-active,.panel-slide-leave-active { transition:opacity .2s; }
-.panel-slide-enter-active .menu-editor-panel,.panel-slide-leave-active .menu-editor-panel { transition:transform .25s ease; }
-.panel-slide-enter-from { opacity:0; }
-.panel-slide-enter-from .menu-editor-panel { transform:translateX(100%); }
-.panel-slide-leave-to { opacity:0; }
-.panel-slide-leave-to .menu-editor-panel { transform:translateX(100%); }
 </style>
 
 <style>

@@ -108,7 +108,7 @@ function getCircleStyle(index) {
     padding: 0 2rem;
 }
 .aspirations-title {
-    font-family: "Playfair Display", serif;
+    font-family: var(--font-heading);
     font-style: italic;
     font-weight: 700;
     font-size: 3rem;

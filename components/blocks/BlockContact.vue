@@ -271,7 +271,7 @@ async function submitForm() {
 .contact-page-title {
   margin: 0;
   flex-shrink: 0;
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--font-heading);
   font-style: italic;
   font-size: 2.8em;
   font-weight: 700;
@@ -286,7 +286,7 @@ async function submitForm() {
   color: #064886;
   font-style: italic;
   line-height: 1.7;
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--font-heading);
 }
 .contact-page-main {
   background: white;
@@ -386,7 +386,7 @@ async function submitForm() {
 
 /* ── Title ── */
 .contact-title {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--font-heading);
   font-size: clamp(2.5em, 5vw, 4em);
   text-align: center;
   margin-bottom: 60px;

@@ -69,7 +69,7 @@ function goHomeAdmin() {
   color: white;
 }
 .error-code {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-heading);
   font-size: clamp(80px, 20vw, 160px);
   font-weight: 900;
   margin: 0;
@@ -77,7 +77,7 @@ function goHomeAdmin() {
   opacity: 0.3;
 }
 .error-title {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-heading);
   font-size: clamp(24px, 5vw, 36px);
   font-weight: 700;
   margin: 16px 0 8px;
