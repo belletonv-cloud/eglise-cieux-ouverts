@@ -6,7 +6,7 @@
   >
     <div class="footer-inner" :ref="titleAnim.setRef">
       <div class="footer-left">
-        <h2 class="footer-title">
+        <h2 class="footer-title" :style="fieldFontStyle(fieldFonts, 'title')">
           <span
             v-for="(char, i) in titleChars"
             :key="i"
@@ -21,9 +21,9 @@
 
       <div class="footer-right">
         <div class="footer-info" :style="infoStyle">
-          <a :href="'mailto:' + email" class="footer-email" :style="emailStyle">{{ email }}</a>
-          <p v-html="formattedSchedule"></p>
-          <p v-html="formattedAddress"></p>
+          <a :href="'mailto:' + email" class="footer-email" :style="{ ...emailStyle, ...fieldFontStyle(fieldFonts, 'email') }">{{ email }}</a>
+          <p :style="fieldFontStyle(fieldFonts, 'schedule')" v-html="formattedSchedule"></p>
+          <p :style="fieldFontStyle(fieldFonts, 'address')" v-html="formattedAddress"></p>
         </div>
       </div>
     </div>
@@ -33,6 +33,7 @@
 <script setup>
 import { computed, inject, ref } from 'vue'
 import { useAnimatedElements } from '~/composables/useAnimatedElements'
+import { fieldFontStyle } from '~/utils/fonts.js'
 
 const props = defineProps({
   title: { type: String, default: "Il y a une place pour toi !" },
@@ -51,6 +52,7 @@ const props = defineProps({
   titleBoldEnd: { type: Number, default: 15 },
   blockId: { type: String, default: '' },
   visibility: { type: Object, default: () => ({}) },
+  fieldFonts: { type: Object, default: () => ({}) },
 })
 
 const { addElement } = useAnimatedElements(props.blockId)

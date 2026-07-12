@@ -39,3 +39,13 @@ export function ensureFontLoaded(name) {
   link.href = href
   document.head.appendChild(link)
 }
+
+// Police par champ de texte (ex: props.fieldFonts = { title: "Lora" }) —
+// override plus fin que le réglage global headingFont/bodyFont. Retourne un
+// objet de style prêt pour :style, vide si aucun override pour ce champ.
+export function fieldFontStyle(fieldFonts, key) {
+  const name = fieldFonts?.[key]
+  if (!name || !isValidFont(name)) return {}
+  ensureFontLoaded(name)
+  return { fontFamily: fontStack(name) }
+}

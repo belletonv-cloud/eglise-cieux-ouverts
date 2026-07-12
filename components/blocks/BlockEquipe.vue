@@ -5,8 +5,8 @@
     :style="{ background: backgroundColor, color: textColor }"
   >
     <div class="block-equipe-inner">
-      <h2 class="block-equipe-title" v-if="title" :style="{ color: textColor }">{{ title }}</h2>
-      <p class="block-equipe-subtitle" v-if="subtitle">{{ subtitle }}</p>
+      <h2 class="block-equipe-title" v-if="title" :style="{ color: textColor, ...fieldFontStyle(fieldFonts, 'title') }">{{ title }}</h2>
+      <p class="block-equipe-subtitle" v-if="subtitle" :style="fieldFontStyle(fieldFonts, 'subtitle')">{{ subtitle }}</p>
       <div class="block-equipe-grid" :style="{ '--equipe-cols': columns }">
         <div v-for="(member, i) in members" :key="i" class="equipe-card">
           <div class="equipe-photo-wrap">
@@ -33,6 +33,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import { fieldFontStyle } from '~/utils/fonts.js'
 
 const props = defineProps({
   blockId: { type: String, default: '' },
@@ -46,6 +47,7 @@ const props = defineProps({
   backgroundColor: { type: String, default: '#ffffff' },
   textColor: { type: String, default: '#064886' },
   animation: { type: String, default: 'fadeIn' },
+  fieldFonts: { type: Object, default: () => ({}) },
 })
 
 const { visibility = {} } = props

@@ -17,7 +17,7 @@
 
         <div class="hero-content" :class="{ 'hero-visible': visible }">
             <template v-if="overlayText">
-                <h1 class="hero-title" :style="{ color: textColor }">
+                <h1 class="hero-title" :style="{ color: textColor, ...fieldFontStyle(fieldFonts, 'overlayText') }">
                     {{ overlayText }}
                 </h1>
             </template>
@@ -41,12 +41,14 @@
 
 <script setup>
 import { ref, computed, onMounted } from "vue";
+import { fieldFontStyle } from "~/utils/fonts.js";
 
 defineOptions({ inheritAttrs: false });
 
 const props = defineProps({
     blockId: { type: String, default: "" },
     visibility: { type: Object, default: () => ({}) },
+    fieldFonts: { type: Object, default: () => ({}) },
     image: { type: String, default: "/foule-croix.png" },
     nameImage: { type: String, default: "" },
     logoImage: { type: String, default: "" },

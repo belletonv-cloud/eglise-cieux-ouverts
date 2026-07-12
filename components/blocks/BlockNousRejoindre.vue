@@ -8,7 +8,7 @@
         <div class="circle circle-right"></div>
         <div class="circle circle-small"></div>
 
-        <NuxtLink :to="link || '/contact'" class="cta-link">
+        <NuxtLink :to="link || '/contact'" class="cta-link" :style="fieldFontStyle(fieldFonts, 'title')">
             {{ title }}
         </NuxtLink>
     </section>
@@ -16,6 +16,7 @@
 
 <script setup>
 import { computed } from "vue";
+import { fieldFontStyle } from "~/utils/fonts.js";
 
 const {
     backgroundGradient = "",
@@ -23,12 +24,14 @@ const {
     link = "/contact",
     visibility = {},
     isTriggered = false,
+    fieldFonts = {},
 } = defineProps({
     backgroundGradient: { type: String, default: "" },
     title: { type: String, default: "" },
     link: { type: String, default: "/contact" },
     visibility: { type: Object, default: () => ({}) },
     isTriggered: { type: Boolean, default: false },
+    fieldFonts: { type: Object, default: () => ({}) },
 });
 
 const visibilityClasses = computed(() => ({

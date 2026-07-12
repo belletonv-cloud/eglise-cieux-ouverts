@@ -6,13 +6,14 @@
   >
     <template v-if="text || image">
       <img v-if="image" :src="image" :alt="text" class="spacer-img" loading="lazy" />
-      <p v-if="text" class="spacer-text" :style="{ textAlign: contentAlign }">{{ text }}</p>
+      <p v-if="text" class="spacer-text" :style="{ textAlign: contentAlign, ...fieldFontStyle(fieldFonts, 'text') }">{{ text }}</p>
     </template>
   </div>
 </template>
 
 <script setup>
 import { computed } from 'vue'
+import { fieldFontStyle } from '~/utils/fonts.js'
 
 const {
   visibility = {},
@@ -22,6 +23,7 @@ const {
   image = '',
   contentAlign = 'center',
   contentVerticalAlign = 'middle',
+  fieldFonts = {},
 } = defineProps({
   height: { type: Number, default: 60 },
   backgroundColor: { type: String, default: 'transparent' },
@@ -32,6 +34,7 @@ const {
   visibility: { type: Object, default: () => ({}) },
   isTriggered: { type: Boolean, default: false },
   previewDevice: { type: String, default: 'desktop' },
+  fieldFonts: { type: Object, default: () => ({}) },
 })
 const visibilityClasses = computed(() => ({
   'hide-mobile': visibility.mobile === false,

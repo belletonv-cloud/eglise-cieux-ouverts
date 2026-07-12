@@ -5,8 +5,8 @@
     :style="{ background: backgroundColor, color: textColor }"
   >
     <div class="block-faq-inner">
-      <h2 class="block-faq-title" v-if="title" :style="{ color: textColor }">{{ title }}</h2>
-      <p class="block-faq-subtitle" v-if="subtitle">{{ subtitle }}</p>
+      <h2 class="block-faq-title" v-if="title" :style="{ color: textColor, ...fieldFontStyle(fieldFonts, 'title') }">{{ title }}</h2>
+      <p class="block-faq-subtitle" v-if="subtitle" :style="fieldFontStyle(fieldFonts, 'subtitle')">{{ subtitle }}</p>
       <div class="block-faq-list">
         <!-- details/summary : accordéon accessible et fonctionnel sans JS -->
         <details v-for="(item, i) in items" :key="i" class="faq-item" :open="i === 0 && openFirst">
@@ -24,6 +24,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import { fieldFontStyle } from '~/utils/fonts.js'
 
 const props = defineProps({
   blockId: { type: String, default: '' },
@@ -37,6 +38,7 @@ const props = defineProps({
   backgroundColor: { type: String, default: '#ffffff' },
   textColor: { type: String, default: '#064886' },
   animation: { type: String, default: 'fadeIn' },
+  fieldFonts: { type: Object, default: () => ({}) },
 })
 
 const { visibility = {} } = props

@@ -6,7 +6,19 @@
       :field-key="field.key"
     >
       <div class="auto-field">
-        <label class="field-label">{{ field.label }}</label>
+        <div class="auto-field-header">
+          <label class="field-label">{{ field.label }}</label>
+          <select
+            v-if="isFontableField(field)"
+            class="field-font-picker"
+            :value="modelValue?.props?.fieldFonts?.[field.key] || ''"
+            title="Police de ce champ"
+            @change="onFontChange(field.key, ($event.target as HTMLSelectElement).value)"
+          >
+            <option value="">Police par défaut</option>
+            <option v-for="f in availableFonts" :key="f.value" :value="f.value">{{ f.label }}</option>
+          </select>
+        </div>
         <component
           :is="fieldComponent(field.type)"
           :field="field"
@@ -37,6 +49,7 @@ import FieldArray from './fields/FieldArray.vue'
 import FieldImages from './fields/FieldImages.vue'
 import EditorFieldError from './EditorFieldError.vue'
 import FieldDesign from './FieldDesign.vue'
+import { AVAILABLE_FONTS as availableFonts } from '~/utils/fonts.js'
 
 const props = defineProps<{
   schema: FieldSchema[]
@@ -65,11 +78,35 @@ function fieldComponent(type: string) {
   return FIELD_MAP[type]
 }
 
+// Champs texte simples uniquement (pas array/richtext sous-champs) — la
+// police par champ ne descend pas dans les items d'un tableau (activités,
+// FAQ...), portée volontairement limitée aux champs de premier niveau.
+// Exclut aussi les champs "text" qui ne sont pas du texte visuel affiché
+// (liens, URLs, CSS de gradient, ID vidéo) via une convention de nommage —
+// pas de sens à proposer une police pour une URL ou un identifiant.
+const NON_VISUAL_FIELD_PATTERN = /link|url|gradient|videoid|^alt$/i
+function isFontableField(field: FieldSchema) {
+  if (!['text', 'textarea', 'richtext'].includes(field.type)) return false
+  return !NON_VISUAL_FIELD_PATTERN.test(field.key)
+}
+
 function onChange(key: string, value: any) {
   if (!props.modelValue) return
   const updated = {
     ...props.modelValue,
     props: { ...props.modelValue.props, [key]: value },
+  }
+  emit('update', updated)
+}
+
+function onFontChange(key: string, font: string) {
+  if (!props.modelValue) return
+  const fieldFonts = { ...(props.modelValue.props?.fieldFonts || {}) }
+  if (font) fieldFonts[key] = font
+  else delete fieldFonts[key]
+  const updated = {
+    ...props.modelValue,
+    props: { ...props.modelValue.props, fieldFonts },
   }
   emit('update', updated)
 }
@@ -82,5 +119,15 @@ function onDesignUpdate(block: BlockInstance) {
 <style scoped>
 .auto-editor { display: flex; flex-direction: column; gap: 14px; }
 .auto-field { display: flex; flex-direction: column; gap: 5px; }
+.auto-field-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .field-label { font-size: 0.78em; color: #9999bb; font-weight: 500; }
+.field-font-picker {
+  font-size: 0.72em;
+  background: #2d2d3f;
+  border: 1px solid #3d3d55;
+  border-radius: 5px;
+  color: #b8c1d9;
+  padding: 2px 5px;
+  max-width: 130px;
+}
 </style>

@@ -6,10 +6,10 @@
   >
     <div class="ti-inner">
       <div class="ti-text">
-        <h2 class="ti-title" :style="{ color: textColor }">{{ title }}</h2>
-        <p v-if="subtitle" class="ti-subtitle">{{ subtitle }}</p>
-        <div class="ti-body" v-html="sanitizedBody"></div>
-        <a v-if="ctaText" :href="ctaLink" class="ti-cta">{{ ctaText }}</a>
+        <h2 class="ti-title" :style="{ color: textColor, ...fieldFontStyle(fieldFonts, 'title') }">{{ title }}</h2>
+        <p v-if="subtitle" class="ti-subtitle" :style="fieldFontStyle(fieldFonts, 'subtitle')">{{ subtitle }}</p>
+        <div class="ti-body" :style="fieldFontStyle(fieldFonts, 'body')" v-html="sanitizedBody"></div>
+        <a v-if="ctaText" :href="ctaLink" class="ti-cta" :style="fieldFontStyle(fieldFonts, 'ctaText')">{{ ctaText }}</a>
       </div>
       <div class="ti-image">
         <div v-if="visualStyle === 'messagesLaptop'" class="ti-laptop-shell">
@@ -30,6 +30,7 @@
 
 <script setup>
 import { sanitizeHtml } from '~/utils/sanitize.js'
+import { fieldFontStyle } from '~/utils/fonts.js'
 const props = defineProps({
   blockId: { type: String, default: '' },
   title: { type: String, default: '' },
@@ -46,6 +47,7 @@ const props = defineProps({
   visibility: { type: Object, default: () => ({}) },
   isTriggered: { type: Boolean, default: false },
   previewDevice: { type: String, default: 'desktop' },
+  fieldFonts: { type: Object, default: () => ({}) },
 })
 const visibilityClasses = computed(() => ({
   'hide-mobile': props.visibility.mobile === false,

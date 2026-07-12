@@ -11,12 +11,13 @@
     :class="[visibilityClasses, animClass]"
     ref="sectionRef"
   >
-    <div class="richtext-inner" v-html="sanitizedContent"></div>
+    <div class="richtext-inner" :style="fieldFontStyle(fieldFonts, 'content')" v-html="sanitizedContent"></div>
   </section>
 </template>
 
 <script setup>
 import { sanitizeHtml } from '~/utils/sanitize.js'
+import { fieldFontStyle } from '~/utils/fonts.js'
 const {
   backgroundGradient = '',
   backgroundColor = '#ffffff',
@@ -27,6 +28,7 @@ const {
   animation = 'none',
   visibility = {},
   isTriggered = false,
+  fieldFonts = {},
 } = defineProps({
   backgroundGradient: { type: String, default: '' },
   backgroundColor: { type: String, default: '#ffffff' },
@@ -37,6 +39,7 @@ const {
   animation: { type: String, default: 'none' },
   visibility: { type: Object, default: () => ({}) },
   isTriggered: { type: Boolean, default: false },
+  fieldFonts: { type: Object, default: () => ({}) },
 })
 const sectionRef = ref(null)
 const sanitizedContent = computed(() => content ? sanitizeHtml(content) : '')

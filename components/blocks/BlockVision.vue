@@ -14,12 +14,14 @@
         class="vision-label"
         :ref="labelAnim.setRef"
         :class="[labelAnim.animClass, { triggered: labelAnim.triggered.value }]"
+        :style="fieldFontStyle(fieldFonts, 'label')"
       >{{ label }}</p>
       <p
         v-if="quote"
         class="vision-quote"
         :ref="quoteAnim.setRef"
         :class="[quoteAnim.animClass, { triggered: quoteAnim.triggered.value }]"
+        :style="fieldFontStyle(fieldFonts, 'quote')"
         v-html="sanitizedContent"
       ></p>
       <NuxtLink
@@ -28,6 +30,7 @@
         class="btn btn-white"
         :ref="ctaAnim.setRef"
         :class="[ctaAnim.animClass, { triggered: ctaAnim.triggered.value }]"
+        :style="fieldFontStyle(fieldFonts, 'ctaText')"
       >{{ ctaText }}</NuxtLink>
     </div>
   </section>
@@ -36,6 +39,7 @@
 <script setup>
 import { computed, ref, onMounted, onUnmounted, inject } from 'vue'
 import { useAnimatedElements } from '~/composables/useAnimatedElements'
+import { fieldFontStyle } from '~/utils/fonts.js'
 
 const props = defineProps({
   backgroundGradient: { type: String, default: '' },
@@ -47,6 +51,7 @@ const props = defineProps({
   visibility: { type: Object, default: () => ({}) },
   isTriggered: { type: Boolean, default: false },
   blockId: { type: String, default: '' },
+  fieldFonts: { type: Object, default: () => ({}) },
 })
 
 const isEditor = inject('isEditor', false)

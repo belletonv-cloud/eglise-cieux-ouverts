@@ -11,7 +11,7 @@
         />
 
         <div class="bienvenue-content">
-            <div class="hero-bienvenue-portal" :aria-label="title">
+            <div class="hero-bienvenue-portal" :aria-label="title" :style="fieldFontStyle(fieldFonts, 'title')">
                 <span
                     v-for="(char, i) in wordArr"
                     :key="i"
@@ -20,7 +20,7 @@
                     >{{ char === ' ' ? ' ' : char }}</span
                 >
             </div>
-            <p class="hero-subtitle">{{ subtitle }}</p>
+            <p class="hero-subtitle" :style="fieldFontStyle(fieldFonts, 'subtitle')">{{ subtitle }}</p>
             <div class="hero-socials">
                 <a
                     href="https://www.instagram.com/eglise_cieux_ouverts/"
@@ -65,6 +65,7 @@
 
 <script setup>
 import { computed, inject, ref } from "vue";
+import { fieldFontStyle } from "~/utils/fonts.js";
 
 // Défauts alignés sur le contenu actuellement affiché en dur (avant ce
 // fix) : un bloc réel sans title/subtitle explicite en Firestore doit
@@ -77,10 +78,12 @@ const {
     title = "BIENVENUE",
     subtitle = "à l'Église Cieux Ouverts à Morlaix",
     visibility = {},
+    fieldFonts = {},
 } = defineProps({
     title: { type: String, default: "BIENVENUE" },
     subtitle: { type: String, default: "à l'Église Cieux Ouverts à Morlaix" },
     visibility: { type: Object, default: () => ({}) },
+    fieldFonts: { type: Object, default: () => ({}) },
 });
 
 const isAdmin = inject("isAdmin", ref(false));

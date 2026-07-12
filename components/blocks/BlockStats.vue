@@ -1,7 +1,7 @@
 <template>
   <section class="block-stats" :style="{ background: backgroundColor, color: textColor }">
     <div class="stats-inner">
-      <h2 v-if="title" class="stats-title">{{ title }}</h2>
+      <h2 v-if="title" class="stats-title" :style="fieldFontStyle(fieldFonts, 'title')">{{ title }}</h2>
       <div class="stats-grid">
         <div v-for="(item, i) in items" :key="i" class="stats-item">
           <div class="stats-value">{{ item?.value }}</div>
@@ -13,6 +13,7 @@
 </template>
 
 <script setup>
+import { fieldFontStyle } from '~/utils/fonts.js'
 defineProps({
   title: { type: String, default: '' },
   items: { type: Array, default: () => [] },
@@ -22,6 +23,7 @@ defineProps({
   isTriggered: { type: Boolean, default: false },
   blockId: { type: String, default: '' },
   visibility: { type: Object, default: () => ({}) },
+  fieldFonts: { type: Object, default: () => ({}) },
 })
 </script>
 

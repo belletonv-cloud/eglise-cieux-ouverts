@@ -6,9 +6,9 @@
     >
         <div class="rejoins-inner">
             <div class="rejoins-text-container">
-                <p class="rejoins-title">{{ title }}</p>
-                <p class="rejoins-subtitle">{{ subtitle }}</p>
-                <p class="rejoins-location">{{ location }}</p>
+                <p class="rejoins-title" :style="fieldFontStyle(fieldFonts, 'title')">{{ title }}</p>
+                <p class="rejoins-subtitle" :style="fieldFontStyle(fieldFonts, 'subtitle')">{{ subtitle }}</p>
+                <p class="rejoins-location" :style="fieldFontStyle(fieldFonts, 'location')">{{ location }}</p>
             </div>
             <div class="rejoins-grid">
                 <div
@@ -27,6 +27,7 @@
 
 <script setup>
 import { computed } from "vue";
+import { fieldFontStyle } from "~/utils/fonts.js";
 
 const {
     backgroundGradient = "",
@@ -36,6 +37,7 @@ const {
     horaires = [],
     visibility = {},
     isTriggered = false,
+    fieldFonts = {},
 } = defineProps({
     backgroundGradient: { type: String, default: "" },
     title: { type: String, default: "" },
@@ -44,6 +46,7 @@ const {
     horaires: { type: Array, default: () => [] },
     visibility: { type: Object, default: () => ({}) },
     isTriggered: { type: Boolean, default: false },
+    fieldFonts: { type: Object, default: () => ({}) },
 });
 
 const visibilityClasses = computed(() => ({

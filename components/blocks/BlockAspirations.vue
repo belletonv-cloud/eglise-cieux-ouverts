@@ -11,7 +11,7 @@
             }"
         >
             <div class="aspirations-content">
-                <h1 class="aspirations-title">{{ title }}</h1>
+                <h1 class="aspirations-title" :style="fieldFontStyle(fieldFonts, 'title')">{{ title }}</h1>
                 <div class="aspirations-divider"></div>
                 <ol class="aspirations-list">
                     <li
@@ -30,6 +30,7 @@
 
 <script setup>
 import { computed } from "vue";
+import { fieldFontStyle } from "~/utils/fonts.js";
 const {
     backgroundGradient = "",
     backgroundColor = "#fff",
@@ -38,6 +39,7 @@ const {
     items = [],
     visibility = {},
     isTriggered = false,
+    fieldFonts = {},
 } = defineProps({
     backgroundGradient: { type: String, default: "" },
     backgroundColor: { type: String, default: "#fff" },
@@ -46,6 +48,7 @@ const {
     items: { type: Array, default: () => [] },
     visibility: { type: Object, default: () => ({}) },
     isTriggered: { type: Boolean, default: false },
+    fieldFonts: { type: Object, default: () => ({}) },
 });
 
 const visibilityClasses = computed(() => ({

@@ -1,13 +1,14 @@
 <template>
   <section class="block-quote" :style="{ background: backgroundColor, color: textColor }">
     <div class="quote-inner">
-      <blockquote class="quote-text">{{ quote }}</blockquote>
-      <cite v-if="author" class="quote-author">{{ author }}</cite>
+      <blockquote class="quote-text" :style="fieldFontStyle(fieldFonts, 'quote')">{{ quote }}</blockquote>
+      <cite v-if="author" class="quote-author" :style="fieldFontStyle(fieldFonts, 'author')">{{ author }}</cite>
     </div>
   </section>
 </template>
 
 <script setup>
+import { fieldFontStyle } from '~/utils/fonts.js'
 defineProps({
   quote: { type: String, default: '' },
   author: { type: String, default: '' },
@@ -17,6 +18,7 @@ defineProps({
   isTriggered: { type: Boolean, default: false },
   blockId: { type: String, default: '' },
   visibility: { type: Object, default: () => ({}) },
+  fieldFonts: { type: Object, default: () => ({}) },
 })
 </script>
 

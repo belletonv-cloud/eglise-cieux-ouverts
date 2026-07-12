@@ -7,10 +7,10 @@
     <div v-if="isClassicPageContact" class="contact-page-shell">
       <section class="contact-page-header">
         <div class="contact-page-header-inner">
-          <h2 class="contact-page-title">{{ title }}</h2>
+          <h2 class="contact-page-title" :style="fieldFontStyle(fieldFonts, 'title')">{{ title }}</h2>
           <div v-if="addressTitle || addressLine" class="contact-page-address">
-            <p v-if="addressTitle">{{ addressTitle }}</p>
-            <p v-if="addressLine">{{ addressLine }}</p>
+            <p v-if="addressTitle" :style="fieldFontStyle(fieldFonts, 'addressTitle')">{{ addressTitle }}</p>
+            <p v-if="addressLine" :style="fieldFontStyle(fieldFonts, 'addressLine')">{{ addressLine }}</p>
           </div>
         </div>
       </section>
@@ -82,7 +82,7 @@
     </div>
 
     <div v-else class="contact-inner">
-      <h2 class="contact-title">{{ title }}</h2>
+      <h2 class="contact-title" :style="fieldFontStyle(fieldFonts, 'title')">{{ title }}</h2>
 
       <div class="contact-wrap">
         <div class="contact-left">
@@ -133,6 +133,7 @@
 
 <script setup>
 import { ref, computed, inject } from 'vue'
+import { fieldFontStyle } from '~/utils/fonts.js'
 
 const {
   backgroundGradient = '',
@@ -145,6 +146,7 @@ const {
   showSocials = false,
   showQuestions = false,
   visibility = {},
+  fieldFonts = {},
 } = defineProps({
   backgroundGradient: { type: String, default: '' },
   textColor: { type: String, default: '#fff' },
@@ -156,6 +158,7 @@ const {
   showSocials: { type: Boolean, default: false },
   showQuestions: { type: Boolean, default: false },
   visibility: { type: Object, default: () => ({}) },
+  fieldFonts: { type: Object, default: () => ({}) },
 })
 
 const isEditor = inject('isEditor', false)
