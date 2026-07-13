@@ -66,13 +66,14 @@ Firebase Auth (Google Sign-In), projet Firebase `eglise-cieux-ouverts`. `?admin=
 
 CSS `animation-timeline` natif (scroll-driven), fallback IntersectionObserver pour Safari/navigateurs non supportés. Deux stratégies déclarées par bloc (`animations` dans `BLOCK_TYPES`) : `wrapper` (PageRenderer gère l'animation) et `internal` (le bloc gère la sienne en interne, ex. `aspirations`, `nousRejoindre`, `rejoins`). Le travail d'animation vit entièrement dans le code des composants — jamais dans Firestore, donc jamais perdu par une corruption de données de page.
 
-## Pièges de sauvegarde (causes racines corrigées)
+## Pièges de sauvegarde et de stabilité admin (causes racines corrigées)
 
-Ces bugs ont causé des pertes de contenu réel en prod pendant cette session — corrigés, mais les mécanismes valent d'être compris avant de toucher au code de sauvegarde :
+Ces bugs ont causé des pertes de contenu réel ou des blocages de l'admin en prod — corrigés, mais les mécanismes valent d'être compris avant de toucher au code de sauvegarde/auth :
 
 - **Sauvegarde croisée entre pages** : `saveToServer()` (`AdminToolbar.vue`) combinait `props.pageSlug` (piloté par la route, se met à jour immédiatement à la navigation) avec `localBlocks.value` (composable partagé, mis à jour de façon asynchrone). Une sauvegarde différée (debounce 3s) qui se déclenchait après un changement de page écrivait encore le contenu de l'ancienne page, mais sur le slug de la nouvelle. Corrigé par un garde-fou comparant `localBlocksPage` à `props.pageSlug` avant toute écriture.
 - **Reload forcé en sortant du bfcache (retour d'onglet)** : un listener `pageshow` rechargeait systématiquement la page à la restauration depuis le cache navigateur, sans exception pour le mode admin — perdait silencieusement les modifications non sauvegardées en changeant d'onglet puis en revenant. Corrigé (`plugins/deployment-check.client.ts`).
 - **`normalizeBlock()`** (`lib/blocks/renderer.ts`) réapplique `BLOCK_TYPES[type].defaults` à CHAQUE rendu (pas seulement à la création) pour tout prop vide/absent — changer un default de type peut donc changer l'affichage de contenu déjà existant si ce contenu n'a jamais explicitement écrasé ce champ. C'est ce mécanisme qui a causé la neutralisation accidentelle du footer réel.
+- **Crash Vue après connexion admin réelle** : `pages/admin.vue` avait un listener `onAuthStateChanged` jamais désabonné, combiné à une course entre sa navigation post-connexion (SPA) et `layouts/default.vue` (layout persistant) réagissant en parallèle au même changement de route — corrompait l'état interne de Vue, rendant l'admin totalement inerte (aucun bouton ne répondait) jusqu'à un hard refresh. Non reproductible avec le raccourci de test habituel (`?admin=true` direct) — seulement en passant réellement par `/admin`. Corrigé : cleanup du listener + rechargement complet (`window.location.href`) au lieu de navigation SPA après connexion.
 
 ## Tests
 
