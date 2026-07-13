@@ -39,9 +39,12 @@ export default defineNuxtPlugin((nuxtApp) => {
   }
 
   // Restauration bfcache (retour/avant depuis l'historique navigateur) :
-  // le navigateur ressuscite un instantané potentiellement périmé
+  // le navigateur ressuscite un instantané potentiellement périmé.
+  // Jamais en mode admin — un reload ici perdrait silencieusement toute
+  // édition en cours (localBlocks non sauvegardé), notamment en changeant
+  // d'onglet puis en revenant sur celui en cours d'édition.
   window.addEventListener('pageshow', (event) => {
-    if (event.persisted) window.location.reload()
+    if (event.persisted && !isAdminMode.value) window.location.reload()
   })
 
   // Version initiale au démarrage de l'app
