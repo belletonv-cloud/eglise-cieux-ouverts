@@ -156,13 +156,6 @@
                         </button>
                         <button
                             class="admin-btn admin-btn-secondary"
-                            @click="showTypography = true"
-                            title="Police des textes"
-                        >
-                            🔤 Police
-                        </button>
-                        <button
-                            class="admin-btn admin-btn-secondary"
                             @click="showComments = true"
                             title="Demandes développeur"
                         >
@@ -583,48 +576,6 @@
         </div>
     </Teleport>
 
-    <!-- Typography Modal -->
-    <Teleport to="body">
-        <div v-if="showTypography" class="version-modal-overlay" @click.self="showTypography = false">
-            <div class="version-modal">
-                <div class="version-modal-header">
-                    <h3>Police des textes</h3>
-                    <button class="version-modal-close" @click="showTypography = false">✕</button>
-                </div>
-                <div class="version-modal-body">
-                    <div class="admin-mgr-section">
-                        <label class="create-page-label">
-                            Police des titres
-                            <select v-model="typographyDraft.headingFont" class="admin-mgr-input">
-                                <option v-for="f in availableFonts" :key="f.value" :value="f.value">{{ f.label }}</option>
-                            </select>
-                        </label>
-                        <p class="typography-preview" :style="{ fontFamily: fontStack(typographyDraft.headingFont) }">
-                            Aperçu du titre
-                        </p>
-                    </div>
-                    <div class="admin-mgr-section">
-                        <label class="create-page-label">
-                            Police du texte
-                            <select v-model="typographyDraft.bodyFont" class="admin-mgr-input">
-                                <option v-for="f in availableFonts" :key="f.value" :value="f.value">{{ f.label }}</option>
-                            </select>
-                        </label>
-                        <p class="typography-preview" :style="{ fontFamily: fontStack(typographyDraft.bodyFont) }">
-                            Aperçu du texte courant, pour se faire une idée du rendu.
-                        </p>
-                    </div>
-                    <p v-if="typographyError" class="create-page-error">{{ typographyError }}</p>
-                    <div class="create-page-actions">
-                        <button class="admin-btn" @click="saveTypography" :disabled="savingTypography">
-                            {{ savingTypography ? "Enregistrement…" : "Appliquer au site" }}
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </Teleport>
-
     <!-- Comments (Developer Requests) Modal -->
     <Teleport to="body">
         <div v-if="showComments" class="version-modal-overlay" @click.self="showComments = false">
@@ -676,7 +627,6 @@ import {
     onAuthStateChanged,
 } from "firebase/auth";
 import { BLOCK_TYPES, ANIMATIONS } from "~/utils/blockTypes.js";
-import { AVAILABLE_FONTS as availableFonts, DEFAULT_TYPOGRAPHY, fontStack, ensureFontLoaded } from "~/utils/fonts.js";
 import { useToast } from '~/composables/useToast'
 
 const { showToast } = useToast()
@@ -1096,58 +1046,6 @@ function formatDate(dateStr) {
         })
     } catch {
         return dateStr
-    }
-}
-
-// Typography
-const showTypography = ref(false);
-const typographyDraft = ref({ ...DEFAULT_TYPOGRAPHY });
-const typographyError = ref('');
-const savingTypography = ref(false);
-
-watch(showTypography, (show) => {
-    if (show) loadTypography()
-})
-
-async function loadTypography() {
-    typographyError.value = ''
-    try {
-        const res = await fetch('/api/typography')
-        if (!res.ok) return
-        const data = await res.json()
-        if (data.props?.headingFont && data.props?.bodyFont) {
-            typographyDraft.value = { headingFont: data.props.headingFont, bodyFont: data.props.bodyFont }
-        }
-    } catch (e) {
-        console.warn('[admin] load typography failed:', e)
-    }
-}
-
-async function saveTypography() {
-    const token = await getFirebaseToken()
-    if (!token) { typographyError.value = 'Connectez-vous pour sauvegarder.'; return }
-    savingTypography.value = true
-    typographyError.value = ''
-    try {
-        const res = await fetch('/api/typography', {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-            body: JSON.stringify({ props: typographyDraft.value }),
-        })
-        if (!res.ok) {
-            const err = await res.json().catch(() => ({}))
-            throw new Error(err.message || `HTTP ${res.status}`)
-        }
-        ensureFontLoaded(typographyDraft.value.headingFont)
-        ensureFontLoaded(typographyDraft.value.bodyFont)
-        document.documentElement.style.setProperty('--font-heading', fontStack(typographyDraft.value.headingFont))
-        document.documentElement.style.setProperty('--font-body', fontStack(typographyDraft.value.bodyFont))
-        showToast('Police appliquée au site.', 'toast-success')
-        showTypography.value = false
-    } catch (e) {
-        typographyError.value = e.message || 'Erreur lors de la sauvegarde'
-    } finally {
-        savingTypography.value = false
     }
 }
 
@@ -2286,15 +2184,6 @@ async function saveChanges() {
     font-size: 12px;
     color: #999;
     margin: 6px 0 0;
-}
-.typography-preview {
-    margin: 10px 0 0;
-    padding: 12px 14px;
-    background: #f9fafb;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    font-size: 1.1em;
-    color: #333;
 }
 .admin-mgr-list {
     display: flex;

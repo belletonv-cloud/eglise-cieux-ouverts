@@ -1,9 +1,9 @@
-// Polices sélectionnables pour la typographie du site (titres/texte).
+// Polices sélectionnables pour la police par champ de texte (voir
+// components/editor/AutoEditor.vue et fieldFontStyle ci-dessous).
 // Liste fermée volontairement : chaque entrée doit exister sur Google Fonts
-// et est chargée dynamiquement via un <link> quand elle est utilisée
-// (voir plugins/typography.client.js). N'accepter que ces valeurs empêche
-// l'injection de CSS/URL arbitraire via le champ police (admin-only mais
-// vaut mieux valider à la frontière).
+// et est chargée dynamiquement via un <link> quand elle est utilisée.
+// N'accepter que ces valeurs empêche l'injection de CSS/URL arbitraire via
+// le champ police (admin-only mais vaut mieux valider à la frontière).
 export const AVAILABLE_FONTS = [
   { value: "Nunito", label: "Nunito (actuel — texte)", stack: "'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif" },
   { value: "Playfair Display", label: "Playfair Display (actuel — titres)", stack: "'Playfair Display', serif" },
@@ -14,11 +14,6 @@ export const AVAILABLE_FONTS = [
   { value: "Merriweather", label: "Merriweather", stack: "'Merriweather', serif" },
   { value: "Roboto", label: "Roboto", stack: "'Roboto', sans-serif" },
 ]
-
-export const DEFAULT_TYPOGRAPHY = {
-  headingFont: "Playfair Display",
-  bodyFont: "Nunito",
-}
 
 export function isValidFont(name) {
   return AVAILABLE_FONTS.some((f) => f.value === name)

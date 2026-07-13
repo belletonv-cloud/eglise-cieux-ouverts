@@ -14,7 +14,7 @@ Modern CMS & admin builder for [cieuxouverts.bzh](https://cieuxouverts.bzh), a F
 ## Features
 
 - **🎨 Modern admin builder** (Wix-like) with live preview
-- **🔧 Schema-driven blocks**: 17 block types with auto-generated editors
+- **🔧 Schema-driven blocks**: 19 block types with auto-generated editors — see [FEATURES.md](./FEATURES.md) for the full list and site scope
 - **✏️ Drag-and-drop**: Reorder blocks instantly via `vue-draggable-plus`
 - **↩️ Undo/Redo**: 50-entry history + Ctrl+Z / Ctrl+Shift+Z
 - **☁️ Cloud sync**: Firestore auto-save (3s debounce) + manual save
@@ -90,13 +90,7 @@ npm run dev
 ## Architecture Overview
 
 ### Block System (Schema-Driven)
-Content is composed of **blocks**, each with a schema that auto-generates editor fields. Types include:
-- **Hero** — Landing section with image, title, CTA
-- **Text** — Rich text with styling
-- **Gallery** — Image carousel with lightbox
-- **Contact** — Contact form with Firestore/email integration
-- **Calendar** — Event calendar (4 views: month/week/cards/agenda)
-- And more... (see `BLOCK_TYPES` in `utils/blockTypes.js`)
+Content is composed of **blocks**, each with a schema that auto-generates editor fields. 19 types — see [FEATURES.md](./FEATURES.md) for the full, accurate list (source of truth: `BLOCK_TYPES` in `utils/blockTypes.js`).
 
 ### Admin Editor Flow
 1. **Edit** → Sidebar auto-generates form from block schema
@@ -106,8 +100,10 @@ Content is composed of **blocks**, each with a schema that auto-generates editor
 
 ### Firestore Collections
 - `pages/{slug}` — Page blocks & metadata
-- `menu/{slug}` — Navigation menu items
-- `footer` — Shared footer block
+- `settings/menu` — Navigation menu items
+- `settings/footer` — Shared footer block (falls back to code defaults if unset — see FEATURES.md)
+- `settings/admins` — Admin allowlist
+- `comments` — Developer request notes (admin-only)
 
 ## Development
 

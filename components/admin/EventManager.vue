@@ -9,9 +9,27 @@
 
         <div v-if="!editing && !creating && !deleting" class="event-manager-body">
           <button class="event-add-btn" @click="startCreate">+ Nouvel événement</button>
+          <div class="event-toolbar">
+            <input
+              v-model="searchQuery"
+              type="text"
+              class="event-search-input"
+              placeholder="Rechercher un événement (titre, lieu, description)…"
+            />
+            <select v-model="sortOrder" class="event-sort-select" title="Trier">
+              <option value="date-asc">Date ↑</option>
+              <option value="date-desc">Date ↓</option>
+              <option value="title-asc">Titre A→Z</option>
+            </select>
+            <select v-model="statusFilter" class="event-filter-select" title="Filtrer par statut">
+              <option value="all">Tous les statuts</option>
+              <option value="active">Actifs</option>
+              <option value="cancelled">Annulés</option>
+            </select>
+          </div>
           <div v-if="loading" class="event-status">Chargement...</div>
           <div v-else class="event-list">
-            <div v-for="evt in events" :key="evt.id" class="event-row" @click="startEdit(evt)">
+            <div v-for="evt in filteredEvents" :key="evt.id" class="event-row" @click="startEdit(evt)">
               <div class="event-row-date">
                 <span class="event-row-day">{{ formatDay(evt.date) }}</span>
                 <span class="event-row-month">{{ formatMonth(evt.date) }}</span>
@@ -27,6 +45,7 @@
               <button class="event-delete-btn" @click.stop="deleting = evt" title="Supprimer">&times;</button>
             </div>
             <p v-if="events.length === 0" class="event-status">Aucun événement.</p>
+            <p v-else-if="filteredEvents.length === 0" class="event-status">Aucun événement ne correspond à la recherche.</p>
           </div>
         </div>
 
@@ -180,6 +199,39 @@ const apiUrl = config.public.apiUrl || 'https://eglise-app.belletonv.workers.dev
 
 const events = ref([])
 const loading = ref(false)
+const searchQuery = ref('')
+const sortOrder = ref('date-asc')
+const statusFilter = ref('all')
+
+const filteredEvents = computed(() => {
+  let list = events.value
+
+  if (statusFilter.value !== 'all') {
+    list = list.filter((e) => (e.statut || 'active') === statusFilter.value)
+  }
+
+  const q = searchQuery.value.trim().toLowerCase()
+  if (q) {
+    list = list.filter((e) =>
+      (e.titre || '').toLowerCase().includes(q) ||
+      (e.lieu || '').toLowerCase().includes(q) ||
+      (e.description || '').toLowerCase().includes(q)
+    )
+  }
+
+  const sorted = [...list]
+  switch (sortOrder.value) {
+    case 'date-desc':
+      sorted.sort((a, b) => b.date - a.date)
+      break
+    case 'title-asc':
+      sorted.sort((a, b) => (a.titre || '').localeCompare(b.titre || ''))
+      break
+    default: // date-asc
+      sorted.sort((a, b) => a.date - b.date)
+  }
+  return sorted
+})
 const editing = ref(null)
 const creating = ref(false)
 const deleting = ref(null)
@@ -663,6 +715,18 @@ watch(() => props.open, (v) => { if (v) fetchEvents() })
   cursor: pointer; margin-bottom: 16px;
 }
 .event-add-btn:hover { background: #1d4ed8; }
+.event-toolbar {
+  display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap;
+}
+.event-search-input {
+  flex: 1; min-width: 180px; padding: 8px 12px; font-size: 0.85em;
+  border: 1px solid #e5e7eb; border-radius: 8px; box-sizing: border-box;
+}
+.event-search-input:focus { outline: none; border-color: #2563eb; }
+.event-sort-select, .event-filter-select {
+  padding: 8px 10px; font-size: 0.85em; border: 1px solid #e5e7eb;
+  border-radius: 8px; background: #fff; color: #374151; cursor: pointer;
+}
 .event-status { text-align: center; color: #6b7280; padding: 24px; }
 .event-list { display: flex; flex-direction: column; gap: 8px; }
 .event-row {
