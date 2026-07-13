@@ -233,6 +233,20 @@ async function waitForAuth() {
     if (import.meta.server || !import.meta.client) return null;
     const { $auth } = useNuxtApp();
     if (!$auth?.onAuthStateChanged) return null;
+    // Si l'état d'auth est déjà connu de façon synchrone (currentUser déjà
+    // résolu), le retourner directement plutôt que d'enregistrer un nouveau
+    // listener : cette fonction est appelée depuis 4 endroits différents,
+    // chacun créant sa propre souscription onAuthStateChanged. Firebase peut
+    // notifier des souscriptions enregistrées à des instants légèrement
+    // différents avec des snapshots différents pendant la résolution initiale
+    // — ça provoquait un aller-retour /admin ↔ page cible (chaque appel de
+    // waitForAuth() concluant différemment), avec des montages/démontages de
+    // page concurrents qui corrompaient l'état interne de Vue (crash
+    // "Cannot destructure property of null"). currentUser reflète l'état
+    // déjà résolu par n'importe quel appel précédent à onAuthStateChanged.
+    if ($auth.currentUser !== undefined && $auth.currentUser !== null) {
+        return $auth.currentUser;
+    }
     return await new Promise((resolve) => {
         const unsubscribe = $auth.onAuthStateChanged((user) => {
             resolve(user);

@@ -43,7 +43,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { GoogleAuthProvider, signInWithPopup, signOut as firebaseSignOut } from 'firebase/auth'
 
 useSeoMeta({
@@ -53,7 +53,6 @@ useSeoMeta({
 
 const route = useRoute()
 const { $auth } = useNuxtApp()
-const router = useRouter()
 const user = ref(null)
 const checking = ref(true)
 const isAdmin = ref(false)
@@ -63,12 +62,27 @@ const settingUp = ref(false)
 
 const redirectUrl = computed(() => route.query.redirect || '/?admin=true')
 
+// Jamais désabonné auparavant : ce listener restait actif après la navigation
+// (navigateTo plus bas) vers la page cible une fois connecté, et pouvait se
+// redéclencher pendant que Vue démontait ce composant — corrompait l'état
+// interne de Vue (crash "Cannot destructure property of null" en cascade,
+// plus aucune interaction possible jusqu'à un hard refresh). Constaté en
+// prod avec une vraie connexion Google, mais aussi reproduit en mock quand
+// une session déjà authentifiée déclenche le callback de façon synchrone —
+// Firebase peut appeler le callback AVANT que `onAuthStateChanged()` n'ait
+// fini de retourner, donc `unsubscribe` n'est pas encore assigné au moment
+// où le tout premier appel voudrait s'en servir. `navigated` (booléen simple,
+// affecté de façon synchrone) protège indépendamment de cet ordre d'exécution.
+let unsubscribe = null
+let navigated = false
+
 onMounted(() => {
   if (!$auth?.onAuthStateChanged) {
     checking.value = false
     return
   }
-  $auth.onAuthStateChanged(async (u) => {
+  unsubscribe = $auth.onAuthStateChanged(async (u) => {
+    if (navigated) return
     user.value = u
     error.value = ''
     if (!u) {
@@ -82,7 +96,20 @@ onMounted(() => {
         isAdmin.value = true
         isSetupMode.value = false
         checking.value = false
-        navigateTo(redirectUrl.value, { replace: true })
+        navigated = true
+        unsubscribe?.()
+        // Rechargement complet plutôt que navigateTo() (SPA) : juste après la
+        // résolution de l'auth, layouts/default.vue (persistant, ne remonte
+        // pas) réagit *aussi* au changement de route via son propre watcher
+        // sur route.query.admin, en parallèle du remplacement de cette page
+        // par la cible — les deux cascades réactives concurrentes (bascule
+        // des v-if AdminToolbar/MenuEditor + swap de page) ont fait planter
+        // Vue en interne ("Cannot destructure property of null", plus aucune
+        // interaction possible jusqu'à hard refresh). Un rechargement complet
+        // ici (une fois, juste après connexion) est un compromis sûr — même
+        // pattern déjà utilisé par AdminToolbar.vue pour ce type de
+        // transition d'auth.
+        window.location.href = redirectUrl.value
         return
       }
       const token = await u.getIdToken()
@@ -90,11 +117,25 @@ onMounted(() => {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       const data = await res.json()
+      if (navigated) return
       if (data.isAdmin) {
         isAdmin.value = true
         isSetupMode.value = false
         checking.value = false
-        navigateTo(redirectUrl.value, { replace: true })
+        navigated = true
+        unsubscribe?.()
+        // Rechargement complet plutôt que navigateTo() (SPA) : juste après la
+        // résolution de l'auth, layouts/default.vue (persistant, ne remonte
+        // pas) réagit *aussi* au changement de route via son propre watcher
+        // sur route.query.admin, en parallèle du remplacement de cette page
+        // par la cible — les deux cascades réactives concurrentes (bascule
+        // des v-if AdminToolbar/MenuEditor + swap de page) ont fait planter
+        // Vue en interne ("Cannot destructure property of null", plus aucune
+        // interaction possible jusqu'à hard refresh). Un rechargement complet
+        // ici (une fois, juste après connexion) est un compromis sûr — même
+        // pattern déjà utilisé par AdminToolbar.vue pour ce type de
+        // transition d'auth.
+        window.location.href = redirectUrl.value
         return
       }
       // Si setupMode pas dans la réponse (ancien déploiement),
@@ -118,6 +159,10 @@ onMounted(() => {
       checking.value = false
     }
   })
+})
+
+onUnmounted(() => {
+  unsubscribe?.()
 })
 
 async function signIn() {
@@ -157,7 +202,9 @@ async function setupFirstAdmin() {
     }
     isAdmin.value = true
     isSetupMode.value = false
-    navigateTo(redirectUrl.value, { replace: true })
+    navigated = true
+    unsubscribe?.()
+    window.location.href = redirectUrl.value
   } catch (e) {
     error.value = e.message || 'Erreur de configuration'
   } finally {
@@ -166,17 +213,9 @@ async function setupFirstAdmin() {
 }
 
 function goAdmin() {
-  try {
-    navigateTo(redirectUrl.value, { replace: true })
-  } catch (e) {
-    console.error('[admin] navigateTo failed, falling back to router.replace', e)
-    try {
-      router.replace(redirectUrl.value)
-    } catch (e2) {
-      console.error('[admin] router.replace also failed, using window.location', e2)
-      window.location.href = redirectUrl.value
-    }
-  }
+  navigated = true
+  unsubscribe?.()
+  window.location.href = redirectUrl.value
 }
 </script>
 
