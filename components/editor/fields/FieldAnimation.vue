@@ -25,10 +25,10 @@ defineEmits<{ change: [value: string] }>()
 }
 .anim-btn {
   padding: 5px 10px;
-  background: #2d2d3f;
-  border: 1.5px solid #3d3d55;
+  background: #f9fafb;
+  border: 1.5px solid #ddd;
   border-radius: 20px;
-  color: #9999bb;
+  color: #555;
   font-size: 0.75em;
   cursor: pointer;
   transition: all 0.15s;
@@ -39,5 +39,6 @@ defineEmits<{ change: [value: string] }>()
   color: white;
   font-weight: 600;
 }
-.anim-btn:hover { border-color: #064886; color: white; }
+.anim-btn:hover { border-color: #064886; color: #064886; }
+.anim-btn.active:hover { color: white; }
 </style>

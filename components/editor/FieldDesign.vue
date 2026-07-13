@@ -96,7 +96,7 @@ function onChange(key, value) {
 }
 .field-label {
   font-size: 0.75em;
-  color: #9999bb;
+  color: #6b7280;
   font-weight: 500;
 }
 </style>

@@ -120,13 +120,13 @@ function onDesignUpdate(block: BlockInstance) {
 .auto-editor { display: flex; flex-direction: column; gap: 14px; }
 .auto-field { display: flex; flex-direction: column; gap: 5px; }
 .auto-field-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.field-label { font-size: 0.78em; color: #9999bb; font-weight: 500; }
+.field-label { font-size: 0.78em; color: #6b7280; font-weight: 500; }
 .field-font-picker {
   font-size: 0.72em;
-  background: #2d2d3f;
-  border: 1px solid #3d3d55;
+  background: #fff;
+  border: 1px solid #ddd;
   border-radius: 5px;
-  color: #b8c1d9;
+  color: #555;
   padding: 2px 5px;
   max-width: 130px;
 }

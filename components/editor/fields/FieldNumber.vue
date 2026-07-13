@@ -27,7 +27,7 @@ defineEmits<{ change: [value: number] }>()
 .field-range { flex: 1; accent-color: #064886; }
 .field-number-val {
   font-size: 0.82em;
-  color: #9999bb;
+  color: #6b7280;
   min-width: 30px;
   text-align: right;
 }

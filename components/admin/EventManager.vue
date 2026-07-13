@@ -804,7 +804,7 @@ watch(() => props.open, (v) => { if (v) fetchEvents() })
 .event-image-controls { display: flex; gap: 6px; flex-wrap: wrap; }
 .event-image-controls input[type="url"] { flex: 1; min-width: 120px; }
 .event-image-controls input[type="url"] { padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9em; }
-.event-image-preview { max-width: 100%; max-height: 120px; object-fit: cover; border-radius: 6px; }
+.event-image-preview { max-width: 100%; max-height: 220px; width: auto; object-fit: contain; border-radius: 6px; background: #f3f4f6; display: block; margin: 0 auto; }
 .file-input-hidden { display: none; }
 .event-uploaded-list { max-height: 180px; overflow-y: auto; }
 .event-uploaded-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }

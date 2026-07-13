@@ -86,16 +86,16 @@ function clearAll() {
 
 <style scoped>
 .field-array { display: flex; flex-direction: column; gap: 10px; }
-.array-item { background: #13131f; border: 1px solid #2d2d3f; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+.array-item { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 6px; }
 .array-item-header { display: flex; align-items: center; justify-content: space-between; }
-.array-item-num { font-size: 0.72em; font-weight: 700; color: #7c7c9a; text-transform: uppercase; letter-spacing: 0.08em; }
+.array-item-num { font-size: 0.72em; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.08em; }
 .array-item-del { background: none; border: none; color: #EF4B54; cursor: pointer; font-size: 0.85em; padding: 2px 5px; border-radius: 4px; }
 .array-item-del:hover { background: rgba(239,75,84,0.1); }
 .array-actions { display: flex; gap: 8px; align-items: stretch; }
-.array-add-btn { background: #2d2d3f; border: 1.5px dashed #3d3d55; border-radius: 8px; color: #9999bb; font-size: 0.82em; padding: 8px; cursor: pointer; flex: 1; }
-.array-add-btn:hover { border-color: #064886; color: white; }
-.array-clear-btn { background: #2d1520; border: 1.5px solid #5c2630; border-radius: 8px; color: #EF4B54; font-size: 0.82em; padding: 8px 12px; cursor: pointer; white-space: nowrap; }
-.array-clear-btn:hover { background: #3d1820; border-color: #EF4B54; }
-.field-input { width: 100%; padding: 7px 10px; background: #2d2d3f; border: 1px solid #3d3d55; border-radius: 6px; color: #e2e8f0; font-size: 0.88em; outline: none; font-family: inherit; }
+.array-add-btn { background: #f3f4f6; border: 1.5px dashed #d1d5db; border-radius: 8px; color: #555; font-size: 0.82em; padding: 8px; cursor: pointer; flex: 1; }
+.array-add-btn:hover { border-color: #064886; color: #064886; background: #eef4fa; }
+.array-clear-btn { background: #fef2f2; border: 1.5px solid #fecaca; border-radius: 8px; color: #EF4B54; font-size: 0.82em; padding: 8px 12px; cursor: pointer; white-space: nowrap; }
+.array-clear-btn:hover { background: #fee2e2; border-color: #EF4B54; }
+.field-input { width: 100%; padding: 7px 10px; background: #fff; border: 1px solid #ddd; border-radius: 6px; color: #1a1a2e; font-size: 0.88em; outline: none; font-family: inherit; }
 .field-image-preview { width: 100%; max-height: 60px; object-fit: cover; border-radius: 6px; }
 </style>

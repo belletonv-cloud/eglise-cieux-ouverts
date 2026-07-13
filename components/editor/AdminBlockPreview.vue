@@ -37,28 +37,29 @@ const thumbnail = computed(() => {
   align-items: center;
   gap: 4px;
   padding: 12px 8px;
-  background: #1e1e2e;
-  border: 1px solid #2d2d3f;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
   border-radius: 8px;
   cursor: pointer;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, background 0.15s;
   width: 100%;
   text-align: center;
 }
 .admin-block-preview:hover {
   border-color: #064886;
+  background: #eef4fa;
 }
 .preview-icon {
   font-size: 1.5em;
 }
 .preview-label {
   font-size: 0.78em;
-  color: #e2e8f0;
+  color: #1a1a2e;
   font-weight: 600;
 }
 .preview-fields-count {
   font-size: 0.65em;
-  color: #7c7c9a;
+  color: #888;
 }
 .preview-thumb img {
   width: 100%;

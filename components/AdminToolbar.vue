@@ -2021,7 +2021,7 @@ async function saveChanges() {
     object-fit: cover;
     border-radius: 6px;
     cursor: pointer;
-    border: 1px solid #2d2d3f;
+    border: 1px solid #e5e7eb;
 }
 .images-loading {
     color: #666;
