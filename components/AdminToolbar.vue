@@ -478,6 +478,7 @@
                         Aucune version sauvegardée
                     </div>
                     <div v-else>
+                        <p class="version-list-hint">Chaque version est un instantané de la page pris juste avant une sauvegarde — pas nécessairement l'état actuellement affiché sur le site.</p>
                         <div v-if="blockOptions.length" class="version-filter-bar">
                             <label class="version-filter-label">Filtrer par bloc:</label>
                             <select v-model="filterByBlock" class="version-filter-select">
@@ -508,7 +509,7 @@
                                     <span class="version-author">{{ v.savedBy }}</span>
                                     <div class="version-meta">
                                         <span class="version-blocks">{{ v.blockCount }} bloc{{ v.blockCount !== 1 ? 's' : '' }}</span>
-                                        <span v-if="versions.length && v.id === versions[0].id" class="version-current">Actuelle</span>
+                                        <span v-if="versions.length && v.id === versions[0].id" class="version-current" title="L'état réellement affiché sur le site peut être différent : cette version est un instantané pris juste avant la dernière sauvegarde, pas l'état actuel en direct.">Précédente</span>
                                         <span v-if="v.changes" class="version-expand-arrow">{{ expandedVersion === v.id ? '▲' : '▼' }}</span>
                                     </div>
                                     <div v-if="v.changes && (v.changes.added || v.changes.removed || v.changes.modified)" class="version-diff">
@@ -2677,6 +2678,12 @@ async function saveChanges() {
     padding: 16px 20px;
     overflow-y: auto;
     flex: 1;
+}
+.version-list-hint {
+    font-size: 11px;
+    color: #999;
+    margin: 0 0 12px;
+    line-height: 1.4;
 }
 .version-filter-bar {
     display: flex;

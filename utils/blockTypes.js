@@ -83,7 +83,7 @@ export const BLOCK_TYPES = {
       { key: "animation", label: "Animation", type: "animation" },
       {
         key: "fontSize",
-        label: "Taille police (em)",
+        label: "Taille police (titre uniquement, em)",
         type: "number",
         min: 2,
         max: 10,

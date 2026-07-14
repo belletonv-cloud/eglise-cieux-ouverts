@@ -228,7 +228,7 @@ function getShutterStyle(i) {
 
 .footer-info :deep(strong) {
   font-weight: 700;
-  color: #064886;
+  color: var(--bf-text-color, white);
 }
 
 @media (prefers-reduced-motion: reduce) {

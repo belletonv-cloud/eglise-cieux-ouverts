@@ -80,7 +80,7 @@ const sanitizedBody = computed(() => props.body ? sanitizeHtml(props.body) : '')
   margin: -4px 0 22px;
   font-size: 1.4em;
   font-weight: 700;
-  color: #333;
+  opacity: 0.85;
 }
 .ti-body { font-size: 1.05em; line-height: 1.75; opacity: 0.9; margin-bottom: 28px; }
 .ti-cta {
@@ -117,13 +117,12 @@ const sanitizedBody = computed(() => props.body ? sanitizeHtml(props.body) : '')
 .style-messagesSeamless .ti-body {
   font-size: 18px;
   line-height: 1.8;
-  color: #555;
+  opacity: 0.85;
 }
 
 .style-messagesSeamless .ti-subtitle {
   font-family: Helvetica, Arial, sans-serif;
   font-size: 24px;
-  color: #333;
   margin-bottom: 30px;
 }
 
