@@ -107,7 +107,7 @@
                     <template v-else>
                         <span
                             class="admin-save-status unsaved"
-                            v-if="hasUnsavedChanges && !saveStatus"
+                            v-if="hasAnyUnsavedChanges && !saveStatus"
                             >⚠ Modifications non sauvegardées</span
                         >
                         <span
@@ -814,7 +814,10 @@ const {
     localBlocksPage,
 } = useAdmin();
 
-const { saveMenuToFirestore, customPages, loadCustomPages } = useMenuEditor();
+const { saveMenuToFirestore, customPages, loadCustomPages, menuChanged } = useMenuEditor();
+
+// Fusionner l'état des modifications (blocs + menu) pour une UX unifiée
+const hasAnyUnsavedChanges = computed(() => hasUnsavedChanges.value || menuChanged.value)
 
 // Titre « propre » de la page courante (celui affiché dans la liste
 // déroulante), renvoyé au serveur à chaque sauvegarde pour réparer les
@@ -1817,8 +1820,10 @@ async function saveChanges() {
     saving.value = true;
     try {
         await saveToServer();
-        // Also persist menu changes
-        await saveMenuToFirestore();
+        // Sauvegarde aussi le menu s'il a changé (fusion UX: une seule sauvegarde)
+        if (menuChanged.value) {
+            await saveMenuToFirestore();
+        }
         markSaved();
         saveStatus.value = "Sauvegardé";
         setTimeout(() => {
