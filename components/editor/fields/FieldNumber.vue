@@ -1,15 +1,15 @@
 <template>
   <div class="field-number-row">
     <input
-      type="range"
-      class="field-range"
+      type="number"
+      class="field-number-input"
       :min="field.min ?? 0"
       :max="field.max ?? 100"
       :step="field.step ?? 1"
       :value="value"
       @input="$emit('change', Number(($event.target as HTMLInputElement).value))"
+      :placeholder="`${field.min ?? 0}–${field.max ?? 100}`"
     />
-    <span class="field-number-val">{{ value }}</span>
   </div>
 </template>
 
@@ -24,11 +24,17 @@ defineEmits<{ change: [value: number] }>()
   align-items: center;
   gap: 10px;
 }
-.field-range { flex: 1; accent-color: #064886; }
-.field-number-val {
-  font-size: 0.82em;
-  color: #6b7280;
-  min-width: 30px;
-  text-align: right;
+.field-number-input {
+  flex: 1;
+  padding: 6px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.9em;
+  font-family: inherit;
+}
+.field-number-input:focus {
+  outline: none;
+  border-color: #064886;
+  box-shadow: 0 0 0 2px rgba(6, 72, 134, 0.1);
 }
 </style>
