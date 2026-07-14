@@ -12,8 +12,8 @@
         <span v-if="event.time || event.heure">🕙 {{ event.time || event.heure }}</span>
         <span v-if="event.location || event.lieu">📍 {{ event.location || event.lieu }}</span>
       </div>
-      <div class="popover-desc" v-if="event.description || event.description">
-        <span>{{ event.description }}</span>
+      <div class="popover-desc" v-if="event.description">
+        <span>{{ formattedDescription }}</span>
       </div>
       <div class="popover-links">
         <a v-if="event.link || event.lien" :href="event.link || event.lien" class="popover-btn" target="_blank">En savoir plus</a>
@@ -35,6 +35,12 @@ const props = defineProps({
 })
 
 const popoverEl = ref<HTMLElement|null>(null)
+
+// Les descriptions venant de l'API eglise-app stockent parfois des "\n"
+// littéraux (backslash+n) au lieu d'un vrai retour à la ligne.
+const formattedDescription = computed(() =>
+  (props.event.description || '').replace(/\\n/g, '\n')
+)
 
 const popoverStyle = computed(() => ({
   position: 'fixed',
@@ -98,7 +104,7 @@ watch(() => props.visible, val => {
 .popover-meta {
   display: flex; gap: 16px; font-size: 0.95em; color: #6466b6; margin-bottom: 6px; flex-wrap: wrap;
 }
-.popover-desc { font-size: 0.98em; color: #444; margin: 6px 0 2px; }
+.popover-desc { font-size: 0.98em; color: #444; margin: 6px 0 2px; white-space: pre-line; }
 .popover-links { display: flex; gap: 8px; margin-top: 7px; flex-wrap: wrap; }
 .popover-btn {
   display: inline-block; padding: 6px 16px; background: #064886;
