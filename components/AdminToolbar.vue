@@ -546,15 +546,15 @@
                             <div v-if="expandedVersion === v.id && v.changes" class="version-detail-panel">
                                 <div v-if="v.changes.details?.modified?.length" class="vd-detail-group">
                                     <span class="vd-detail-label">~ Modifiés</span>
-                                    <span v-for="label in v.changes.details.modified" :key="label" class="vd-detail-item vd-modified">{{ label }}</span>
+                                    <span v-for="item in v.changes.details.modified" :key="item.id" class="vd-detail-item vd-modified">{{ item.label }}</span>
                                 </div>
                                 <div v-if="v.changes.details?.added?.length" class="vd-detail-group">
                                     <span class="vd-detail-label">+ Ajoutés</span>
-                                    <span v-for="label in v.changes.details.added" :key="label" class="vd-detail-item vd-added">{{ label }}</span>
+                                    <span v-for="item in v.changes.details.added" :key="item.id" class="vd-detail-item vd-added">{{ item.label }}</span>
                                 </div>
                                 <div v-if="v.changes.details?.removed?.length" class="vd-detail-group">
                                     <span class="vd-detail-label">− Supprimés</span>
-                                    <span v-for="label in v.changes.details.removed" :key="label" class="vd-detail-item vd-removed">{{ label }}</span>
+                                    <span v-for="item in v.changes.details.removed" :key="item.id" class="vd-detail-item vd-removed">{{ item.label }}</span>
                                 </div>
                                 <p v-if="!v.changes.details?.modified?.length && !v.changes.details?.added?.length && !v.changes.details?.removed?.length" class="vd-no-detail">Aucun changement détecté</p>
                             </div>
@@ -1506,12 +1506,12 @@ const filteredVersions = computed(() => {
     const selectedBlockId = filterByBlock.value
     return versions.value.filter(v => {
         if (!v.changes?.details) return false
-        const allLabels = [
+        const allItems = [
             ...(v.changes.details.added || []),
             ...(v.changes.details.removed || []),
             ...(v.changes.details.modified || []),
         ]
-        return allLabels.some(label => label.includes(selectedBlockId))
+        return allItems.some(item => item.id === selectedBlockId)
     })
 })
 

@@ -27,49 +27,53 @@ export function computeChanges(newerBlocks, olderBlocks) {
   const newMap = new Map(newerBlocks.filter(b => b?.id).map(b => [b.id, b]))
   const oldMap = new Map(olderBlocks.filter(b => b?.id).map(b => [b.id, b]))
 
-  const addedLabels = []
-  const removedLabels = []
-  const modifiedLabels = []
+  // { id, label } plutôt que juste le label affiché : le filtre par bloc
+  // (frontend) a besoin de l'id du bloc pour matcher de façon fiable, le
+  // label (type + titre) n'étant qu'un texte d'affichage qui ne contient
+  // jamais l'id réel du bloc.
+  const added = []
+  const removed = []
+  const modified = []
 
   for (const [id, nb] of newMap) {
     if (!oldMap.has(id)) {
-      addedLabels.push(blockLabel(nb))
+      added.push({ id, label: blockLabel(nb) })
     } else {
       const ob = oldMap.get(id)
       if (JSON.stringify(nb.props) !== JSON.stringify(ob.props) ||
           JSON.stringify(nb.visibility) !== JSON.stringify(ob.visibility) ||
           JSON.stringify(nb.responsive) !== JSON.stringify(ob.responsive)) {
-        modifiedLabels.push(blockLabel(nb))
+        modified.push({ id, label: blockLabel(nb) })
       }
     }
   }
   for (const [id, ob] of oldMap) {
-    if (!newMap.has(id)) removedLabels.push(blockLabel(ob))
+    if (!newMap.has(id)) removed.push({ id, label: blockLabel(ob) })
   }
 
   if (newMap.size === 0 && oldMap.size === 0) {
     const maxLen = Math.max(newerBlocks.length, olderBlocks.length)
     for (let i = 0; i < maxLen; i++) {
-      if (i >= newerBlocks.length) { removedLabels.push(blockLabel(olderBlocks[i])); continue }
-      if (i >= olderBlocks.length) { addedLabels.push(blockLabel(newerBlocks[i])); continue }
+      if (i >= newerBlocks.length) { removed.push({ id: olderBlocks[i]?.id ?? `idx-${i}`, label: blockLabel(olderBlocks[i]) }); continue }
+      if (i >= olderBlocks.length) { added.push({ id: newerBlocks[i]?.id ?? `idx-${i}`, label: blockLabel(newerBlocks[i]) }); continue }
       if (JSON.stringify(newerBlocks[i]) !== JSON.stringify(olderBlocks[i])) {
-        modifiedLabels.push(blockLabel(newerBlocks[i]))
+        modified.push({ id: newerBlocks[i]?.id ?? `idx-${i}`, label: blockLabel(newerBlocks[i]) })
       }
     }
   }
 
   const parts = []
-  if (addedLabels.length) parts.push(`+${addedLabels.length}`)
-  if (removedLabels.length) parts.push(`-${removedLabels.length}`)
-  if (modifiedLabels.length) parts.push(`~${modifiedLabels.length}`)
+  if (added.length) parts.push(`+${added.length}`)
+  if (removed.length) parts.push(`-${removed.length}`)
+  if (modified.length) parts.push(`~${modified.length}`)
   if (!parts.length && newerBlocks.length) parts.push(`${newerBlocks.length} blocs (inchangés)`)
 
   return {
-    added: addedLabels.length,
-    removed: removedLabels.length,
-    modified: modifiedLabels.length,
+    added: added.length,
+    removed: removed.length,
+    modified: modified.length,
     summary: parts.join(' '),
-    details: { added: addedLabels, removed: removedLabels, modified: modifiedLabels },
+    details: { added, removed, modified },
   }
 }
 
