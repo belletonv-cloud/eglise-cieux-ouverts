@@ -223,6 +223,7 @@
 import { ref, watch, onMounted } from 'vue'
 import EventModal from '~/components/EventModal.vue'
 import EventImageSlider from '~/components/EventImageSlider.vue'
+import { sanitizeHtml as sanitizeHtmlXss } from '~/utils/sanitize'
 
 
 useSeoMeta({
@@ -391,9 +392,12 @@ function next() {
   currentDate.value = d
 }
 
+// Convertit les retours à la ligne en <br> puis passe par le vrai
+// sanitizeHtml (utils/sanitize.js) qui retire scripts/handlers — le rendu
+// se fait ensuite via v-html, donc cette étape XSS est obligatoire.
 function sanitizeHtml(text) {
   if (typeof text !== 'string') return ''
-  return text.replace(/\\n/g, '\n').replace(/\n/g, '<br>')
+  return sanitizeHtmlXss(text.replace(/\\n/g, '\n').replace(/\n/g, '<br>'))
 }
 
 function formatDate(date) {

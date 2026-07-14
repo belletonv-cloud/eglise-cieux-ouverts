@@ -163,6 +163,20 @@
                         </button>
                         <button
                             class="admin-btn admin-btn-secondary"
+                            @click="openContactMessages"
+                            title="Messages de contact"
+                        >
+                            📬 Messages<span v-if="unreadContactCount" class="admin-msg-count">{{ unreadContactCount }}</span>
+                        </button>
+                        <button
+                            class="admin-btn admin-btn-secondary"
+                            @click="showSettings = true"
+                            title="Configuration"
+                        >
+                            ⚙️ Config
+                        </button>
+                        <button
+                            class="admin-btn admin-btn-secondary"
                             @click="showEventManager = true"
                             title="Gérer les événements"
                         >
@@ -576,6 +590,57 @@
         </div>
     </Teleport>
 
+    <!-- Contact Messages Modal -->
+    <Teleport to="body">
+        <div v-if="showContactMessages" class="version-modal-overlay" @click.self="showContactMessages = false">
+            <div class="version-modal">
+                <div class="version-modal-header">
+                    <h3>Messages de contact <span v-if="contactMessages.length" class="version-count">{{ contactMessages.length }}</span></h3>
+                    <button class="version-modal-close" @click="showContactMessages = false">✕</button>
+                </div>
+                <div class="version-modal-body">
+                    <div v-if="!contactMessagesLoading && contactMessages.length > 0" class="contact-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Total</span>
+                            <span class="stat-value">{{ contactMessages.length }}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Non lus</span>
+                            <span class="stat-value">{{ unreadContactCount }}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Newsletter</span>
+                            <span class="stat-value">{{ newsletterSubscriberCount }}</span>
+                        </div>
+                    </div>
+                    <div v-if="contactMessagesLoading" class="version-loading">Chargement...</div>
+                    <div v-else-if="contactMessages.length === 0" class="version-empty">Aucun message reçu</div>
+                    <div v-else class="version-list">
+                        <div
+                            v-for="m in contactMessages"
+                            :key="m.id"
+                            class="version-item"
+                            :class="{ 'comment-resolved': m.status === 'read' }"
+                        >
+                            <div class="version-item-row">
+                                <div class="version-info">
+                                    <span class="version-date">{{ new Date(m.createdAt).toLocaleString('fr-FR') }}</span>
+                                    <span class="version-author">{{ m.prenom }} {{ m.nom }} — <a :href="`mailto:${m.email}`">{{ m.email }}</a>{{ m.ville ? ' — ' + m.ville : '' }}</span>
+                                    <div class="version-meta">{{ m.message }}</div>
+                                </div>
+                                <div class="version-actions">
+                                    <button class="admin-btn admin-btn-secondary" @click.stop="toggleContactRead(m)">
+                                        {{ m.status === 'read' ? "↺ Marquer non lu" : "✓ Marquer lu" }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </Teleport>
+
     <!-- Comments (Developer Requests) Modal -->
     <Teleport to="body">
         <div v-if="showComments" class="version-modal-overlay" @click.self="showComments = false">
@@ -609,6 +674,51 @@
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </Teleport>
+
+    <!-- Modale Configuration -->
+    <Teleport to="body" v-if="showSettings">
+        <div class="settings-modal-overlay" @click.self="showSettings = false">
+            <div class="settings-modal">
+                <div class="settings-modal-header">
+                    <h2>Configuration</h2>
+                    <button class="close-btn" @click="showSettings = false">✕</button>
+                </div>
+                <div class="settings-modal-body">
+                    <div class="settings-field">
+                        <label>Email de destination (formulaire contact)</label>
+                        <input
+                            v-model="settingsForm.contactEmail"
+                            type="email"
+                            placeholder="contact@example.com"
+                            class="settings-input"
+                        />
+                        <p class="settings-hint">Les messages du formulaire de contact seront envoyés à cet email</p>
+                    </div>
+                    <div class="settings-field">
+                        <label class="settings-checkbox-label">
+                            <input
+                                v-model="settingsForm.showEventsPage"
+                                type="checkbox"
+                                class="settings-checkbox"
+                            />
+                            Afficher la page Événements
+                        </label>
+                        <p class="settings-hint">Si décoché, la page sera masquée du site</p>
+                    </div>
+                </div>
+                <div class="settings-modal-footer">
+                    <button class="btn-cancel" @click="showSettings = false">Annuler</button>
+                    <button
+                        class="btn-save"
+                        @click="saveSettings"
+                        :disabled="settingsSaving"
+                    >
+                        {{ settingsSaving ? 'Sauvegarde...' : 'Sauvegarder' }}
+                    </button>
                 </div>
             </div>
         </div>
@@ -945,6 +1055,103 @@ function goToComment(c) {
 // pour que le badge sur "💬 Demandes" soit visible sans ouvrir la modale.
 watch(isAdminUser, (val) => { if (val) loadAllComments() }, { immediate: true })
 
+// ─── Messages de contact (lecture seule, pas de réponse depuis l'admin) ───
+const showContactMessages = ref(false)
+const contactMessages = ref([])
+const contactMessagesLoading = ref(false)
+
+const unreadContactCount = computed(() => contactMessages.value.filter(m => m.status !== 'read').length)
+const newsletterSubscriberCount = computed(() => contactMessages.value.filter(m => m.newsletter === true).length)
+
+watch(isAdminUser, (val) => { if (val) loadContactMessages() }, { immediate: true })
+
+async function loadContactMessages() {
+    contactMessagesLoading.value = true
+    try {
+        const token = await getFirebaseToken()
+        const res = await fetch('/api/contacts', { headers: { Authorization: `Bearer ${token}` } })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const data = await res.json()
+        contactMessages.value = (data.contacts || []).sort(
+            (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        )
+    } catch (e) {
+        console.error('[admin] load contact messages failed:', e)
+        contactMessages.value = []
+    } finally {
+        contactMessagesLoading.value = false
+    }
+}
+
+function openContactMessages() {
+    showContactMessages.value = true
+    loadContactMessages()
+}
+
+async function toggleContactRead(m) {
+    const nextStatus = m.status === 'read' ? 'new' : 'read'
+    try {
+        const token = await getFirebaseToken()
+        const res = await fetch(`/api/contacts/${m.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ status: nextStatus }),
+        })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        m.status = nextStatus
+    } catch (e) {
+        showToast('Erreur : ' + (e.message || e), 'toast-error')
+    }
+}
+
+// Settings
+const showSettings = ref(false)
+const settingsForm = ref({ contactEmail: '', showEventsPage: true })
+const settingsSaving = ref(false)
+
+watch(showSettings, async (show) => {
+  if (show) await loadSettings()
+})
+
+async function loadSettings() {
+  try {
+    const res = await fetch('/api/settings')
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const data = await res.json()
+    settingsForm.value = { contactEmail: data.contactEmail }
+  } catch (e) {
+    console.error('[admin] load settings failed:', e)
+    showToast('Erreur : ' + (e.message || e), 'toast-error')
+  }
+}
+
+async function saveSettings() {
+  if (!settingsForm.value.contactEmail) {
+    showToast('Email requis', 'toast-error')
+    return
+  }
+  settingsSaving.value = true
+  try {
+    const token = await getFirebaseToken()
+    const res = await fetch('/api/settings', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(settingsForm.value),
+    })
+    if (!res.ok) {
+      const body = await res.json().catch(() => null)
+      throw new Error(body?.message || `HTTP ${res.status}`)
+    }
+    showToast('Configuration sauvegardée', 'toast-success')
+    showSettings.value = false
+  } catch (e) {
+    console.error('[admin] save settings failed:', e)
+    showToast('Erreur : ' + (e.message || e), 'toast-error')
+  } finally {
+    settingsSaving.value = false
+  }
+}
+
 // Version history
 const showVersionHistory = ref(false);
 const versions = ref([]);
@@ -988,12 +1195,19 @@ async function loadVersions() {
         const res = await fetch(`/api/pages/${props.pageSlug}/versions`, {
             headers: { Authorization: `Bearer ${token}` },
         })
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        if (!res.ok) {
+            const body = await res.json().catch(() => null)
+            throw new Error(body?.message || `HTTP ${res.status}`)
+        }
         const data = await res.json()
         versions.value = data.versions || []
     } catch (e) {
         console.error('[admin] load versions failed:', e)
         versions.value = []
+        // Distingue "0 version" (état normal) d'une erreur de chargement —
+        // sans ça l'admin voit juste "Aucune version" et pense que la
+        // fonctionnalité n'existe pas alors qu'il y a une vraie erreur.
+        showToast('Impossible de charger l\'historique : ' + (e.message || e), 'toast-error')
     } finally {
         versionsLoading.value = false
     }
@@ -1590,7 +1804,7 @@ async function saveChanges() {
     font-size: 0.72em;
     color: #16a34a;
 }
-.admin-comment-count {
+.admin-comment-count, .admin-msg-count {
     display: inline-block;
     margin-left: 4px;
     background: #ef4444;
@@ -2340,6 +2554,152 @@ async function saveChanges() {
 }
 .admin-btn-add-block:hover {
     background: #059669;
+}
+
+/* Settings Modal */
+.settings-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+.settings-modal {
+    background: white;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+.settings-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #e5e7eb;
+}
+.settings-modal-header h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #6b7280;
+}
+.settings-modal-body {
+    padding: 20px;
+}
+.settings-field {
+    margin-bottom: 16px;
+}
+.settings-field label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+}
+.settings-input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: inherit;
+}
+.settings-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+.settings-hint {
+    margin: 6px 0 0 0;
+    font-size: 13px;
+    color: #6b7280;
+}
+.settings-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    color: #374151;
+    cursor: pointer;
+}
+.settings-checkbox {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+.settings-modal-footer {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    padding: 20px;
+    border-top: 1px solid #e5e7eb;
+}
+.btn-cancel, .btn-save {
+    padding: 8px 16px;
+    border-radius: 4px;
+    border: none;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+}
+.btn-cancel {
+    background: #e5e7eb;
+    color: #374151;
+}
+.btn-cancel:hover {
+    background: #d1d5db;
+}
+.btn-save {
+    background: #3b82f6;
+    color: white;
+}
+.btn-save:hover:not(:disabled) {
+    background: #2563eb;
+}
+.btn-save:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Contact Stats */
+.contact-stats {
+    display: flex;
+    gap: 16px;
+    padding: 12px 0;
+    border-bottom: 1px solid #e5e7eb;
+    margin-bottom: 12px;
+}
+.stat-item {
+    flex: 1;
+    text-align: center;
+    padding: 8px;
+    background: #f9fafb;
+    border-radius: 4px;
+}
+.stat-label {
+    display: block;
+    font-size: 12px;
+    color: #6b7280;
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+.stat-value {
+    display: block;
+    font-size: 20px;
+    font-weight: 700;
+    color: #3b82f6;
 }
 
 /* Global fallback: ensure site header is offset below admin toolbar when in admin mode */

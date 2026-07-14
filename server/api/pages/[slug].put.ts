@@ -5,11 +5,20 @@ export default defineEventHandler(async (event) => {
   // En mode test, écrit dans le mock RAM — jamais dans la vraie base
   const isTest = process.env.NODE_ENV === 'test' || process.env.PW_TEST === '1' || process.env.TEST_ENV === '1'
   if (isTest) {
-    const { setPageDoc } = await import('../../utils/firestore-mock.js')
+    const { getPages, setPageDoc, addVersion } = await import('../../utils/firestore-mock.js')
     const slug = getRouterParam(event, 'slug')
     const body = await readBody(event)
     if (!slug || !body?.blocks) {
       throw createError({ statusCode: 400, message: 'Données invalides' })
+    }
+    const current = getPages()[slug]
+    if (current?.blocks && JSON.stringify(current.blocks) !== JSON.stringify(body.blocks)) {
+      addVersion(slug, {
+        id: String(Date.now()) + Math.random().toString(36).slice(2, 6),
+        blocks: current.blocks,
+        savedAt: new Date().toISOString(),
+        savedBy: 'test',
+      })
     }
     await setPageDoc(slug, { blocks: body.blocks })
     return { success: true }

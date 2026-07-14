@@ -11,7 +11,7 @@
         />
 
         <div class="bienvenue-content">
-            <div class="hero-bienvenue-portal" :aria-label="title" :style="fieldFontStyle(fieldFonts, 'title')">
+            <div class="hero-bienvenue-portal" :aria-label="props.title" :style="{ color: props.textColor, fontSize: props.fontSize + 'em', ...fieldFontStyle(props.fieldFonts, 'title') }">
                 <span
                     v-for="(char, i) in wordArr"
                     :key="i"
@@ -20,7 +20,7 @@
                     >{{ char === ' ' ? ' ' : char }}</span
                 >
             </div>
-            <p class="hero-subtitle" :style="fieldFontStyle(fieldFonts, 'subtitle')">{{ subtitle }}</p>
+            <p class="hero-subtitle" :style="{ color: props.textColor, ...fieldFontStyle(props.fieldFonts, 'subtitle') }">{{ props.subtitle }}</p>
             <div class="hero-socials">
                 <a
                     href="https://www.instagram.com/eglise_cieux_ouverts/"
@@ -67,36 +67,26 @@
 import { computed, inject, ref } from "vue";
 import { fieldFontStyle } from "~/utils/fonts.js";
 
-// Défauts alignés sur le contenu actuellement affiché en dur (avant ce
-// fix) : un bloc réel sans title/subtitle explicite en Firestore doit
-// continuer à afficher exactement le même texte qu'avant, pas basculer
-// vers BLOCK_TYPES.bienvenue.defaults (déjà neutralisé pour les
-// *nouveaux* blocs — voir utils/blockTypes.js). Déstructuré directement
-// depuis defineProps() (comme BlockGallery.vue) pour que title/subtitle
-// soient à la fois réactifs et exposés tels quels au template.
-const {
-    title = "BIENVENUE",
-    subtitle = "à l'Église Cieux Ouverts à Morlaix",
-    visibility = {},
-    fieldFonts = {},
-} = defineProps({
+const props = defineProps({
     title: { type: String, default: "BIENVENUE" },
     subtitle: { type: String, default: "à l'Église Cieux Ouverts à Morlaix" },
     visibility: { type: Object, default: () => ({}) },
     fieldFonts: { type: Object, default: () => ({}) },
+    textColor: { type: String, default: "#064886" },
+    fontSize: { type: [Number, String], default: 5 },
 });
 
 const isAdmin = inject("isAdmin", ref(false));
 
 const visibilityClasses = computed(() => ({
-    "hide-mobile": visibility.mobile === false,
-    "hide-tablet": visibility.tablet === false,
-    "hide-desktop": visibility.desktop === false,
+    "hide-mobile": props.visibility.mobile === false,
+    "hide-tablet": props.visibility.tablet === false,
+    "hide-desktop": props.visibility.desktop === false,
 }));
 
 // L'animation fan-out est calculée par lettre ; [...title] (plutôt que
 // split('')) gère correctement les caractères accentués et emoji.
-const wordArr = computed(() => [...(title || "")]);
+const wordArr = computed(() => [...(props.title || "")]);
 const center = computed(() => (wordArr.value.length - 1) / 2);
 
 function getLetterVars(i) {
@@ -169,7 +159,7 @@ function getLetterVars(i) {
     display: inline-block;
     will-change: transform, opacity;
     margin: 0 0.03em;
-    color: #054886;
+    color: inherit;
     opacity: 1;
     transform: translateX(0) translateY(0) rotate(0) scale(1);
 }
@@ -232,7 +222,6 @@ function getLetterVars(i) {
     font-size: 17.5px;
     font-weight: 400;
     margin-top: 20px;
-    color: #054886;
     opacity: 0;
     transform: translateY(30px);
 }

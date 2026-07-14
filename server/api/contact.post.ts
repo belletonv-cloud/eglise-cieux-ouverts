@@ -38,17 +38,21 @@ function assertString(value: unknown, max: number) {
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig(event)
   const body = await readBody(event)
-  
-  // Rate limiting check
-  const rateLimitKey = getRateLimitKey(event)
-  const rateCheck = checkRateLimit(rateLimitKey)
-  if (!rateCheck.allowed) {
-    throw createError({
-      statusCode: 429,
-      message: `Trop de requêtes. Réessayez dans ${rateCheck.resetIn} secondes.`
-    })
+  const isTest = process.env.NODE_ENV === 'test' || process.env.PW_TEST === '1' || process.env.TEST_ENV === '1'
+
+  // Rate limiting check (désactivé en test : évite une pollution du compteur
+  // en mémoire entre lancements successifs de la suite E2E)
+  if (!isTest) {
+    const rateLimitKey = getRateLimitKey(event)
+    const rateCheck = checkRateLimit(rateLimitKey)
+    if (!rateCheck.allowed) {
+      throw createError({
+        statusCode: 429,
+        message: `Trop de requêtes. Réessayez dans ${rateCheck.resetIn} secondes.`
+      })
+    }
   }
-  
+
   // Cloudflare Pages: read from process.env directly
   const firebaseProjectId = (process.env.NUXT_FIREBASE_PROJECT_ID || config.firebaseProjectId || '') as string
   const firebaseClientEmail = (process.env.NUXT_FIREBASE_CLIENT_EMAIL || config.firebaseClientEmail || '') as string
@@ -75,10 +79,22 @@ export default defineEventHandler(async (event) => {
   if (website) {
     throw createError({ statusCode: 400, message: 'Envoi bloqué.' })
   }
+
+  if (isTest) {
+    const { setContact } = await import('../utils/firestore-mock.js')
+    const id = crypto.randomUUID()
+    setContact(id, {
+      id, prenom, nom, ville, email, message, newsletter, source,
+      status: 'new',
+      createdAt: new Date().toISOString(),
+    })
+    return { ok: true }
+  }
+
   if (!firebaseClientEmail || !firebasePrivateKey || !firebaseProjectId) {
     throw createError({ statusCode: 503, message: 'Configuration serveur contact incomplète.' })
   }
-  
+
   try {
     const accessToken = await getAccessToken(firebaseClientEmail, firebasePrivateKey)
     
@@ -113,9 +129,26 @@ export default defineEventHandler(async (event) => {
       throw new Error(`Firestore error: ${errorText}`)
     }
   
+    // Récupérer l'email de destination depuis settings
+    let contactEmail = process.env.CONTACT_EMAIL || 'contact@example.com'
+    try {
+      const settingsResponse = await fetch(`https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/(default)/documents/settings/config`, {
+        headers: { authorization: `Bearer ${accessToken}` },
+      })
+      if (settingsResponse.ok) {
+        const settingsDoc = await settingsResponse.json()
+        const contactEmailField = settingsDoc.fields?.contactEmail?.stringValue
+        if (contactEmailField) {
+          contactEmail = contactEmailField
+        }
+      }
+    } catch (e) {
+      console.error('Could not fetch settings, using fallback:', e)
+    }
+
     // Envoyer notification email via Resend
     const resendApiKey = process.env.NUXT_RESEND_API_KEY || ''
-    
+
     if (resendApiKey) {
       const emailHtml = `
         <h2>Nouveau contact reçu</h2>
@@ -138,7 +171,7 @@ export default defineEventHandler(async (event) => {
         },
         body: JSON.stringify({
           from: 'Contact <onboarding@resend.dev>',
-          to: ['belletonv@gmail.com'],
+          to: [contactEmail],
           subject: `Nouveau contact : ${prenom} ${nom}`,
           html: emailHtml,
         }),

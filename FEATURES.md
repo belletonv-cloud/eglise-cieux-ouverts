@@ -62,6 +62,11 @@ Firebase Auth (Google Sign-In), projet Firebase `eglise-cieux-ouverts`. `?admin=
 
 `server/api/contact.post.ts` — écrit dans Firestore `contacts` + notification email via Resend (si `NUXT_RESEND_API_KEY` configuré). Rate-limité (3 requêtes / 15 min / IP, en mémoire — reset à chaque cold start serverless). Retourne un 503 explicite si les credentials serveur Firestore manquent (comportement volontaire, pas une erreur silencieuse). Le composant affiche `e.data.message` (message métier explicite), pas `e.data.statusMessage` (texte HTTP générique type "Server Error").
 
+- **Champ newsletter** (`checkbox` dans le formulaire) : booléen capturé lors de la soumission, stocké en Firestore `contacts/{id}` (champ `newsletter`). Permet aux visiteurs de s'abonner directement via le formulaire contact.
+- **Email de destination configurable** : l'adresse qui reçoit les notifications est stockée en Firestore `settings/config` (champ `contactEmail`), modifiable en admin via le bouton «⚙️ Config». Fallback variable d'env `CONTACT_EMAIL` en dev. Utilise ce champ si défini, sinon fallback défaut.
+
+Messages visibles dans l'admin via le bouton toolbar « 📬 Messages » (badge = nombre non lus) — liste en lecture seule (`GET /api/contacts`, admin-only) avec un simple bascule lu/non lu (`PUT /api/contacts/:id`, champ `status`). Volontairement pas de réponse/reply gérée depuis l'admin : le mail de l'expéditeur est un lien `mailto:` cliquable, rien de plus.
+
 ## Animations
 
 CSS `animation-timeline` natif (scroll-driven), fallback IntersectionObserver pour Safari/navigateurs non supportés. Deux stratégies déclarées par bloc (`animations` dans `BLOCK_TYPES`) : `wrapper` (PageRenderer gère l'animation) et `internal` (le bloc gère la sienne en interne, ex. `aspirations`, `nousRejoindre`, `rejoins`). Le travail d'animation vit entièrement dans le code des composants — jamais dans Firestore, donc jamais perdu par une corruption de données de page.
@@ -75,11 +80,19 @@ Ces bugs ont causé des pertes de contenu réel ou des blocages de l'admin en pr
 - **`normalizeBlock()`** (`lib/blocks/renderer.ts`) réapplique `BLOCK_TYPES[type].defaults` à CHAQUE rendu (pas seulement à la création) pour tout prop vide/absent — changer un default de type peut donc changer l'affichage de contenu déjà existant si ce contenu n'a jamais explicitement écrasé ce champ. C'est ce mécanisme qui a causé la neutralisation accidentelle du footer réel.
 - **Crash Vue après connexion admin réelle** : `pages/admin.vue` avait un listener `onAuthStateChanged` jamais désabonné, combiné à une course entre sa navigation post-connexion (SPA) et `layouts/default.vue` (layout persistant) réagissant en parallèle au même changement de route — corrompait l'état interne de Vue, rendant l'admin totalement inerte (aucun bouton ne répondait) jusqu'à un hard refresh. Non reproductible avec le raccourci de test habituel (`?admin=true` direct) — seulement en passant réellement par `/admin`. Corrigé : cleanup du listener + rechargement complet (`window.location.href`) au lieu de navigation SPA après connexion.
 
+## Intégration eglise-app (backend partagé)
+
+**Repo séparé** : `/Users/vic/Projects/eglise-app` (Worker Cloudflare + D1). Les deux sites partagent l'**authentification Firebase** (deux projets distincts `eglise-app-b81b0` et `eglise-cieux-ouverts`, mais auth mutuelle via tokens `Bearer`). eglise-app expose plusieurs ressources :
+
+- **Événements** (`/api/church-events`, D1 table `church_events`) — voir section « Événements » ci-dessus.
+- **Membres** (`/api/members`, D1 table `members`) — liste des membres avec pagination, recherche, filtrage par équipe (`teams`). Accessible via `GET /api/members?page=1&size=25&q=...&teamId=...` en passant un token Firebase Bearer. Retourne les champs : `id`, `first_name`, `last_name`, `email`, `phone`, `birth_date`, `membership_type`, `role`, `teams` (array), + champs RGPD (`consent_*`). Admins voient tous les champs ; members et autres rôles voient une version réduite (exclusion des champs sensibles : `birth_date`, `baptism_date`, `notes`, `pco_*`, `consent_*`, `data_origin`, `gdpr_*`). Rôles/permissions définis en `src/auth.js` : `admin` (accès total), `editor` (peut modifier), `scheduler`, `music_director`, `tech_director`, `member`, `volunteer`, `viewer` (lecture seule ou réduite).
+- **Proxy local** (`server/api/members.get.ts` sur eglise-cieux-ouverts) — le site envoie son token Bearer à eglise-app, l'app retourne les membres bruts. Composable `useMembers()` (`composables/useMembers.ts`) encapsule le fetch avec pagination et filtres côté client.
+
 ## Tests
 
 - `tests/schema-driven/` (config `playwright.unit.config.ts`) — tests génériques par schema (SSR, admin, responsive, a11y, intégrité) + specs dédiées par bloc.
 - `tests/playwright/` (config `playwright.config.ts`) — E2E (parcours admin, navigation, auth, formulaire, événements, etc.).
-- Mode mock (`PW_TEST=1`) : toutes les lectures/écritures Firestore passent par `server/utils/firestore-mock.js` (RAM, reset via `resetMock()`), jamais la vraie base.
+- Mode mock (`PW_TEST=1`) : toutes les lectures/écritures Firestore passent par `server/utils/firestore-mock.js` (RAM, reset via `resetMock()`), jamais la vraie base. Contacts, settings, commentaires, et contacts passent par le mock — les membres n'existent que via le proxy (eglise-app réel, même en test, ou fallback mock si l'API est indisponible).
 
 ## Déploiement
 

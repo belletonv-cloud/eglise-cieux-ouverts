@@ -3,7 +3,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { getDefaultBilletteriePage } from '~/utils/blockTypes.js'
 
 useSeoMeta({
@@ -12,6 +12,17 @@ useSeoMeta({
 })
 
 const { isAdminMode, enterAdmin, localBlocks, localBlocksPage } = useAdmin()
+const router = useRouter()
+
+// Vérifier si la page Événements doit être masquée
+const { data: settingsData } = await useFetch('/api/settings')
+const showEventsPage = computed(() => settingsData.value?.showEventsPage !== false)
+
+onMounted(() => {
+  if (!isAdminMode.value && !showEventsPage.value) {
+    router.push('/')
+  }
+})
 
 // On utilise useFetch au lieu de useLazyFetch pour que les données
 // soient sérialisées dans le payload Nuxt et disponibles côté client

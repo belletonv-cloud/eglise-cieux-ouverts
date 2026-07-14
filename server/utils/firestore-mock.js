@@ -156,6 +156,9 @@ export function resetMock() {
     accueil: { blocks: accueilBlocks },
   }
   COMMENTS = {}
+  CONTACTS = {}
+  VERSIONS = {}
+  SETTINGS = { config: { contactEmail: 'belletonv@gmail.com' } }
 }
 
 export function getPages() {
@@ -212,5 +215,58 @@ export function setComment(id, data) {
 
 export function deleteComment(id) {
   delete COMMENTS[id]
+  return { success: true }
+}
+
+// Mock des messages du formulaire de contact (collection top-level 'contacts')
+let CONTACTS = {}
+
+export function getContacts() {
+  return Object.values(JSON.parse(JSON.stringify(CONTACTS)))
+}
+
+export function getContact(id) {
+  return CONTACTS[id] ? JSON.parse(JSON.stringify(CONTACTS[id])) : null
+}
+
+export function setContact(id, data) {
+  CONTACTS[id] = JSON.parse(JSON.stringify(data))
+  return { success: true }
+}
+
+// Mock de la config (collection 'settings', document 'config')
+let SETTINGS = { config: { contactEmail: 'belletonv@gmail.com' } }
+
+export function getSettings() {
+  return SETTINGS.config ? JSON.parse(JSON.stringify(SETTINGS.config)) : { contactEmail: 'belletonv@gmail.com' }
+}
+
+export function setSettings(data) {
+  SETTINGS.config = JSON.parse(JSON.stringify(data))
+  return { success: true }
+}
+
+// Mock de l'historique des versions (sous-collection Firestore réelle
+// pages/{slug}/versions/{versionId}) — clé = slug, valeur = liste de
+// { id, blocks, savedAt, savedBy }.
+let VERSIONS = {}
+
+export function getVersionsRaw(slug) {
+  return JSON.parse(JSON.stringify(VERSIONS[slug] || []))
+}
+
+export function addVersion(slug, data) {
+  if (!VERSIONS[slug]) VERSIONS[slug] = []
+  VERSIONS[slug].push(JSON.parse(JSON.stringify(data)))
+  return { success: true }
+}
+
+export function getVersion(slug, versionId) {
+  const v = (VERSIONS[slug] || []).find(x => x.id === versionId)
+  return v ? JSON.parse(JSON.stringify(v)) : null
+}
+
+export function deleteVersionMock(slug, versionId) {
+  VERSIONS[slug] = (VERSIONS[slug] || []).filter(x => x.id !== versionId)
   return { success: true }
 }

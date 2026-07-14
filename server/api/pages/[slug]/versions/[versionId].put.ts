@@ -3,22 +3,42 @@ import { getFirestoreConfig, getAccessToken, getFirestoreDoc, setFirestoreDoc, p
 import { requireAdmin } from '../../../../utils/firebase-admin'
 
 export default defineEventHandler(async (event) => {
-  const config = getFirestoreConfig(event)
-  if (!config) {
-    throw createError({ statusCode: 500, message: 'Firestore non configuré' })
-  }
-
-  const userInfo = await requireAdmin(event)
-
   const slug = getRouterParam(event, 'slug')
   const versionId = getRouterParam(event, 'versionId')
-  
+
   if (!slug) {
     throw createError({ statusCode: 400, message: 'Slug manquant' })
   }
   if (!versionId) {
     throw createError({ statusCode: 400, message: 'Version ID manquant' })
   }
+
+  const isTest = process.env.NODE_ENV === 'test' || process.env.PW_TEST === '1' || process.env.TEST_ENV === '1'
+  if (isTest) {
+    const { getPages, setPageDoc, getVersion, addVersion } = await import('../../../../utils/firestore-mock.js')
+    const versionData = getVersion(slug, versionId)
+    if (!versionData?.blocks) {
+      throw createError({ statusCode: 404, message: 'Version introuvable' })
+    }
+    const current = getPages()[slug]
+    if (current?.blocks && JSON.stringify(current.blocks) !== JSON.stringify(versionData.blocks)) {
+      addVersion(slug, {
+        id: String(Date.now()) + Math.random().toString(36).slice(2, 6),
+        blocks: current.blocks,
+        savedAt: new Date().toISOString(),
+        savedBy: 'test',
+      })
+    }
+    await setPageDoc(slug, { blocks: versionData.blocks })
+    return { success: true, blocks: versionData.blocks }
+  }
+
+  const config = getFirestoreConfig(event)
+  if (!config) {
+    throw createError({ statusCode: 500, message: 'Firestore non configuré' })
+  }
+
+  const userInfo = await requireAdmin(event)
 
   try {
     const accessToken = await getAccessToken(config.clientEmail, config.privateKey)

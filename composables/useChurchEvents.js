@@ -172,7 +172,10 @@ export function useChurchEvents(options = {}) {
       date,
       heure: ev.start_time || null,
       lieu: ev.location || null,
-      description: ev.description || null,
+      // Certaines descriptions en base contiennent des "\n" littéraux (texte
+      // backslash+n, pas de vrai retour à la ligne) — normalisé ici une fois
+      // pour tous les consommateurs (agenda, etc).
+      description: ev.description ? ev.description.replace(/\\n/g, '\n') : null,
       source: ev.source || null,
       image_url: ev.image_url || null,
       images: ev.images ? ev.images : (ev.image_url ? [ev.image_url] : []),

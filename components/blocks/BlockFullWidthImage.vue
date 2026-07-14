@@ -1,31 +1,27 @@
 <template>
-  <div class="full-width-image" :style="style" :class="visibilityClasses"></div>
+  <div class="full-width-image" :style="style" :class="visibilityClasses" role="img" :aria-label="props.alt"></div>
 </template>
 
 <script setup>
 import { computed } from 'vue'
 
-const {
-  src = '',
-  height = 400,
-  visibility = {},
-  previewDevice = 'desktop',
-} = defineProps({
+const props = defineProps({
   src: { type: String, default: '' },
+  alt: { type: String, default: '' },
   height: { type: Number, default: 400 },
   visibility: { type: Object, default: () => ({}) },
   previewDevice: { type: String, default: 'desktop' },
 })
 
 const visibilityClasses = computed(() => ({
-  'hide-mobile': visibility.mobile === false,
-  'hide-tablet': visibility.tablet === false,
-  'hide-desktop': visibility.desktop === false,
+  'hide-mobile': props.visibility.mobile === false,
+  'hide-tablet': props.visibility.tablet === false,
+  'hide-desktop': props.visibility.desktop === false,
 }))
 
 const style = computed(() => ({
-  backgroundImage: `url(${src})`,
-  height: `${height}px`,
+  backgroundImage: `url(${props.src})`,
+  height: `${props.height}px`,
 }))
 </script>
 
