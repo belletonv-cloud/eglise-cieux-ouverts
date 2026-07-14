@@ -106,8 +106,13 @@
                     <template v-else-if="!isAdminUser" />
                     <template v-else>
                         <span
+                            class="admin-save-status preview-mode"
+                            v-if="previewingVersion"
+                            >👁 Prévisualisation en cours</span
+                        >
+                        <span
                             class="admin-save-status unsaved"
-                            v-if="hasAnyUnsavedChanges && !saveStatus"
+                            v-else-if="hasAnyUnsavedChanges && !saveStatus"
                             >⚠ Modifications non sauvegardées</span
                         >
                         <span
@@ -139,6 +144,14 @@
                             title="Sauvegarder les modifications"
                         >
                             {{ saving ? "Sauvegarde..." : "Sauvegarder" }}
+                        </button>
+                        <button
+                            v-if="previewingVersion"
+                            class="admin-btn admin-btn-preview-cancel admin-btn-compact"
+                            @click="cancelPreview"
+                            title="Annuler le preview et revenir à la version actuelle"
+                        >
+                            <span class="icon">❌</span><span class="label">Annuler preview</span>
                         </button>
                         <button
                             class="admin-btn admin-btn-secondary admin-btn-compact"
@@ -491,6 +504,14 @@
                                     </div>
                                 </div>
                                 <div class="version-actions">
+                                    <button
+                                        class="admin-btn admin-btn-secondary version-restore-btn"
+                                        @click.stop="previewVersion(v.id)"
+                                        :disabled="restoring === v.id || deletingVersion === v.id || previewingVersion === v.id"
+                                        title="Prévisualiser cette version"
+                                    >
+                                        {{ previewingVersion === v.id ? "..." : "Prévisualiser" }}
+                                    </button>
                                     <button
                                         class="admin-btn admin-btn-secondary version-restore-btn"
                                         @click.stop="restoreVersion(v.id)"
@@ -1241,6 +1262,8 @@ const versionsLoading = ref(false);
 const restoring = ref(null);
 const expandedVersion = ref(null);
 const deletingVersion = ref(null);
+const previewingVersion = ref(null);
+const previewOriginalBlocks = ref(null);
 
 function toggleVersionExpand(id) {
     expandedVersion.value = expandedVersion.value === id ? null : id
@@ -1320,6 +1343,36 @@ async function restoreVersion(versionId) {
     } finally {
         restoring.value = null
     }
+}
+
+async function previewVersion(versionId) {
+    try {
+        const token = await getFirebaseToken()
+        const res = await fetch(`/api/pages/${props.pageSlug}/versions/${versionId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+        })
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}))
+            throw new Error(err.message || `HTTP ${res.status}`)
+        }
+        const data = await res.json()
+        if (data.blocks) {
+            previewOriginalBlocks.value = JSON.parse(JSON.stringify(localBlocks.value))
+            localBlocks.value = data.blocks
+            previewingVersion.value = versionId
+        }
+    } catch (e) {
+        console.error('[admin] preview failed:', e)
+        showToast("Erreur lors du preview : " + (e.message || e), 'toast-error')
+    }
+}
+
+function cancelPreview() {
+    if (previewOriginalBlocks.value) {
+        localBlocks.value = previewOriginalBlocks.value
+    }
+    previewingVersion.value = null
+    previewOriginalBlocks.value = null
 }
 
 function getBlockTypesLabel(typeCounts) {
@@ -2112,6 +2165,10 @@ async function saveChanges() {
 .admin-save-status.auto-saved {
     color: #4ade80;
 }
+.admin-save-status.preview-mode {
+    color: #60a5fa;
+    font-weight: 600;
+}
 .admin-avatar {
     width: 30px;
     height: 30px;
@@ -2154,6 +2211,13 @@ async function saveChanges() {
 .version-modal .admin-btn-secondary:hover,
 .settings-modal .admin-btn-secondary:hover {
     background: #e0e0e0;
+}
+.admin-btn-preview-cancel {
+    background: rgba(217, 119, 119, 0.3);
+    border: 1px solid rgba(217, 119, 119, 0.5);
+}
+.admin-btn-preview-cancel:hover {
+    background: rgba(217, 119, 119, 0.4);
 }
 .admin-btn-login {
     background: #fff;
