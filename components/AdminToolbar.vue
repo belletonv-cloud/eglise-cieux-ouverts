@@ -155,32 +155,32 @@
                             👥 Admins
                         </button>
                         <button
-                            class="admin-btn admin-btn-secondary"
+                            class="admin-btn admin-btn-secondary admin-btn-compact"
                             @click="showComments = true"
                             title="Demandes développeur"
                         >
-                            💬 Demandes<span v-if="unresolvedCommentCount" class="admin-comment-count">{{ unresolvedCommentCount }}</span>
+                            <span class="icon">💬</span><span class="label">Demandes</span><span v-if="unresolvedCommentCount" class="admin-comment-count">{{ unresolvedCommentCount }}</span>
                         </button>
                         <button
-                            class="admin-btn admin-btn-secondary"
+                            class="admin-btn admin-btn-secondary admin-btn-compact"
                             @click="openContactMessages"
                             title="Messages de contact"
                         >
-                            📬 Messages<span v-if="unreadContactCount" class="admin-msg-count">{{ unreadContactCount }}</span>
+                            <span class="icon">📬</span><span class="label">Messages</span><span v-if="unreadContactCount" class="admin-msg-count">{{ unreadContactCount }}</span>
                         </button>
                         <button
-                            class="admin-btn admin-btn-secondary"
+                            class="admin-btn admin-btn-secondary admin-btn-compact"
                             @click="showSettings = true"
                             title="Configuration"
                         >
-                            ⚙️ Config
+                            <span class="icon">⚙️</span><span class="label">Config</span>
                         </button>
                         <button
-                            class="admin-btn admin-btn-secondary"
+                            class="admin-btn admin-btn-secondary admin-btn-compact"
                             @click="showEventManager = true"
                             title="Gérer les événements"
                         >
-                            📅 Événements
+                            <span class="icon">📅</span><span class="label">Événements</span>
                         </button>
                         <button
                             class="admin-btn admin-btn-secondary"
@@ -2066,6 +2066,21 @@ async function saveChanges() {
 }
 .admin-btn-login:hover {
     background: #f0f0f0;
+}
+.admin-btn-compact {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 10px;
+}
+.admin-btn-compact .label {
+    display: none;
+}
+.admin-btn-compact:hover .label {
+    display: inline;
+}
+.admin-btn-compact .icon {
+    font-size: 1.1em;
 }
 
 .admin-sidebar-overlay {
