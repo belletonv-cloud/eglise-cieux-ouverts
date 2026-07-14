@@ -1180,22 +1180,6 @@ async function toggleContactArchived(message) {
     }
 }
 
-async function toggleContactRead(m) {
-    const nextStatus = m.status === 'read' ? 'new' : 'read'
-    try {
-        const token = await getFirebaseToken()
-        const res = await fetch(`/api/contacts/${m.id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-            body: JSON.stringify({ status: nextStatus }),
-        })
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        m.status = nextStatus
-    } catch (e) {
-        showToast('Erreur : ' + (e.message || e), 'toast-error')
-    }
-}
-
 // Settings
 const showSettings = ref(false)
 const settingsForm = ref({ contactEmail: '', showEventsPage: true })
