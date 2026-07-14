@@ -207,7 +207,7 @@ const headerStyle = computed(() => ({
 }));
 const { hasEvenements } = useChurchEvents();
 const showBilletterie = computed(
-    () => isAdminRoute.value || hasEvenements.value,
+    () => adminMode.value || isAdminRoute.value || hasEvenements.value,
 );
 
 // Menu editor integration — intercept clicks in admin mode
@@ -219,9 +219,14 @@ const {
     getMenuItems,
     menuBgImage,
 } = useMenuEditor();
-const navItems = computed(() =>
-    adminMode.value ? getMenuItems() : getVisibleItems(),
-);
+// La page Événements est masquée de la nav publique quand aucun événement
+// n'est à venir — évite un lien mort vers une page vide. Toujours visible
+// en mode admin pour permettre la gestion du contenu.
+const navItems = computed(() => {
+    const items = adminMode.value ? getMenuItems() : getVisibleItems();
+    if (showBilletterie.value) return items;
+    return items.filter((item) => item.to !== "/event-list");
+});
 const menuBgStyle = computed(() => {
     const img = menuBgImage.value || "/foule-croix.png";
     return { backgroundImage: `url("${img}")` };

@@ -20,7 +20,7 @@ export default defineEventHandler(async (event) => {
 
     return {
       contactEmail: data?.contactEmail || process.env.CONTACT_EMAIL || 'contact@example.com',
-      showEventsPage: data?.showEventsPage !== false,
+      hideEventsPageIfEmpty: data?.hideEventsPageIfEmpty === true,
     }
   } catch (err: any) {
     console.error('Settings load error:', err)

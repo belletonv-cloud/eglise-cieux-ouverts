@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
 
   if (isTest) {
     const { setSettings } = await import('../../utils/firestore-mock.js')
-    setSettings({ contactEmail: body?.contactEmail || '' })
+    setSettings({ contactEmail: body?.contactEmail || '', hideEventsPageIfEmpty: body?.hideEventsPageIfEmpty === true })
     return { ok: true }
   }
 
@@ -26,13 +26,13 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'Email invalide' })
   }
 
-  const showEventsPage = body.showEventsPage !== false // par défaut true
+  const hideEventsPageIfEmpty = body.hideEventsPageIfEmpty === true // par défaut false (toujours visible)
 
   try {
     const accessToken = await getAccessToken(config.clientEmail, config.privateKey)
     await setFirestoreDoc(config.projectId, accessToken, 'settings', 'config', {
       contactEmail: body.contactEmail,
-      showEventsPage: showEventsPage,
+      hideEventsPageIfEmpty: hideEventsPageIfEmpty,
       updatedAt: new Date().toISOString(),
     })
     return { ok: true }

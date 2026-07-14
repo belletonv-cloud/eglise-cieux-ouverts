@@ -558,6 +558,7 @@
                                 <p v-if="!v.changes.details?.modified?.length && !v.changes.details?.added?.length && !v.changes.details?.removed?.length" class="vd-no-detail">Aucun changement détecté</p>
                             </div>
                         </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -769,13 +770,13 @@
                     <div class="settings-field">
                         <label class="settings-checkbox-label">
                             <input
-                                v-model="settingsForm.showEventsPage"
+                                v-model="settingsForm.hideEventsPageIfEmpty"
                                 type="checkbox"
                                 class="settings-checkbox"
                             />
-                            Afficher la page Événements même sans billetterie
+                            Masquer la page Événements si aucun événement à venir
                         </label>
-                        <p class="settings-hint">Si décoché, la page sera masquée quand aucun événement n'est disponible</p>
+                        <p class="settings-hint">La page et le lien de menu seront masqués du site public tant qu'aucun événement n'est prévu. Toujours visible en mode admin.</p>
                     </div>
                 </div>
                 <div class="settings-modal-footer">
@@ -1223,7 +1224,7 @@ async function toggleContactArchived(message) {
 
 // Settings
 const showSettings = ref(false)
-const settingsForm = ref({ contactEmail: '', showEventsPage: true })
+const settingsForm = ref({ contactEmail: '', hideEventsPageIfEmpty: false })
 const settingsSaving = ref(false)
 
 watch(showSettings, async (show) => {
@@ -1235,7 +1236,7 @@ async function loadSettings() {
     const res = await fetch('/api/settings')
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     const data = await res.json()
-    settingsForm.value = { contactEmail: data.contactEmail, showEventsPage: data.showEventsPage !== false }
+    settingsForm.value = { contactEmail: data.contactEmail, hideEventsPageIfEmpty: data.hideEventsPageIfEmpty === true }
   } catch (e) {
     console.error('[admin] load settings failed:', e)
     showToast('Erreur : ' + (e.message || e), 'toast-error')
