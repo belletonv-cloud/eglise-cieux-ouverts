@@ -477,9 +477,23 @@
                     <div v-else-if="versions.length === 0" class="version-empty">
                         Aucune version sauvegardée
                     </div>
-                    <div v-else class="version-list">
-                        <div
-                            v-for="v in versions"
+                    <div v-else>
+                        <div v-if="blockOptions.length" class="version-filter-bar">
+                            <label class="version-filter-label">Filtrer par bloc:</label>
+                            <select v-model="filterByBlock" class="version-filter-select">
+                                <option :value="null">Tous les blocs</option>
+                                <option v-for="block in blockOptions" :key="block.id" :value="block.id">
+                                    {{ block.label }}
+                                </option>
+                            </select>
+                            <span v-if="filterByBlock" class="version-filter-count">{{ filteredVersions.length }} version{{ filteredVersions.length !== 1 ? 's' : '' }}</span>
+                        </div>
+                        <div v-if="filteredVersions.length === 0" class="version-empty">
+                            Aucune version n'affecte ce bloc
+                        </div>
+                        <div v-else class="version-list">
+                            <div
+                                v-for="v in filteredVersions"
                             :key="v.id"
                             class="version-item"
                         >
@@ -494,7 +508,7 @@
                                     <span class="version-author">{{ v.savedBy }}</span>
                                     <div class="version-meta">
                                         <span class="version-blocks">{{ v.blockCount }} bloc{{ v.blockCount !== 1 ? 's' : '' }}</span>
-                                        <span v-if="v === versions[0]" class="version-current">Actuelle</span>
+                                        <span v-if="versions.length && v.id === versions[0].id" class="version-current">Actuelle</span>
                                         <span v-if="v.changes" class="version-expand-arrow">{{ expandedVersion === v.id ? '▲' : '▼' }}</span>
                                     </div>
                                     <div v-if="v.changes && (v.changes.added || v.changes.removed || v.changes.modified)" class="version-diff">
@@ -1264,6 +1278,7 @@ const expandedVersion = ref(null);
 const deletingVersion = ref(null);
 const previewingVersion = ref(null);
 const previewOriginalBlocks = ref(null);
+const filterByBlock = ref(null);
 
 function toggleVersionExpand(id) {
     expandedVersion.value = expandedVersion.value === id ? null : id
@@ -1397,6 +1412,29 @@ function formatDate(dateStr) {
         return dateStr
     }
 }
+
+// Filtre par bloc pour les versions
+const blockOptions = computed(() => {
+    const blocks = localBlocks.value || []
+    return blocks.map(b => ({
+        id: b.id,
+        label: `${BLOCK_TYPES[b.type]?.label || b.type}${b.id ? ` #${b.id}` : ''}`,
+    }))
+})
+
+const filteredVersions = computed(() => {
+    if (!filterByBlock.value) return versions.value
+    const selectedBlockId = filterByBlock.value
+    return versions.value.filter(v => {
+        if (!v.changes?.details) return false
+        const allLabels = [
+            ...(v.changes.details.added || []),
+            ...(v.changes.details.removed || []),
+            ...(v.changes.details.modified || []),
+        ]
+        return allLabels.some(label => label.includes(selectedBlockId))
+    })
+})
 
 // Admin management
 const showAdminManager = ref(false);
@@ -2525,6 +2563,37 @@ async function saveChanges() {
     padding: 16px 20px;
     overflow-y: auto;
     flex: 1;
+}
+.version-filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 0 16px 0;
+    border-bottom: 1px solid #e5e5e5;
+    margin-bottom: 12px;
+}
+.version-filter-label {
+    font-size: 12px;
+    color: #666;
+    font-weight: 600;
+}
+.version-filter-select {
+    flex: 1;
+    padding: 6px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    font-size: 13px;
+    font-family: inherit;
+}
+.version-filter-select:focus {
+    outline: none;
+    border-color: #064886;
+    box-shadow: 0 0 0 2px rgba(6, 72, 134, 0.1);
+}
+.version-filter-count {
+    font-size: 11px;
+    color: #888;
+    white-space: nowrap;
 }
 .version-loading, .version-empty {
     color: #888;
