@@ -18,7 +18,7 @@
             </ClientOnly>
 
             <!-- Desktop: inline rendering (blocks editable) -->
-            <div v-if="previewDevice === 'desktop' || isInnerPreview" :class="deviceClass">
+            <div v-if="previewDevice === 'desktop' || isInnerPreview" class="page-shell" :class="deviceClass">
                 <SiteHeader />
                 <main class="site-main">
                     <slot />
@@ -418,6 +418,16 @@ function onFooterClick(e) {
     margin: 0 auto;
     width: 100%;
     transition: max-width 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+}
+.page-shell {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
 }
 .admin-preview-frame.preview-tablet {
     max-width: 768px;

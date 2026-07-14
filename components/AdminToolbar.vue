@@ -141,18 +141,18 @@
                             {{ saving ? "Sauvegarde..." : "Sauvegarder" }}
                         </button>
                         <button
-                            class="admin-btn admin-btn-secondary"
+                            class="admin-btn admin-btn-secondary admin-btn-compact"
                             @click="showVersionHistory = true"
                             title="Historique des versions"
                         >
-                            🕐 Versions
+                            <span class="icon">🕐</span><span class="label">Versions</span>
                         </button>
                         <button
-                            class="admin-btn admin-btn-secondary"
+                            class="admin-btn admin-btn-secondary admin-btn-compact"
                             @click="showAdminManager = true"
                             title="Gérer les administrateurs"
                         >
-                            👥 Admins
+                            <span class="icon">👥</span><span class="label">Admins</span>
                         </button>
                         <button
                             class="admin-btn admin-btn-secondary admin-btn-compact"
@@ -622,7 +622,7 @@
                             class="filter-btn"
                             :class="{ active: contactMessageFilter === 'all' }"
                             @click="contactMessageFilter = 'all'"
-                        >Tous ({{ contactMessages.length }})</button>
+                        >Tous ({{ inboxMessages.length }})</button>
                         <button
                             class="filter-btn"
                             :class="{ active: contactMessageFilter === 'unread' }"
@@ -1095,17 +1095,20 @@ const contactMessagesLoading = ref(false)
 const contactMessageFilter = ref('all') // 'all', 'unread', 'archived'
 const contactMessageSort = ref('date-desc') // 'date-desc', 'date-asc', 'sender'
 
-const unreadContactCount = computed(() => contactMessages.value.filter(m => m.status !== 'read').length)
+// Comme Gmail : les messages archivés sortent de la boîte de réception
+// ("Tous" / "Non lus") et ne réapparaissent que dans l'onglet "Archivés".
+const inboxMessages = computed(() => contactMessages.value.filter(m => m.status !== 'archived'))
+const unreadContactCount = computed(() => inboxMessages.value.filter(m => m.status !== 'read').length)
 const archivedContactCount = computed(() => contactMessages.value.filter(m => m.status === 'archived').length)
 const newsletterSubscriberCount = computed(() => contactMessages.value.filter(m => m.newsletter === true).length)
 
 const filteredContactMessages = computed(() => {
-  let filtered = contactMessages.value
+  let filtered = inboxMessages.value
 
   if (contactMessageFilter.value === 'unread') {
     filtered = filtered.filter(m => m.status !== 'read')
   } else if (contactMessageFilter.value === 'archived') {
-    filtered = filtered.filter(m => m.status === 'archived')
+    filtered = contactMessages.value.filter(m => m.status === 'archived')
   }
 
   // Tri
@@ -1194,7 +1197,7 @@ async function loadSettings() {
     const res = await fetch('/api/settings')
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     const data = await res.json()
-    settingsForm.value = { contactEmail: data.contactEmail }
+    settingsForm.value = { contactEmail: data.contactEmail, showEventsPage: data.showEventsPage !== false }
   } catch (e) {
     console.error('[admin] load settings failed:', e)
     showToast('Erreur : ' + (e.message || e), 'toast-error')
@@ -2135,6 +2138,17 @@ async function saveChanges() {
 }
 .admin-btn-secondary:hover {
     background: rgba(255, 255, 255, 0.3);
+}
+/* Dans les modales à fond blanc (version-modal, settings-modal), le style
+   translucide blanc-sur-blanc du bouton secondaire devient illisible. */
+.version-modal .admin-btn-secondary,
+.settings-modal .admin-btn-secondary {
+    background: #f0f0f0;
+    color: #333;
+}
+.version-modal .admin-btn-secondary:hover,
+.settings-modal .admin-btn-secondary:hover {
+    background: #e0e0e0;
 }
 .admin-btn-login {
     background: #fff;
