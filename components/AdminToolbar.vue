@@ -758,14 +758,29 @@
                 </div>
                 <div class="settings-modal-body">
                     <div class="settings-field">
-                        <label>Email de destination (formulaire contact)</label>
-                        <input
-                            v-model="settingsForm.contactEmail"
-                            type="email"
-                            placeholder="contact@example.com"
-                            class="settings-input"
-                        />
-                        <p class="settings-hint">Les messages du formulaire de contact seront envoyés à cet email</p>
+                        <label>Emails de destination (formulaire contact)</label>
+                        <textarea
+                            v-model="contactEmailsText"
+                            rows="2"
+                            placeholder="contact@example.com, pasteur@example.com"
+                            class="settings-input settings-textarea"
+                        ></textarea>
+                        <p class="settings-hint">Un ou plusieurs emails, séparés par une virgule ou un retour à la ligne. Chacun recevra les messages du formulaire de contact.</p>
+                    </div>
+                    <div class="settings-field" v-if="emailQuota">
+                        <label>Quota d'envoi d'emails ({{ emailQuota.month || 'ce mois' }})</label>
+                        <div class="quota-bar-wrap">
+                            <div class="quota-bar">
+                                <div class="quota-bar-fill" :class="quotaLevelClass" :style="{ width: quotaPercent + '%' }"></div>
+                            </div>
+                            <span class="quota-text">{{ emailQuota.count }}/{{ emailQuota.limit }}</span>
+                        </div>
+                        <p v-if="quotaPercent >= 100" class="settings-hint quota-warning">
+                            Quota atteint : les nouveaux messages restent visibles dans l'admin mais aucun email ne sera envoyé jusqu'au mois prochain. Si cette limite est gênante, une formule Resend supérieure permet d'augmenter le quota.
+                        </p>
+                        <p v-else-if="quotaPercent >= 80" class="settings-hint quota-warning">
+                            Le quota d'envoi mensuel approche de sa limite.
+                        </p>
                     </div>
                     <div class="settings-field">
                         <label class="settings-checkbox-label">
@@ -1224,11 +1239,26 @@ async function toggleContactArchived(message) {
 
 // Settings
 const showSettings = ref(false)
-const settingsForm = ref({ contactEmail: '', hideEventsPageIfEmpty: false })
+const settingsForm = ref({ hideEventsPageIfEmpty: false })
+const contactEmailsText = ref('')
+const emailQuota = ref(null)
 const settingsSaving = ref(false)
 
+const quotaPercent = computed(() => {
+  if (!emailQuota.value || !emailQuota.value.limit) return 0
+  return Math.min(100, Math.round((emailQuota.value.count / emailQuota.value.limit) * 100))
+})
+const quotaLevelClass = computed(() => {
+  if (quotaPercent.value >= 100) return 'quota-critical'
+  if (quotaPercent.value >= 80) return 'quota-warning-level'
+  return 'quota-ok'
+})
+
 watch(showSettings, async (show) => {
-  if (show) await loadSettings()
+  if (show) {
+    await loadSettings()
+    await loadEmailQuota()
+  }
 })
 
 async function loadSettings() {
@@ -1236,16 +1266,35 @@ async function loadSettings() {
     const res = await fetch('/api/settings')
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     const data = await res.json()
-    settingsForm.value = { contactEmail: data.contactEmail, hideEventsPageIfEmpty: data.hideEventsPageIfEmpty === true }
+    settingsForm.value = { hideEventsPageIfEmpty: data.hideEventsPageIfEmpty === true }
+    contactEmailsText.value = (data.contactEmails || []).join(', ')
   } catch (e) {
     console.error('[admin] load settings failed:', e)
     showToast('Erreur : ' + (e.message || e), 'toast-error')
   }
 }
 
+async function loadEmailQuota() {
+  try {
+    const token = await getFirebaseToken()
+    const res = await fetch('/api/settings/email-quota', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    emailQuota.value = await res.json()
+  } catch (e) {
+    console.error('[admin] load email quota failed:', e)
+    emailQuota.value = null
+  }
+}
+
 async function saveSettings() {
-  if (!settingsForm.value.contactEmail) {
-    showToast('Email requis', 'toast-error')
+  const contactEmails = contactEmailsText.value
+    .split(/[,\n]/)
+    .map(e => e.trim())
+    .filter(Boolean)
+  if (contactEmails.length === 0) {
+    showToast('Au moins un email est requis', 'toast-error')
     return
   }
   settingsSaving.value = true
@@ -1254,7 +1303,7 @@ async function saveSettings() {
     const res = await fetch('/api/settings', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify(settingsForm.value),
+      body: JSON.stringify({ ...settingsForm.value, contactEmails }),
     })
     if (!res.ok) {
       const body = await res.json().catch(() => null)
@@ -2921,10 +2970,51 @@ async function saveChanges() {
     border-color: #3b82f6;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
+.settings-textarea {
+    resize: vertical;
+    min-height: 44px;
+    line-height: 1.5;
+}
 .settings-hint {
     margin: 6px 0 0 0;
     font-size: 13px;
     color: #6b7280;
+}
+.settings-hint.quota-warning {
+    color: #b45309;
+}
+.quota-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.quota-bar {
+    flex: 1;
+    height: 8px;
+    border-radius: 4px;
+    background: #e5e7eb;
+    overflow: hidden;
+}
+.quota-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.2s ease;
+}
+.quota-bar-fill.quota-ok {
+    background: #22c55e;
+}
+.quota-bar-fill.quota-warning-level {
+    background: #f59e0b;
+}
+.quota-bar-fill.quota-critical {
+    background: #ef4444;
+}
+.quota-text {
+    font-size: 12px;
+    color: #6b7280;
+    white-space: nowrap;
+    min-width: 48px;
+    text-align: right;
 }
 .settings-checkbox-label {
     display: flex;

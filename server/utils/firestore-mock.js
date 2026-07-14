@@ -158,7 +158,8 @@ export function resetMock() {
   COMMENTS = {}
   CONTACTS = {}
   VERSIONS = {}
-  SETTINGS = { config: { contactEmail: 'belletonv@gmail.com' } }
+  SETTINGS = { config: { contactEmails: ['belletonv@gmail.com'] } }
+  EMAIL_QUOTA = { month: null, count: 0 }
 }
 
 export function getPages() {
@@ -235,15 +236,32 @@ export function setContact(id, data) {
 }
 
 // Mock de la config (collection 'settings', document 'config')
-let SETTINGS = { config: { contactEmail: 'belletonv@gmail.com' } }
+let SETTINGS = { config: { contactEmails: ['belletonv@gmail.com'] } }
 
 export function getSettings() {
-  return SETTINGS.config ? JSON.parse(JSON.stringify(SETTINGS.config)) : { contactEmail: 'belletonv@gmail.com' }
+  return SETTINGS.config ? JSON.parse(JSON.stringify(SETTINGS.config)) : { contactEmails: ['belletonv@gmail.com'] }
 }
 
 export function setSettings(data) {
   SETTINGS.config = JSON.parse(JSON.stringify(data))
   return { success: true }
+}
+
+// Mock du quota d'envoi d'emails (collection 'settings', document 'emailQuota')
+// Compteur mensuel remis à zéro à chaque changement de mois (format 'YYYY-MM').
+let EMAIL_QUOTA = { month: null, count: 0 }
+
+export function getEmailQuota() {
+  return JSON.parse(JSON.stringify(EMAIL_QUOTA))
+}
+
+export function incrementEmailQuota() {
+  const month = new Date().toISOString().slice(0, 7)
+  if (EMAIL_QUOTA.month !== month) {
+    EMAIL_QUOTA = { month, count: 0 }
+  }
+  EMAIL_QUOTA.count++
+  return JSON.parse(JSON.stringify(EMAIL_QUOTA))
 }
 
 // Mock de l'historique des versions (sous-collection Firestore réelle

@@ -1,4 +1,5 @@
-import { getAccessToken } from '../utils/firebase'
+import { getAccessToken, getFirestoreDoc, setFirestoreDoc, parseFirestoreDoc } from '../utils/firebase'
+import { getEmailQuotaLimit } from '../utils/email-quota'
 
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token'
 // Note: in-memory rate limiting is best-effort on serverless (Cloudflare Pages).
@@ -129,62 +130,90 @@ export default defineEventHandler(async (event) => {
       throw new Error(`Firestore error: ${errorText}`)
     }
   
-    // Récupérer l'email de destination depuis settings
-    let contactEmail = process.env.CONTACT_EMAIL || 'contact@example.com'
+    // Récupérer les emails de destination depuis settings (nouveau format
+    // contactEmails[] ; repli sur l'ancien champ contactEmail string pour les
+    // documents Firestore écrits avant l'introduction des emails multiples)
+    let contactEmails = [process.env.CONTACT_EMAIL || 'contact@example.com']
     try {
-      const settingsResponse = await fetch(`https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/(default)/documents/settings/config`, {
+      const settingsResponse = await fetch(`https://firestore.googleapis.com/v1/projects/${firebaseProjectId}/databases/(default)/documents/settings/config`, {
         headers: { authorization: `Bearer ${accessToken}` },
       })
       if (settingsResponse.ok) {
         const settingsDoc = await settingsResponse.json()
-        const contactEmailField = settingsDoc.fields?.contactEmail?.stringValue
-        if (contactEmailField) {
-          contactEmail = contactEmailField
+        const multiField = settingsDoc.fields?.contactEmails?.arrayValue?.values
+        const legacyField = settingsDoc.fields?.contactEmail?.stringValue
+        if (multiField?.length) {
+          contactEmails = multiField.map((v: any) => v.stringValue).filter(Boolean)
+        } else if (legacyField) {
+          contactEmails = [legacyField]
         }
       }
     } catch (e) {
       console.error('Could not fetch settings, using fallback:', e)
     }
 
-    // Envoyer notification email via Resend
+    // Envoyer notification email via Resend, sous réserve du quota mensuel
     const resendApiKey = process.env.NUXT_RESEND_API_KEY || ''
 
-    if (resendApiKey) {
-      const emailHtml = `
-        <h2>Nouveau contact reçu</h2>
-        <p><strong>Nom :</strong> ${prenom} ${nom}</p>
-        <p><strong>Email :</strong> <a href="mailto:${email}">${email}</a></p>
-        ${ville ? `<p><strong>Ville :</strong> ${ville}</p>` : ''}
-        <p><strong>Message :</strong></p>
-        <div style="background:#f5f5f5;padding:15px;border-radius:8px;margin:10px 0">
-          ${message.replace(/\n/g, '<br>')}
-        </div>
-        <p><small>Reçu le ${new Date().toLocaleString('fr-FR')}</small></p>
-        <p><a href="https://console.firebase.google.com/project/eglise-cieux-ouverts/firestore/data/~2Fcontacts">Voir dans Firestore</a></p>
-      `
-      
-      const resendResponse = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${resendApiKey}`,
-        },
-        body: JSON.stringify({
-          from: 'Contact <onboarding@resend.dev>',
-          to: [contactEmail],
-          subject: `Nouveau contact : ${prenom} ${nom}`,
-          html: emailHtml,
-        }),
-      })
-      
-      if (!resendResponse.ok) {
-        const errorText = await resendResponse.text()
-        console.error('Resend error:', errorText)
+    if (resendApiKey && contactEmails.length) {
+      const quotaLimit = getEmailQuotaLimit()
+      const month = new Date().toISOString().slice(0, 7)
+      let quotaCount = 0
+      try {
+        const quotaDoc = await getFirestoreDoc(firebaseProjectId, accessToken, 'settings', 'emailQuota')
+        const quotaData = quotaDoc ? parseFirestoreDoc(quotaDoc) : null
+        quotaCount = quotaData?.month === month ? (quotaData.count || 0) : 0
+      } catch (e) {
+        console.error('Could not read email quota, assuming 0:', e)
+      }
+
+      if (quotaCount >= quotaLimit) {
+        console.warn(`Email quota reached (${quotaCount}/${quotaLimit} for ${month}) — skipping Resend, contact saved to Firestore only.`)
       } else {
-        console.log('Resend success')
+        const emailHtml = `
+          <h2>Nouveau contact reçu</h2>
+          <p><strong>Nom :</strong> ${prenom} ${nom}</p>
+          <p><strong>Email :</strong> <a href="mailto:${email}">${email}</a></p>
+          ${ville ? `<p><strong>Ville :</strong> ${ville}</p>` : ''}
+          <p><strong>Message :</strong></p>
+          <div style="background:#f5f5f5;padding:15px;border-radius:8px;margin:10px 0">
+            ${message.replace(/\n/g, '<br>')}
+          </div>
+          <p><small>Reçu le ${new Date().toLocaleString('fr-FR')}</small></p>
+          <p><a href="https://console.firebase.google.com/project/eglise-cieux-ouverts/firestore/data/~2Fcontacts">Voir dans Firestore</a></p>
+        `
+
+        const resendResponse = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${resendApiKey}`,
+          },
+          body: JSON.stringify({
+            from: 'Contact <onboarding@resend.dev>',
+            to: contactEmails,
+            subject: `Nouveau contact : ${prenom} ${nom}`,
+            html: emailHtml,
+          }),
+        })
+
+        if (!resendResponse.ok) {
+          const errorText = await resendResponse.text()
+          console.error('Resend error:', errorText)
+        } else {
+          console.log('Resend success')
+          try {
+            await setFirestoreDoc(firebaseProjectId, accessToken, 'settings', 'emailQuota', {
+              month,
+              count: quotaCount + 1,
+            })
+          } catch (e) {
+            console.error('Could not update email quota counter:', e)
+          }
+        }
       }
     }
-  
+
     return { ok: true }
   } catch (err) {
     console.error('Contact API error:', err)
