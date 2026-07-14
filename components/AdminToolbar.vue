@@ -609,28 +609,61 @@
                             <span class="stat-value">{{ unreadContactCount }}</span>
                         </div>
                         <div class="stat-item">
+                            <span class="stat-label">Archivés</span>
+                            <span class="stat-value">{{ archivedContactCount }}</span>
+                        </div>
+                        <div class="stat-item">
                             <span class="stat-label">Newsletter</span>
                             <span class="stat-value">{{ newsletterSubscriberCount }}</span>
                         </div>
                     </div>
+                    <div v-if="!contactMessagesLoading && contactMessages.length > 0" class="contact-filters">
+                        <button
+                            class="filter-btn"
+                            :class="{ active: contactMessageFilter === 'all' }"
+                            @click="contactMessageFilter = 'all'"
+                        >Tous ({{ contactMessages.length }})</button>
+                        <button
+                            class="filter-btn"
+                            :class="{ active: contactMessageFilter === 'unread' }"
+                            @click="contactMessageFilter = 'unread'"
+                        >Non lus ({{ unreadContactCount }})</button>
+                        <button
+                            class="filter-btn"
+                            :class="{ active: contactMessageFilter === 'archived' }"
+                            @click="contactMessageFilter = 'archived'"
+                        >Archivés ({{ archivedContactCount }})</button>
+                    </div>
+                    <div v-if="!contactMessagesLoading && contactMessages.length > 0" class="contact-sort">
+                        <label>Tri:</label>
+                        <select v-model="contactMessageSort" class="sort-select">
+                            <option value="date-desc">Plus récent d'abord</option>
+                            <option value="date-asc">Plus ancien d'abord</option>
+                            <option value="sender">Par sender (A-Z)</option>
+                        </select>
+                    </div>
                     <div v-if="contactMessagesLoading" class="version-loading">Chargement...</div>
                     <div v-else-if="contactMessages.length === 0" class="version-empty">Aucun message reçu</div>
+                    <div v-else-if="filteredContactMessages.length === 0" class="version-empty">Aucun message correspondant au filtre</div>
                     <div v-else class="version-list">
                         <div
-                            v-for="m in contactMessages"
+                            v-for="m in filteredContactMessages"
                             :key="m.id"
                             class="version-item"
-                            :class="{ 'comment-resolved': m.status === 'read' }"
+                            :class="{ 'comment-resolved': m.status === 'read', 'is-archived': m.status === 'archived' }"
                         >
                             <div class="version-item-row">
                                 <div class="version-info">
                                     <span class="version-date">{{ new Date(m.createdAt).toLocaleString('fr-FR') }}</span>
-                                    <span class="version-author">{{ m.prenom }} {{ m.nom }} — <a :href="`mailto:${m.email}`">{{ m.email }}</a>{{ m.ville ? ' — ' + m.ville : '' }}</span>
+                                    <span class="version-author">{{ m.prenom }} {{ m.nom }} — <a :href="`mailto:${m.email}`">{{ m.email }}</a>{{ m.ville ? ' — ' + m.ville : '' }}{{ m.newsletter ? ' — 📧 Newsletter' : '' }}</span>
                                     <div class="version-meta">{{ m.message }}</div>
                                 </div>
                                 <div class="version-actions">
                                     <button class="admin-btn admin-btn-secondary" @click.stop="toggleContactRead(m)">
-                                        {{ m.status === 'read' ? "↺ Marquer non lu" : "✓ Marquer lu" }}
+                                        {{ m.status === 'read' ? "↺ Non lu" : "✓ Lu" }}
+                                    </button>
+                                    <button class="admin-btn admin-btn-secondary" @click.stop="toggleContactArchived(m)">
+                                        {{ m.status === 'archived' ? "↺ Restaurer" : "📦 Archiver" }}
                                     </button>
                                 </div>
                             </div>
@@ -1059,9 +1092,34 @@ watch(isAdminUser, (val) => { if (val) loadAllComments() }, { immediate: true })
 const showContactMessages = ref(false)
 const contactMessages = ref([])
 const contactMessagesLoading = ref(false)
+const contactMessageFilter = ref('all') // 'all', 'unread', 'archived'
+const contactMessageSort = ref('date-desc') // 'date-desc', 'date-asc', 'sender'
 
 const unreadContactCount = computed(() => contactMessages.value.filter(m => m.status !== 'read').length)
+const archivedContactCount = computed(() => contactMessages.value.filter(m => m.status === 'archived').length)
 const newsletterSubscriberCount = computed(() => contactMessages.value.filter(m => m.newsletter === true).length)
+
+const filteredContactMessages = computed(() => {
+  let filtered = contactMessages.value
+
+  if (contactMessageFilter.value === 'unread') {
+    filtered = filtered.filter(m => m.status !== 'read')
+  } else if (contactMessageFilter.value === 'archived') {
+    filtered = filtered.filter(m => m.status === 'archived')
+  }
+
+  // Tri
+  const sorted = [...filtered]
+  if (contactMessageSort.value === 'date-desc') {
+    sorted.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+  } else if (contactMessageSort.value === 'date-asc') {
+    sorted.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+  } else if (contactMessageSort.value === 'sender') {
+    sorted.sort((a, b) => `${a.prenom} ${a.nom}`.localeCompare(`${b.prenom} ${b.nom}`))
+  }
+
+  return sorted
+})
 
 watch(isAdminUser, (val) => { if (val) loadContactMessages() }, { immediate: true })
 
@@ -1086,6 +1144,40 @@ async function loadContactMessages() {
 function openContactMessages() {
     showContactMessages.value = true
     loadContactMessages()
+}
+
+async function toggleContactRead(message) {
+    try {
+        const token = await getFirebaseToken()
+        const newStatus = message.status === 'read' ? 'new' : 'read'
+        const res = await fetch(`/api/contacts/${message.id}`, {
+            method: 'PUT',
+            headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: newStatus })
+        })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        message.status = newStatus
+    } catch (e) {
+        console.error('[admin] toggle read failed:', e)
+        showToast('Erreur lors de la mise à jour', 'toast-error')
+    }
+}
+
+async function toggleContactArchived(message) {
+    try {
+        const token = await getFirebaseToken()
+        const newStatus = message.status === 'archived' ? 'new' : 'archived'
+        const res = await fetch(`/api/contacts/${message.id}`, {
+            method: 'PUT',
+            headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: newStatus })
+        })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        message.status = newStatus
+    } catch (e) {
+        console.error('[admin] toggle archived failed:', e)
+        showToast('Erreur lors de la mise à jour', 'toast-error')
+    }
 }
 
 async function toggleContactRead(m) {
@@ -2081,6 +2173,62 @@ async function saveChanges() {
 }
 .admin-btn-compact .icon {
     font-size: 1.1em;
+}
+
+.contact-filters {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.filter-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.7);
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.filter-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+}
+
+.filter-btn.active {
+    background: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
+}
+
+.contact-sort {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    font-size: 0.8em;
+}
+
+.sort-select {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    cursor: pointer;
+}
+
+.sort-select option {
+    background: #1a1a2e;
+    color: white;
+}
+
+.version-item.is-archived {
+    opacity: 0.6;
 }
 
 .admin-sidebar-overlay {

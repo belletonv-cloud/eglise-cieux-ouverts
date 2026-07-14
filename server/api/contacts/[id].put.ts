@@ -9,7 +9,8 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'Id manquant' })
   }
   const body = await readBody(event)
-  const status = body?.status === 'read' ? 'read' : 'new'
+  const validStatuses = ['new', 'read', 'archived']
+  const status = validStatuses.includes(body?.status) ? body.status : 'new'
 
   const isTest = process.env.NODE_ENV === 'test' || process.env.PW_TEST === '1' || process.env.TEST_ENV === '1'
   if (isTest) {
