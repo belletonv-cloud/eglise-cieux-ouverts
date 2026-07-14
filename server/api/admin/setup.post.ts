@@ -1,5 +1,5 @@
-import { getFirestoreConfig, getAccessToken, getFirestoreDoc, setFirestoreDoc, parseFirestoreDoc } from '../../utils/firebase'
-import { verifyFirebaseToken } from '../../utils/firebase-admin'
+import { getFirestoreConfig, getAccessToken, setFirestoreDoc } from '../../utils/firebase'
+import { verifyFirebaseToken, getAdminUsers } from '../../utils/firebase-admin'
 
 export default defineEventHandler(async (event) => {
   const authHeader = getHeader(event, 'authorization')
@@ -7,9 +7,27 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, message: 'Non authentifié' })
   }
 
-  const userInfo = await verifyFirebaseToken(authHeader.slice(7))
+  const userInfo = await verifyFirebaseToken(authHeader.slice(7), event)
   if (!userInfo) {
     throw createError({ statusCode: 401, message: 'Token invalide' })
+  }
+  if (!userInfo.email) {
+    throw createError({ statusCode: 400, message: 'Aucun email associé à ce compte Google' })
+  }
+
+  const currentUsers = await getAdminUsers(event)
+  if (currentUsers.length > 0) {
+    throw createError({ statusCode: 400, message: 'Des admins existent déjà. Utilisez la gestion des admins.' })
+  }
+
+  // Le premier admin bootstrappé obtient toujours le rôle complet 'admin'
+  const users = [{ email: userInfo.email.toLowerCase(), role: 'admin' as const }]
+
+  const isTest = process.env.NODE_ENV === 'test' || process.env.PW_TEST === '1' || process.env.TEST_ENV === '1'
+  if (isTest) {
+    const { setAdminUsersMock } = await import('../../utils/firestore-mock.js')
+    setAdminUsersMock(users)
+    return { success: true, message: 'Premier admin créé' }
   }
 
   const config = getFirestoreConfig(event)
@@ -25,20 +43,8 @@ export default defineEventHandler(async (event) => {
 
   try {
     const accessToken = await getAccessToken(config.clientEmail, config.privateKey)
-    const doc = await getFirestoreDoc(config.projectId, accessToken, 'settings', 'admins')
-    const parsed = doc ? parseFirestoreDoc(doc) : null
-    const currentEmails: string[] = parsed?.emails || []
-
-    if (currentEmails.length > 0) {
-      throw createError({ statusCode: 400, message: 'Des admins existent déjà. Utilisez la gestion des admins.' })
-    }
-
-    if (!userInfo.email) {
-      throw createError({ statusCode: 400, message: 'Aucun email associé à ce compte Google' })
-    }
-
     await setFirestoreDoc(config.projectId, accessToken, 'settings', 'admins', {
-      emails: [userInfo.email.toLowerCase()],
+      users,
       updatedAt: new Date().toISOString(),
       updatedBy: userInfo.uid,
     })

@@ -574,7 +574,7 @@
                     <button class="version-modal-close" @click="showAdminManager = false">✕</button>
                 </div>
                 <div class="version-modal-body">
-                    <div class="admin-mgr-section">
+                    <div class="admin-mgr-section" v-if="currentUserRole === 'admin'">
                         <h4>Ajouter un admin</h4>
                         <div class="admin-mgr-add">
                             <input
@@ -583,6 +583,10 @@
                                 type="email"
                                 class="admin-mgr-input"
                             />
+                            <select v-model="newAdminRole" class="admin-mgr-role-select">
+                                <option value="editor">Éditeur</option>
+                                <option value="admin">Admin</option>
+                            </select>
                             <button
                                 class="admin-btn"
                                 @click="addAdmin"
@@ -592,7 +596,7 @@
                             </button>
                         </div>
                         <p class="admin-mgr-hint">
-                            Entrez l'adresse email de l'utilisateur (compte Google utilisé pour la connexion)
+                            Admin : accès complet, y compris la gestion des comptes. Éditeur : peut éditer le contenu du site mais pas gérer les admins.
                         </p>
                     </div>
                     <div class="admin-mgr-section">
@@ -600,21 +604,45 @@
                         <div v-if="adminList.length === 0" class="version-empty">
                             Aucun admin
                         </div>
-                        <div v-else class="admin-mgr-list">
-                            <div
-                                v-for="email in adminList"
-                                :key="email"
-                                class="admin-mgr-item"
-                            >
-                                <span class="admin-mgr-uid">{{ email }}</span>
-                                <button
-                                    class="admin-mgr-del-btn"
-                                    @click="removeAdmin(email)"
-                                    title="Retirer"
-                                    :disabled="removingAdmin === email"
-                                >{{ removingAdmin === email ? "…" : "✕" }}</button>
-                            </div>
-                        </div>
+                        <table v-else class="admin-mgr-table">
+                            <thead>
+                                <tr>
+                                    <th>Email</th>
+                                    <th>Rôle</th>
+                                    <th v-if="currentUserRole === 'admin'"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr
+                                    v-for="u in adminList"
+                                    :key="u.email"
+                                    class="admin-mgr-row"
+                                >
+                                    <td class="admin-mgr-uid">{{ u.email }}</td>
+                                    <td>
+                                        <select
+                                            v-if="currentUserRole === 'admin' && u.email !== user?.email?.toLowerCase()"
+                                            :value="u.role"
+                                            @change="changeAdminRole(u.email, $event.target.value)"
+                                            class="admin-mgr-role-select"
+                                            :disabled="changingRole === u.email"
+                                        >
+                                            <option value="editor">Éditeur</option>
+                                            <option value="admin">Admin</option>
+                                        </select>
+                                        <span v-else class="admin-mgr-role-badge" :class="`role-${u.role}`">{{ u.role === 'admin' ? 'Admin' : 'Éditeur' }}</span>
+                                    </td>
+                                    <td v-if="currentUserRole === 'admin'">
+                                        <button
+                                            class="admin-mgr-del-btn"
+                                            @click="removeAdmin(u.email)"
+                                            title="Retirer"
+                                            :disabled="removingAdmin === u.email || u.email === user?.email?.toLowerCase()"
+                                        >{{ removingAdmin === u.email ? "…" : "✕" }}</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                     <div v-if="setupMode" class="admin-mgr-section">
                         <p class="admin-mgr-hint">
@@ -1489,11 +1517,14 @@ const filteredVersions = computed(() => {
 // Admin management
 const showAdminManager = ref(false);
 const showEventManager = ref(false);
-const adminList = ref([]);
+const adminList = ref([]); // [{ email, role }]
 const newAdminEmail = ref('');
+const newAdminRole = ref('editor');
 const addingAdmin = ref(false);
 const removingAdmin = ref(null);
+const changingRole = ref(null);
 const setupMode = ref(false);
+const currentUserRole = ref(null);
 
 watch(showAdminManager, (show) => {
     if (show) loadAdminList()
@@ -1508,8 +1539,10 @@ async function loadAdminList() {
         })
         if (res.ok) {
             const data = await res.json()
-            adminList.value = data.emails || []
+            adminList.value = data.users || []
             setupMode.value = false
+            const mine = adminList.value.find(u => u.email === user.value?.email?.toLowerCase())
+            currentUserRole.value = mine?.role || null
         } else if (res.status === 404) {
             setupMode.value = true
             adminList.value = []
@@ -1535,20 +1568,50 @@ async function addAdmin() {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`,
             },
-            body: JSON.stringify({ email: newAdminEmail.value.trim() }),
+            body: JSON.stringify({ email: newAdminEmail.value.trim(), role: newAdminRole.value }),
         })
         if (!res.ok) {
             const err = await res.json().catch(() => ({}))
             throw new Error(err.message || `HTTP ${res.status}`)
         }
         const data = await res.json()
-        adminList.value = data.emails || []
+        adminList.value = data.users || []
         newAdminEmail.value = ''
+        newAdminRole.value = 'editor'
     } catch (e) {
         console.error('[admin] addAdmin failed:', e)
         showToast("Erreur : " + (e.message || e), 'toast-error')
     } finally {
         addingAdmin.value = false
+    }
+}
+
+async function changeAdminRole(email, role) {
+    changingRole.value = email
+    try {
+        const token = await getFirebaseToken()
+        if (!token) throw new Error('Non authentifié')
+        const res = await fetch('/api/admin/users', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify({ email, role }),
+        })
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}))
+            throw new Error(err.message || `HTTP ${res.status}`)
+        }
+        const data = await res.json()
+        adminList.value = data.users || []
+        showToast('Rôle mis à jour', 'toast-success')
+    } catch (e) {
+        console.error('[admin] changeAdminRole failed:', e)
+        showToast("Erreur : " + (e.message || e), 'toast-error')
+        await loadAdminList()
+    } finally {
+        changingRole.value = null
     }
 }
 
@@ -1570,7 +1633,7 @@ async function removeAdmin(email) {
             throw new Error(err.message || `HTTP ${res.status}`)
         }
         const data = await res.json()
-        adminList.value = data.emails || []
+        adminList.value = data.users || []
     } catch (e) {
         console.error('[admin] removeAdmin failed:', e)
         showToast("Erreur : " + (e.message || e), 'toast-error')
@@ -1597,6 +1660,7 @@ async function setupFirstAdmin() {
         showAdminManager.value = false
         // Re-check admin status
         isAdminUser.value = true
+        currentUserRole.value = 'admin'
         showToast("Vous êtes maintenant administrateur !", 'toast-success')
     } catch (e) {
         console.error('[admin] setupFirstAdmin failed:', e)
@@ -2784,6 +2848,50 @@ async function saveChanges() {
 }
 .admin-mgr-del-btn:hover { background: #fef2f2; }
 .admin-mgr-del-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.admin-mgr-role-select {
+    padding: 4px 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 12px;
+    font-family: inherit;
+    background: white;
+}
+.admin-mgr-role-select:disabled { opacity: 0.5; cursor: not-allowed; }
+.admin-mgr-role-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+.admin-mgr-role-badge.role-admin {
+    color: #2563eb;
+    background: #eff6ff;
+}
+.admin-mgr-role-badge.role-editor {
+    color: #6b7280;
+    background: #f3f4f6;
+}
+.admin-mgr-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+.admin-mgr-table th {
+    text-align: left;
+    font-size: 11px;
+    color: #999;
+    font-weight: 500;
+    padding: 4px 8px;
+    border-bottom: 1px solid #eee;
+}
+.admin-mgr-row td {
+    padding: 6px 8px;
+    border-bottom: 1px solid #f5f5f5;
+    vertical-align: middle;
+}
+.admin-mgr-row .admin-mgr-uid {
+    font-family: monospace;
+}
 
 /* Version history expandable */
 .version-item {

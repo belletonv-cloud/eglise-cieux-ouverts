@@ -160,6 +160,7 @@ export function resetMock() {
   VERSIONS = {}
   SETTINGS = { config: { contactEmails: ['belletonv@gmail.com'] } }
   EMAIL_QUOTA = { month: null, count: 0 }
+  ADMIN_USERS = [{ email: 'ci-admin@tests.fr', role: 'admin' }]
 }
 
 export function getPages() {
@@ -262,6 +263,21 @@ export function incrementEmailQuota() {
   }
   EMAIL_QUOTA.count++
   return JSON.parse(JSON.stringify(EMAIL_QUOTA))
+}
+
+// Mock des comptes admin (collection 'settings', document 'admins').
+// L'utilisateur mock CI (voir plugins/auth-mock.client.ts) est admin par
+// défaut, pour que le bypass client ?admin=true corresponde à un vrai accès
+// admin côté serveur si un test appelle /api/admin/*.
+let ADMIN_USERS = [{ email: 'ci-admin@tests.fr', role: 'admin' }]
+
+export function getAdminUsersMock() {
+  return JSON.parse(JSON.stringify(ADMIN_USERS))
+}
+
+export function setAdminUsersMock(users) {
+  ADMIN_USERS = JSON.parse(JSON.stringify(users))
+  return { success: true }
 }
 
 // Mock de l'historique des versions (sous-collection Firestore réelle
