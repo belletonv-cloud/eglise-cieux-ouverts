@@ -233,6 +233,9 @@ function wrapperStyle(block) {
     }
     if (p.marginTop) s.marginTop = p.marginTop;
     if (p.marginBottom) s.marginBottom = p.marginBottom;
+    // Réglage générique de hauteur minimale, disponible pour tout type de
+    // bloc (panneau "Hauteur du bloc" dans la sidebar, hors schema par bloc)
+    if (p.minHeight) s.minHeight = typeof p.minHeight === "number" ? `${p.minHeight}px` : p.minHeight;
     return s;
 }
 

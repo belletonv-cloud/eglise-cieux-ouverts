@@ -9,7 +9,12 @@
         <h2 class="ti-title" :style="{ color: textColor, ...fieldFontStyle(fieldFonts, 'title') }">{{ title }}</h2>
         <p v-if="subtitle" class="ti-subtitle" :style="fieldFontStyle(fieldFonts, 'subtitle')">{{ subtitle }}</p>
         <div class="ti-body" :style="fieldFontStyle(fieldFonts, 'body')" v-html="sanitizedBody"></div>
-        <a v-if="ctaText" :href="ctaLink" class="ti-cta" :style="fieldFontStyle(fieldFonts, 'ctaText')">{{ ctaText }}</a>
+        <div v-if="ctaText || buttons.length" class="ti-buttons">
+          <a v-if="ctaText" :href="ctaLink" class="ti-cta" :style="fieldFontStyle(fieldFonts, 'ctaText')">{{ ctaText }}</a>
+          <template v-for="(btn, i) in buttons" :key="i">
+            <a v-if="btn.text" :href="btn.link" class="ti-cta ti-cta-extra">{{ btn.text }}</a>
+          </template>
+        </div>
       </div>
       <div class="ti-image">
         <div v-if="visualStyle === 'messagesLaptop'" class="ti-laptop-shell">
@@ -23,6 +28,16 @@
         </div>
         <img v-else-if="image" :src="image" :alt="title" class="ti-img" loading="lazy" />
         <div v-else class="ti-img-placeholder">🖼️</div>
+        <div v-if="images.length" class="ti-gallery-extra">
+          <img
+            v-for="(src, i) in images"
+            :key="i"
+            :src="src"
+            :alt="`${title} — image ${i + 2}`"
+            class="ti-gallery-thumb"
+            loading="lazy"
+          />
+        </div>
       </div>
     </div>
   </section>
@@ -37,10 +52,12 @@ const props = defineProps({
   subtitle: { type: String, default: '' },
   body: { type: String, default: '' },
   image: { type: String, default: '' },
+  images: { type: Array, default: () => [] },
   reverse: { type: Boolean, default: false },
   visualStyle: { type: String, default: 'default' },
   ctaText: { type: String, default: '' },
   ctaLink: { type: String, default: '' },
+  buttons: { type: Array, default: () => [] },
   backgroundColor: { type: String, default: '#ffffff' },
   textColor: { type: String, default: '#1a1a2e' },
   animation: { type: String, default: 'slideLeft' },
@@ -83,6 +100,7 @@ const sanitizedBody = computed(() => props.body ? sanitizeHtml(props.body) : '')
   opacity: 0.85;
 }
 .ti-body { font-size: 1.05em; line-height: 1.75; opacity: 0.9; margin-bottom: 28px; }
+.ti-buttons { display: flex; flex-wrap: wrap; gap: 12px; }
 .ti-cta {
   display: inline-block;
   padding: 12px 28px;
@@ -94,8 +112,26 @@ const sanitizedBody = computed(() => props.body ? sanitizeHtml(props.body) : '')
   transition: transform 0.2s, box-shadow 0.2s;
 }
 .ti-cta:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.15); }
+.ti-cta-extra {
+  background: transparent;
+  color: inherit;
+  border: 2px solid currentColor;
+}
 .ti-img { width: 100%; border-radius: 16px; box-shadow: 0 8px 40px rgba(0,0,0,0.15); }
 .ti-img-placeholder { width: 100%; aspect-ratio: 4/3; border-radius: 16px; background: rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; font-size: 3em; }
+.ti-gallery-extra {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+.ti-gallery-thumb {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+}
 
 .style-messagesSeamless {
   padding: 30px 24px;

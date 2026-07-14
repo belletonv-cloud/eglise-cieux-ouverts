@@ -279,6 +279,25 @@
                     Choisis Tablette/Mobile dans la barre du haut pour régler chaque format.
                 </p>
             </div>
+            <div v-if="!editingFooter && sidebarBlock" class="admin-height-panel">
+                <p class="admin-height-label">Hauteur minimale du bloc (px)</p>
+                <div class="admin-height-row">
+                    <input
+                        type="number"
+                        class="admin-height-input"
+                        min="0"
+                        placeholder="Auto"
+                        :value="sidebarBlock.props?.minHeight || ''"
+                        @input="updateBlock(sidebarBlock.id, { minHeight: $event.target.value ? Number($event.target.value) : '' })"
+                    />
+                    <button
+                        v-if="sidebarBlock.props?.minHeight"
+                        class="admin-height-reset"
+                        title="Revenir à la hauteur automatique"
+                        @click="updateBlock(sidebarBlock.id, { minHeight: '' })"
+                    >↺ Auto</button>
+                </div>
+            </div>
             <div v-if="sidebarBlock" class="admin-comment-panel">
                 <p class="admin-comment-label">💬 Note pour le développeur</p>
                 <textarea
@@ -2117,6 +2136,52 @@ async function saveChanges() {
     padding: 10px;
     margin-bottom: 14px;
     background: #fafafc;
+}
+.admin-height-panel {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 14px;
+    background: #fafafc;
+}
+.admin-height-label {
+    font-size: 0.72em;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin: 0 0 8px;
+}
+.admin-height-row {
+    display: flex;
+    gap: 8px;
+}
+.admin-height-input {
+    flex: 1;
+    padding: 7px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.85em;
+    font-family: inherit;
+}
+.admin-height-input:focus {
+    outline: none;
+    border-color: #064886;
+    box-shadow: 0 0 0 2px rgba(6, 72, 134, 0.1);
+}
+.admin-height-reset {
+    flex-shrink: 0;
+    padding: 7px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: #fff;
+    color: #374151;
+    font-size: 0.78em;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.admin-height-reset:hover {
+    background: #f3f4f6;
 }
 .admin-responsive-label {
     font-size: 0.72em;
