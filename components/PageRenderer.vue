@@ -559,7 +559,10 @@ watch(
     border-radius: 6px;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
     z-index: 20;
-    opacity: 0;
+    /* Discrètement visible en permanence (pas juste au survol) : sinon la
+       fonctionnalité de réordonnancement par glisser-déposer est invisible
+       tant qu'on ne survole pas exactement le bon endroit du bloc. */
+    opacity: 0.55;
     transition: opacity 0.15s;
     user-select: none;
     line-height: 1;
