@@ -705,9 +705,9 @@
                                 type="checkbox"
                                 class="settings-checkbox"
                             />
-                            Afficher la page Événements
+                            Afficher la page Événements même sans billetterie
                         </label>
-                        <p class="settings-hint">Si décoché, la page sera masquée du site</p>
+                        <p class="settings-hint">Si décoché, la page sera masquée quand aucun événement n'est disponible</p>
                     </div>
                 </div>
                 <div class="settings-modal-footer">

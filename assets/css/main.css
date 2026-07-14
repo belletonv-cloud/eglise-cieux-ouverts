@@ -29,6 +29,7 @@ html {
   scroll-behavior: smooth;
   background-color: var(--bg-light);
   overflow-x: clip;
+  height: 100%;
 }
 
 body {
@@ -41,6 +42,21 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  height: 100%;
+}
+
+#app-root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.site-main {
+  flex: 1;
+}
+
+.footer-editable-wrap {
+  flex-shrink: 0;
 }
 
 @media (prefers-color-scheme: dark) {
