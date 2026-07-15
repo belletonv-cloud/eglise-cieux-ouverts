@@ -2045,9 +2045,13 @@ async function openTemplateModal() {
     if (!sidebarBlock.value) return
     const name = prompt("Nom du template :", "Template " + (sidebarBlock.value?.type || "inconnu"))
     if (!name) return
+    
+    // Ask if user wants to share with other admins
+    const share = confirm("Partager ce template avec les autres admins ?")
+    
     try {
-        await saveTemplateBlock(name, false)
-        showToast("Template sauvé avec succès !", 'toast-success')
+        await saveTemplateBlock(name, share)
+        showToast(`Template sauvé${share ? ' et partagé' : ''} !`, 'toast-success')
     } catch (e) {
         showToast("Erreur : " + e.message, 'toast-error')
     }
