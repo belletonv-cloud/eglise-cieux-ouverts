@@ -1,5 +1,5 @@
 <template>
-  <div ref="canvasRef" class="bee-canvas" :style="{ height: canvasHeight + 'px' }">
+  <div ref="canvasRef" class="bee-canvas">
     <ClientOnly v-if="isAdmin">
       <VueDraggableResizable
         v-for="el in elements"
@@ -39,7 +39,6 @@ import 'vue-draggable-resizable/style.css'
 
 const props = defineProps<{
   elements: ExtraElement[]
-  canvasHeight?: number
   isAdmin?: boolean
   selectedId?: string | null
 }>()
@@ -49,7 +48,6 @@ const emit = defineEmits<{
   'update:elements': [elements: ExtraElement[]]
 }>()
 
-const canvasHeight = computed(() => props.canvasHeight || 300)
 const canvasRef = ref<HTMLElement | null>(null)
 const canvasSize = ref({ width: 0, height: 0 })
 
@@ -114,11 +112,18 @@ function onResizeStop(el: ExtraElement, x: number, y: number, w: number, h: numb
 
 <style scoped>
 .bee-canvas {
-  position: relative;
-  width: 100%;
+  /* Se superpose exactement sur le contenu du bloc (voir .block-wrapper
+     dans PageRenderer.vue, qui fournit l'ancre position:relative) — pas
+     de hauteur propre, le bloc garde sa taille naturelle. */
+  position: absolute;
+  inset: 0;
   overflow: hidden;
+  /* Laisse passer les clics vers le contenu du bloc en dessous partout
+     sauf sur les éléments eux-mêmes (réactivé ci-dessous). */
+  pointer-events: none;
 }
 .bee-el {
+  pointer-events: auto;
   display: flex;
   align-items: flex-start;
   justify-content: flex-start;

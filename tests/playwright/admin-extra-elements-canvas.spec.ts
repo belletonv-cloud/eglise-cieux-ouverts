@@ -40,7 +40,7 @@ test.describe('Éléments additionnels (canvas libre) — panneau sidebar', () =
     await page.waitForSelector('.admin-toolbar', { timeout: 10000 })
     await selectHeroBlock(page)
 
-    await expect(page.locator('.admin-elements-panel')).toBeVisible()
+    await expect(page.locator('.field-elements')).toBeVisible()
 
     await page.locator('.array-add-btn', { hasText: '+ Texte' }).click()
     await page.locator('.array-add-btn', { hasText: '+ Image' }).click()
@@ -180,17 +180,49 @@ test.describe('Éléments additionnels (canvas libre) — panneau sidebar', () =
     await expect(page.locator('.bee-el')).toHaveCount(0)
   })
 
-  test('la hauteur de la zone canvas est réglable et se répercute sur le rendu', async ({ page }) => {
+  test('le canvas se superpose sur le contenu du bloc (pas une zone séparée en dessous)', async ({ page }) => {
     await page.goto('/accueil?admin=true')
     await page.waitForSelector('.admin-toolbar', { timeout: 10000 })
     await selectHeroBlock(page)
 
-    const heightInput = page.locator('.admin-elements-canvas-height input')
-    await heightInput.fill('500')
     await page.locator('.array-add-btn', { hasText: '+ Texte' }).click()
 
-    const canvasHeight = await page.locator('.bee-canvas').evaluate((el) => (el as HTMLElement).style.height)
-    expect(canvasHeight).toBe('500px')
+    const heroWrapper = page.locator('.block-wrapper[data-block-id="bloc-hero"]')
+    const heroBox = await heroWrapper.boundingBox()
+    const canvasBox = await page.locator('.bee-canvas').boundingBox()
+    if (!heroBox || !canvasBox) throw new Error('bounding box introuvable')
+
+    // Le canvas occupe exactement la même zone que le bloc — aucune bande
+    // supplémentaire ajoutée après le contenu du bloc.
+    expect(canvasBox.y).toBeCloseTo(heroBox.y, 0)
+    expect(canvasBox.height).toBeCloseTo(heroBox.height, 0)
+  })
+
+  test('un clic sur une zone vide du canvas atteint le contenu du bloc en dessous (pointer-events)', async ({ page }) => {
+    // Testé sur le rendu PUBLIC : en admin, le backdrop plein écran de la
+    // sidebar (.admin-sidebar-overlay, z-index 9998) couvrirait toute la
+    // page dès qu'un bloc est sélectionné, ce qui fausserait ce test —
+    // ce backdrop est un comportement préexistant indépendant du canvas.
+    await page.goto('/accueil?admin=true')
+    await page.waitForSelector('.admin-toolbar', { timeout: 10000 })
+    await selectHeroBlock(page)
+    await page.locator('.array-add-btn', { hasText: '+ Texte' }).click()
+    await page.locator('button[title="Sauvegarder les modifications"], button:has-text("Sauvegarder")').first().click()
+    await page.waitForTimeout(500)
+
+    await page.goto('/accueil')
+    await page.waitForTimeout(500)
+
+    // Un point du canvas loin de l'élément (60%/70%) doit résoudre vers le
+    // contenu du bloc (l'image de fond du Hero), pas vers .bee-canvas
+    // lui-même (pointer-events: none sur la zone vide).
+    const topElement = await page.evaluate(() => {
+      const canvas = document.querySelector('.bee-canvas') as HTMLElement
+      const rect = canvas.getBoundingClientRect()
+      const el = document.elementFromPoint(rect.left + rect.width * 0.6, rect.top + rect.height * 0.7)
+      return el?.className
+    })
+    expect(topElement).not.toContain('bee-canvas')
   })
 
   test('persistance après rechargement : le rendu public statique reflète position/taille/contenu', async ({ page }) => {

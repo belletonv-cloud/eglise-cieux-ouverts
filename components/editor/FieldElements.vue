@@ -158,7 +158,7 @@ function addItem(kind: ExtraElementKind) {
 </script>
 
 <style scoped>
-.field-elements { display: flex; flex-direction: column; gap: 10px; }
+.field-elements { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
 .field-array-list { display: flex; flex-direction: column; gap: 10px; min-height: 4px; }
 .array-item { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 6px; cursor: pointer; }
 .array-item-selected { border-color: #064886; box-shadow: 0 0 0 2px rgba(6, 72, 134, 0.15); }

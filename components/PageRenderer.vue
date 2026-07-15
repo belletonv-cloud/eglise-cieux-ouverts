@@ -36,7 +36,6 @@
             <BlockExtraElementsCanvas
                 v-if="block.props?.extraElements?.length"
                 :elements="block.props.extraElements"
-                :canvas-height="block.props.canvasHeight"
                 :is-admin="true"
                 :selected-id="selectedElementId"
                 @select="selectedElementId = $event"
@@ -74,7 +73,6 @@
             <BlockExtraElementsCanvas
                 v-if="block.props?.extraElements?.length"
                 :elements="block.props.extraElements"
-                :canvas-height="block.props.canvasHeight"
                 :is-admin="isAdmin || undefined"
                 :selected-id="selectedElementId"
                 @select="selectedElementId = $event"
@@ -603,9 +601,14 @@ watch(
 </style>
 
 <style>
+.block-wrapper {
+    /* Ancre de positionnement pour BlockExtraElementsCanvas (overlay
+       absolute sur le contenu du bloc) — nécessaire aussi hors admin-mode
+       puisque le rendu public utilise le même overlay. */
+    position: relative;
+}
 .admin-mode .block-wrapper {
     cursor: pointer;
-    position: relative;
     transition: outline 0.15s;
 }
 .admin-mode .block-wrapper:hover {
