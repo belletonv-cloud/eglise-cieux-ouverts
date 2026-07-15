@@ -9,6 +9,7 @@
         :w="pxW(el)"
         :h="pxH(el)"
         :parent="true"
+        :z="10000"
         :active="el.id === selectedId"
         class="bee-el bee-el-drag"
         @activated="$emit('select', el.id)"

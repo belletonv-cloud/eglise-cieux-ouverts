@@ -14,6 +14,10 @@ const previewDevice = ref("desktop");
 const hasUnsavedChanges = ref(false);
 const undoStack = ref([]);
 const redoStack = ref([]);
+// Élément sélectionné dans une zone canvas (props.extraElements) — partagé
+// entre le panneau sidebar (FieldElements) et le rendu sur la page
+// (BlockExtraElementsCanvas) pour que la sélection reste synchronisée.
+const selectedElementId = ref(null);
 
 // Footer block (managed separately from page blocks)
 // Initialized with defaults so it renders immediately (SSR/public).
@@ -109,6 +113,7 @@ export function useAdmin() {
 
   function selectBlock(id) {
     editingFooter.value = false;
+    if (editingBlockId.value !== id) selectedElementId.value = null;
     editingBlockId.value = id;
   }
 
@@ -351,6 +356,7 @@ export function useAdmin() {
     localBlocksPage,
     previewDevice,
     hasUnsavedChanges,
+    selectedElementId,
     enterAdmin,
     exitAdmin,
     clearBlocks,

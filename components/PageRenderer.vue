@@ -149,12 +149,9 @@ const props = defineProps({
     blocks: { type: Array, default: () => [] },
 });
 
-const { reorderBlocks, updateBlock } = useAdmin();
-
-// Élément sélectionné dans une zone canvas (props.extraElements) — état
-// local simple pour l'instant ; sera synchronisé avec le panneau sidebar
-// FieldElements dans une étape ultérieure.
-const selectedElementId = ref<string | null>(null);
+// selectedElementId : partagé avec le panneau sidebar FieldElements
+// (composables/useAdmin.js) pour garder la sélection synchronisée.
+const { reorderBlocks, updateBlock, selectedElementId } = useAdmin();
 
 // Applique le nouvel ordre des blocs VISIBLES à la liste complète : les blocs
 // masqués (par device) gardent leur position, les visibles prennent l'ordre

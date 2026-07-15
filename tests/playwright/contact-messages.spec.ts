@@ -45,8 +45,8 @@ test.describe('Messages de contact', () => {
     await expect(page.locator('.admin-btn-secondary', { hasText: 'Messages' }).locator('.admin-msg-count')).toHaveText('1', { timeout: 3000 })
 
     await page.locator('.admin-btn-secondary', { hasText: 'Messages' }).click()
-    await page.locator('.version-item', { hasText: 'Marie Martin' }).locator('button', { hasText: 'Marquer lu' }).click()
-    await expect(page.locator('.version-item', { hasText: 'Marie Martin' }).locator('button', { hasText: 'Marquer non lu' })).toBeVisible({ timeout: 3000 })
+    await page.locator('.version-item', { hasText: 'Marie Martin' }).locator('button', { hasText: '✓ Lu' }).click()
+    await expect(page.locator('.version-item', { hasText: 'Marie Martin' }).locator('button', { hasText: '↺ Non lu' })).toBeVisible({ timeout: 3000 })
   })
 })
 

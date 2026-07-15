@@ -298,6 +298,26 @@
                     >↺ Auto</button>
                 </div>
             </div>
+            <div v-if="!editingFooter && sidebarBlock" class="admin-elements-panel">
+                <p class="admin-elements-label">Éléments additionnels</p>
+                <div class="admin-height-row admin-elements-canvas-height">
+                    <input
+                        type="number"
+                        class="admin-height-input"
+                        min="50"
+                        placeholder="300"
+                        :value="sidebarBlock.props?.canvasHeight || ''"
+                        @input="updateBlock(sidebarBlock.id, { canvasHeight: $event.target.value ? Number($event.target.value) : '' })"
+                    />
+                    <span class="admin-elements-canvas-hint">Hauteur de la zone (px)</span>
+                </div>
+                <FieldElements
+                    :elements="sidebarBlock.props?.extraElements || []"
+                    :selected-id="selectedElementId"
+                    @change="updateBlock(sidebarBlock.id, { extraElements: $event })"
+                    @select="selectedElementId = $event"
+                />
+            </div>
             <div v-if="sidebarBlock" class="admin-comment-panel">
                 <p class="admin-comment-label">💬 Note pour le développeur</p>
                 <textarea
@@ -911,6 +931,7 @@ const {
     saveFooterBlock,
     addBlock,
     localBlocksPage,
+    selectedElementId,
 } = useAdmin();
 
 const { saveMenuToFirestore, customPages, loadCustomPages, menuChanged } = useMenuEditor();
@@ -2182,6 +2203,31 @@ async function saveChanges() {
 }
 .admin-height-reset:hover {
     background: #f3f4f6;
+}
+.admin-elements-panel {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 14px;
+    background: #fafafc;
+}
+.admin-elements-label {
+    font-size: 0.72em;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin: 0 0 8px;
+}
+.admin-elements-canvas-height {
+    align-items: center;
+    margin-bottom: 12px;
+}
+.admin-elements-canvas-hint {
+    flex-shrink: 0;
+    font-size: 0.75em;
+    color: #999;
+    white-space: nowrap;
 }
 .admin-responsive-label {
     font-size: 0.72em;
