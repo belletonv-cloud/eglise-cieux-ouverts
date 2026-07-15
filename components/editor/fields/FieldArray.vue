@@ -1,68 +1,80 @@
 <template>
   <div class="field-array">
-    <div
-      v-for="(item, idx) in localItems"
-      :key="getItemKey(item, idx)"
-      class="array-item"
+    <VueDraggable
+      v-model="localItems"
+      handle=".array-drag-handle"
+      ghost-class="array-item-ghost"
+      :animation="200"
+      :force-fallback="true"
+      tag="div"
+      class="field-array-list"
+      @end="emitChange"
     >
-      <div class="array-item-header">
-        <span class="array-item-num">#{{ idx + 1 }}</span>
-        <button
-          class="array-item-del"
-          @click="removeItem(idx)"
-          aria-label="Supprimer l'élément {{ idx + 1 }}"
-        >✕</button>
-      </div>
-      <template v-if="hasSubFields">
-        <div
-          v-for="sub in field.subFields"
-          :key="sub.key"
-          class="sub-field"
-        >
-          <label class="sub-field-label">{{ sub.label }}</label>
+      <div
+        v-for="(item, idx) in localItems"
+        :key="item._key"
+        class="array-item"
+      >
+        <div class="array-item-header">
+          <span class="array-drag-handle" title="Glisser pour réordonner">⠿</span>
+          <span class="array-item-num">#{{ idx + 1 }}</span>
+          <button
+            class="array-item-del"
+            @click="removeItem(idx)"
+            aria-label="Supprimer l'élément {{ idx + 1 }}"
+          >✕</button>
+        </div>
+        <template v-if="hasSubFields">
+          <div
+            v-for="sub in field.subFields"
+            :key="sub.key"
+            class="sub-field"
+          >
+            <label class="sub-field-label">{{ sub.label }}</label>
+            <input
+              v-if="sub.type === 'text'"
+              type="text"
+              class="field-input"
+              :placeholder="sub.placeholder || sub.label"
+              :value="item[sub.key]"
+              @input="updateItem(idx, sub.key, ($event.target as HTMLInputElement).value)"
+            />
+            <textarea
+              v-else-if="sub.type === 'textarea'"
+              class="field-textarea"
+              rows="3"
+              :placeholder="sub.placeholder || sub.label"
+              :value="item[sub.key]"
+              @input="updateItem(idx, sub.key, ($event.target as HTMLTextAreaElement).value)"
+            ></textarea>
+          </div>
+        </template>
+        <template v-else>
           <input
-            v-if="sub.type === 'text'"
             type="text"
             class="field-input"
-            :placeholder="sub.placeholder || sub.label"
-            :value="item[sub.key]"
-            @input="updateItem(idx, sub.key, ($event.target as HTMLInputElement).value)"
+            placeholder="Titre"
+            :value="item.title"
+            @input="updateItem(idx, 'title', ($event.target as HTMLInputElement).value)"
           />
           <textarea
-            v-else-if="sub.type === 'textarea'"
             class="field-textarea"
             rows="3"
-            :placeholder="sub.placeholder || sub.label"
-            :value="item[sub.key]"
-            @input="updateItem(idx, sub.key, ($event.target as HTMLTextAreaElement).value)"
+            placeholder="Description"
+            :value="item.description"
+            @input="updateItem(idx, 'description', ($event.target as HTMLTextAreaElement).value)"
           ></textarea>
-        </div>
-      </template>
-      <template v-else>
-        <input
-          type="text"
-          class="field-input"
-          placeholder="Titre"
-          :value="item.title"
-          @input="updateItem(idx, 'title', ($event.target as HTMLInputElement).value)"
-        />
-        <textarea
-          class="field-textarea"
-          rows="3"
-          placeholder="Description"
-          :value="item.description"
-          @input="updateItem(idx, 'description', ($event.target as HTMLTextAreaElement).value)"
-        ></textarea>
-        <input
-          type="text"
-          class="field-input"
-          placeholder="URL image"
-          :value="item.image"
-          @input="updateItem(idx, 'image', ($event.target as HTMLInputElement).value)"
-        />
-        <img v-if="item.image" :src="item.image" class="field-image-preview" alt="preview" />
-      </template>
-    </div>
+          <input
+            type="text"
+            class="field-input"
+            placeholder="URL image"
+            :value="item.image"
+            @input="updateItem(idx, 'image', ($event.target as HTMLInputElement).value)"
+          />
+          <img v-if="item.image" :src="item.image" class="field-image-preview" alt="preview" />
+        </template>
+      </div>
+    </VueDraggable>
     <button class="array-add-btn" @click="addItem" :aria-label="'Ajouter un élément à ' + (field.label || 'la liste')">
       + Ajouter
     </button>
@@ -71,15 +83,17 @@
 
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
+import { VueDraggable } from 'vue-draggable-plus'
 
 const props = defineProps<{ value: any; field: any }>()
 const emit = defineEmits<{ change: [value: any[]] }>()
 
 let isEditing = false
+let nextKey = 0
 const localItems = ref<any[]>([])
 
 function initItems(val: any) {
-  localItems.value = Array.isArray(val) ? val.map(item => ({ ...item })) : []
+  localItems.value = Array.isArray(val) ? val.map(item => ({ ...item, _key: nextKey++ })) : []
 }
 
 initItems(props.value)
@@ -103,17 +117,11 @@ function getEmptyItem(): any {
   return { title: '', description: '', image: '' }
 }
 
-function getItemKey(item: any, idx: number): string {
-  if (item._key) return item._key
-  const stable = hasSubFields.value
-    ? props.field.subFields.map((s: any) => item[s.key]).join('|')
-    : item.title || ''
-  return idx + '-' + stable
-}
-
 function emitChange() {
   isEditing = true
-  emit('change', localItems.value.map(item => ({ ...item })))
+  // _key est un identifiant interne pour le drag & drop uniquement — jamais
+  // persisté dans les données du bloc.
+  emit('change', localItems.value.map(({ _key, ...rest }) => rest))
   setTimeout(() => { isEditing = false }, 0)
 }
 
@@ -128,16 +136,20 @@ function removeItem(idx: number) {
 }
 
 function addItem() {
-  localItems.value.push(getEmptyItem())
+  localItems.value.push({ ...getEmptyItem(), _key: nextKey++ })
   emitChange()
 }
 </script>
 
 <style scoped>
 .field-array { display: flex; flex-direction: column; gap: 10px; }
+.field-array-list { display: flex; flex-direction: column; gap: 10px; min-height: 4px; }
 .array-item { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 6px; }
-.array-item-header { display: flex; align-items: center; justify-content: space-between; }
-.array-item-num { font-size: 0.72em; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.08em; }
+.array-item-ghost { opacity: 0.4; outline: 2px dashed #064886; outline-offset: -2px; }
+.array-item-header { display: flex; align-items: center; gap: 8px; }
+.array-drag-handle { cursor: grab; color: #9ca3af; font-size: 14px; user-select: none; }
+.array-drag-handle:hover { color: #064886; }
+.array-item-num { font-size: 0.72em; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.08em; flex: 1; }
 .array-item-del { background: none; border: none; color: #EF4B54; cursor: pointer; font-size: 0.85em; padding: 2px 5px; border-radius: 4px; }
 .array-item-del:hover { background: rgba(239,75,84,0.1); }
 .array-add-btn { background: #f3f4f6; border: 1.5px dashed #d1d5db; border-radius: 8px; color: #555; font-size: 0.82em; padding: 8px; cursor: pointer; }

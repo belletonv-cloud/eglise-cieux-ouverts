@@ -1,27 +1,39 @@
 <template>
   <div class="field-array">
-    <div
-      v-for="(url, idx) in localItems"
-      :key="idx + '-' + (url || '')"
-      class="array-item"
+    <VueDraggable
+      v-model="localEntries"
+      handle=".array-drag-handle"
+      ghost-class="array-item-ghost"
+      :animation="200"
+      :force-fallback="true"
+      tag="div"
+      class="field-array-list"
+      @end="emitChange"
     >
-      <div class="array-item-header">
-        <span class="array-item-num">#{{ idx + 1 }}</span>
-        <button
-          class="array-item-del"
-          @click="removeItem(idx)"
-          aria-label="Supprimer l'image {{ idx + 1 }}"
-        >✕</button>
+      <div
+        v-for="(entry, idx) in localEntries"
+        :key="entry.id"
+        class="array-item"
+      >
+        <div class="array-item-header">
+          <span class="array-drag-handle" title="Glisser pour réordonner">⠿</span>
+          <span class="array-item-num">#{{ idx + 1 }}</span>
+          <button
+            class="array-item-del"
+            @click="removeItem(idx)"
+            aria-label="Supprimer l'image {{ idx + 1 }}"
+          >✕</button>
+        </div>
+        <input
+          type="text"
+          class="field-input"
+          placeholder="URL image"
+          :value="entry.url"
+          @input="updateItem(idx, ($event.target as HTMLInputElement).value)"
+        />
+        <img v-if="entry.url" :src="entry.url" class="field-image-preview" alt="Aperçu image {{ idx + 1 }}" />
       </div>
-      <input
-        type="text"
-        class="field-input"
-        placeholder="URL image"
-        :value="url"
-        @input="updateItem(idx, ($event.target as HTMLInputElement).value)"
-      />
-      <img v-if="url" :src="url" class="field-image-preview" alt="Aperçu image {{ idx + 1 }}" />
-    </div>
+    </VueDraggable>
     <div class="array-actions">
       <button
         class="array-add-btn"
@@ -29,7 +41,7 @@
         aria-label="Ajouter une image"
       >+ Ajouter une image</button>
       <button
-        v-if="localItems.length > 0"
+        v-if="localEntries.length > 0"
         class="array-clear-btn"
         @click="clearAll"
         aria-label="Tout supprimer"
@@ -40,15 +52,17 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import { VueDraggable } from 'vue-draggable-plus'
 
 const props = defineProps<{ value: any; field: any }>()
 const emit = defineEmits<{ change: [value: string[]] }>()
 
 let isEditing = false
-const localItems = ref<string[]>([])
+let nextId = 0
+const localEntries = ref<{ id: number; url: string }[]>([])
 
 function initItems(val: any) {
-  localItems.value = Array.isArray(val) ? [...val] : []
+  localEntries.value = Array.isArray(val) ? val.map((url) => ({ id: nextId++, url })) : []
 }
 
 initItems(props.value)
@@ -59,36 +73,40 @@ watch(() => props.value, (v) => {
 
 function emitChange() {
   isEditing = true
-  emit('change', [...localItems.value])
+  emit('change', localEntries.value.map((e) => e.url))
   setTimeout(() => { isEditing = false }, 0)
 }
 
 function updateItem(idx: number, val: string) {
-  localItems.value[idx] = val
+  localEntries.value[idx] = { ...localEntries.value[idx], url: val }
   emitChange()
 }
 
 function removeItem(idx: number) {
-  localItems.value.splice(idx, 1)
+  localEntries.value.splice(idx, 1)
   emitChange()
 }
 
 function addItem() {
-  localItems.value.push('')
+  localEntries.value.push({ id: nextId++, url: '' })
   emitChange()
 }
 
 function clearAll() {
-  localItems.value = []
+  localEntries.value = []
   emitChange()
 }
 </script>
 
 <style scoped>
 .field-array { display: flex; flex-direction: column; gap: 10px; }
+.field-array-list { display: flex; flex-direction: column; gap: 10px; min-height: 4px; }
 .array-item { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 6px; }
-.array-item-header { display: flex; align-items: center; justify-content: space-between; }
-.array-item-num { font-size: 0.72em; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.08em; }
+.array-item-ghost { opacity: 0.4; outline: 2px dashed #064886; outline-offset: -2px; }
+.array-item-header { display: flex; align-items: center; gap: 8px; }
+.array-drag-handle { cursor: grab; color: #9ca3af; font-size: 14px; user-select: none; }
+.array-drag-handle:hover { color: #064886; }
+.array-item-num { font-size: 0.72em; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.08em; flex: 1; }
 .array-item-del { background: none; border: none; color: #EF4B54; cursor: pointer; font-size: 0.85em; padding: 2px 5px; border-radius: 4px; }
 .array-item-del:hover { background: rgba(239,75,84,0.1); }
 .array-actions { display: flex; gap: 8px; align-items: stretch; }

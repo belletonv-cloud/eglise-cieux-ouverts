@@ -12,7 +12,7 @@ test.describe('BlockTextImage — Schema-driven tests', () => {
   validateSchema('textImage', TI_SCHEMA, TI_DEFAULTS)
 
   test('schema has correct field count', () => {
-    expect(TI_SCHEMA.length).toBe(11)
+    expect(TI_SCHEMA.length).toBe(13)
   })
 
   test('select fields have options', () => {
