@@ -132,7 +132,7 @@
                         <span v-else class="admin-user">{{ user.email }}</span>
                         <button
                             class="admin-btn admin-btn-add-block"
-                            @click="showBlockPicker = true"
+                            @click="() => { loadTemplates(); showBlockPicker = true }"
                             title="Ajouter un bloc à la page"
                         >
                             ＋ Bloc
@@ -475,7 +475,7 @@
         </div>
     </Teleport>
 
-    <!-- Template Picker Modal (2nd step, only for block types with templates) -->
+    <!-- Template Picker Modal (2nd step, using saved templates) -->
     <Teleport to="body">
         <div v-if="showTemplatePicker" class="version-modal-overlay" @click.self="showTemplatePicker = false">
             <div class="version-modal block-picker-modal">
@@ -488,15 +488,23 @@
                 </div>
                 <div class="version-modal-body">
                     <button class="block-picker-back" @click="backToBlockPicker">← Retour</button>
-                    <div class="block-picker-grid">
+                    <div v-if="templatesLoading" class="block-picker-loading">Chargement...</div>
+                    <div v-else class="block-picker-grid">
                         <button
-                            v-for="tpl in BLOCK_TYPES[pendingBlockType]?.templates || []"
+                            v-for="tpl in availableTemplates.filter(t => t.type === pendingBlockType)"
                             :key="tpl.id"
                             class="block-picker-card"
                             @click="pickTemplate(tpl)"
                         >
-                            <span class="block-picker-icon">{{ tpl.icon || '📄' }}</span>
-                            <span class="block-picker-label">{{ tpl.label }}</span>
+                            <span class="block-picker-icon">📄</span>
+                            <span class="block-picker-label">{{ tpl.name }}</span>
+                        </button>
+                        <button
+                            class="block-picker-card block-picker-card-empty"
+                            @click="pickTemplate({ props: {} })"
+                        >
+                            <span class="block-picker-icon">➕</span>
+                            <span class="block-picker-label">Bloc vierge</span>
                         </button>
                     </div>
                 </div>
@@ -956,6 +964,8 @@ const { $auth } = useNuxtApp();
 const showBlockPicker = ref(false)
 const showTemplatePicker = ref(false)
 const pendingBlockType = ref(null)
+const availableTemplates = ref([])
+const templatesLoading = ref(false)
 
 const pickableBlockTypes = computed(() =>
     Object.entries(BLOCK_TYPES)
@@ -963,17 +973,32 @@ const pickableBlockTypes = computed(() =>
         .map(([key, def]) => ({ key, label: def.label || key, icon: def.icon || '📦', category: def.category || 'other' }))
 )
 
-// Types with >1 template show a 2nd step (template chooser) before adding
-// the block; types with none/one template are added immediately as before.
-function pickBlock(type) {
-    if (BLOCK_TYPES[type]?.templates?.length) {
-        pendingBlockType.value = type
+// Load templates when opening picker
+async function loadTemplates(type) {
+    templatesLoading.value = true
+    try {
+        const res = await fetch('/api/templates/blocks')
+        if (res.ok) {
+            availableTemplates.value = await res.json()
+        }
+    } catch (e) {
+        console.warn('loadTemplates error:', e)
+    } finally {
+        templatesLoading.value = false
+    }
+}
+
+// Types with templates show a 2nd step (template chooser) before adding
+async function pickBlock(type) {
+    pendingBlockType.value = type
+    const templates = availableTemplates.value.filter(t => t.type === type)
+    if (templates.length > 0) {
         showBlockPicker.value = false
         showTemplatePicker.value = true
-        return
+    } else {
+        showBlockPicker.value = false
+        await finalizeAddBlock(type)
     }
-    showBlockPicker.value = false
-    finalizeAddBlock(type)
 }
 
 async function finalizeAddBlock(type, overrideProps) {
@@ -981,11 +1006,11 @@ async function finalizeAddBlock(type, overrideProps) {
     if (newBlock) selectBlock(newBlock.id)
 }
 
-function pickTemplate(tpl) {
+async function pickTemplate(tpl) {
     showTemplatePicker.value = false
     const type = pendingBlockType.value
     pendingBlockType.value = null
-    finalizeAddBlock(type, tpl.props)
+    await finalizeAddBlock(type, tpl.props)
 }
 
 function backToBlockPicker() {
@@ -3120,6 +3145,21 @@ async function saveChanges() {
 }
 .block-picker-back:hover {
     text-decoration: underline;
+}
+.block-picker-loading {
+    padding: 40px;
+    text-align: center;
+    color: #6b7280;
+    font-size: 14px;
+}
+.block-picker-card-empty {
+    grid-column: 1 / -1;
+    border-style: dashed;
+    background: #f9fafb;
+}
+.block-picker-card-empty:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
 }
 .admin-btn-add-block {
     background: #10b981;
