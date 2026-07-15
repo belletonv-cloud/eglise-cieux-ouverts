@@ -40,10 +40,14 @@ test.describe('Historique des versions', () => {
     // Chaque sauvegarde qui change les blocs crée une version — 2 saves = 2
     // versions (la 1ère snapshotte l'état initial, la 2e "Titre version 1").
     await expect(page.locator('.version-item')).toHaveCount(2, { timeout: 3000 })
-    await expect(page.locator('.version-restore-btn').first()).toBeVisible()
+    const firstVersionItem = page.locator('.version-item').first()
+    await expect(firstVersionItem.locator('.version-restore-btn', { hasText: 'Restaurer' })).toBeVisible()
 
-    // La version la plus récente (en tête de liste) contient "Titre version 1"
-    await page.locator('.version-restore-btn').first().click()
+    // La version la plus récente (en tête de liste) contient "Titre version 1".
+    // .version-restore-btn est partagée par les boutons "Prévisualiser" ET
+    // "Restaurer" : cibler explicitement "Restaurer" (sinon .first() clique
+    // Prévisualiser, qui ne ferme pas la modale ni ne persiste la restauration).
+    await firstVersionItem.locator('.version-restore-btn', { hasText: 'Restaurer' }).click()
     await expect(page.locator('.version-modal-overlay')).toHaveCount(0, { timeout: 3000 })
 
     await expect(titleInput).toHaveValue('Titre version 1', { timeout: 3000 })
