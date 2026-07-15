@@ -231,6 +231,46 @@ export function useAdmin() {
     return duplicated;
   }
 
+  /**
+   * Save current block as a template
+   * Used by Story 2.1 - Save block template
+   */
+  async function saveTemplateBlock(name, shared = false) {
+    const block = sidebarBlock.value;
+    if (!block) return null;
+    
+    try {
+      const token = await _getFirebaseToken();
+      if (!token) throw new Error('Non authentifié');
+      
+      const res = await fetch('/api/templates/blocks', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name,
+          type: block.type,
+          props: block.props,
+          shared,
+        }),
+      });
+      
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || `HTTP ${res.status}`);
+      }
+      
+      const result = await res.json();
+      pushHistory(`Sauvegarde du template « ${name} »`);
+      return result;
+    } catch (error) {
+      console.error('saveTemplateBlock error:', error);
+      throw error;
+    }
+  }
+
   function reorderBlocks(blocks) {
     if (!Array.isArray(blocks)) return;
     if (
@@ -391,6 +431,7 @@ export function useAdmin() {
     removeBlock,
     addBlock,
     duplicateBlock,
+    saveTemplateBlock,
     reorderBlocks,
     undo,
     redo,

@@ -418,6 +418,13 @@
                     📋
                 </button>
                 <button
+                    class="admin-action-btn admin-action-template"
+                    @click="openTemplateModal"
+                    title="Sauvegarder template"
+                >
+                    💾
+                </button>
+                <button
                     class="admin-action-btn admin-action-danger"
                     @click="removeBlock(sidebarBlock.id)"
                     title="Supprimer"
@@ -908,6 +915,7 @@ const {
     moveBlock,
     removeBlock,
     duplicateBlock,
+    saveTemplateBlock,
     exitAdmin,
     clearBlocks,
     localBlocks,
@@ -2008,6 +2016,18 @@ async function saveFooterChanges() {
     }
 }
 
+async function openTemplateModal() {
+    if (!sidebarBlock.value) return
+    const name = prompt("Nom du template :", "Template " + (sidebarBlock.value?.type || "inconnu"))
+    if (!name) return
+    try {
+        await saveTemplateBlock(name, false)
+        showToast("Template sauvé avec succès !", 'toast-success')
+    } catch (e) {
+        showToast("Erreur : " + e.message, 'toast-error')
+    }
+}
+
 
 async function navigateToPage(slug, focusBlockId) {
     // Sauter vers un bloc précis (depuis la modale Demandes) : portée v1
@@ -2670,6 +2690,10 @@ async function saveChanges() {
 .admin-action-duplicate:hover {
     background: #e8f4ff;
     border-color: #064886;
+}
+.admin-action-template:hover {
+    background: #fff8e8;
+    border-color: #f59e0b;
 }
 .admin-loading {
     font-size: 0.8em;
