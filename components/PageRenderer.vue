@@ -37,6 +37,10 @@
                 v-if="block.props?.extraElements?.length"
                 :elements="block.props.extraElements"
                 :canvas-height="block.props.canvasHeight"
+                :is-admin="true"
+                :selected-id="selectedElementId"
+                @select="selectedElementId = $event"
+                @update:elements="updateBlock(block.id, { extraElements: $event })"
             />
             <span v-if="!getAnimClass(block) && getAnimationStrategy(block.type) !== 'wrapper'" class="anim-native-badge">
                 {{ getAnimationStrategy(block.type) === 'none' ? 'Aucune animation' : 'Animation native' }}
@@ -71,6 +75,10 @@
                 v-if="block.props?.extraElements?.length"
                 :elements="block.props.extraElements"
                 :canvas-height="block.props.canvasHeight"
+                :is-admin="isAdmin || undefined"
+                :selected-id="selectedElementId"
+                @select="selectedElementId = $event"
+                @update:elements="updateBlock(block.id, { extraElements: $event })"
             />
             <span v-if="isAdmin && !getAnimClass(block) && getAnimationStrategy(block.type) !== 'wrapper'" class="anim-native-badge">
                 {{ getAnimationStrategy(block.type) === 'none' ? 'Aucune animation' : 'Animation native' }}
@@ -141,7 +149,12 @@ const props = defineProps({
     blocks: { type: Array, default: () => [] },
 });
 
-const { reorderBlocks } = useAdmin();
+const { reorderBlocks, updateBlock } = useAdmin();
+
+// Élément sélectionné dans une zone canvas (props.extraElements) — état
+// local simple pour l'instant ; sera synchronisé avec le panneau sidebar
+// FieldElements dans une étape ultérieure.
+const selectedElementId = ref<string | null>(null);
 
 // Applique le nouvel ordre des blocs VISIBLES à la liste complète : les blocs
 // masqués (par device) gardent leur position, les visibles prennent l'ordre
