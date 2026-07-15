@@ -1,6 +1,10 @@
 import { getFirestoreConfig, getAccessToken } from '../../utils/firebase'
+import { requireAdmin } from '../../utils/firebase-admin'
 
 export default defineEventHandler(async (event) => {
+  // En mode test, servir le mock RAM
+  const isTest = process.env.NODE_ENV === 'test' || process.env.PW_TEST === '1' || process.env.TEST_ENV === '1'
+  
   const body = await readBody(event)
   const { name, type, props, shared } = body
   
@@ -8,9 +12,15 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'Nom et type requis' })
   }
 
-  const isTest = process.env.NODE_ENV === 'test' || process.env.PW_TEST === '1' || process.env.TEST_ENV === '1'
   if (isTest) {
+    const { addTemplateBlock } = await import('../../utils/templates-mock.js')
     return { id: 'tpl-' + Date.now(), name, type, props, shared }
+  }
+
+  // Vérification admin requise
+  const userInfo = await requireAdmin(event)
+  if (!userInfo) {
+    throw createError({ statusCode: 401, message: 'Authentification admin requise' })
   }
 
   const config = getFirestoreConfig(event)
