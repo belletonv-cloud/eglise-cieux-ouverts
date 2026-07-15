@@ -411,6 +411,13 @@
                     ↓
                 </button>
                 <button
+                    class="admin-action-btn admin-action-duplicate"
+                    @click="duplicateBlock(sidebarBlock.id)"
+                    title="Dupliquer"
+                >
+                    📋
+                </button>
+                <button
                     class="admin-action-btn admin-action-danger"
                     @click="removeBlock(sidebarBlock.id)"
                     title="Supprimer"
@@ -900,6 +907,7 @@ const {
     resetResponsive,
     moveBlock,
     removeBlock,
+    duplicateBlock,
     exitAdmin,
     clearBlocks,
     localBlocks,
@@ -2658,6 +2666,10 @@ async function saveChanges() {
 .admin-action-danger:hover {
     background: #fee;
     border-color: #ef4b54;
+}
+.admin-action-duplicate:hover {
+    background: #e8f4ff;
+    border-color: #064886;
 }
 .admin-loading {
     font-size: 0.8em;

@@ -208,6 +208,29 @@ export function useAdmin() {
     return newBlock;
   }
 
+  /**
+   * Duplicate an existing block with all its props
+   * Used by Story 1.1 - Duplicate a block
+   */
+  async function duplicateBlock(blockId) {
+    const idx = localBlocks.value.findIndex((b) => b.id === blockId);
+    if (idx < 0) return null;
+    const original = localBlocks.value[idx];
+    const { createBlock } = await import("~/utils/blockTypes.js");
+    // Clone props, visibility, and responsive overrides
+    const duplicated = createBlock(original.type, {
+      ...original.props,
+      ...(original.visibility || VISIBILITY_DEFAULTS),
+      ...(original.responsive || {}),
+    });
+    if (!duplicated) return null;
+    const label = _blockLabel(original.type);
+    pushHistory(`Duplication du bloc « ${label} »`);
+    // Insert after original block position
+    localBlocks.value.splice(idx + 1, 0, duplicated);
+    return duplicated;
+  }
+
   function reorderBlocks(blocks) {
     if (!Array.isArray(blocks)) return;
     if (
@@ -367,6 +390,7 @@ export function useAdmin() {
     moveBlock,
     removeBlock,
     addBlock,
+    duplicateBlock,
     reorderBlocks,
     undo,
     redo,
