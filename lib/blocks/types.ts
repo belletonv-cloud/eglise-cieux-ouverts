@@ -69,6 +69,29 @@ export interface BlockInstance {
   }
 }
 
+// Éléments additionnels librement positionnables/redimensionnables, greffés
+// après le contenu propre d'un bloc via `props.extraElements` (n'importe quel
+// type de bloc, absent par défaut — voir components/blocks/BlockExtraElementsCanvas.vue
+// et components/editor/FieldElements.vue). Position/taille en % de la zone
+// canvas (pas en px) pour une mise à l'échelle proportionnelle responsive
+// sans authoring séparé par device.
+export type ExtraElementKind = 'text' | 'image' | 'button'
+
+export interface ExtraElement {
+  id: string
+  kind: ExtraElementKind
+  text?: string
+  imageUrl?: string
+  imageAlt?: string
+  buttonLabel?: string
+  buttonLink?: string
+  xPct: number
+  yPct: number
+  wPct: number
+  hPct: number
+  z: number
+}
+
 export interface EditorFieldProps {
   label: string
   value: any

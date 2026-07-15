@@ -26,6 +26,7 @@
     "swiper": "^12.2.0",
     "vue": "^3.4.0",
     "vue-draggable-plus": "^0.6.1",
+    "vue-draggable-resizable": "^3.0.0",
     "vue-router": "^4.3.0"
   },
   "devDependencies": {

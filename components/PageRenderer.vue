@@ -33,6 +33,11 @@
                 :is-triggered="isTriggered(block.id)"
                 :is-admin="true"
             />
+            <BlockExtraElementsCanvas
+                v-if="block.props?.extraElements?.length"
+                :elements="block.props.extraElements"
+                :canvas-height="block.props.canvasHeight"
+            />
             <span v-if="!getAnimClass(block) && getAnimationStrategy(block.type) !== 'wrapper'" class="anim-native-badge">
                 {{ getAnimationStrategy(block.type) === 'none' ? 'Aucune animation' : 'Animation native' }}
             </span>
@@ -61,6 +66,11 @@
                 :block="block"
                 :is-triggered="isTriggered(block.id)"
                 :is-admin="isAdmin || undefined"
+            />
+            <BlockExtraElementsCanvas
+                v-if="block.props?.extraElements?.length"
+                :elements="block.props.extraElements"
+                :canvas-height="block.props.canvasHeight"
             />
             <span v-if="isAdmin && !getAnimClass(block) && getAnimationStrategy(block.type) !== 'wrapper'" class="anim-native-badge">
                 {{ getAnimationStrategy(block.type) === 'none' ? 'Aucune animation' : 'Animation native' }}
