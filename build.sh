@@ -18,5 +18,11 @@ if [ "$CF_PAGES_BRANCH" = "recette" ]; then
   export NUXT_FIREBASE_PRIVATE_KEY="${NUXT_FIREBASE_PRIVATE_KEY:-dummy-key-set-in-cloudflare-dashboard}"
 fi
 
-npm ci
+# npm install (pas npm ci) : le lockfile est généré sur macOS et ne
+# contient donc que le binding natif darwin-arm64 pour les paquets
+# multi-plateformes (oxc-parser, esbuild, rollup) — npm ci refuse
+# d'installer quoi que ce soit hors lockfile et échoue sur Linux avec
+# "Cannot find native binding". npm install résout et installe le
+# binding linux-x64-gnu manquant à la volée (bug connu npm/cli#4828).
+npm install --no-audit --no-fund
 npm run build
