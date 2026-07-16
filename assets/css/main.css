@@ -53,6 +53,7 @@ body {
 
 .site-main {
   flex: 1;
+  background: #fff;
 }
 
 .footer-editable-wrap {

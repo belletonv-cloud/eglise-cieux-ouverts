@@ -13,7 +13,7 @@ export default defineEventHandler(async (event) => {
   }
 
   if (isTest) {
-    const { addTemplateBlock } = await import('../../utils/templates-mock.js')
+    // Return mock success without saving
     return { id: 'tpl-' + Date.now(), name, type, props, shared }
   }
 
