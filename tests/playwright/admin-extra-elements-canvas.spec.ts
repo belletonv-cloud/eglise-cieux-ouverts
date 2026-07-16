@@ -225,6 +225,40 @@ test.describe('Éléments additionnels (canvas libre) — panneau sidebar', () =
     expect(topElement).not.toContain('bee-canvas')
   })
 
+  test('interagir avec un élément du canvas ne re-sélectionne pas son bloc (ne coupe pas un drag/resize en cours)', async ({ page }) => {
+    // Bug réel : docPointerHandler/docClickHandler/wrapperClick sélectionnaient
+    // le bloc sur TOUT clic dans .block-wrapper, y compris sur les poignées
+    // VueDraggableResizable — rouvrant/re-render la sidebar en pleine saisie
+    // d'une poignée et avalant le drag, exactement le bug déjà connu et
+    // corrigé pour .drag-handle (Sortable). Ce test vérifie que cliquer sur
+    // un élément du canvas d'un bloc NE change PAS le bloc actuellement
+    // sélectionné (le canvas gère sa propre sélection d'élément séparément).
+    await page.goto('/accueil?admin=true')
+    await page.waitForSelector('.admin-toolbar', { timeout: 10000 })
+    await selectHeroBlock(page)
+    await page.locator('.array-add-btn', { hasText: '+ Texte' }).click()
+
+    // On sélectionne un AUTRE bloc — editingBlockId pointe maintenant vers lui.
+    // Comportement préexistant de la sidebar (indépendant du canvas) : tant
+    // qu'elle est ouverte, son backdrop plein écran (.admin-sidebar-overlay)
+    // intercepte tout clic ailleurs sur la page — il faut donc cliquer le
+    // backdrop explicitement pour fermer la sidebar du Hero avant de
+    // pouvoir sélectionner Bienvenue (Playwright cible le locator demandé
+    // et attend qu'il devienne cliquable, il ne clique jamais l'obstruction
+    // à sa place comme le ferait un utilisateur réel).
+    await page.locator('.admin-sidebar-overlay').click()
+    await page.waitForTimeout(200)
+    await page.locator('.block-wrapper[data-block-id="bloc-bienvenue"]').click()
+    await page.waitForTimeout(200)
+    await expect(page.locator('.block-wrapper.admin-selected')).toHaveAttribute('data-block-id', 'bloc-bienvenue')
+
+    // Cliquer sur l'élément du Hero (bloc non sélectionné) ne doit PAS
+    // ramener la sélection sur le Hero
+    await page.locator('.bee-el').first().click()
+    await page.waitForTimeout(200)
+    await expect(page.locator('.block-wrapper.admin-selected')).toHaveAttribute('data-block-id', 'bloc-bienvenue')
+  })
+
   test('persistance après rechargement : le rendu public statique reflète position/taille/contenu', async ({ page }) => {
     await page.goto('/accueil?admin=true')
     await page.waitForSelector('.admin-toolbar', { timeout: 10000 })
