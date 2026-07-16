@@ -280,3 +280,70 @@ test.describe('Éléments additionnels (canvas libre) — panneau sidebar', () =
     expect(style).toContain('%')
   })
 })
+
+test.describe('« Rendre déplaçable » — promouvoir un champ existant en élément libre', () => {
+  test.beforeEach(async ({ request }) => {
+    await resetMock(request)
+  })
+
+  async function selectBienvenueBlock(page: import('@playwright/test').Page) {
+    await page.locator('.block-wrapper[data-block-id="bloc-bienvenue"]').click()
+    await page.waitForTimeout(300)
+  }
+
+  test('promouvoir un champ jamais édité (valeur par défaut) ne duplique pas le contenu', async ({ page }) => {
+    // Bug réel rencontré en implémentant la fonctionnalité : le titre du
+    // bloc Bienvenue n'a jamais été explicitement défini, il s'affiche via
+    // BLOCK_TYPES.bienvenue.defaults.title = "BIENVENUE". Vider le champ
+    // à '' seul ne suffit pas : normalizeBlock retombe sur ce même default,
+    // recréant le même texte à l'ancien emplacement en plus du nouvel
+    // élément flottant — d'où le mécanisme props.promotedFields.
+    const errors = collectErrors(page)
+    await page.goto('/accueil?admin=true')
+    await page.waitForSelector('.admin-toolbar', { timeout: 10000 })
+    await selectBienvenueBlock(page)
+
+    const titreField = page.locator('.auto-field').filter({ has: page.locator('.field-label', { hasText: /^Titre$/ }) })
+    await expect(titreField.locator('.field-promote-btn')).toBeVisible()
+    await titreField.locator('.field-promote-btn').click()
+    await page.waitForTimeout(200)
+
+    // Le texte "BIENVENUE" n'apparaît qu'une fois (l'élément flottant),
+    // pas une deuxième fois à son ancien emplacement fixe.
+    const wrapper = page.locator('.block-wrapper[data-block-id="bloc-bienvenue"]')
+    await expect(wrapper.locator('.bee-el')).toHaveCount(1)
+    await expect(wrapper.locator('.bee-el').first()).toHaveText('BIENVENUE')
+    const bienvenueOccurrences = await wrapper.evaluate((el) => (el.textContent?.match(/BIENVENUE/g) || []).length)
+    expect(bienvenueOccurrences).toBe(1)
+
+    // Le bouton disparaît après promotion (rien à re-promouvoir)
+    await expect(titreField.locator('.field-promote-btn')).toHaveCount(0)
+
+    expect(errors).toEqual([])
+  })
+
+  test('l\'élément promu est sélectionné automatiquement et s\'édite comme un élément ajouté', async ({ page }) => {
+    // Le drag/resize d'un élément du canvas est déjà couvert mécaniquement
+    // par les tests "déplacer..."/"redimensionner..." plus haut (identique
+    // pour un élément ajouté ou promu, même composant sous-jacent). Ici on
+    // vérifie spécifiquement ce qui est NOUVEAU pour la promotion : la
+    // sélection automatique et l'édition via le même panneau FieldElements.
+    await page.goto('/accueil?admin=true')
+    await page.waitForSelector('.admin-toolbar', { timeout: 10000 })
+    await selectBienvenueBlock(page)
+
+    const titreField = page.locator('.auto-field').filter({ has: page.locator('.field-label', { hasText: /^Titre$/ }) })
+    await titreField.locator('.field-promote-btn').click()
+    await page.waitForTimeout(200)
+
+    const el = page.locator('.bee-el').first()
+    // Sélectionné automatiquement après promotion (poignées actives)
+    await expect(el).toHaveClass(/active/)
+    await expect(page.locator('.field-elements .array-item').first()).toHaveClass(/array-item-selected/)
+
+    // Édition de contenu via le même panneau FieldElements que les
+    // éléments ajoutés normalement
+    await page.locator('.field-elements .field-textarea').fill('Titre modifié après promotion')
+    await expect(el).toHaveText('Titre modifié après promotion')
+  })
+})

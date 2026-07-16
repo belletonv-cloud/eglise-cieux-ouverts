@@ -38,9 +38,22 @@ export function normalizeBlock(block: BlockInstance): BlockInstance {
   propsSrc = propsSrc || {};
 
   if (copy.type && BLOCK_TYPES[copy.type]) {
+    // Champs vidés intentionnellement via "Rendre déplaçable" (promus en
+    // élément libre de props.extraElements) : ne pas retomber sur le
+    // default du type de bloc, qui recréerait visuellement le même
+    // contenu qu'on vient de détacher de sa place fixe. N'affecte que
+    // CETTE instance de bloc — les autres blocs du même type qui n'ont
+    // jamais touché ce champ gardent leur default normalement.
+    const promotedFields: string[] = Array.isArray(propsSrc.promotedFields)
+      ? propsSrc.promotedFields
+      : [];
     const safe: Record<string, any> = {};
     for (const [k, v] of Object.entries(propsSrc)) {
-      if (v !== "" && v !== null && v !== undefined) safe[k] = v;
+      if (v !== "" && v !== null && v !== undefined) {
+        safe[k] = v;
+      } else if (promotedFields.includes(k)) {
+        safe[k] = "";
+      }
     }
     copy.props = { ...BLOCK_TYPES[copy.type].defaults, ...safe };
   } else {

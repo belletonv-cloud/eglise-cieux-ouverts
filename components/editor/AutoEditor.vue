@@ -8,6 +8,13 @@
       <div class="auto-field">
         <div class="auto-field-header">
           <label class="field-label">{{ field.label }}</label>
+          <button
+            v-if="isPromotableField(field) && effectiveFieldValue(field)"
+            type="button"
+            class="field-promote-btn"
+            title="Rendre cet élément déplaçable, redimensionnable et le sortir de sa place fixe dans le bloc"
+            @click="promoteField(field)"
+          >⇱ Rendre déplaçable</button>
           <select
             v-if="isFontableField(field)"
             class="field-font-picker"
@@ -35,7 +42,8 @@
 </template>
 
 <script setup lang="ts">
-import type { FieldSchema, BlockInstance } from '~/lib/blocks/types'
+import type { FieldSchema, BlockInstance, ExtraElement } from '~/lib/blocks/types'
+import { BLOCK_TYPES } from '~/utils/blockTypes.js'
 import FieldText from './fields/FieldText.vue'
 import FieldTextarea from './fields/FieldTextarea.vue'
 import FieldRichText from './fields/FieldRichText.vue'
@@ -58,6 +66,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   update: [block: BlockInstance]
+  promoted: [elementId: string]
 }>()
 
 const FIELD_MAP: Record<string, any> = {
@@ -111,6 +120,59 @@ function onFontChange(key: string, font: string) {
   emit('update', updated)
 }
 
+// "Rendre déplaçable" : convertit la valeur actuelle d'un champ fixe du
+// bloc (image/texte) en élément libre du canvas (props.extraElements),
+// pour lui donner le même comportement déplacer/redimensionner/éditer
+// que les éléments ajoutés via le panneau — au lieu de rester figé à sa
+// place dans la mise en page du bloc. richtext exclu : son contenu HTML
+// serait affiché tel quel comme texte brut par BlockExtraElementContent.
+let nextPromotedId = 0
+function isPromotableField(field: FieldSchema) {
+  if (!['image', 'text', 'textarea'].includes(field.type)) return false
+  return !NON_VISUAL_FIELD_PATTERN.test(field.key)
+}
+
+// sidebarBlock (useAdmin.js) expose les props BRUTES, non fusionnées avec
+// BLOCK_TYPES[type].defaults comme le fait le rendu public (normalizeBlock) —
+// un champ jamais modifié apparaît donc vide ici alors que la page affiche
+// bien une valeur par défaut. On retombe sur ce default uniquement pour
+// savoir CE QUI EST RÉELLEMENT AFFICHÉ à promouvoir, sans toucher à
+// l'affichage des champs eux-mêmes ni au flux de sauvegarde habituel.
+function effectiveFieldValue(field: FieldSchema) {
+  const raw = props.modelValue?.props?.[field.key]
+  if (raw !== undefined && raw !== null && raw !== '') return raw
+  // Déjà promu : normalizeBlock ne retombera plus sur le default pour ce
+  // champ (voir lib/blocks/renderer.ts), donc rien à re-promouvoir ici.
+  if (props.modelValue?.props?.promotedFields?.includes(field.key)) return undefined
+  const type = props.modelValue?.type
+  return type ? BLOCK_TYPES[type]?.defaults?.[field.key] : undefined
+}
+
+function promoteField(field: FieldSchema) {
+  if (!props.modelValue) return
+  const value = effectiveFieldValue(field)
+  if (!value) return
+  const kind = field.type === 'image' ? 'image' : 'text'
+  const newElement: ExtraElement = {
+    id: `el-promoted-${Date.now()}-${nextPromotedId++}`,
+    kind,
+    xPct: 0,
+    yPct: 0,
+    wPct: 100,
+    hPct: 100,
+    z: props.modelValue.props?.extraElements?.length || 0,
+    ...(kind === 'image' ? { imageUrl: value, imageAlt: '' } : { text: value }),
+  }
+  const extraElements = [...(props.modelValue.props?.extraElements || []), newElement]
+  const promotedFields = [...new Set([...(props.modelValue.props?.promotedFields || []), field.key])]
+  const updated = {
+    ...props.modelValue,
+    props: { ...props.modelValue.props, [field.key]: '', extraElements, promotedFields },
+  }
+  emit('update', updated)
+  emit('promoted', newElement.id)
+}
+
 function onDesignUpdate(block: BlockInstance) {
   emit('update', block)
 }
@@ -121,6 +183,17 @@ function onDesignUpdate(block: BlockInstance) {
 .auto-field { display: flex; flex-direction: column; gap: 5px; }
 .auto-field-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .field-label { font-size: 0.78em; color: #6b7280; font-weight: 500; }
+.field-promote-btn {
+  font-size: 0.68em;
+  background: #eef4fa;
+  border: 1px solid #cfe0ee;
+  border-radius: 5px;
+  color: #064886;
+  padding: 2px 7px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.field-promote-btn:hover { background: #dceafb; }
 .field-font-picker {
   font-size: 0.72em;
   background: #fff;

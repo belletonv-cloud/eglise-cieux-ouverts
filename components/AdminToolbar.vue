@@ -346,6 +346,7 @@
                 :schema="sidebarSchema"
                 :model-value="sidebarBlock"
                 @update="onAutoUpdate"
+                @promoted="selectedElementId = $event"
             />
             <p v-if="sidebarBlock && BLOCK_TYPES[sidebarBlock.type]?.animations !== 'wrapper'" class="admin-anim-note">
                 {{ BLOCK_TYPES[sidebarBlock.type]?.animations === 'none' ? 'Aucune animation configurable pour ce bloc.' : 'Animation CSS native — non modifiable dans l\'éditeur.' }}
