@@ -153,14 +153,25 @@ function promoteField(field: FieldSchema) {
   const value = effectiveFieldValue(field)
   if (!value) return
   const kind = field.type === 'image' ? 'image' : 'text'
+  // Une taille pleine largeur/hauteur (100%) laisse l'élément bloqué :
+  // avec :parent="true", un élément qui occupe déjà tout l'espace
+  // disponible n'a nulle part où aller tant qu'il n'a pas été réduit —
+  // ce qui donnait l'impression qu'un élément promu "ne bougeait pas",
+  // contrairement à un élément ajouté (qui démarre à 30%×20%, avec de la
+  // marge). Une marge de 5% de chaque côté garde une taille proche de
+  // l'original tout en le rendant immédiatement déplaçable. Un léger
+  // décalage par élément déjà présent évite en plus que deux champs
+  // promus sur le même bloc démarrent parfaitement superposés.
+  const existingCount = props.modelValue.props?.extraElements?.length || 0
+  const offset = (existingCount % 4) * 3
   const newElement: ExtraElement = {
     id: `el-promoted-${Date.now()}-${nextPromotedId++}`,
     kind,
-    xPct: 0,
-    yPct: 0,
-    wPct: 100,
-    hPct: 100,
-    z: props.modelValue.props?.extraElements?.length || 0,
+    xPct: 5 + offset,
+    yPct: 5 + offset,
+    wPct: 90 - offset,
+    hPct: 90 - offset,
+    z: existingCount,
     ...(kind === 'image' ? { imageUrl: value, imageAlt: '' } : { text: value }),
   }
   const extraElements = [...(props.modelValue.props?.extraElements || []), newElement]

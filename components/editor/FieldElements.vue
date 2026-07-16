@@ -141,11 +141,17 @@ function removeItem(idx: number) {
 }
 
 function addItem(kind: ExtraElementKind) {
+  // Décale légèrement chaque nouvel élément par rapport au précédent :
+  // sans ça, plusieurs éléments créés à la suite démarrent exactement à
+  // la même position et se superposent parfaitement, ce qui donne
+  // l'impression qu'un déplacement ne fait rien (l'élément du dessous
+  // reste visible au même endroit).
+  const offset = (localItems.value.length % 5) * 4
   const base: ExtraElement = {
     id: `el-${Date.now()}-${nextId++}`,
     kind,
-    xPct: 10,
-    yPct: 10,
+    xPct: 10 + offset,
+    yPct: 10 + offset,
     wPct: 30,
     hPct: 20,
     z: localItems.value.length,
