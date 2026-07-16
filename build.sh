@@ -18,11 +18,17 @@ if [ "$CF_PAGES_BRANCH" = "recette" ]; then
   export NUXT_FIREBASE_PRIVATE_KEY="${NUXT_FIREBASE_PRIVATE_KEY:-dummy-key-set-in-cloudflare-dashboard}"
 fi
 
-# npm install (pas npm ci) : le lockfile est généré sur macOS et ne
-# contient donc que le binding natif darwin-arm64 pour les paquets
-# multi-plateformes (oxc-parser, esbuild, rollup) — npm ci refuse
-# d'installer quoi que ce soit hors lockfile et échoue sur Linux avec
-# "Cannot find native binding". npm install résout et installe le
-# binding linux-x64-gnu manquant à la volée (bug connu npm/cli#4828).
+# package-lock.json est généré sur macOS et ne verrouille donc que le
+# binding natif darwin-arm64 pour les paquets multi-plateformes
+# (oxc-parser, esbuild, rollup). npm install seul ne suffit pas : avec
+# un lockfile existant (même partiel), npm considère la résolution déjà
+# satisfaite et ne va pas chercher les variantes de plateforme
+# manquantes. On supprime donc le lockfile ici pour forcer une
+# résolution fraîche sur la machine Linux de Cloudflare elle-même, qui
+# récupère alors correctement le binding linux-x64-gnu (bug connu
+# npm/cli#4828 — suggestion officielle de npm dans son propre message
+# d'erreur : supprimer node_modules + package-lock.json puis réinstaller).
+rm -f package-lock.json
+rm -rf node_modules
 npm install --no-audit --no-fund
 npm run build
