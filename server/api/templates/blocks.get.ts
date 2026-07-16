@@ -1,13 +1,20 @@
 import { getFirestoreConfig, getAccessToken } from '../../utils/firebase'
+import { BLOCK_TYPES } from '../../../utils/blockTypes.js'
 
 export default defineEventHandler(async (event) => {
   const isTest = process.env.NODE_ENV === 'test' || process.env.PW_TEST === '1' || process.env.TEST_ENV === '1'
   if (isTest) {
-    // Return mock templates in test mode
-    return [
-      { id: 'tpl-1', name: 'Témoignage simple', type: 'textImage', props: {} },
-      { id: 'tpl-2', name: 'Événement', type: 'activities', props: {} }
-    ]
+    // Mock templates in test mode, derived from BLOCK_TYPES' built-in templates.
+    // "blank" entries are skipped: the template picker always shows its own
+    // hardcoded "Bloc vierge" card, so including them would duplicate it.
+    const templates: any[] = []
+    for (const [type, def] of Object.entries(BLOCK_TYPES)) {
+      for (const tpl of (def as any).templates || []) {
+        if (tpl.id === 'blank') continue
+        templates.push({ id: `${type}-${tpl.id}`, name: tpl.label, type, props: { ...tpl.props } })
+      }
+    }
+    return templates
   }
 
   const config = getFirestoreConfig(event)
