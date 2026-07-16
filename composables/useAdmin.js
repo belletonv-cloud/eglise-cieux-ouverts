@@ -217,12 +217,13 @@ export function useAdmin() {
     if (idx < 0) return null;
     const original = localBlocks.value[idx];
     const { createBlock } = await import("~/utils/blockTypes.js");
-    // Clone props, visibility, and responsive overrides
-    const duplicated = createBlock(original.type, {
+    const { mergeDesignDefaults } = await import("~/utils/designDefaults.js");
+    // Clone props, visibility, and responsive overrides with design defaults
+    const duplicated = mergeDesignDefaults(createBlock(original.type, {
       ...original.props,
       ...(original.visibility || VISIBILITY_DEFAULTS),
       ...(original.responsive || {}),
-    });
+    }));
     if (!duplicated) return null;
     const label = _blockLabel(original.type);
     pushHistory(`Duplication du bloc « ${label} »`);
