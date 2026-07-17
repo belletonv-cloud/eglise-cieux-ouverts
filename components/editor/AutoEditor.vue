@@ -87,7 +87,7 @@ const fieldRefs: Record<string, HTMLElement> = {}
 watch(activeFieldKey, (key) => {
   if (!key) return
   nextTick(() => fieldRefs[key]?.scrollIntoView({ behavior: 'smooth', block: 'center' }))
-})
+}, { immediate: true })
 
 const FIELD_MAP: Record<string, any> = {
   text: FieldText,

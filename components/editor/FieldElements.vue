@@ -131,7 +131,7 @@ const itemRefs: Record<string, HTMLElement> = {}
 watch(() => props.selectedId, (id) => {
   if (!id) return
   nextTick(() => itemRefs[id]?.scrollIntoView({ behavior: 'smooth', block: 'center' }))
-})
+}, { immediate: true })
 
 let isEditing = false
 let nextKey = 0
