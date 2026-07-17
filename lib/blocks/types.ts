@@ -75,7 +75,7 @@ export interface BlockInstance {
 // et components/editor/FieldElements.vue). Position/taille en % de la zone
 // canvas (pas en px) pour une mise à l'échelle proportionnelle responsive
 // sans authoring séparé par device.
-export type ExtraElementKind = 'text' | 'image' | 'button'
+export type ExtraElementKind = 'text' | 'richtext' | 'image' | 'button'
 
 export interface ExtraElement {
   id: string

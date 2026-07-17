@@ -38,6 +38,17 @@
           ></textarea>
         </template>
 
+        <template v-else-if="item.kind === 'richtext'">
+          <textarea
+            class="field-textarea field-textarea-html"
+            rows="4"
+            placeholder="Contenu HTML"
+            :value="item.text"
+            @input="updateItem(idx, { text: ($event.target as HTMLTextAreaElement).value })"
+            @click.stop
+          ></textarea>
+        </template>
+
         <template v-else-if="item.kind === 'image'">
           <input
             type="text"
@@ -121,7 +132,10 @@ watch(() => props.elements, (v) => {
 }, { deep: true })
 
 function kindLabel(kind: ExtraElementKind) {
-  return kind === 'text' ? 'Texte' : kind === 'image' ? 'Image' : 'Bouton'
+  if (kind === 'text') return 'Texte'
+  if (kind === 'richtext') return 'Texte HTML'
+  if (kind === 'image') return 'Image'
+  return 'Bouton'
 }
 
 function emitChange() {
@@ -180,6 +194,7 @@ function addItem(kind: ExtraElementKind) {
 .array-add-btn:hover { border-color: #064886; color: #064886; background: #eef4fa; }
 .field-input, .field-textarea { width: 100%; padding: 7px 10px; background: #fff; border: 1px solid #ddd; border-radius: 6px; color: #1a1a2e; font-size: 0.88em; outline: none; font-family: inherit; }
 .field-textarea { resize: vertical; min-height: 50px; }
+.field-textarea-html { font-family: monospace; }
 .field-image-preview { width: 100%; max-height: 60px; object-fit: cover; border-radius: 6px; }
 .field-elements-hint { font-size: 0.75em; color: #999; margin: 0; line-height: 1.4; }
 </style>

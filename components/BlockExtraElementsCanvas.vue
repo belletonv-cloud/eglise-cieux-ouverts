@@ -139,6 +139,7 @@ function onResizeStop(el: ExtraElement, x: number, y: number, w: number, h: numb
   pointer-events: auto;
 }
 .bee-el-drag :deep(.bee-text),
+.bee-el-drag :deep(.bee-richtext),
 .bee-el-drag :deep(.bee-image) {
   width: 100%;
   height: 100%;

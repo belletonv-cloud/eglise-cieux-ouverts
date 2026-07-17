@@ -1,7 +1,12 @@
 // /server/utils/firestore-mock.js
 
-// Memo en RAM pour simuler la persistance (reset à chaque test run)
-let PAGES = {
+// Fixture canonique des pages mock, utilisée à la fois pour l'état initial
+// du module et par resetMock() — une seule source pour éviter que les deux
+// dérivent (resetMock() avait sa propre copie tronquée sans 'test-blocks'
+// ni le bloc richText d'event-list, cassant silencieusement tout test
+// naviguant vers /test-blocks après un appel à resetMock()).
+function defaultPages() {
+  return {
   'event-list': {
     blocks: [
       {
@@ -104,7 +109,11 @@ let PAGES = {
       { id: 'tb-footer', type: 'footer', props: {} },
     ],
   },
+  }
 }
+
+// Memo en RAM pour simuler la persistance (reset à chaque test run)
+let PAGES = defaultPages()
 
 export function getPageDoc(slug) {
   const found = PAGES[slug]
@@ -117,44 +126,7 @@ export function getPageDoc(slug) {
 }
 
 export function resetMock() {
-  const accueilBlocks = [
-    { id: 'bloc-hero', type: 'hero', props: {} },
-    { id: 'bloc-bienvenue', type: 'bienvenue', props: {} },
-    { id: 'bloc-rejoins', type: 'rejoins', props: {} },
-    { id: 'bloc-aspirations', type: 'aspirations', props: {} },
-    { id: 'bloc-vision', type: 'vision', props: {} },
-    { id: 'bloc-activities', type: 'activities', props: {} },
-    { id: 'bloc-nousRejoindre', type: 'nousRejoindre', props: {} },
-    { id: 'bloc-contact', type: 'contact', props: {} },
-  ]
-  PAGES = {
-    'event-list': {
-      blocks: [
-        {
-          id: 'block-hero',
-          type: 'hero',
-          props: {
-            overlayText: 'Événements à venir',
-            overlay: true,
-          },
-        },
-        {
-          id: 'block-text-img',
-          type: 'textImage',
-          props: {
-            title: 'Un texte de présentation avec un Drag & Drop possible.',
-            image: '/test-img.gif',
-          },
-        },
-        {
-          id: 'block-spacer',
-          type: 'spacer',
-          props: { height: 25 },
-        },
-      ],
-    },
-    accueil: { blocks: accueilBlocks },
-  }
+  PAGES = defaultPages()
   COMMENTS = {}
   CONTACTS = {}
   VERSIONS = {}

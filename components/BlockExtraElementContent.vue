@@ -1,5 +1,11 @@
 <template>
   <p v-if="element.kind === 'text' && element.text" class="bee-text" :style="textStyle">{{ element.text }}</p>
+  <div
+    v-else-if="element.kind === 'richtext' && element.text"
+    class="bee-richtext"
+    :style="textStyle"
+    v-html="sanitizedHtml"
+  ></div>
   <img
     v-else-if="element.kind === 'image' && element.imageUrl"
     class="bee-image"
@@ -20,11 +26,17 @@
 import { computed } from 'vue'
 import type { ExtraElement } from '~/lib/blocks/types'
 import { fontStack, ensureFontLoaded } from '~/utils/fonts.js'
+import { sanitizeHtml } from '~/utils/sanitize.js'
 
 const props = defineProps<{
   element: ExtraElement
   isAdmin?: boolean
 }>()
+
+// Même traitement que BlockRichText.vue pour le champ HTML d'origine :
+// le contenu reste du HTML admin-authored mais passe par le même filtre
+// (script/handlers/javascript: retirés) avant v-html.
+const sanitizedHtml = computed(() => props.element.text ? sanitizeHtml(props.element.text) : '')
 
 // Style repris d'un champ promu (voir AutoEditor.promoteField) pour garder
 // l'apparence d'origine. fontFamily est un NOM de police résolu en stack
@@ -59,6 +71,13 @@ function onButtonClick(e: MouseEvent) {
   font-size: 1.05em;
   line-height: 1.5;
 }
+.bee-richtext {
+  font-size: 1.05em;
+  line-height: 1.7;
+  overflow: auto;
+}
+.bee-richtext :deep(*:first-child) { margin-top: 0; }
+.bee-richtext :deep(*:last-child) { margin-bottom: 0; }
 .bee-image {
   width: 100%;
   height: 100%;

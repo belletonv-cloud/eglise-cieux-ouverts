@@ -381,4 +381,33 @@ test.describe('« Rendre déplaçable » — promouvoir un champ existant en él
     await expect(titreField.locator('input, textarea')).toHaveCount(0)
     await expect(titreField.locator('.field-promote-btn')).toHaveCount(0)
   })
+
+  test('un champ richtext (bloc Texte riche) est promouvable et son HTML est rendu, pas affiché en texte brut', async ({ page }) => {
+    // Le champ "content" du bloc richText était le seul type de champ exclu
+    // de « Rendre déplaçable » : son HTML aurait été affiché tel quel en
+    // texte brut par .bee-text. Un kind 'richtext' dédié le rend via v-html
+    // (sanitizeHtml), comme BlockRichText.vue en position fixe.
+    const errors = collectErrors(page)
+    await page.goto('/test-blocks?admin=true')
+    await page.waitForSelector('.block-wrapper[data-block-type="richText"]', { timeout: 10000 })
+    await page.locator('.block-wrapper[data-block-type="richText"]').click()
+    await page.waitForTimeout(300)
+
+    const contentField = page.locator('.auto-field').filter({ has: page.locator('.field-label', { hasText: /^Contenu HTML$/ }) })
+    await expect(contentField.locator('.field-promote-btn')).toBeVisible()
+    await contentField.locator('.field-promote-btn').click()
+    await page.waitForTimeout(200)
+
+    const wrapper = page.locator('.block-wrapper[data-block-type="richText"]')
+    // Le <h2> du contenu mock ("Bloc richText animé") est rendu comme
+    // véritable élément HTML, pas comme texte brut contenant des chevrons.
+    await expect(wrapper.locator('.bee-richtext h2')).toHaveText('Bloc richText animé')
+    await expect(wrapper.locator('.bee-text')).toHaveCount(0)
+
+    // Le champ affiche la note de promotion, plus d'éditeur ni de bouton.
+    await expect(contentField.locator('.field-promoted-note')).toBeVisible()
+    await expect(contentField.locator('.field-promote-btn')).toHaveCount(0)
+
+    expect(errors).toEqual([])
+  })
 })

@@ -125,14 +125,15 @@ function onFontChange(key: string, font: string) {
 }
 
 // "Rendre déplaçable" : convertit la valeur actuelle d'un champ fixe du
-// bloc (image/texte) en élément libre du canvas (props.extraElements),
+// bloc (image/texte/HTML) en élément libre du canvas (props.extraElements),
 // pour lui donner le même comportement déplacer/redimensionner/éditer
 // que les éléments ajoutés via le panneau — au lieu de rester figé à sa
-// place dans la mise en page du bloc. richtext exclu : son contenu HTML
-// serait affiché tel quel comme texte brut par BlockExtraElementContent.
+// place dans la mise en page du bloc. richtext rendu via un kind dédié
+// (BlockExtraElementContent applique sanitizeHtml + v-html, comme
+// BlockRichText.vue) plutôt qu'affiché tel quel comme texte brut.
 let nextPromotedId = 0
 function isPromotableField(field: FieldSchema) {
-  if (!['image', 'text', 'textarea'].includes(field.type)) return false
+  if (!['image', 'text', 'textarea', 'richtext'].includes(field.type)) return false
   return !NON_VISUAL_FIELD_PATTERN.test(field.key)
 }
 
@@ -163,7 +164,7 @@ function promoteField(field: FieldSchema) {
   if (!props.modelValue) return
   const value = effectiveFieldValue(field)
   if (!value) return
-  const kind = field.type === 'image' ? 'image' : 'text'
+  const kind = field.type === 'image' ? 'image' : field.type === 'richtext' ? 'richtext' : 'text'
   // Une taille pleine largeur/hauteur (100%) laisse l'élément bloqué :
   // avec :parent="true", un élément qui occupe déjà tout l'espace
   // disponible n'a nulle part où aller tant qu'il n'a pas été réduit —
@@ -191,7 +192,7 @@ function promoteField(field: FieldSchema) {
   // Ces clés (textColor/fontSize/fieldFonts) couvrent les blocs textuels du
   // site ; fontSize est en em côté blocs (ex: Bienvenue) → suffixé 'em' si
   // numérique. Un champ sans style particulier reste au défaut de .bee-text.
-  if (kind === 'text') {
+  if (kind === 'text' || kind === 'richtext') {
     const color = effectiveProp('textColor') ?? effectiveProp('color')
     if (color) newElement.color = String(color)
     const fs = effectiveProp('fontSize')
