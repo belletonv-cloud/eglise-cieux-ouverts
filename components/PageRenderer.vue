@@ -38,8 +38,10 @@
                 :elements="block.props.extraElements"
                 :is-admin="true"
                 :selected-id="selectedElementId"
+                :positioning-id="positioningElementId"
                 @select="selectedElementId = $event"
                 @update:elements="updateBlock(block.id, { extraElements: $event })"
+                @stop-positioning="stopPositioning"
             />
             <span v-if="!getAnimClass(block) && getAnimationStrategy(block.type) !== 'wrapper'" class="anim-native-badge">
                 {{ getAnimationStrategy(block.type) === 'none' ? 'Aucune animation' : 'Animation native' }}
@@ -75,8 +77,10 @@
                 :elements="block.props.extraElements"
                 :is-admin="isAdmin || undefined"
                 :selected-id="selectedElementId"
+                :positioning-id="positioningElementId"
                 @select="selectedElementId = $event"
                 @update:elements="updateBlock(block.id, { extraElements: $event })"
+                @stop-positioning="stopPositioning"
             />
             <span v-if="isAdmin && !getAnimClass(block) && getAnimationStrategy(block.type) !== 'wrapper'" class="anim-native-badge">
                 {{ getAnimationStrategy(block.type) === 'none' ? 'Aucune animation' : 'Animation native' }}
@@ -147,9 +151,10 @@ const props = defineProps({
     blocks: { type: Array, default: () => [] },
 });
 
-// selectedElementId : partagé avec le panneau sidebar FieldElements
-// (composables/useAdmin.js) pour garder la sélection synchronisée.
-const { reorderBlocks, updateBlock, selectedElementId } = useAdmin();
+// selectedElementId / positioningElementId : partagés avec le panneau
+// sidebar FieldElements (composables/useAdmin.js) pour garder la sélection
+// et le mode positionnement synchronisés.
+const { reorderBlocks, updateBlock, selectedElementId, positioningElementId, stopPositioning } = useAdmin();
 
 // Applique le nouvel ordre des blocs VISIBLES à la liste complète : les blocs
 // masqués (par device) gardent leur position, les visibles prennent l'ordre

@@ -21,6 +21,11 @@
           <span class="array-drag-handle" title="Glisser pour réordonner (ordre d'empilement)">⠿</span>
           <span class="array-item-num">{{ kindLabel(item.kind) }} #{{ idx + 1 }}</span>
           <button
+            class="array-item-position-btn"
+            title="Ajuster la position/taille sur la page"
+            @click.stop="$emit('position', item.id)"
+          >⤢</button>
+          <button
             class="array-item-del"
             @click.stop="removeItem(idx)"
             aria-label="Supprimer l'élément"
@@ -96,7 +101,7 @@
       <button class="array-add-btn" @click="addItem('button')">+ Bouton</button>
     </div>
     <p class="field-elements-hint">
-      Ajoute, réordonne (ordre d'empilement) ou supprime le contenu ici. Pour déplacer/redimensionner un élément, sélectionne-le puis glisse-le directement sur la page.
+      Ajoute, réordonne (ordre d'empilement) ou supprime le contenu ici. Clique ⤢ sur un élément pour le déplacer/redimensionner directement sur la page.
     </p>
   </div>
 </template>
@@ -114,6 +119,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   change: [elements: ExtraElement[]]
   select: [id: string]
+  position: [id: string]
 }>()
 
 let isEditing = false
@@ -187,6 +193,8 @@ function addItem(kind: ExtraElementKind) {
 .array-drag-handle { cursor: grab; color: #9ca3af; font-size: 14px; user-select: none; }
 .array-drag-handle:hover { color: #064886; }
 .array-item-num { font-size: 0.72em; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.08em; flex: 1; }
+.array-item-position-btn { background: none; border: none; color: #064886; cursor: pointer; font-size: 0.95em; padding: 2px 5px; border-radius: 4px; }
+.array-item-position-btn:hover { background: rgba(6,72,134,0.1); }
 .array-item-del { background: none; border: none; color: #EF4B54; cursor: pointer; font-size: 0.85em; padding: 2px 5px; border-radius: 4px; }
 .array-item-del:hover { background: rgba(239,75,84,0.1); }
 .array-actions { display: flex; gap: 8px; }

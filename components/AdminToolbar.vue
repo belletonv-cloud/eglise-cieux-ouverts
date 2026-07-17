@@ -227,10 +227,10 @@
 
     <div
         class="admin-sidebar-overlay"
-        v-if="sidebarBlock && user"
+        v-if="sidebarBlock && user && !positioningElementId"
         @click="closeSidebar"
     ></div>
-    <div class="admin-sidebar" v-if="sidebarBlock && user">
+    <div class="admin-sidebar" v-if="sidebarBlock && user && !positioningElementId">
         <div class="admin-sidebar-header">
             <h3>{{ getBlockLabel(sidebarBlock.type) }}</h3>
             <button class="admin-close-btn" @click="closeSidebar">
@@ -304,6 +304,7 @@
                 :selected-id="selectedElementId"
                 @change="updateBlock(sidebarBlock.id, { extraElements: $event })"
                 @select="selectedElementId = $event"
+                @position="startPositioning"
             />
             <div v-if="sidebarBlock" class="admin-comment-panel">
                 <p class="admin-comment-label">💬 Note pour le développeur</p>
@@ -944,6 +945,8 @@ const {
     addBlock,
     localBlocksPage,
     selectedElementId,
+    positioningElementId,
+    startPositioning,
 } = useAdmin();
 
 const { saveMenuToFirestore, customPages, loadCustomPages, menuChanged } = useMenuEditor();

@@ -80,12 +80,13 @@ test.describe('Éléments additionnels (canvas libre) — panneau sidebar', () =
     await page.locator('.array-add-btn', { hasText: '+ Texte' }).click()
     await page.locator('.array-add-btn', { hasText: '+ Image' }).click()
 
-    // Sélection depuis la sidebar → le canvas montre l'élément actif (poignées).
+    // Sélection depuis la sidebar → le canvas surligne l'élément sélectionné
+    // (statique, pas encore de poignées — il faut cliquer ⤢ pour ça).
     // On clique le header (pas le body de l'item : la textarea/les inputs ont
     // @click.stop pour ne pas déclencher la sélection en éditant du contenu).
     await page.locator('.field-elements .array-item').first().locator('.array-item-header').click()
     await expect(page.locator('.field-elements .array-item').first()).toHaveClass(/array-item-selected/)
-    await expect(page.locator('.bee-el').first()).toHaveClass(/active/)
+    await expect(page.locator('.bee-el').first()).toHaveClass(/bee-el-selected/)
 
     // Sélection depuis le canvas (clic direct) → la sidebar suit
     await page.locator('.bee-el').nth(1).click()
@@ -101,10 +102,12 @@ test.describe('Éléments additionnels (canvas libre) — panneau sidebar', () =
     await page.locator('.array-add-btn', { hasText: '+ Texte' }).click()
     await page.locator('.field-elements .field-textarea').fill('Élément déplaçable')
 
-    const el = page.locator('.bee-el').first()
-    await el.click() // sélectionne pour activer le drag
+    // Le drag ne s'active plus à la simple sélection : il faut cliquer ⤢
+    // pour entrer en mode positionnement (la sidebar se cache).
+    await page.locator('.array-item-position-btn').click()
     await page.waitForTimeout(200)
 
+    const el = page.locator('.bee-el').first()
     const before = await el.boundingBox()
     if (!before) throw new Error('bounding box introuvable')
 
@@ -118,6 +121,10 @@ test.describe('Éléments additionnels (canvas libre) — panneau sidebar', () =
     if (!after) throw new Error('bounding box introuvable après drag')
     expect(Math.abs(after.x - before.x)).toBeGreaterThan(50)
     expect(Math.abs(after.y - before.y)).toBeGreaterThan(20)
+
+    // Valider le positionnement pour rouvrir la sidebar
+    await page.locator('.bee-validate-btn').click()
+    await page.waitForTimeout(200)
 
     // Sauvegarde puis vérification de la persistance via l'API
     await page.locator('button[title="Sauvegarder les modifications"], button:has-text("Sauvegarder")').first().click()
@@ -139,10 +146,12 @@ test.describe('Éléments additionnels (canvas libre) — panneau sidebar', () =
 
     await page.locator('.array-add-btn', { hasText: '+ Texte' }).click()
 
-    const el = page.locator('.bee-el').first()
-    await el.click()
+    // Le resize ne s'active plus à la simple sélection : il faut cliquer ⤢
+    // pour entrer en mode positionnement (la sidebar se cache).
+    await page.locator('.array-item-position-btn').click()
     await page.waitForTimeout(200)
 
+    const el = page.locator('.bee-el').first()
     const before = await el.boundingBox()
     if (!before) throw new Error('bounding box introuvable')
 
@@ -337,8 +346,10 @@ test.describe('« Rendre déplaçable » — promouvoir un champ existant en él
     await page.waitForTimeout(200)
 
     const el = page.locator('.bee-el').first()
-    // Sélectionné automatiquement après promotion (poignées actives)
-    await expect(el).toHaveClass(/active/)
+    // Sélectionné automatiquement après promotion (surlignage), mais pas
+    // encore en mode positionnement (pas de poignées tant qu'on n'a pas
+    // cliqué ⤢) — cohérent avec le flux homogène : sélection ≠ drag/resize.
+    await expect(el).toHaveClass(/bee-el-selected/)
     await expect(page.locator('.field-elements .array-item').first()).toHaveClass(/array-item-selected/)
 
     // Édition de contenu via le même panneau FieldElements que les

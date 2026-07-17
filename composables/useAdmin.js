@@ -18,6 +18,11 @@ const redoStack = ref([]);
 // entre le panneau sidebar (FieldElements) et le rendu sur la page
 // (BlockExtraElementsCanvas) pour que la sélection reste synchronisée.
 const selectedElementId = ref(null);
+// Élément additionnel actuellement en mode positionnement (drag/resize actif
+// sur le canvas, sidebar cachée) — distinct de selectedElementId : une
+// simple sélection n'active plus le drag/resize, il faut explicitement
+// entrer en mode positionnement via le bouton ⤢ de FieldElements.
+const positioningElementId = ref(null);
 
 // Footer block (managed separately from page blocks)
 // Initialized with defaults so it renders immediately (SSR/public).
@@ -93,6 +98,7 @@ export function useAdmin() {
     isAdminMode.value = false;
     editingBlockId.value = null;
     editingFooter.value = false;
+    positioningElementId.value = null;
     footerBlock.value = _defaultFooterBlock();
     localBlocks.value = [];
     localBlocksPage.value = "";
@@ -115,6 +121,7 @@ export function useAdmin() {
     editingFooter.value = false;
     if (editingBlockId.value !== id) selectedElementId.value = null;
     editingBlockId.value = id;
+    positioningElementId.value = null;
   }
 
   function updateBlock(id, props) {
@@ -393,6 +400,15 @@ export function useAdmin() {
   function selectFooter() {
     editingBlockId.value = null;
     editingFooter.value = true;
+    positioningElementId.value = null;
+  }
+
+  function startPositioning(id) {
+    positioningElementId.value = id;
+  }
+
+  function stopPositioning() {
+    positioningElementId.value = null;
   }
 
   function closeFooterEditor() {
@@ -421,6 +437,9 @@ export function useAdmin() {
     previewDevice,
     hasUnsavedChanges,
     selectedElementId,
+    positioningElementId,
+    startPositioning,
+    stopPositioning,
     enterAdmin,
     exitAdmin,
     clearBlocks,
