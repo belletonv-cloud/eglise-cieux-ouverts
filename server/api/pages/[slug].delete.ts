@@ -20,7 +20,7 @@ export default defineEventHandler(async (event) => {
   // En mode test, soft-delete dans le mock RAM — jamais dans la vraie base
   const isTest = process.env.NODE_ENV === 'test' || process.env.PW_TEST === '1' || process.env.TEST_ENV === '1'
   if (isTest) {
-    const { getPageDoc, setPageDoc } = await import('../../utils/firestore-mock.js')
+    const { getPageDoc, setPageDoc, getMenuMock, setMenuMock } = await import('../../utils/firestore-mock.js')
     const current = await getPageDoc(slug)
     await setPageDoc(slug, {
       ...current,
@@ -29,6 +29,24 @@ export default defineEventHandler(async (event) => {
       updatedAt: new Date().toISOString(),
       updatedBy: 'test',
     })
+
+    // Nettoyer le menu du mock aussi
+    try {
+      const menuData = getMenuMock()?.menuItems || []
+      const cleanedMenu = (menuData as any[])
+        .map((item: any) => ({
+          ...item,
+          children: item.children?.filter((child: any) => child.to !== `/${slug}`) || []
+        }))
+        .filter((item: any) => item.to !== `/${slug}`)
+
+      if (JSON.stringify(menuData) !== JSON.stringify(cleanedMenu)) {
+        setMenuMock({ menuItems: cleanedMenu, menuBgImage: '' })
+      }
+    } catch (menuErr) {
+      console.warn('Failed to clean menu item in mock:', menuErr)
+    }
+
     return { success: true }
   }
 
@@ -54,6 +72,29 @@ export default defineEventHandler(async (event) => {
       updatedAt: new Date().toISOString(),
       updatedBy: userInfo.email || 'inconnu',
     }, ['_deleted', 'blocks', 'updatedAt', 'updatedBy'])
+
+    // Nettoyer le menu : retirer l'item qui référence cette page
+    try {
+      const { parseFirestoreDoc } = await import('../../utils/firebase')
+      const menuDoc = await getFirestoreDoc(config.projectId, accessToken, 'settings', 'menu')
+      const menuData = menuDoc ? parseFirestoreDoc(menuDoc)?.menuItems || [] : []
+
+      const cleanedMenu = (menuData as any[])
+        .map((item: any) => ({
+          ...item,
+          children: item.children?.filter((child: any) => child.to !== `/${slug}`) || []
+        }))
+        .filter((item: any) => item.to !== `/${slug}`)
+
+      if (JSON.stringify(menuData) !== JSON.stringify(cleanedMenu)) {
+        await setFirestoreDoc(config.projectId, accessToken, 'settings', 'menu', {
+          menuItems: cleanedMenu,
+        }, ['menuItems'])
+      }
+    } catch (menuErr) {
+      // Ne pas bloquer la suppression si le menu ne peut pas être nettoyé
+      console.warn('Failed to clean menu item:', menuErr)
+    }
 
     return { success: true }
   } catch (err: any) {
