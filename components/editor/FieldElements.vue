@@ -15,6 +15,7 @@
         :key="item._key"
         class="array-item"
         :class="{ 'array-item-selected': item.id === selectedId }"
+        :ref="(el) => { if (el) itemRefs[item.id] = el }"
         @click="$emit('select', item.id)"
       >
         <div class="array-item-header">
@@ -107,7 +108,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, nextTick } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 import type { ExtraElement, ExtraElementKind } from '~/lib/blocks/types'
 
@@ -121,6 +122,16 @@ const emit = defineEmits<{
   select: [id: string]
   position: [id: string]
 }>()
+
+// Scroll automatique vers l'élément sélectionné depuis le canvas (clic
+// direct sur la page) — même logique que le surlignage des champs fixes
+// dans AutoEditor.vue, pour qu'un élément déjà présent hors-vue reste
+// repérable dans la liste sans avoir à scroller manuellement.
+const itemRefs: Record<string, HTMLElement> = {}
+watch(() => props.selectedId, (id) => {
+  if (!id) return
+  nextTick(() => itemRefs[id]?.scrollIntoView({ behavior: 'smooth', block: 'center' }))
+})
 
 let isEditing = false
 let nextKey = 0

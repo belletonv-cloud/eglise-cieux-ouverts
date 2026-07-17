@@ -87,7 +87,7 @@
       <div class="contact-wrap">
         <div class="contact-left">
           <img v-if="image" :src="image" alt="" class="contact-phone" data-field-key="image" loading="lazy" />
-          <div v-else class="contact-phone-placeholder"></div>
+          <div v-else-if="!imagePromoted" class="contact-phone-placeholder"></div>
 
           <div class="contact-socials" v-if="showSocials">
             <a href="https://instagram.com/eglise_cieux_ouverts" target="_blank" rel="noopener" class="contact-social-icon" aria-label="Instagram Cieux Ouverts">
@@ -147,6 +147,7 @@ const {
   showQuestions = false,
   visibility = {},
   fieldFonts = {},
+  promotedFields = [],
 } = defineProps({
   backgroundGradient: { type: String, default: '' },
   textColor: { type: String, default: '#fff' },
@@ -159,7 +160,13 @@ const {
   showQuestions: { type: Boolean, default: false },
   visibility: { type: Object, default: () => ({}) },
   fieldFonts: { type: Object, default: () => ({}) },
+  promotedFields: { type: Array, default: () => [] },
 })
+// Un champ promu ("Rendre déplaçable") vide sa valeur fixe pour exister
+// ailleurs en élément libre — sans ce garde-fou, le placeholder "image
+// manquante" resterait affiché à son ancien emplacement alors que l'image
+// existe toujours (juste déplacée), donnant l'impression d'un bug visuel.
+const imagePromoted = computed(() => promotedFields.includes('image'))
 
 const isEditor = inject('isEditor', false)
 

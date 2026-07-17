@@ -21,13 +21,13 @@
           <div class="ti-laptop-screen-frame">
             <div class="ti-laptop-content">
               <img v-if="image" :src="image" :alt="title" class="ti-img" data-field-key="image" loading="lazy" />
-              <div v-else class="ti-img-placeholder">🖼️</div>
+              <div v-else-if="!imagePromoted" class="ti-img-placeholder">🖼️</div>
             </div>
           </div>
           <div class="ti-laptop-base"></div>
         </div>
         <img v-else-if="image" :src="image" :alt="title" class="ti-img" data-field-key="image" loading="lazy" />
-        <div v-else class="ti-img-placeholder">🖼️</div>
+        <div v-else-if="!imagePromoted" class="ti-img-placeholder">🖼️</div>
         <div v-if="images.length" class="ti-gallery-extra">
           <img
             v-for="(src, i) in images"
@@ -65,7 +65,13 @@ const props = defineProps({
   isTriggered: { type: Boolean, default: false },
   previewDevice: { type: String, default: 'desktop' },
   fieldFonts: { type: Object, default: () => ({}) },
+  promotedFields: { type: Array, default: () => [] },
 })
+// Un champ promu ("Rendre déplaçable") vide sa valeur fixe pour exister
+// ailleurs en élément libre — sans ce garde-fou, le placeholder "image
+// manquante" resterait affiché à son ancien emplacement alors que l'image
+// existe toujours (juste déplacée), donnant l'impression d'un bug visuel.
+const imagePromoted = computed(() => props.promotedFields.includes('image'))
 const visibilityClasses = computed(() => ({
   'hide-mobile': props.visibility.mobile === false,
   'hide-tablet': props.visibility.tablet === false,
