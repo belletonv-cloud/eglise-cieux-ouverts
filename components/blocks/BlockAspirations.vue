@@ -11,7 +11,7 @@
             }"
         >
             <div class="aspirations-content">
-                <h1 class="aspirations-title" :style="fieldFontStyle(fieldFonts, 'title')">{{ title }}</h1>
+                <h1 class="aspirations-title" data-field-key="title" :style="fieldFontStyle(fieldFonts, 'title')">{{ title }}</h1>
                 <div class="aspirations-divider"></div>
                 <ol class="aspirations-list">
                     <li

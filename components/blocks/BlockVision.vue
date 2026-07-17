@@ -12,6 +12,7 @@
       <p
         v-if="label"
         class="vision-label"
+        data-field-key="label"
         :ref="labelAnim.setRef"
         :class="[labelAnim.animClass, { triggered: labelAnim.triggered.value }]"
         :style="fieldFontStyle(fieldFonts, 'label')"
@@ -19,6 +20,7 @@
       <p
         v-if="quote"
         class="vision-quote"
+        data-field-key="quote"
         :ref="quoteAnim.setRef"
         :class="[quoteAnim.animClass, { triggered: quoteAnim.triggered.value }]"
         :style="fieldFontStyle(fieldFonts, 'quote')"
@@ -28,6 +30,7 @@
         v-if="ctaText && ctaLink"
         :to="ctaLink"
         class="btn btn-white"
+        data-field-key="ctaText"
         :ref="ctaAnim.setRef"
         :class="[ctaAnim.animClass, { triggered: ctaAnim.triggered.value }]"
         :style="fieldFontStyle(fieldFonts, 'ctaText')"

@@ -5,7 +5,7 @@
     :class="visibilityClasses"
   >
     <div class="gallery-inner">
-      <h2 v-if="title" class="gallery-title" :style="{ color: textColor, ...fieldFontStyle(fieldFonts, 'title') }">{{ title }}</h2>
+      <h2 v-if="title" class="gallery-title" data-field-key="title" :style="{ color: textColor, ...fieldFontStyle(fieldFonts, 'title') }">{{ title }}</h2>
       <div class="gallery-grid" :style="{ gridTemplateColumns: `repeat(${columns ?? 3}, 1fr)` }">
         <div
           v-for="(img, i) in normalizedImages"

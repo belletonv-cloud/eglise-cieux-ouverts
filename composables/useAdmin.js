@@ -23,6 +23,10 @@ const selectedElementId = ref(null);
 // simple sélection n'active plus le drag/resize, il faut explicitement
 // entrer en mode positionnement via le bouton ⤢ de FieldElements.
 const positioningElementId = ref(null);
+// Clé du champ fixe (schema) identifié par le dernier clic dans un bloc —
+// permet à AutoEditor.vue de surligner/scroller vers ce champ précis dans
+// la sidebar, plutôt que de simplement ouvrir le bloc sans indication.
+const activeFieldKey = ref(null);
 
 // Footer block (managed separately from page blocks)
 // Initialized with defaults so it renders immediately (SSR/public).
@@ -99,6 +103,7 @@ export function useAdmin() {
     editingBlockId.value = null;
     editingFooter.value = false;
     positioningElementId.value = null;
+    activeFieldKey.value = null;
     footerBlock.value = _defaultFooterBlock();
     localBlocks.value = [];
     localBlocksPage.value = "";
@@ -122,6 +127,7 @@ export function useAdmin() {
     if (editingBlockId.value !== id) selectedElementId.value = null;
     editingBlockId.value = id;
     positioningElementId.value = null;
+    activeFieldKey.value = null;
   }
 
   function updateBlock(id, props) {
@@ -401,6 +407,7 @@ export function useAdmin() {
     editingBlockId.value = null;
     editingFooter.value = true;
     positioningElementId.value = null;
+    activeFieldKey.value = null;
   }
 
   function startPositioning(id) {
@@ -438,6 +445,7 @@ export function useAdmin() {
     hasUnsavedChanges,
     selectedElementId,
     positioningElementId,
+    activeFieldKey,
     startPositioning,
     stopPositioning,
     enterAdmin,

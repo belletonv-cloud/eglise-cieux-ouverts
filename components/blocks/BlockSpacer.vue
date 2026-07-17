@@ -5,8 +5,8 @@
     :class="visibilityClasses"
   >
     <template v-if="text || image">
-      <img v-if="image" :src="image" :alt="text" class="spacer-img" loading="lazy" />
-      <p v-if="text" class="spacer-text" :style="{ textAlign: contentAlign, ...fieldFontStyle(fieldFonts, 'text') }">{{ text }}</p>
+      <img v-if="image" :src="image" :alt="text" class="spacer-img" data-field-key="image" loading="lazy" />
+      <p v-if="text" class="spacer-text" data-field-key="text" :style="{ textAlign: contentAlign, ...fieldFontStyle(fieldFonts, 'text') }">{{ text }}</p>
     </template>
   </div>
 </template>

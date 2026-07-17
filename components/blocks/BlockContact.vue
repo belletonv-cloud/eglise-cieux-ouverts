@@ -7,10 +7,10 @@
     <div v-if="isClassicPageContact" class="contact-page-shell">
       <section class="contact-page-header">
         <div class="contact-page-header-inner">
-          <h2 class="contact-page-title" :style="fieldFontStyle(fieldFonts, 'title')">{{ title }}</h2>
+          <h2 class="contact-page-title" data-field-key="title" :style="fieldFontStyle(fieldFonts, 'title')">{{ title }}</h2>
           <div v-if="addressTitle || addressLine" class="contact-page-address">
-            <p v-if="addressTitle" :style="fieldFontStyle(fieldFonts, 'addressTitle')">{{ addressTitle }}</p>
-            <p v-if="addressLine" :style="fieldFontStyle(fieldFonts, 'addressLine')">{{ addressLine }}</p>
+            <p v-if="addressTitle" data-field-key="addressTitle" :style="fieldFontStyle(fieldFonts, 'addressTitle')">{{ addressTitle }}</p>
+            <p v-if="addressLine" data-field-key="addressLine" :style="fieldFontStyle(fieldFonts, 'addressLine')">{{ addressLine }}</p>
           </div>
         </div>
       </section>
@@ -82,11 +82,11 @@
     </div>
 
     <div v-else class="contact-inner">
-      <h2 class="contact-title" :style="fieldFontStyle(fieldFonts, 'title')">{{ title }}</h2>
+      <h2 class="contact-title" data-field-key="title" :style="fieldFontStyle(fieldFonts, 'title')">{{ title }}</h2>
 
       <div class="contact-wrap">
         <div class="contact-left">
-          <img v-if="image" :src="image" alt="" class="contact-phone" loading="lazy" />
+          <img v-if="image" :src="image" alt="" class="contact-phone" data-field-key="image" loading="lazy" />
           <div v-else class="contact-phone-placeholder"></div>
 
           <div class="contact-socials" v-if="showSocials">

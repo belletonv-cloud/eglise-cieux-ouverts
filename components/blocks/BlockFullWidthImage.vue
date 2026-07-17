@@ -1,5 +1,5 @@
 <template>
-  <div class="full-width-image" :style="style" :class="visibilityClasses" role="img" :aria-label="props.alt"></div>
+  <div class="full-width-image" :style="style" :class="visibilityClasses" role="img" :aria-label="props.alt" data-field-key="src"></div>
 </template>
 
 <script setup>

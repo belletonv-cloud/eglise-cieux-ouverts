@@ -39,7 +39,7 @@
                 :is-admin="true"
                 :selected-id="selectedElementId"
                 :positioning-id="positioningElementId"
-                @select="selectedElementId = $event"
+                @select="onExtraElementSelected"
                 @update:elements="updateBlock(block.id, { extraElements: $event })"
                 @stop-positioning="stopPositioning"
             />
@@ -78,7 +78,7 @@
                 :is-admin="isAdmin || undefined"
                 :selected-id="selectedElementId"
                 :positioning-id="positioningElementId"
-                @select="selectedElementId = $event"
+                @select="onExtraElementSelected"
                 @update:elements="updateBlock(block.id, { extraElements: $event })"
                 @stop-positioning="stopPositioning"
             />
@@ -151,10 +151,28 @@ const props = defineProps({
     blocks: { type: Array, default: () => [] },
 });
 
-// selectedElementId / positioningElementId : partagés avec le panneau
-// sidebar FieldElements (composables/useAdmin.js) pour garder la sélection
-// et le mode positionnement synchronisés.
-const { reorderBlocks, updateBlock, selectedElementId, positioningElementId, stopPositioning } = useAdmin();
+// selectedElementId / positioningElementId / activeFieldKey : partagés avec
+// le panneau sidebar (composables/useAdmin.js) pour garder la sélection, le
+// mode positionnement et le champ identifié par clic synchronisés.
+const { reorderBlocks, updateBlock, selectedElementId, positioningElementId, stopPositioning, activeFieldKey } = useAdmin();
+
+// Sélectionner un élément additionnel (canvas ou sidebar) efface le champ
+// fixe éventuellement identifié par un clic précédent — évite un surlignage
+// obsolète dans AutoEditor.vue une fois qu'on édite un élément libre.
+function onExtraElementSelected(id) {
+    selectedElementId.value = id
+    activeFieldKey.value = null
+}
+
+// Cherche l'ancêtre [data-field-key] le plus proche du point de clic : les
+// composants de bloc (components/blocks/Block*.vue) taguent leurs champs
+// promouvables (image/texte/richtext fixes) avec cet attribut pour que le
+// clic identifie précisément quel champ ouvrir/surligner dans la sidebar
+// (AutoEditor.vue), plutôt que de juste sélectionner le bloc entier.
+function resolveFieldKey(target) {
+    const el = target?.closest?.("[data-field-key]");
+    return el ? el.getAttribute("data-field-key") : null;
+}
 
 // Applique le nouvel ordre des blocs VISIBLES à la liste complète : les blocs
 // masqués (par device) gardent leur position, les visibles prennent l'ordre
@@ -422,6 +440,11 @@ if (typeof window !== "undefined" && import.meta.client) {
                         console.warn("PageRenderer.docClick: could not set editingBlockId", e);
                     }
                     try {
+                        activeFieldKey.value = resolveFieldKey(target);
+                    } catch (e) {
+                        console.warn("PageRenderer.docClick: could not resolve field key", e);
+                    }
+                    try {
                         document
                             .querySelectorAll(".block-wrapper.admin-selected")
                             .forEach((el) =>
@@ -459,6 +482,11 @@ if (typeof window !== "undefined" && import.meta.client) {
                         if (editingBlockId) editingBlockId.value = bid;
                     } catch (e) {
                         console.warn("PageRenderer.docPointer: could not set editingBlockId", e);
+                    }
+                    try {
+                        activeFieldKey.value = resolveFieldKey(target);
+                    } catch (e) {
+                        console.warn("PageRenderer.docPointer: could not resolve field key", e);
                     }
                     try {
                         document
@@ -505,6 +533,11 @@ function wrapperClick(id, ev) {
         }
     } catch (e) {
         console.warn("PageRenderer.wrapperClick: failed to set editingBlockId directly", e);
+    }
+    try {
+        activeFieldKey.value = resolveFieldKey(ev?.target);
+    } catch (e) {
+        console.warn("PageRenderer.wrapperClick: could not resolve field key", e);
     }
 }
 

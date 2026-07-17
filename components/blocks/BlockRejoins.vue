@@ -6,9 +6,9 @@
     >
         <div class="rejoins-inner">
             <div class="rejoins-text-container">
-                <p class="rejoins-title" :style="fieldFontStyle(fieldFonts, 'title')">{{ title }}</p>
-                <p class="rejoins-subtitle" :style="fieldFontStyle(fieldFonts, 'subtitle')">{{ subtitle }}</p>
-                <p class="rejoins-location" :style="fieldFontStyle(fieldFonts, 'location')">{{ location }}</p>
+                <p class="rejoins-title" data-field-key="title" :style="fieldFontStyle(fieldFonts, 'title')">{{ title }}</p>
+                <p class="rejoins-subtitle" data-field-key="subtitle" :style="fieldFontStyle(fieldFonts, 'subtitle')">{{ subtitle }}</p>
+                <p class="rejoins-location" data-field-key="location" :style="fieldFontStyle(fieldFonts, 'location')">{{ location }}</p>
             </div>
             <div class="rejoins-grid">
                 <div

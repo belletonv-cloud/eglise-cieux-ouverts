@@ -347,7 +347,7 @@
                 :schema="sidebarSchema"
                 :model-value="sidebarBlock"
                 @update="onAutoUpdate"
-                @promoted="selectedElementId = $event"
+                @promoted="onPromoted"
             />
             <p v-if="sidebarBlock && BLOCK_TYPES[sidebarBlock.type]?.animations !== 'wrapper'" class="admin-anim-note">
                 {{ BLOCK_TYPES[sidebarBlock.type]?.animations === 'none' ? 'Aucune animation configurable pour ce bloc.' : 'Animation CSS native — non modifiable dans l\'éditeur.' }}
@@ -1021,6 +1021,15 @@ function backToBlockPicker() {
     showTemplatePicker.value = false
     pendingBlockType.value = null
     showBlockPicker.value = true
+}
+
+// « Rendre déplaçable » (AutoEditor.vue) promeut un champ fixe en élément
+// libre : le champ a déjà du contenu (contrairement à un élément vierge
+// ajouté via « + Texte »), donc pas besoin de garder la sidebar ouverte pour
+// taper du texte — on lance directement le mode positionnement.
+function onPromoted(id) {
+    selectedElementId.value = id
+    startPositioning(id)
 }
 
 function setDevice(device) {

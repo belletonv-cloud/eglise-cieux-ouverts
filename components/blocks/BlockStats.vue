@@ -1,7 +1,7 @@
 <template>
   <section class="block-stats" :style="{ background: backgroundColor, color: textColor }">
     <div class="stats-inner">
-      <h2 v-if="title" class="stats-title" :style="fieldFontStyle(fieldFonts, 'title')">{{ title }}</h2>
+      <h2 v-if="title" class="stats-title" data-field-key="title" :style="fieldFontStyle(fieldFonts, 'title')">{{ title }}</h2>
       <div class="stats-grid">
         <div v-for="(item, i) in items" :key="i" class="stats-item">
           <div class="stats-value">{{ item?.value }}</div>

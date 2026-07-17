@@ -5,7 +5,11 @@
       :key="field.key"
       :field-key="field.key"
     >
-      <div class="auto-field">
+      <div
+        class="auto-field"
+        :class="{ 'auto-field-active': activeFieldKey === field.key }"
+        :ref="(el) => { if (el) fieldRefs[field.key] = el }"
+      >
         <div class="auto-field-header">
           <label class="field-label">{{ field.label }}</label>
           <button
@@ -62,6 +66,7 @@ import FieldImages from './fields/FieldImages.vue'
 import EditorFieldError from './EditorFieldError.vue'
 import FieldDesign from './FieldDesign.vue'
 import { AVAILABLE_FONTS as availableFonts, fontStack } from '~/utils/fonts.js'
+import { watch, nextTick } from 'vue'
 
 const props = defineProps<{
   schema: FieldSchema[]
@@ -72,6 +77,17 @@ const emit = defineEmits<{
   update: [block: BlockInstance]
   promoted: [elementId: string]
 }>()
+
+// Champ identifié par le dernier clic direct sur le rendu du bloc (attribut
+// data-field-key posé par les composants Block*.vue) — surligné + scrollé en
+// vue ci-dessous pour que l'utilisateur retrouve immédiatement dans la
+// sidebar l'élément sur lequel il vient de cliquer sur la page.
+const { activeFieldKey } = useAdmin()
+const fieldRefs: Record<string, HTMLElement> = {}
+watch(activeFieldKey, (key) => {
+  if (!key) return
+  nextTick(() => fieldRefs[key]?.scrollIntoView({ behavior: 'smooth', block: 'center' }))
+})
 
 const FIELD_MAP: Record<string, any> = {
   text: FieldText,
@@ -221,7 +237,8 @@ function onDesignUpdate(block: BlockInstance) {
 
 <style scoped>
 .auto-editor { display: flex; flex-direction: column; gap: 14px; }
-.auto-field { display: flex; flex-direction: column; gap: 5px; }
+.auto-field { display: flex; flex-direction: column; gap: 5px; border-radius: 8px; transition: background-color 0.2s, box-shadow 0.2s; }
+.auto-field-active { background: rgba(59, 130, 246, 0.08); box-shadow: 0 0 0 2px #3b82f6; padding: 8px; margin: -8px; }
 .auto-field-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .field-label { font-size: 0.78em; color: #6b7280; font-weight: 500; }
 .field-promote-btn {

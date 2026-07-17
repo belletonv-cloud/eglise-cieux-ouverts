@@ -8,7 +8,7 @@
             height: height ? height + 'px' : 'auto',
         }"
     >
-        <img :src="image" alt="Hero background" class="hero-bg" />
+        <img :src="image" alt="Hero background" class="hero-bg" data-field-key="image" />
         <div
             v-if="overlay"
             class="hero-overlay"
@@ -17,7 +17,7 @@
 
         <div class="hero-content" :class="{ 'hero-visible': visible }">
             <template v-if="overlayText">
-                <h1 class="hero-title" :style="{ color: textColor, ...fieldFontStyle(fieldFonts, 'overlayText') }">
+                <h1 class="hero-title" data-field-key="overlayText" :style="{ color: textColor, ...fieldFontStyle(fieldFonts, 'overlayText') }">
                     {{ overlayText }}
                 </h1>
             </template>
@@ -26,6 +26,7 @@
                     :src="nameImage"
                     alt="Cieux Ouverts"
                     class="hero-name"
+                    data-field-key="nameImage"
                     @error="onImgError"
                 />
 

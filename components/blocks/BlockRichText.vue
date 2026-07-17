@@ -11,7 +11,7 @@
     :class="[visibilityClasses, animClass]"
     ref="sectionRef"
   >
-    <div class="richtext-inner" :style="fieldFontStyle(fieldFonts, 'content')" v-html="sanitizedContent"></div>
+    <div class="richtext-inner" data-field-key="content" :style="fieldFontStyle(fieldFonts, 'content')" v-html="sanitizedContent"></div>
   </section>
 </template>
 

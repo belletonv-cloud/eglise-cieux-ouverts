@@ -8,7 +8,7 @@
         <div class="circle circle-right"></div>
         <div class="circle circle-small"></div>
 
-        <NuxtLink :to="link || '/contact'" class="cta-link" :style="fieldFontStyle(fieldFonts, 'title')">
+        <NuxtLink :to="link || '/contact'" class="cta-link" data-field-key="title" :style="fieldFontStyle(fieldFonts, 'title')">
             {{ title }}
         </NuxtLink>
     </section>

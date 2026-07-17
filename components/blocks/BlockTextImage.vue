@@ -6,11 +6,11 @@
   >
     <div class="ti-inner">
       <div class="ti-text">
-        <h2 class="ti-title" :style="{ color: textColor, ...fieldFontStyle(fieldFonts, 'title') }">{{ title }}</h2>
-        <p v-if="subtitle" class="ti-subtitle" :style="fieldFontStyle(fieldFonts, 'subtitle')">{{ subtitle }}</p>
-        <div class="ti-body" :style="fieldFontStyle(fieldFonts, 'body')" v-html="sanitizedBody"></div>
+        <h2 class="ti-title" data-field-key="title" :style="{ color: textColor, ...fieldFontStyle(fieldFonts, 'title') }">{{ title }}</h2>
+        <p v-if="subtitle" class="ti-subtitle" data-field-key="subtitle" :style="fieldFontStyle(fieldFonts, 'subtitle')">{{ subtitle }}</p>
+        <div class="ti-body" data-field-key="body" :style="fieldFontStyle(fieldFonts, 'body')" v-html="sanitizedBody"></div>
         <div v-if="ctaText || buttons.length" class="ti-buttons">
-          <a v-if="ctaText" :href="ctaLink" class="ti-cta" :style="fieldFontStyle(fieldFonts, 'ctaText')">{{ ctaText }}</a>
+          <a v-if="ctaText" :href="ctaLink" class="ti-cta" data-field-key="ctaText" :style="fieldFontStyle(fieldFonts, 'ctaText')">{{ ctaText }}</a>
           <template v-for="(btn, i) in buttons" :key="i">
             <a v-if="btn.text" :href="btn.link" class="ti-cta ti-cta-extra">{{ btn.text }}</a>
           </template>
@@ -20,13 +20,13 @@
         <div v-if="visualStyle === 'messagesLaptop'" class="ti-laptop-shell">
           <div class="ti-laptop-screen-frame">
             <div class="ti-laptop-content">
-              <img v-if="image" :src="image" :alt="title" class="ti-img" loading="lazy" />
+              <img v-if="image" :src="image" :alt="title" class="ti-img" data-field-key="image" loading="lazy" />
               <div v-else class="ti-img-placeholder">🖼️</div>
             </div>
           </div>
           <div class="ti-laptop-base"></div>
         </div>
-        <img v-else-if="image" :src="image" :alt="title" class="ti-img" loading="lazy" />
+        <img v-else-if="image" :src="image" :alt="title" class="ti-img" data-field-key="image" loading="lazy" />
         <div v-else class="ti-img-placeholder">🖼️</div>
         <div v-if="images.length" class="ti-gallery-extra">
           <img

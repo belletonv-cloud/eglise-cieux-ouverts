@@ -346,10 +346,15 @@ test.describe('« Rendre déplaçable » — promouvoir un champ existant en él
     await page.waitForTimeout(200)
 
     const el = page.locator('.bee-el').first()
-    // Sélectionné automatiquement après promotion (surlignage), mais pas
-    // encore en mode positionnement (pas de poignées tant qu'on n'a pas
-    // cliqué ⤢) — cohérent avec le flux homogène : sélection ≠ drag/resize.
-    await expect(el).toHaveClass(/bee-el-selected/)
+    // Le champ a déjà du contenu (pas besoin de le taper) : la promotion
+    // lance directement le mode positionnement (poignées actives, sidebar
+    // cachée), sans étape intermédiaire.
+    await expect(el).toHaveClass(/bee-el-drag/)
+    await expect(el).toHaveClass(/active/)
+
+    // Valider referme le mode positionnement et rouvre la sidebar
+    await page.locator('.bee-validate-btn').click()
+    await page.waitForTimeout(200)
     await expect(page.locator('.field-elements .array-item').first()).toHaveClass(/array-item-selected/)
 
     // Édition de contenu via le même panneau FieldElements que les
@@ -385,6 +390,11 @@ test.describe('« Rendre déplaçable » — promouvoir un champ existant en él
     await titreField.locator('.field-promote-btn').click()
     await page.waitForTimeout(200)
 
+    // La promotion lance directement le mode positionnement (sidebar
+    // cachée) : valider pour la rouvrir et vérifier l'état du champ.
+    await page.locator('.bee-validate-btn').click()
+    await page.waitForTimeout(200)
+
     // Le champ affiche désormais une note "déplacé sur la page", plus aucun
     // input (impossible de re-saisir une valeur qui recréerait le doublon)
     // ni bouton "Rendre déplaçable".
@@ -414,6 +424,11 @@ test.describe('« Rendre déplaçable » — promouvoir un champ existant en él
     // véritable élément HTML, pas comme texte brut contenant des chevrons.
     await expect(wrapper.locator('.bee-richtext h2')).toHaveText('Bloc richText animé')
     await expect(wrapper.locator('.bee-text')).toHaveCount(0)
+
+    // La promotion lance directement le mode positionnement (sidebar
+    // cachée) : valider pour la rouvrir et vérifier l'état du champ.
+    await page.locator('.bee-validate-btn').click()
+    await page.waitForTimeout(200)
 
     // Le champ affiche la note de promotion, plus d'éditeur ni de bouton.
     await expect(contentField.locator('.field-promoted-note')).toBeVisible()
