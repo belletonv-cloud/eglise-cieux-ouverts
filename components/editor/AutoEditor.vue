@@ -9,14 +9,14 @@
         <div class="auto-field-header">
           <label class="field-label">{{ field.label }}</label>
           <button
-            v-if="isPromotableField(field) && effectiveFieldValue(field)"
+            v-if="!isPromoted(field) && isPromotableField(field) && effectiveFieldValue(field)"
             type="button"
             class="field-promote-btn"
             title="Rendre cet élément déplaçable, redimensionnable et le sortir de sa place fixe dans le bloc"
             @click="promoteField(field)"
           >⇱ Rendre déplaçable</button>
           <select
-            v-if="isFontableField(field)"
+            v-if="!isPromoted(field) && isFontableField(field)"
             class="field-font-picker"
             :value="modelValue?.props?.fieldFonts?.[field.key] || ''"
             title="Police de ce champ"
@@ -26,7 +26,11 @@
             <option v-for="f in availableFonts" :key="f.value" :value="f.value">{{ f.label }}</option>
           </select>
         </div>
+        <p v-if="isPromoted(field)" class="field-promoted-note">
+          ↳ Déplacé sur la page. Sélectionne-le sur le bloc pour le repositionner ou modifier son contenu.
+        </p>
         <component
+          v-else
           :is="fieldComponent(field.type)"
           :field="field"
           :value="modelValue?.props?.[field.key]"
@@ -57,7 +61,7 @@ import FieldArray from './fields/FieldArray.vue'
 import FieldImages from './fields/FieldImages.vue'
 import EditorFieldError from './EditorFieldError.vue'
 import FieldDesign from './FieldDesign.vue'
-import { AVAILABLE_FONTS as availableFonts } from '~/utils/fonts.js'
+import { AVAILABLE_FONTS as availableFonts, fontStack } from '~/utils/fonts.js'
 
 const props = defineProps<{
   schema: FieldSchema[]
@@ -139,13 +143,20 @@ function isPromotableField(field: FieldSchema) {
 // savoir CE QUI EST RÉELLEMENT AFFICHÉ à promouvoir, sans toucher à
 // l'affichage des champs eux-mêmes ni au flux de sauvegarde habituel.
 function effectiveFieldValue(field: FieldSchema) {
-  const raw = props.modelValue?.props?.[field.key]
+  return effectiveProp(field.key)
+}
+
+// Valeur effective d'une prop du bloc : la valeur brute si renseignée,
+// sinon le default du type (comme le rendu public via normalizeBlock).
+function effectiveProp(key: string) {
+  const raw = props.modelValue?.props?.[key]
   if (raw !== undefined && raw !== null && raw !== '') return raw
-  // Déjà promu : normalizeBlock ne retombera plus sur le default pour ce
-  // champ (voir lib/blocks/renderer.ts), donc rien à re-promouvoir ici.
-  if (props.modelValue?.props?.promotedFields?.includes(field.key)) return undefined
   const type = props.modelValue?.type
-  return type ? BLOCK_TYPES[type]?.defaults?.[field.key] : undefined
+  return type ? BLOCK_TYPES[type]?.defaults?.[key] : undefined
+}
+
+function isPromoted(field: FieldSchema) {
+  return !!props.modelValue?.props?.promotedFields?.includes(field.key)
 }
 
 function promoteField(field: FieldSchema) {
@@ -173,6 +184,24 @@ function promoteField(field: FieldSchema) {
     hPct: 90 - offset,
     z: existingCount,
     ...(kind === 'image' ? { imageUrl: value, imageAlt: '' } : { text: value }),
+  }
+
+  // Reprend l'apparence que le champ avait dans le bloc pour que le texte
+  // détaché ne devienne pas un texte générique (couleur/taille/police).
+  // Ces clés (textColor/fontSize/fieldFonts) couvrent les blocs textuels du
+  // site ; fontSize est en em côté blocs (ex: Bienvenue) → suffixé 'em' si
+  // numérique. Un champ sans style particulier reste au défaut de .bee-text.
+  if (kind === 'text') {
+    const color = effectiveProp('textColor') ?? effectiveProp('color')
+    if (color) newElement.color = String(color)
+    const fs = effectiveProp('fontSize')
+    if (fs !== undefined && fs !== null && fs !== '') {
+      newElement.fontSize = typeof fs === 'number' ? `${fs}em` : String(fs)
+    }
+    const align = effectiveProp('textAlign') ?? effectiveProp('align')
+    if (align) newElement.textAlign = String(align)
+    const fontName = props.modelValue.props?.fieldFonts?.[field.key]
+    if (fontName && fontStack(fontName)) newElement.fontFamily = fontName
   }
   const extraElements = [...(props.modelValue.props?.extraElements || []), newElement]
   const promotedFields = [...new Set([...(props.modelValue.props?.promotedFields || []), field.key])]
@@ -205,6 +234,16 @@ function onDesignUpdate(block: BlockInstance) {
   white-space: nowrap;
 }
 .field-promote-btn:hover { background: #dceafb; }
+.field-promoted-note {
+  margin: 0;
+  font-size: 0.75em;
+  color: #64748b;
+  font-style: italic;
+  background: #f1f5f9;
+  border-radius: 6px;
+  padding: 6px 9px;
+  line-height: 1.35;
+}
 .field-font-picker {
   font-size: 0.72em;
   background: #fff;

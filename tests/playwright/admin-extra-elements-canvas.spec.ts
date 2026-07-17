@@ -346,4 +346,39 @@ test.describe('« Rendre déplaçable » — promouvoir un champ existant en él
     await page.locator('.field-elements .field-textarea').fill('Titre modifié après promotion')
     await expect(el).toHaveText('Titre modifié après promotion')
   })
+
+  test('un titre promu conserve sa couleur et sa taille d\'origine', async ({ page }) => {
+    // Le titre Bienvenue s'affiche en #064886 à 5em ; une fois promu, le
+    // texte détaché doit garder cette apparence plutôt que de retomber sur
+    // le style générique de .bee-text (voir promoteField dans AutoEditor).
+    await page.goto('/accueil?admin=true')
+    await page.waitForSelector('.admin-toolbar', { timeout: 10000 })
+    await selectBienvenueBlock(page)
+
+    const titreField = page.locator('.auto-field').filter({ has: page.locator('.field-label', { hasText: /^Titre$/ }) })
+    await titreField.locator('.field-promote-btn').click()
+    await page.waitForTimeout(200)
+
+    const beeText = page.locator('.bee-text').first()
+    // #064886 == rgb(6, 72, 134) ; 5em == 80px (base 16px)
+    await expect(beeText).toHaveCSS('color', 'rgb(6, 72, 134)')
+    await expect(beeText).toHaveCSS('font-size', '80px')
+  })
+
+  test('un champ promu affiche une note à la place de son éditeur (pas de re-saisie possible)', async ({ page }) => {
+    await page.goto('/accueil?admin=true')
+    await page.waitForSelector('.admin-toolbar', { timeout: 10000 })
+    await selectBienvenueBlock(page)
+
+    const titreField = page.locator('.auto-field').filter({ has: page.locator('.field-label', { hasText: /^Titre$/ }) })
+    await titreField.locator('.field-promote-btn').click()
+    await page.waitForTimeout(200)
+
+    // Le champ affiche désormais une note "déplacé sur la page", plus aucun
+    // input (impossible de re-saisir une valeur qui recréerait le doublon)
+    // ni bouton "Rendre déplaçable".
+    await expect(titreField.locator('.field-promoted-note')).toBeVisible()
+    await expect(titreField.locator('input, textarea')).toHaveCount(0)
+    await expect(titreField.locator('.field-promote-btn')).toHaveCount(0)
+  })
 })

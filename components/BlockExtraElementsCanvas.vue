@@ -123,10 +123,20 @@ function onResizeStop(el: ExtraElement, x: number, y: number, w: number, h: numb
   pointer-events: none;
 }
 .bee-el {
-  pointer-events: auto;
   display: flex;
   align-items: flex-start;
   justify-content: flex-start;
+}
+/* Admin : l'élément entier capte le pointeur (drag / resize / sélection). */
+.bee-el-drag {
+  pointer-events: auto;
+}
+/* Public : les éléments héritent du pointer-events:none du canvas — un
+   texte ou une image promus (souvent grands) ne bloquent donc pas les
+   clics vers le contenu du bloc en dessous (ex: un bouton du Hero). Seuls
+   les éléments réellement interactifs (boutons/liens) restent cliquables. */
+.bee-el :deep(.bee-button) {
+  pointer-events: auto;
 }
 .bee-el-drag :deep(.bee-text),
 .bee-el-drag :deep(.bee-image) {

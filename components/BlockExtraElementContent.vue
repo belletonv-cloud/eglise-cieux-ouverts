@@ -1,5 +1,5 @@
 <template>
-  <p v-if="element.kind === 'text' && element.text" class="bee-text">{{ element.text }}</p>
+  <p v-if="element.kind === 'text' && element.text" class="bee-text" :style="textStyle">{{ element.text }}</p>
   <img
     v-else-if="element.kind === 'image' && element.imageUrl"
     class="bee-image"
@@ -17,12 +17,33 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import type { ExtraElement } from '~/lib/blocks/types'
+import { fontStack, ensureFontLoaded } from '~/utils/fonts.js'
 
 const props = defineProps<{
   element: ExtraElement
   isAdmin?: boolean
 }>()
+
+// Style repris d'un champ promu (voir AutoEditor.promoteField) pour garder
+// l'apparence d'origine. fontFamily est un NOM de police résolu en stack
+// et chargé à la demande (même mécanisme que fieldFontStyle des blocs).
+const textStyle = computed(() => {
+  const el = props.element
+  const s: Record<string, string> = {}
+  if (el.color) s.color = el.color
+  if (el.fontSize) s.fontSize = el.fontSize
+  if (el.textAlign) s.textAlign = el.textAlign
+  if (el.fontFamily) {
+    const stack = fontStack(el.fontFamily)
+    if (stack) {
+      ensureFontLoaded(el.fontFamily)
+      s.fontFamily = stack
+    }
+  }
+  return s
+})
 
 // En mode admin, le bouton est à l'intérieur d'une zone de drag/resize —
 // suivre le lien romprait l'édition. Il reste cliquable normalement côté

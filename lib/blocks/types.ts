@@ -90,6 +90,15 @@ export interface ExtraElement {
   wPct: number
   hPct: number
   z: number
+  // Style optionnel repris d'un champ promu via « Rendre déplaçable » pour
+  // que le texte détaché conserve l'apparence qu'il avait dans le bloc.
+  // color/fontSize/textAlign : valeurs CSS prêtes à l'emploi. fontFamily :
+  // NOM de police (ex: "Lora"), résolu en stack + chargé à l'affichage,
+  // même convention que props.fieldFonts (voir utils/fonts.js).
+  color?: string
+  fontSize?: string
+  fontFamily?: string
+  textAlign?: string
 }
 
 export interface EditorFieldProps {

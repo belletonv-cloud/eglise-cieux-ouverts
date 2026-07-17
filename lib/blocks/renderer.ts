@@ -49,10 +49,13 @@ export function normalizeBlock(block: BlockInstance): BlockInstance {
       : [];
     const safe: Record<string, any> = {};
     for (const [k, v] of Object.entries(propsSrc)) {
-      if (v !== "" && v !== null && v !== undefined) {
-        safe[k] = v;
-      } else if (promotedFields.includes(k)) {
+      // Un champ promu reste vide en permanence : ni son default, ni une
+      // valeur re-saisie par mégarde dans la sidebar ne doivent réafficher
+      // le contenu à sa place fixe — il vit désormais dans extraElements.
+      if (promotedFields.includes(k)) {
         safe[k] = "";
+      } else if (v !== "" && v !== null && v !== undefined) {
+        safe[k] = v;
       }
     }
     copy.props = { ...BLOCK_TYPES[copy.type].defaults, ...safe };
