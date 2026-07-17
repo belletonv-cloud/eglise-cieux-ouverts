@@ -68,19 +68,34 @@ const emit = defineEmits<{
 const canvasRef = ref<HTMLElement | null>(null)
 const canvasSize = ref({ width: 0, height: 0 })
 
+function measure() {
+  if (!canvasRef.value) return
+  canvasSize.value = { width: canvasRef.value.clientWidth, height: canvasRef.value.clientHeight }
+}
+
 let resizeObserver: ResizeObserver | null = null
 onMounted(() => {
   if (!canvasRef.value || typeof ResizeObserver === 'undefined') return
-  const measure = () => {
-    if (!canvasRef.value) return
-    canvasSize.value = { width: canvasRef.value.clientWidth, height: canvasRef.value.clientHeight }
-  }
   measure()
   resizeObserver = new ResizeObserver(measure)
   resizeObserver.observe(canvasRef.value)
 })
 onUnmounted(() => {
   resizeObserver?.disconnect()
+})
+
+// Le ResizeObserver ci-dessus est asynchrone (callback différé, après le
+// patch DOM de Vue) : entrer en mode positionnement juste après avoir promu
+// un champ (qui retire ce champ de sa place fixe et peut donc changer la
+// hauteur du bloc) faisait convertir le %/px de VueDraggableResizable
+// contre un canvasSize encore PÉRIMÉ, causant un redimensionnement visible
+// de l'élément à l'ouverture des poignées. Un re-mesure synchrone après le
+// prochain patch DOM (nextTick), déclenché dès qu'on entre en
+// positionnement, corrige la taille avant que VueDraggableResizable ne
+// s'en serve.
+watch(() => props.positioningId, (id) => {
+  if (!id) return
+  nextTick(measure)
 })
 
 // % -> px, utilisé uniquement pour piloter VueDraggableResizable (qui

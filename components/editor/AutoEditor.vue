@@ -82,7 +82,7 @@ const emit = defineEmits<{
 // data-field-key posé par les composants Block*.vue) — surligné + scrollé en
 // vue ci-dessous pour que l'utilisateur retrouve immédiatement dans la
 // sidebar l'élément sur lequel il vient de cliquer sur la page.
-const { activeFieldKey, identifySeq } = useAdmin()
+const { activeFieldKey, identifySeq, promoteFieldToElement } = useAdmin()
 const fieldRefs: Record<string, HTMLElement> = {}
 // Watch sur identifySeq (compteur incrémenté à CHAQUE clic), pas sur
 // activeFieldKey directement : Vue ne déclenche pas un watch sur un ref
@@ -152,7 +152,6 @@ function onFontChange(key: string, font: string) {
 // place dans la mise en page du bloc. richtext rendu via un kind dédié
 // (BlockExtraElementContent applique sanitizeHtml + v-html, comme
 // BlockRichText.vue) plutôt qu'affiché tel quel comme texte brut.
-let nextPromotedId = 0
 function isPromotableField(field: FieldSchema) {
   if (!['image', 'text', 'textarea', 'richtext'].includes(field.type)) return false
   return !NON_VISUAL_FIELD_PATTERN.test(field.key)
@@ -199,31 +198,16 @@ function onMoveField(field: FieldSchema) {
   promoteField(field)
 }
 
+// Construit l'élément (kind + contenu + apparence héritée), la position/
+// taille réelle est mesurée et corrigée par promoteFieldToElement()
+// (useAdmin.js — voir ce fichier pour le pourquoi de ce découpage).
 function promoteField(field: FieldSchema) {
   if (!props.modelValue) return
   const value = effectiveFieldValue(field)
   if (!value) return
   const kind = field.type === 'image' ? 'image' : field.type === 'richtext' ? 'richtext' : 'text'
-  // Une taille pleine largeur/hauteur (100%) laisse l'élément bloqué :
-  // avec :parent="true", un élément qui occupe déjà tout l'espace
-  // disponible n'a nulle part où aller tant qu'il n'a pas été réduit —
-  // ce qui donnait l'impression qu'un élément promu "ne bougeait pas",
-  // contrairement à un élément ajouté (qui démarre à 30%×20%, avec de la
-  // marge). Une marge de 5% de chaque côté garde une taille proche de
-  // l'original tout en le rendant immédiatement déplaçable. Un léger
-  // décalage par élément déjà présent évite en plus que deux champs
-  // promus sur le même bloc démarrent parfaitement superposés.
-  const existingCount = props.modelValue.props?.extraElements?.length || 0
-  const offset = (existingCount % 4) * 3
-  const newElement: ExtraElement = {
-    id: `el-promoted-${Date.now()}-${nextPromotedId++}`,
+  const seed: Partial<ExtraElement> = {
     kind,
-    xPct: 5 + offset,
-    yPct: 5 + offset,
-    wPct: 90 - offset,
-    hPct: 90 - offset,
-    z: existingCount,
-    promotedFrom: field.key,
     ...(kind === 'image' ? { imageUrl: value, imageAlt: '' } : { text: value }),
   }
 
@@ -234,24 +218,22 @@ function promoteField(field: FieldSchema) {
   // numérique. Un champ sans style particulier reste au défaut de .bee-text.
   if (kind === 'text' || kind === 'richtext') {
     const color = effectiveProp('textColor') ?? effectiveProp('color')
-    if (color) newElement.color = String(color)
+    if (color) seed.color = String(color)
     const fs = effectiveProp('fontSize')
     if (fs !== undefined && fs !== null && fs !== '') {
-      newElement.fontSize = typeof fs === 'number' ? `${fs}em` : String(fs)
+      seed.fontSize = typeof fs === 'number' ? `${fs}em` : String(fs)
     }
     const align = effectiveProp('textAlign') ?? effectiveProp('align')
-    if (align) newElement.textAlign = String(align)
+    if (align) seed.textAlign = String(align)
     const fontName = props.modelValue.props?.fieldFonts?.[field.key]
-    if (fontName && fontStack(fontName)) newElement.fontFamily = fontName
+    if (fontName && fontStack(fontName)) seed.fontFamily = fontName
   }
-  const extraElements = [...(props.modelValue.props?.extraElements || []), newElement]
-  const promotedFields = [...new Set([...(props.modelValue.props?.promotedFields || []), field.key])]
-  const updated = {
-    ...props.modelValue,
-    props: { ...props.modelValue.props, [field.key]: '', extraElements, promotedFields },
-  }
-  emit('update', updated)
-  emit('promoted', newElement.id)
+
+  // promoteFieldToElement() lance elle-même le mode positionnement, une
+  // fois la taille garantie stable (voir sa doc dans useAdmin.js) — émettre
+  // 'promoted' ici déclencherait un positionnement prématuré (sidebar
+  // cachée, élément monté) AVANT que la correction de taille n'ait eu lieu.
+  promoteFieldToElement(props.modelValue.id, field.key, seed)
 }
 
 function onDesignUpdate(block: BlockInstance) {

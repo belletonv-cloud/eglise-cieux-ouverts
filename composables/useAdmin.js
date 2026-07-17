@@ -1,4 +1,4 @@
-import { ref, computed } from "vue";
+import { ref, computed, nextTick } from "vue";
 import { BLOCK_TYPES, VISIBILITY_DEFAULTS } from "~/utils/blockTypes.js";
 import {
   DESIGN_DEFAULTS,
@@ -35,6 +35,7 @@ const activeFieldKey = ref(null);
 // scroll-vers-l'élément dans la sidebar (AutoEditor.vue/FieldElements.vue)
 // se déclenche de façon fiable à chaque interaction.
 const identifySeq = ref(0);
+let nextPromotedId = 0;
 
 // Footer block (managed separately from page blocks)
 // Initialized with defaults so it renders immediately (SSR/public).
@@ -158,6 +159,125 @@ export function useAdmin() {
       ...current,
       props: { ...current.props, ...props },
     };
+  }
+
+  // « Rendre déplaçable »/« Déplacer » (AutoEditor.vue) : convertit un champ
+  // fixe du bloc en élément libre du canvas, en conservant sa position/
+  // taille RÉELLE (mesurée sur la page) pour que rien ne change visuellement
+  // au moment du clic, PUIS lance le mode positionnement une fois cette
+  // taille garantie stable. Vit ici (pas dans AutoEditor.vue) car le
+  // composant se démonte dès que le mode positionnement cache la sidebar —
+  // un timer lancé depuis un composant qui vient de se démonter est
+  // fragile, alors que ce composable est un singleton qui survit au
+  // démontage. extraElementSeed = props de l'ExtraElement hors position
+  // (kind, text/imageUrl/imageAlt, color, fontSize, etc.).
+  //
+  // Important : vue-draggable-resizable (la lib derrière le mode
+  // positionnement) n'observe PAS ses props x/y/w/h après le montage —
+  // aucun watch() dans son code source. Corriger le %/pixels APRÈS avoir
+  // déjà lancé le positionnement ne sert donc à rien, l'élément déjà monté
+  // ignore la mise à jour. Il faut que la taille soit déjà correcte AVANT
+  // le premier montage, d'où l'attente de stabilisation avant startPositioning.
+  function promoteFieldToElement(blockId, fieldKey, extraElementSeed) {
+    const idx = localBlocks.value.findIndex((b) => b.id === blockId);
+    if (idx < 0) return null;
+    const block = localBlocks.value[idx];
+    const existingCount = block.props?.extraElements?.length || 0;
+    const offset = (existingCount % 4) * 3;
+
+    let pixelRect = null;
+    let initialRect = null;
+    if (process.client) {
+      const wrapper = document.querySelector(`.block-wrapper[data-block-id="${blockId}"]`);
+      const fieldEl = wrapper?.querySelector(`[data-field-key="${fieldKey}"]`);
+      if (wrapper && fieldEl) {
+        const wrapperBox = wrapper.getBoundingClientRect();
+        const fieldBox = fieldEl.getBoundingClientRect();
+        if (wrapperBox.width && wrapperBox.height && fieldBox.width && fieldBox.height) {
+          pixelRect = {
+            xPx: fieldBox.left - wrapperBox.left,
+            yPx: fieldBox.top - wrapperBox.top,
+            wPx: fieldBox.width,
+            hPx: fieldBox.height,
+          };
+          initialRect = {
+            xPct: (pixelRect.xPx / wrapperBox.width) * 100,
+            yPct: (pixelRect.yPx / wrapperBox.height) * 100,
+            wPct: (pixelRect.wPx / wrapperBox.width) * 100,
+            hPct: (pixelRect.hPx / wrapperBox.height) * 100,
+          };
+        }
+      }
+    }
+    const rect = initialRect ?? { xPct: 5 + offset, yPct: 5 + offset, wPct: 90 - offset, hPct: 90 - offset };
+
+    const newId = `el-promoted-${Date.now()}-${nextPromotedId++}`;
+    const newElement = { id: newId, z: existingCount, promotedFrom: fieldKey, ...rect, ...extraElementSeed };
+    const label = _blockLabel(block?.type);
+    pushHistory(`Rendre déplaçable « ${label} »`);
+    const extraElements = [...(block.props?.extraElements || []), newElement];
+    const promotedFields = [...new Set([...(block.props?.promotedFields || []), fieldKey])];
+    localBlocks.value[idx] = {
+      ...block,
+      props: { ...block.props, [fieldKey]: "", extraElements, promotedFields },
+    };
+    selectedElementId.value = newId;
+    activeFieldKey.value = null;
+
+    if (!pixelRect || !process.client) {
+      // Rien à mesurer (champ non rendu) : positionnement immédiat, repli
+      // générique déjà appliqué ci-dessus.
+      startPositioning(newId);
+      return newId;
+    }
+
+    // Retirer le champ de son emplacement fixe peut changer la hauteur
+    // (voire la largeur) du bloc lui-même si sa mise en page en dépendait
+    // (ex: grille dont la ligne est dimensionnée par le plus grand des deux
+    // côtés) — le % ci-dessus, calculé sur l'ANCIENNE taille du bloc, ne
+    // correspondrait alors plus aux mêmes pixels une fois le bloc réduit.
+    // Un seul nextTick ne suffit pas : le bloc peut traverser plusieurs
+    // vagues de reflow après la promotion (ex: animation d'entrée) avant
+    // de se stabiliser — on ré-échantillonne la hauteur jusqu'à deux
+    // lectures identiques consécutives, PUIS seulement on corrige et on
+    // lance le positionnement (voir note vue-draggable-resizable ci-dessus).
+    let lastHeight = null;
+    let attempts = 0;
+    const finish = (box) => {
+      const i2 = localBlocks.value.findIndex((b) => b.id === blockId);
+      if (i2 >= 0) {
+        const b2 = localBlocks.value[i2];
+        const corrected = {
+          xPct: (pixelRect.xPx / box.width) * 100,
+          yPct: (pixelRect.yPx / box.height) * 100,
+          wPct: (pixelRect.wPx / box.width) * 100,
+          hPct: (pixelRect.hPx / box.height) * 100,
+        };
+        const els2 = (b2.props?.extraElements || []).map((el) =>
+          el.id === newId ? { ...el, ...corrected } : el,
+        );
+        localBlocks.value[i2] = { ...b2, props: { ...b2.props, extraElements: els2 } };
+      }
+      startPositioning(newId);
+    };
+    const poll = () => {
+      attempts++;
+      const wrapper = document.querySelector(`.block-wrapper[data-block-id="${blockId}"]`);
+      const box = wrapper?.getBoundingClientRect();
+      if (!box || !box.width || !box.height) {
+        startPositioning(newId); // repli : bloc introuvable, tant pis pour la précision
+        return;
+      }
+      if ((lastHeight !== null && Math.abs(box.height - lastHeight) < 0.5) || attempts >= 15) {
+        finish(box);
+        return;
+      }
+      lastHeight = box.height;
+      setTimeout(poll, 70);
+    };
+    nextTick(poll);
+
+    return newId;
   }
 
   // Toggle / set per-device visibility for a block.
@@ -462,6 +582,7 @@ export function useAdmin() {
     clearBlocks,
     selectBlock,
     updateBlock,
+    promoteFieldToElement,
     updateVisibility,
     resetResponsive,
     moveBlock,
