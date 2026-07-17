@@ -234,14 +234,11 @@ test.describe('Éléments additionnels (canvas libre) — panneau sidebar', () =
     expect(topElement).not.toContain('bee-canvas')
   })
 
-  test('interagir avec un élément du canvas ne re-sélectionne pas son bloc (ne coupe pas un drag/resize en cours)', async ({ page }) => {
-    // Bug réel : docPointerHandler/docClickHandler/wrapperClick sélectionnaient
-    // le bloc sur TOUT clic dans .block-wrapper, y compris sur les poignées
-    // VueDraggableResizable — rouvrant/re-render la sidebar en pleine saisie
-    // d'une poignée et avalant le drag, exactement le bug déjà connu et
-    // corrigé pour .drag-handle (Sortable). Ce test vérifie que cliquer sur
-    // un élément du canvas d'un bloc NE change PAS le bloc actuellement
-    // sélectionné (le canvas gère sa propre sélection d'élément séparément).
+  test('un élément statique du canvas sélectionne son bloc (comportement homogène avec les champs fixes)', async ({ page }) => {
+    // Comportement voulu : un élément additionnel statique (non en cours de
+    // positionnement) doit se comporter comme un champ fixe de bloc — un
+    // clic dessus sélectionne/ouvre la sidebar de SON bloc, même si un
+    // autre bloc était sélectionné auparavant.
     await page.goto('/accueil?admin=true')
     await page.waitForSelector('.admin-toolbar', { timeout: 10000 })
     await selectHeroBlock(page)
@@ -261,11 +258,34 @@ test.describe('Éléments additionnels (canvas libre) — panneau sidebar', () =
     await page.waitForTimeout(200)
     await expect(page.locator('.block-wrapper.admin-selected')).toHaveAttribute('data-block-id', 'bloc-bienvenue')
 
-    // Cliquer sur l'élément du Hero (bloc non sélectionné) ne doit PAS
-    // ramener la sélection sur le Hero
+    // Cliquer sur l'élément statique du Hero (bloc non sélectionné) doit
+    // ramener la sélection sur le Hero et identifier l'élément dans la sidebar
     await page.locator('.bee-el').first().click()
     await page.waitForTimeout(200)
-    await expect(page.locator('.block-wrapper.admin-selected')).toHaveAttribute('data-block-id', 'bloc-bienvenue')
+    await expect(page.locator('.block-wrapper.admin-selected')).toHaveAttribute('data-block-id', 'bloc-hero')
+    await expect(page.locator('.field-elements .array-item').first()).toHaveClass(/array-item-selected/)
+  })
+
+  test('interagir avec un élément en cours de positionnement ne re-sélectionne pas le bloc (ne coupe pas un drag/resize en cours)', async ({ page }) => {
+    // Bug réel : docPointerHandler/docClickHandler/wrapperClick sélectionnaient
+    // le bloc sur TOUT clic dans .block-wrapper, y compris sur les poignées
+    // VueDraggableResizable — rouvrant/re-render la sidebar en pleine saisie
+    // d'une poignée et avalant le drag, exactement le bug déjà connu et
+    // corrigé pour .drag-handle (Sortable). Cette protection ne concerne
+    // désormais que l'élément ACTIVEMENT en positionnement (.bee-el-drag) :
+    // un clic dessus ne doit pas appeler selectBlock() (qui réinitialiserait
+    // positioningElementId et couperait le drag/resize en cours).
+    await page.goto('/accueil?admin=true')
+    await page.waitForSelector('.admin-toolbar', { timeout: 10000 })
+    await selectHeroBlock(page)
+    await page.locator('.array-add-btn', { hasText: '+ Texte' }).click()
+    await page.locator('.array-item-position-btn').click()
+    await page.waitForTimeout(200)
+
+    await page.locator('.bee-el').first().click()
+    await page.waitForTimeout(200)
+    await expect(page.locator('.bee-el').first()).toHaveClass(/bee-el-drag/)
+    await expect(page.locator('.bee-validate-btn')).toBeVisible()
   })
 
   test('persistance après rechargement : le rendu public statique reflète position/taille/contenu', async ({ page }) => {

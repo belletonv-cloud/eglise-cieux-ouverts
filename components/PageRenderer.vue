@@ -414,14 +414,14 @@ if (typeof window !== "undefined" && import.meta.client) {
             if (!target) return;
             // La poignée de drag appartient à Sortable : sélectionner le bloc
             // au moment où on la saisit ouvre la sidebar + overlay plein
-            // écran qui avale le drag en cours. Même chose pour le canvas
-            // des éléments additionnels (BlockExtraElementsCanvas) : ses
-            // éléments sont forcément sur un bloc déjà sélectionné (on ne
-            // peut les ajouter que depuis la sidebar de ce bloc), donc pas
-            // besoin de re-sélectionner le bloc en interagissant avec eux —
-            // et le faire réinsère l'overlay plein écran / re-render qui
-            // avale le drag/resize en cours, exactement comme pour .drag-handle.
-            if (target.closest && (target.closest(".drag-handle") || target.closest(".bee-canvas"))) return;
+            // écran qui avale le drag en cours. Même chose pour un élément
+            // additionnel EN COURS DE POSITIONNEMENT (.bee-el-drag, poignées
+            // VueDraggableResizable actives) : le re-sélectionner réinsère
+            // l'overlay plein écran / re-render qui avale le drag/resize en
+            // cours. Les éléments STATIQUES (non en positionnement) doivent
+            // au contraire sélectionner normalement leur bloc — c'est ce qui
+            // ouvre la sidebar et les identifie, comme un champ fixe de bloc.
+            if (target.closest && (target.closest(".drag-handle") || target.closest(".bee-el-drag"))) return;
             const wrapper = target.closest && target.closest(".block-wrapper");
             if (wrapper) {
                 const bid = wrapper.getAttribute("data-block-id");
@@ -466,9 +466,9 @@ if (typeof window !== "undefined" && import.meta.client) {
             if (!isAdmin || !isAdmin.value) return;
             const target = ev.target;
             if (!target) return;
-            // Idem docClickHandler : la poignée de drag et le canvas des
-            // éléments additionnels ne sélectionnent pas le bloc
-            if (target.closest && (target.closest(".drag-handle") || target.closest(".bee-canvas"))) return;
+            // Idem docClickHandler : la poignée de drag et l'élément
+            // additionnel en cours de positionnement ne sélectionnent pas le bloc
+            if (target.closest && (target.closest(".drag-handle") || target.closest(".bee-el-drag"))) return;
             const wrapper = target.closest && target.closest(".block-wrapper");
             if (wrapper) {
                 const bid = wrapper.getAttribute("data-block-id");
@@ -522,10 +522,10 @@ onUnmounted(() => {
 
 function wrapperClick(id, ev) {
     // Idem docClickHandler/docPointerHandler : ne pas re-sélectionner le
-    // bloc depuis le canvas des éléments additionnels, sous peine de
-    // rouvrir/re-render la sidebar en pleine interaction et avaler le
-    // drag/resize en cours.
-    if (ev && ev.target && ev.target.closest && ev.target.closest(".bee-canvas")) return;
+    // bloc depuis un élément additionnel EN COURS DE POSITIONNEMENT, sous
+    // peine de rouvrir/re-render la sidebar en pleine interaction et avaler
+    // le drag/resize en cours.
+    if (ev && ev.target && ev.target.closest && ev.target.closest(".bee-el-drag")) return;
     onBlockSelected(id)
     try {
         if (editingBlockId && editingBlockId.value !== id) {
