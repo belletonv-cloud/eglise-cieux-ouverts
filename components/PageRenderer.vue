@@ -154,7 +154,7 @@ const props = defineProps({
 // selectedElementId / positioningElementId / activeFieldKey : partagés avec
 // le panneau sidebar (composables/useAdmin.js) pour garder la sélection, le
 // mode positionnement et le champ identifié par clic synchronisés.
-const { reorderBlocks, updateBlock, selectedElementId, positioningElementId, stopPositioning, activeFieldKey } = useAdmin();
+const { reorderBlocks, updateBlock, selectedElementId, positioningElementId, stopPositioning, activeFieldKey, identifySeq } = useAdmin();
 
 // Sélectionner un élément additionnel (canvas ou sidebar) efface le champ
 // fixe éventuellement identifié par un clic précédent — évite un surlignage
@@ -162,6 +162,7 @@ const { reorderBlocks, updateBlock, selectedElementId, positioningElementId, sto
 function onExtraElementSelected(id) {
     selectedElementId.value = id
     activeFieldKey.value = null
+    identifySeq.value++
 }
 
 // Cherche l'ancêtre [data-field-key] le plus proche du point de clic : les
@@ -441,6 +442,7 @@ if (typeof window !== "undefined" && import.meta.client) {
                     }
                     try {
                         activeFieldKey.value = resolveFieldKey(target);
+                        identifySeq.value++;
                     } catch (e) {
                         console.warn("PageRenderer.docClick: could not resolve field key", e);
                     }
@@ -485,6 +487,7 @@ if (typeof window !== "undefined" && import.meta.client) {
                     }
                     try {
                         activeFieldKey.value = resolveFieldKey(target);
+                        identifySeq.value++;
                     } catch (e) {
                         console.warn("PageRenderer.docPointer: could not resolve field key", e);
                     }
@@ -536,6 +539,7 @@ function wrapperClick(id, ev) {
     }
     try {
         activeFieldKey.value = resolveFieldKey(ev?.target);
+        identifySeq.value++;
     } catch (e) {
         console.warn("PageRenderer.wrapperClick: could not resolve field key", e);
     }

@@ -127,8 +127,14 @@ const emit = defineEmits<{
 // direct sur la page) — même logique que le surlignage des champs fixes
 // dans AutoEditor.vue, pour qu'un élément déjà présent hors-vue reste
 // repérable dans la liste sans avoir à scroller manuellement.
+// Watch sur identifySeq (compteur incrémenté à CHAQUE clic), pas sur
+// selectedId directement : Vue ne déclenche pas un watch sur un ref
+// primitif dont la valeur ne change pas (ex: re-cliquer le même élément
+// déjà actif) — le scroll ne partait alors jamais pour ce cas précis.
+const { identifySeq } = useAdmin()
 const itemRefs: Record<string, HTMLElement> = {}
-watch(() => props.selectedId, (id) => {
+watch(identifySeq, () => {
+  const id = props.selectedId
   if (!id) return
   nextTick(() => itemRefs[id]?.scrollIntoView({ behavior: 'smooth', block: 'center' }))
 }, { immediate: true })

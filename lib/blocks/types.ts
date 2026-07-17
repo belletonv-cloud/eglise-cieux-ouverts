@@ -99,6 +99,11 @@ export interface ExtraElement {
   fontSize?: string
   fontFamily?: string
   textAlign?: string
+  // Clé du champ de schema d'origine si cet élément a été créé via « Rendre
+  // déplaçable »/« Déplacer » (AutoEditor.vue) — permet de retrouver
+  // l'élément déjà promu pour relancer le positionnement dessus (bouton
+  // toujours visible) sans en recréer un doublon à chaque clic.
+  promotedFrom?: string
 }
 
 export interface EditorFieldProps {

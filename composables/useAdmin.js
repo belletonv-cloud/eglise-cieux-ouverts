@@ -27,6 +27,14 @@ const positioningElementId = ref(null);
 // permet à AutoEditor.vue de surligner/scroller vers ce champ précis dans
 // la sidebar, plutôt que de simplement ouvrir le bloc sans indication.
 const activeFieldKey = ref(null);
+// Compteur incrémenté à chaque clic qui identifie un champ/élément — watch()
+// sur activeFieldKey/selectedId seul ne se déclenche pas si la valeur ne
+// CHANGE pas (ex: re-cliquer le même champ déjà actif, ou une chaîne
+// identique réassignée), Vue ne détecte alors aucune mutation sur un ref
+// primitif. Ce compteur, lui, change à CHAQUE clic sans exception, donc le
+// scroll-vers-l'élément dans la sidebar (AutoEditor.vue/FieldElements.vue)
+// se déclenche de façon fiable à chaque interaction.
+const identifySeq = ref(0);
 
 // Footer block (managed separately from page blocks)
 // Initialized with defaults so it renders immediately (SSR/public).
@@ -446,6 +454,7 @@ export function useAdmin() {
     selectedElementId,
     positioningElementId,
     activeFieldKey,
+    identifySeq,
     startPositioning,
     stopPositioning,
     enterAdmin,

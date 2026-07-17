@@ -416,11 +416,36 @@ test.describe('« Rendre déplaçable » — promouvoir un champ existant en él
     await page.waitForTimeout(200)
 
     // Le champ affiche désormais une note "déplacé sur la page", plus aucun
-    // input (impossible de re-saisir une valeur qui recréerait le doublon)
-    // ni bouton "Rendre déplaçable".
+    // input (impossible de re-saisir une valeur qui recréerait le doublon).
+    // Le bouton reste lui affiché en permanence (renommé « Déplacer ») pour
+    // pouvoir relancer le positionnement sans repasser par le canvas.
     await expect(titreField.locator('.field-promoted-note')).toBeVisible()
     await expect(titreField.locator('input, textarea')).toHaveCount(0)
-    await expect(titreField.locator('.field-promote-btn')).toHaveCount(0)
+    await expect(titreField.locator('.field-promote-btn')).toHaveText('⇱ Déplacer')
+  })
+
+  test('le bouton « Déplacer » reste affiché après promotion et relance le positionnement sans doublon', async ({ page }) => {
+    await page.goto('/accueil?admin=true')
+    await page.waitForSelector('.admin-toolbar', { timeout: 10000 })
+    await selectBienvenueBlock(page)
+
+    const titreField = page.locator('.auto-field').filter({ has: page.locator('.field-label', { hasText: /^Titre$/ }) })
+    await titreField.locator('.field-promote-btn').click()
+    await page.waitForTimeout(200)
+    await page.locator('.bee-validate-btn').click()
+    await page.waitForTimeout(200)
+
+    await expect(page.locator('.bee-el')).toHaveCount(1)
+
+    // Re-cliquer le bouton (maintenant « Déplacer ») relance le mode
+    // positionnement sur le MÊME élément, sans en créer un second.
+    await titreField.locator('.field-promote-btn').click()
+    await page.waitForTimeout(200)
+    await expect(page.locator('.bee-el')).toHaveClass(/bee-el-drag/)
+    await expect(page.locator('.bee-validate-btn')).toBeVisible()
+    await page.locator('.bee-validate-btn').click()
+    await page.waitForTimeout(200)
+    await expect(page.locator('.bee-el')).toHaveCount(1)
   })
 
   test('un champ richtext (bloc Texte riche) est promouvable et son HTML est rendu, pas affiché en texte brut', async ({ page }) => {

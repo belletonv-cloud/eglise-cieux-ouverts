@@ -13,12 +13,12 @@
         <div class="auto-field-header">
           <label class="field-label">{{ field.label }}</label>
           <button
-            v-if="!isPromoted(field) && isPromotableField(field) && effectiveFieldValue(field)"
+            v-if="isPromotableField(field) && (isPromoted(field) || effectiveFieldValue(field))"
             type="button"
             class="field-promote-btn"
-            title="Rendre cet élément déplaçable, redimensionnable et le sortir de sa place fixe dans le bloc"
-            @click="promoteField(field)"
-          >⇱ Rendre déplaçable</button>
+            :title="isPromoted(field) ? 'Déplacer/redimensionner cet élément sur la page' : 'Rendre cet élément déplaçable, redimensionnable et le sortir de sa place fixe dans le bloc'"
+            @click="onMoveField(field)"
+          >⇱ Déplacer</button>
           <select
             v-if="!isPromoted(field) && isFontableField(field)"
             class="field-font-picker"
@@ -31,7 +31,7 @@
           </select>
         </div>
         <p v-if="isPromoted(field)" class="field-promoted-note">
-          ↳ Déplacé sur la page. Sélectionne-le sur le bloc pour le repositionner ou modifier son contenu.
+          ↳ Déplacé sur la page. Clique « Déplacer » ci-dessus pour l'ajuster, ou sélectionne-le sur le bloc pour modifier son contenu.
         </p>
         <component
           v-else
@@ -82,9 +82,14 @@ const emit = defineEmits<{
 // data-field-key posé par les composants Block*.vue) — surligné + scrollé en
 // vue ci-dessous pour que l'utilisateur retrouve immédiatement dans la
 // sidebar l'élément sur lequel il vient de cliquer sur la page.
-const { activeFieldKey } = useAdmin()
+const { activeFieldKey, identifySeq } = useAdmin()
 const fieldRefs: Record<string, HTMLElement> = {}
-watch(activeFieldKey, (key) => {
+// Watch sur identifySeq (compteur incrémenté à CHAQUE clic), pas sur
+// activeFieldKey directement : Vue ne déclenche pas un watch sur un ref
+// primitif dont la valeur ne change pas (ex: re-cliquer le même champ déjà
+// actif) — le scroll ne partait alors jamais pour ce cas précis.
+watch(identifySeq, () => {
+  const key = activeFieldKey.value
   if (!key) return
   nextTick(() => fieldRefs[key]?.scrollIntoView({ behavior: 'smooth', block: 'center' }))
 }, { immediate: true })
@@ -176,6 +181,24 @@ function isPromoted(field: FieldSchema) {
   return !!props.modelValue?.props?.promotedFields?.includes(field.key)
 }
 
+// Retrouve l'élément déjà promu correspondant à ce champ, pour relancer le
+// positionnement dessus sans en recréer un doublon (bouton « Déplacer »
+// toujours visible, y compris après une première promotion).
+function promotedElementId(field: FieldSchema) {
+  return props.modelValue?.props?.extraElements?.find((el) => el.promotedFrom === field.key)?.id || null
+}
+
+// Bouton « Déplacer » : promeut le champ s'il ne l'est pas encore, ou
+// relance directement le mode positionnement sur l'élément déjà promu.
+function onMoveField(field: FieldSchema) {
+  if (isPromoted(field)) {
+    const id = promotedElementId(field)
+    if (id) emit('promoted', id)
+    return
+  }
+  promoteField(field)
+}
+
 function promoteField(field: FieldSchema) {
   if (!props.modelValue) return
   const value = effectiveFieldValue(field)
@@ -200,6 +223,7 @@ function promoteField(field: FieldSchema) {
     wPct: 90 - offset,
     hPct: 90 - offset,
     z: existingCount,
+    promotedFrom: field.key,
     ...(kind === 'image' ? { imageUrl: value, imageAlt: '' } : { text: value }),
   }
 
