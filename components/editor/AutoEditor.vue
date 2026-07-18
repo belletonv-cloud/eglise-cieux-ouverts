@@ -20,7 +20,7 @@
             @click="onMoveField(field)"
           >⇱ Déplacer</button>
           <input
-            v-if="!isPromoted(field) && isFontableField(field)"
+            v-if="isFontableField(field)"
             type="number"
             step="0.1"
             min="0.3"
@@ -32,9 +32,9 @@
             @change="onFontSizeChange(field.key, ($event.target as HTMLInputElement).value)"
           />
           <select
-            v-if="!isPromoted(field) && isFontableField(field)"
+            v-if="isFontableField(field)"
             class="field-font-picker"
-            :value="modelValue?.props?.fieldFonts?.[field.key] || ''"
+            :value="fieldFontValue(field.key)"
             title="Police de ce champ"
             @change="onFontChange(field.key, ($event.target as HTMLSelectElement).value)"
           >
@@ -145,8 +145,42 @@ function onChange(key: string, value: any) {
   emit('update', updated)
 }
 
+// Un champ promu n'est plus rendu à sa place fixe (fieldFontStyle ne
+// s'applique plus à rien) — police/taille doivent alors éditer le STYLE de
+// l'élément libre correspondant (color/fontSize/fontFamily sur
+// l'ExtraElement, lus par BlockExtraElementContent.vue), pas fieldFonts/
+// fieldFontSizes. Sans ça, promouvoir un champ faisait disparaître ces
+// réglages de la sidebar (ils dépendaient de !isPromoted) sans équivalent
+// ailleurs — un champ promu n'était donc plus "que" déplaçable.
+function promotedElementIdByKey(key: string) {
+  return props.modelValue?.props?.extraElements?.find((el) => el.promotedFrom === key)?.id || null
+}
+
+function updatePromotedElementStyle(key: string, patch: Partial<ExtraElement>) {
+  if (!props.modelValue) return
+  const id = promotedElementIdByKey(key)
+  if (!id) return
+  const extraElements = (props.modelValue.props?.extraElements || []).map((el) =>
+    el.id === id ? { ...el, ...patch } : el,
+  )
+  emit('update', { ...props.modelValue, props: { ...props.modelValue.props, extraElements } })
+}
+
+function fieldFontValue(key: string) {
+  if (isPromotedKey(key)) {
+    const id = promotedElementIdByKey(key)
+    const el = props.modelValue?.props?.extraElements?.find((e) => e.id === id)
+    return el?.fontFamily || ''
+  }
+  return props.modelValue?.props?.fieldFonts?.[key] || ''
+}
+
 function onFontChange(key: string, font: string) {
   if (!props.modelValue) return
+  if (isPromotedKey(key)) {
+    updatePromotedElementStyle(key, { fontFamily: font || undefined })
+    return
+  }
   const fieldFonts = { ...(props.modelValue.props?.fieldFonts || {}) }
   if (font) fieldFonts[key] = font
   else delete fieldFonts[key]
@@ -158,9 +192,16 @@ function onFontChange(key: string, font: string) {
 }
 
 // Valeur affichée dans le champ numérique (multiplicateur, ex: "1.4"),
-// vide si aucun override — fieldFontSizes stocke la valeur CSS complète
-// (ex: "1.4em") pour être directement utilisable par fieldFontStyle().
+// vide si aucun override — fieldFontSizes/ExtraElement.fontSize stockent la
+// valeur CSS complète (ex: "1.4em") pour être directement utilisable par
+// fieldFontStyle()/BlockExtraElementContent.vue.
 function fieldFontSizeValue(key: string) {
+  if (isPromotedKey(key)) {
+    const id = promotedElementIdByKey(key)
+    const el = props.modelValue?.props?.extraElements?.find((e) => e.id === id)
+    const n = el?.fontSize ? parseFloat(String(el.fontSize)) : NaN
+    return Number.isFinite(n) ? String(n) : ''
+  }
   const raw = props.modelValue?.props?.fieldFontSizes?.[key]
   const n = raw ? parseFloat(String(raw)) : NaN
   return Number.isFinite(n) ? String(n) : ''
@@ -168,10 +209,15 @@ function fieldFontSizeValue(key: string) {
 
 function onFontSizeChange(key: string, value: string) {
   if (!props.modelValue) return
-  const fieldFontSizes = { ...(props.modelValue.props?.fieldFontSizes || {}) }
   const n = parseFloat(value)
-  if (!value || !Number.isFinite(n) || n <= 0) delete fieldFontSizes[key]
-  else fieldFontSizes[key] = `${n}em`
+  const size = !value || !Number.isFinite(n) || n <= 0 ? undefined : `${n}em`
+  if (isPromotedKey(key)) {
+    updatePromotedElementStyle(key, { fontSize: size })
+    return
+  }
+  const fieldFontSizes = { ...(props.modelValue.props?.fieldFontSizes || {}) }
+  if (size) fieldFontSizes[key] = size
+  else delete fieldFontSizes[key]
   const updated = {
     ...props.modelValue,
     props: { ...props.modelValue.props, fieldFontSizes },
@@ -210,15 +256,19 @@ function effectiveProp(key: string) {
   return type ? BLOCK_TYPES[type]?.defaults?.[key] : undefined
 }
 
+function isPromotedKey(key: string) {
+  return !!props.modelValue?.props?.promotedFields?.includes(key)
+}
+
 function isPromoted(field: FieldSchema) {
-  return !!props.modelValue?.props?.promotedFields?.includes(field.key)
+  return isPromotedKey(field.key)
 }
 
 // Retrouve l'élément déjà promu correspondant à ce champ, pour relancer le
 // positionnement dessus sans en recréer un doublon (bouton « Déplacer »
 // toujours visible, y compris après une première promotion).
 function promotedElementId(field: FieldSchema) {
-  return props.modelValue?.props?.extraElements?.find((el) => el.promotedFrom === field.key)?.id || null
+  return promotedElementIdByKey(field.key)
 }
 
 // Bouton « Déplacer » : promeut le champ s'il ne l'est pas encore, ou

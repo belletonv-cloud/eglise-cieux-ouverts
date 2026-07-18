@@ -415,13 +415,17 @@ test.describe('« Rendre déplaçable » — promouvoir un champ existant en él
     await page.locator('.bee-validate-btn').click()
     await page.waitForTimeout(200)
 
-    // Le champ affiche désormais une note "déplacé sur la page", plus aucun
-    // input (impossible de re-saisir une valeur qui recréerait le doublon).
-    // Le bouton reste lui affiché en permanence (renommé « Déplacer ») pour
-    // pouvoir relancer le positionnement sans repasser par le canvas.
+    // Le champ affiche désormais une note "déplacé sur la page", plus
+    // d'éditeur de VALEUR (impossible de re-saisir un texte qui recréerait
+    // le doublon). Le bouton « Déplacer » et les contrôles police/taille
+    // restent eux affichés en permanence — un champ promu doit garder les
+    // mêmes réglages qu'avant promotion, seule la saisie de contenu passe
+    // par le panneau FieldElements désormais.
     await expect(titreField.locator('.field-promoted-note')).toBeVisible()
-    await expect(titreField.locator('input, textarea')).toHaveCount(0)
+    await expect(titreField.locator('.field-input, .field-textarea')).toHaveCount(0)
     await expect(titreField.locator('.field-promote-btn')).toHaveText('⇱ Déplacer')
+    await expect(titreField.locator('.field-size-input')).toBeVisible()
+    await expect(titreField.locator('.field-font-picker')).toBeVisible()
   })
 
   test('le bouton « Déplacer » reste affiché après promotion et relance le positionnement sans doublon', async ({ page }) => {
