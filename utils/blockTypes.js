@@ -585,8 +585,8 @@ export const BLOCK_TYPES = {
         label: "Questions",
         type: "array",
         subFields: [
-          { key: "question", label: "Question", type: "text" },
-          { key: "answer", label: "Réponse", type: "textarea" },
+          { key: "question", label: "Question", type: "text", sizable: true },
+          { key: "answer", label: "Réponse", type: "textarea", sizable: true },
         ],
       },
       { key: "openFirst", label: "Première question ouverte", type: "boolean" },

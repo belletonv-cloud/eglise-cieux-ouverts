@@ -11,10 +11,10 @@
         <!-- details/summary : accordéon accessible et fonctionnel sans JS -->
         <details v-for="(item, i) in items" :key="i" class="faq-item" :open="i === 0 && openFirst">
           <summary class="faq-question">
-            <span>{{ item.question }}</span>
+            <span :style="{ fontSize: item.questionSize }">{{ item.question }}</span>
             <span class="faq-chevron" aria-hidden="true">▾</span>
           </summary>
-          <div class="faq-answer">{{ item.answer }}</div>
+          <div class="faq-answer" :style="{ fontSize: item.answerSize }">{{ item.answer }}</div>
         </details>
       </div>
       <slot />

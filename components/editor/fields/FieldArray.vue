@@ -39,7 +39,21 @@
             :key="sub.key"
             class="sub-field"
           >
-            <label class="sub-field-label">{{ sub.label }}</label>
+            <div class="sub-field-header">
+              <label class="sub-field-label">{{ sub.label }}</label>
+              <input
+                v-if="sub.sizable"
+                type="number"
+                step="0.1"
+                min="0.3"
+                max="5"
+                class="sub-field-size-input"
+                :value="subFieldSizeValue(item, sub.key)"
+                title="Taille de police relative (1 = taille par défaut)"
+                placeholder="Taille"
+                @change="updateSubFieldSize(idx, sub.key, ($event.target as HTMLInputElement).value)"
+              />
+            </div>
             <input
               v-if="sub.type === 'text'"
               type="text"
@@ -162,6 +176,29 @@ function updateItem(idx: number, prop: string, val: string) {
   emitChange()
 }
 
+// Taille de police par sous-champ "sizable" (ex: FAQ question/answer),
+// stockée directement sur l'item sous `${key}Size` (ex: questionSize:
+// "1.4em") — colocalisée avec le texte plutôt qu'un index séparé, pour
+// survivre naturellement au drag & drop / suppression d'items. Même
+// convention que fieldFontSizes dans AutoEditor.vue : input = multiplicateur
+// affiché (ex: "1.4"), stocké en chaîne CSS complète ("1.4em").
+function subFieldSizeValue(item: any, key: string) {
+  const raw = item?.[`${key}Size`]
+  const n = raw ? parseFloat(String(raw)) : NaN
+  return Number.isFinite(n) ? String(n) : ''
+}
+
+function updateSubFieldSize(idx: number, key: string, value: string) {
+  const n = parseFloat(value)
+  const size = !value || !Number.isFinite(n) || n <= 0 ? undefined : `${n}em`
+  const item = { ...localItems.value[idx] }
+  const sizeKey = `${key}Size`
+  if (size) item[sizeKey] = size
+  else delete item[sizeKey]
+  localItems.value[idx] = item
+  emitChange()
+}
+
 function updatePrimitiveItem(idx: number, val: string) {
   localItems.value[idx] = { ...localItems.value[idx], _value: val }
   emitChange()
@@ -192,7 +229,9 @@ function addItem() {
 .array-add-btn { background: #f3f4f6; border: 1.5px dashed #d1d5db; border-radius: 8px; color: #555; font-size: 0.82em; padding: 8px; cursor: pointer; }
 .array-add-btn:hover { border-color: #064886; color: #064886; background: #eef4fa; }
 .sub-field { display: flex; flex-direction: column; gap: 3px; }
+.sub-field-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .sub-field-label { font-size: 0.7em; color: #888; font-weight: 500; }
+.sub-field-size-input { font-size: 0.72em; background: #fff; border: 1px solid #ddd; border-radius: 5px; color: #555; padding: 2px 5px; width: 48px; }
 .field-input, .field-textarea { width: 100%; padding: 7px 10px; background: #fff; border: 1px solid #ddd; border-radius: 6px; color: #1a1a2e; font-size: 0.88em; outline: none; font-family: inherit; }
 .field-textarea { resize: vertical; min-height: 60px; }
 .field-image-preview { width: 100%; max-height: 60px; object-fit: cover; border-radius: 6px; }
