@@ -479,9 +479,11 @@ test.describe('« Rendre déplaçable » — promouvoir un champ existant en él
     await page.locator('.bee-validate-btn').click()
     await page.waitForTimeout(200)
 
-    // Le champ affiche la note de promotion, plus d'éditeur ni de bouton.
+    // Le champ affiche la note de promotion, plus d'éditeur de valeur ; le
+    // bouton « Déplacer » reste lui affiché en permanence pour relancer le
+    // positionnement sans doublon (voir les tests équivalents pour « Titre »).
     await expect(contentField.locator('.field-promoted-note')).toBeVisible()
-    await expect(contentField.locator('.field-promote-btn')).toHaveCount(0)
+    await expect(contentField.locator('.field-promote-btn')).toHaveText('⇱ Déplacer')
 
     expect(errors).toEqual([])
   })
