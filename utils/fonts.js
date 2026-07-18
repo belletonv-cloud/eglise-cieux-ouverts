@@ -35,12 +35,19 @@ export function ensureFontLoaded(name) {
   document.head.appendChild(link)
 }
 
-// Police par champ de texte (ex: props.fieldFonts = { title: "Lora" }) —
-// override plus fin que le réglage global headingFont/bodyFont. Retourne un
-// objet de style prêt pour :style, vide si aucun override pour ce champ.
-export function fieldFontStyle(fieldFonts, key) {
+// Police (+ taille) par champ de texte (ex: props.fieldFonts = { title:
+// "Lora" }, props.fieldFontSizes = { title: "1.4em" }) — override plus fin
+// que le réglage global headingFont/bodyFont. Retourne un objet de style
+// prêt pour :style, vide si aucun override pour ce champ. fieldFontSizes
+// est optionnel : les appels existants à 2 arguments restent valides.
+export function fieldFontStyle(fieldFonts, key, fieldFontSizes) {
+  const style = {}
   const name = fieldFonts?.[key]
-  if (!name || !isValidFont(name)) return {}
-  ensureFontLoaded(name)
-  return { fontFamily: fontStack(name) }
+  if (name && isValidFont(name)) {
+    ensureFontLoaded(name)
+    style.fontFamily = fontStack(name)
+  }
+  const size = fieldFontSizes?.[key]
+  if (size) style.fontSize = size
+  return style
 }

@@ -543,6 +543,21 @@ export function useAdmin() {
   }
 
   function stopPositioning() {
+    // Si l'élément positionné venait d'un champ promu, on ré-identifie ce
+    // champ (comme un clic dessus) pour que la sidebar, en se rouvrant,
+    // scrolle et surligne automatiquement son bouton « Déplacer » — sans
+    // ça il fallait chercher le champ à la main dans un schema parfois long.
+    const id = positioningElementId.value;
+    if (id) {
+      for (const block of localBlocks.value) {
+        const el = block.props?.extraElements?.find((e) => e.id === id);
+        if (el?.promotedFrom) {
+          activeFieldKey.value = el.promotedFrom;
+          identifySeq.value++;
+          break;
+        }
+      }
+    }
     positioningElementId.value = null;
   }
 

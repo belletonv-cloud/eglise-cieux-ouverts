@@ -6,9 +6,9 @@
     >
         <div class="rejoins-inner">
             <div class="rejoins-text-container">
-                <p class="rejoins-title" data-field-key="title" :style="fieldFontStyle(fieldFonts, 'title')">{{ title }}</p>
-                <p class="rejoins-subtitle" data-field-key="subtitle" :style="fieldFontStyle(fieldFonts, 'subtitle')">{{ subtitle }}</p>
-                <p class="rejoins-location" data-field-key="location" :style="fieldFontStyle(fieldFonts, 'location')">{{ location }}</p>
+                <p class="rejoins-title" data-field-key="title" :style="fieldFontStyle(fieldFonts, 'title', fieldFontSizes)">{{ title }}</p>
+                <p class="rejoins-subtitle" data-field-key="subtitle" :style="fieldFontStyle(fieldFonts, 'subtitle', fieldFontSizes)">{{ subtitle }}</p>
+                <p class="rejoins-location" data-field-key="location" :style="fieldFontStyle(fieldFonts, 'location', fieldFontSizes)">{{ location }}</p>
             </div>
             <div class="rejoins-grid">
                 <div
@@ -38,6 +38,7 @@ const {
     visibility = {},
     isTriggered = false,
     fieldFonts = {},
+    fieldFontSizes = {},
 } = defineProps({
     backgroundGradient: { type: String, default: "" },
     title: { type: String, default: "" },
@@ -47,6 +48,7 @@ const {
     visibility: { type: Object, default: () => ({}) },
     isTriggered: { type: Boolean, default: false },
     fieldFonts: { type: Object, default: () => ({}) },
+    fieldFontSizes: { type: Object, default: () => ({}) },
 });
 
 const visibilityClasses = computed(() => ({

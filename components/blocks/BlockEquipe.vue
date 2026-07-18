@@ -5,8 +5,8 @@
     :style="{ background: backgroundColor, color: textColor }"
   >
     <div class="block-equipe-inner">
-      <h2 class="block-equipe-title" v-if="title" data-field-key="title" :style="{ color: textColor, ...fieldFontStyle(fieldFonts, 'title') }">{{ title }}</h2>
-      <p class="block-equipe-subtitle" v-if="subtitle" data-field-key="subtitle" :style="fieldFontStyle(fieldFonts, 'subtitle')">{{ subtitle }}</p>
+      <h2 class="block-equipe-title" v-if="title" data-field-key="title" :style="{ color: textColor, ...fieldFontStyle(fieldFonts, 'title', fieldFontSizes) }">{{ title }}</h2>
+      <p class="block-equipe-subtitle" v-if="subtitle" data-field-key="subtitle" :style="fieldFontStyle(fieldFonts, 'subtitle', fieldFontSizes)">{{ subtitle }}</p>
       <div class="block-equipe-grid" :style="{ '--equipe-cols': columns }">
         <div v-for="(member, i) in members" :key="i" class="equipe-card">
           <div class="equipe-photo-wrap">
@@ -48,6 +48,7 @@ const props = defineProps({
   textColor: { type: String, default: '#064886' },
   animation: { type: String, default: 'fadeIn' },
   fieldFonts: { type: Object, default: () => ({}) },
+  fieldFontSizes: { type: Object, default: () => ({}) },
 })
 
 const { visibility = {} } = props

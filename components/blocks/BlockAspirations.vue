@@ -11,7 +11,7 @@
             }"
         >
             <div class="aspirations-content">
-                <h1 class="aspirations-title" data-field-key="title" :style="fieldFontStyle(fieldFonts, 'title')">{{ title }}</h1>
+                <h1 class="aspirations-title" data-field-key="title" :style="fieldFontStyle(fieldFonts, 'title', fieldFontSizes)">{{ title }}</h1>
                 <div class="aspirations-divider"></div>
                 <ol class="aspirations-list">
                     <li
@@ -40,6 +40,7 @@ const {
     visibility = {},
     isTriggered = false,
     fieldFonts = {},
+    fieldFontSizes = {},
 } = defineProps({
     backgroundGradient: { type: String, default: "" },
     backgroundColor: { type: String, default: "#fff" },
@@ -49,6 +50,7 @@ const {
     visibility: { type: Object, default: () => ({}) },
     isTriggered: { type: Boolean, default: false },
     fieldFonts: { type: Object, default: () => ({}) },
+    fieldFontSizes: { type: Object, default: () => ({}) },
 });
 
 const visibilityClasses = computed(() => ({

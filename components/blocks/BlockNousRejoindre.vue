@@ -8,7 +8,7 @@
         <div class="circle circle-right"></div>
         <div class="circle circle-small"></div>
 
-        <NuxtLink :to="link || '/contact'" class="cta-link" data-field-key="title" :style="fieldFontStyle(fieldFonts, 'title')">
+        <NuxtLink :to="link || '/contact'" class="cta-link" data-field-key="title" :style="fieldFontStyle(fieldFonts, 'title', fieldFontSizes)">
             {{ title }}
         </NuxtLink>
     </section>
@@ -25,6 +25,7 @@ const {
     visibility = {},
     isTriggered = false,
     fieldFonts = {},
+    fieldFontSizes = {},
 } = defineProps({
     backgroundGradient: { type: String, default: "" },
     title: { type: String, default: "" },
@@ -32,6 +33,7 @@ const {
     visibility: { type: Object, default: () => ({}) },
     isTriggered: { type: Boolean, default: false },
     fieldFonts: { type: Object, default: () => ({}) },
+    fieldFontSizes: { type: Object, default: () => ({}) },
 });
 
 const visibilityClasses = computed(() => ({

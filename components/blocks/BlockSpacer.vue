@@ -6,7 +6,7 @@
   >
     <template v-if="text || image">
       <img v-if="image" :src="image" :alt="text" class="spacer-img" data-field-key="image" loading="lazy" />
-      <p v-if="text" class="spacer-text" data-field-key="text" :style="{ textAlign: contentAlign, ...fieldFontStyle(fieldFonts, 'text') }">{{ text }}</p>
+      <p v-if="text" class="spacer-text" data-field-key="text" :style="{ textAlign: contentAlign, ...fieldFontStyle(fieldFonts, 'text', fieldFontSizes) }">{{ text }}</p>
     </template>
   </div>
 </template>
@@ -24,6 +24,7 @@ const {
   contentAlign = 'center',
   contentVerticalAlign = 'middle',
   fieldFonts = {},
+  fieldFontSizes = {},
 } = defineProps({
   height: { type: Number, default: 60 },
   backgroundColor: { type: String, default: 'transparent' },
@@ -35,6 +36,7 @@ const {
   isTriggered: { type: Boolean, default: false },
   previewDevice: { type: String, default: 'desktop' },
   fieldFonts: { type: Object, default: () => ({}) },
+  fieldFontSizes: { type: Object, default: () => ({}) },
 })
 const visibilityClasses = computed(() => ({
   'hide-mobile': visibility.mobile === false,

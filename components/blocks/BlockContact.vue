@@ -7,10 +7,10 @@
     <div v-if="isClassicPageContact" class="contact-page-shell">
       <section class="contact-page-header">
         <div class="contact-page-header-inner">
-          <h2 class="contact-page-title" data-field-key="title" :style="fieldFontStyle(fieldFonts, 'title')">{{ title }}</h2>
+          <h2 class="contact-page-title" data-field-key="title" :style="fieldFontStyle(fieldFonts, 'title', fieldFontSizes)">{{ title }}</h2>
           <div v-if="addressTitle || addressLine" class="contact-page-address">
-            <p v-if="addressTitle" data-field-key="addressTitle" :style="fieldFontStyle(fieldFonts, 'addressTitle')">{{ addressTitle }}</p>
-            <p v-if="addressLine" data-field-key="addressLine" :style="fieldFontStyle(fieldFonts, 'addressLine')">{{ addressLine }}</p>
+            <p v-if="addressTitle" data-field-key="addressTitle" :style="fieldFontStyle(fieldFonts, 'addressTitle', fieldFontSizes)">{{ addressTitle }}</p>
+            <p v-if="addressLine" data-field-key="addressLine" :style="fieldFontStyle(fieldFonts, 'addressLine', fieldFontSizes)">{{ addressLine }}</p>
           </div>
         </div>
       </section>
@@ -82,7 +82,7 @@
     </div>
 
     <div v-else class="contact-inner">
-      <h2 class="contact-title" data-field-key="title" :style="fieldFontStyle(fieldFonts, 'title')">{{ title }}</h2>
+      <h2 class="contact-title" data-field-key="title" :style="fieldFontStyle(fieldFonts, 'title', fieldFontSizes)">{{ title }}</h2>
 
       <div class="contact-wrap">
         <div class="contact-left">
@@ -147,6 +147,7 @@ const {
   showQuestions = false,
   visibility = {},
   fieldFonts = {},
+  fieldFontSizes = {},
   promotedFields = [],
 } = defineProps({
   backgroundGradient: { type: String, default: '' },
@@ -160,6 +161,7 @@ const {
   showQuestions: { type: Boolean, default: false },
   visibility: { type: Object, default: () => ({}) },
   fieldFonts: { type: Object, default: () => ({}) },
+  fieldFontSizes: { type: Object, default: () => ({}) },
   promotedFields: { type: Array, default: () => [] },
 })
 // Un champ promu ("Rendre déplaçable") vide sa valeur fixe pour exister

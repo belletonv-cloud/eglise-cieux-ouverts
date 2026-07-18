@@ -17,7 +17,7 @@
 
         <div class="hero-content" :class="{ 'hero-visible': visible }">
             <template v-if="overlayText">
-                <h1 class="hero-title" data-field-key="overlayText" :style="{ color: textColor, ...fieldFontStyle(fieldFonts, 'overlayText') }">
+                <h1 class="hero-title" data-field-key="overlayText" :style="{ color: textColor, ...fieldFontStyle(fieldFonts, 'overlayText', fieldFontSizes) }">
                     {{ overlayText }}
                 </h1>
             </template>
@@ -50,6 +50,7 @@ const props = defineProps({
     blockId: { type: String, default: "" },
     visibility: { type: Object, default: () => ({}) },
     fieldFonts: { type: Object, default: () => ({}) },
+    fieldFontSizes: { type: Object, default: () => ({}) },
     image: { type: String, default: "/foule-croix.png" },
     nameImage: { type: String, default: "" },
     logoImage: { type: String, default: "" },

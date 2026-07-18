@@ -11,7 +11,7 @@
         />
 
         <div class="bienvenue-content">
-            <div class="hero-bienvenue-portal" data-field-key="title" :aria-label="props.title" :style="{ color: props.textColor, fontSize: props.fontSize + 'em', ...fieldFontStyle(props.fieldFonts, 'title') }">
+            <div class="hero-bienvenue-portal" data-field-key="title" :aria-label="props.title" :style="{ color: props.textColor, fontSize: props.fontSize + 'em', ...fieldFontStyle(props.fieldFonts, 'title', props.fieldFontSizes) }">
                 <span
                     v-for="(char, i) in wordArr"
                     :key="i"
@@ -20,7 +20,7 @@
                     >{{ char === ' ' ? ' ' : char }}</span
                 >
             </div>
-            <p class="hero-subtitle" data-field-key="subtitle" :style="{ color: props.textColor, ...fieldFontStyle(props.fieldFonts, 'subtitle') }">{{ props.subtitle }}</p>
+            <p class="hero-subtitle" data-field-key="subtitle" :style="{ color: props.textColor, ...fieldFontStyle(props.fieldFonts, 'subtitle', props.fieldFontSizes) }">{{ props.subtitle }}</p>
             <div class="hero-socials">
                 <a
                     href="https://www.instagram.com/eglise_cieux_ouverts/"
@@ -72,6 +72,7 @@ const props = defineProps({
     subtitle: { type: String, default: "à l'Église Cieux Ouverts à Morlaix" },
     visibility: { type: Object, default: () => ({}) },
     fieldFonts: { type: Object, default: () => ({}) },
+    fieldFontSizes: { type: Object, default: () => ({}) },
     textColor: { type: String, default: "#064886" },
     fontSize: { type: [Number, String], default: 5 },
 });

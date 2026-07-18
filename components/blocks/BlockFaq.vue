@@ -5,8 +5,8 @@
     :style="{ background: backgroundColor, color: textColor }"
   >
     <div class="block-faq-inner">
-      <h2 class="block-faq-title" v-if="title" data-field-key="title" :style="{ color: textColor, ...fieldFontStyle(fieldFonts, 'title') }">{{ title }}</h2>
-      <p class="block-faq-subtitle" v-if="subtitle" data-field-key="subtitle" :style="fieldFontStyle(fieldFonts, 'subtitle')">{{ subtitle }}</p>
+      <h2 class="block-faq-title" v-if="title" data-field-key="title" :style="{ color: textColor, ...fieldFontStyle(fieldFonts, 'title', fieldFontSizes) }">{{ title }}</h2>
+      <p class="block-faq-subtitle" v-if="subtitle" data-field-key="subtitle" :style="fieldFontStyle(fieldFonts, 'subtitle', fieldFontSizes)">{{ subtitle }}</p>
       <div class="block-faq-list">
         <!-- details/summary : accordéon accessible et fonctionnel sans JS -->
         <details v-for="(item, i) in items" :key="i" class="faq-item" :open="i === 0 && openFirst">
@@ -39,6 +39,7 @@ const props = defineProps({
   textColor: { type: String, default: '#064886' },
   animation: { type: String, default: 'fadeIn' },
   fieldFonts: { type: Object, default: () => ({}) },
+  fieldFontSizes: { type: Object, default: () => ({}) },
 })
 
 const { visibility = {} } = props

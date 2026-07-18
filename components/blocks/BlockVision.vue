@@ -15,7 +15,7 @@
         data-field-key="label"
         :ref="labelAnim.setRef"
         :class="[labelAnim.animClass, { triggered: labelAnim.triggered.value }]"
-        :style="fieldFontStyle(fieldFonts, 'label')"
+        :style="fieldFontStyle(fieldFonts, 'label', fieldFontSizes)"
       >{{ label }}</p>
       <p
         v-if="quote"
@@ -23,7 +23,7 @@
         data-field-key="quote"
         :ref="quoteAnim.setRef"
         :class="[quoteAnim.animClass, { triggered: quoteAnim.triggered.value }]"
-        :style="fieldFontStyle(fieldFonts, 'quote')"
+        :style="fieldFontStyle(fieldFonts, 'quote', fieldFontSizes)"
         v-html="sanitizedContent"
       ></p>
       <NuxtLink
@@ -33,7 +33,7 @@
         data-field-key="ctaText"
         :ref="ctaAnim.setRef"
         :class="[ctaAnim.animClass, { triggered: ctaAnim.triggered.value }]"
-        :style="fieldFontStyle(fieldFonts, 'ctaText')"
+        :style="fieldFontStyle(fieldFonts, 'ctaText', fieldFontSizes)"
       >{{ ctaText }}</NuxtLink>
     </div>
   </section>
@@ -55,6 +55,7 @@ const props = defineProps({
   isTriggered: { type: Boolean, default: false },
   blockId: { type: String, default: '' },
   fieldFonts: { type: Object, default: () => ({}) },
+  fieldFontSizes: { type: Object, default: () => ({}) },
 })
 
 const isEditor = inject('isEditor', false)

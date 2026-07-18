@@ -1,8 +1,8 @@
 <template>
   <section class="block-quote" :style="{ background: backgroundColor, color: textColor }">
     <div class="quote-inner">
-      <blockquote class="quote-text" data-field-key="quote" :style="fieldFontStyle(fieldFonts, 'quote')">{{ quote }}</blockquote>
-      <cite v-if="author" class="quote-author" data-field-key="author" :style="fieldFontStyle(fieldFonts, 'author')">{{ author }}</cite>
+      <blockquote class="quote-text" data-field-key="quote" :style="fieldFontStyle(fieldFonts, 'quote', fieldFontSizes)">{{ quote }}</blockquote>
+      <cite v-if="author" class="quote-author" data-field-key="author" :style="fieldFontStyle(fieldFonts, 'author', fieldFontSizes)">{{ author }}</cite>
     </div>
   </section>
 </template>
@@ -19,6 +19,7 @@ defineProps({
   blockId: { type: String, default: '' },
   visibility: { type: Object, default: () => ({}) },
   fieldFonts: { type: Object, default: () => ({}) },
+  fieldFontSizes: { type: Object, default: () => ({}) },
 })
 </script>
 

@@ -6,11 +6,11 @@
   >
     <div class="ti-inner">
       <div class="ti-text">
-        <h2 class="ti-title" data-field-key="title" :style="{ color: textColor, ...fieldFontStyle(fieldFonts, 'title') }">{{ title }}</h2>
-        <p v-if="subtitle" class="ti-subtitle" data-field-key="subtitle" :style="fieldFontStyle(fieldFonts, 'subtitle')">{{ subtitle }}</p>
-        <div class="ti-body" data-field-key="body" :style="fieldFontStyle(fieldFonts, 'body')" v-html="sanitizedBody"></div>
+        <h2 class="ti-title" data-field-key="title" :style="{ color: textColor, ...fieldFontStyle(fieldFonts, 'title', fieldFontSizes) }">{{ title }}</h2>
+        <p v-if="subtitle" class="ti-subtitle" data-field-key="subtitle" :style="fieldFontStyle(fieldFonts, 'subtitle', fieldFontSizes)">{{ subtitle }}</p>
+        <div class="ti-body" data-field-key="body" :style="fieldFontStyle(fieldFonts, 'body', fieldFontSizes)" v-html="sanitizedBody"></div>
         <div v-if="ctaText || buttons.length" class="ti-buttons">
-          <a v-if="ctaText" :href="ctaLink" class="ti-cta" data-field-key="ctaText" :style="fieldFontStyle(fieldFonts, 'ctaText')">{{ ctaText }}</a>
+          <a v-if="ctaText" :href="ctaLink" class="ti-cta" data-field-key="ctaText" :style="fieldFontStyle(fieldFonts, 'ctaText', fieldFontSizes)">{{ ctaText }}</a>
           <template v-for="(btn, i) in buttons" :key="i">
             <a v-if="btn.text" :href="btn.link" class="ti-cta ti-cta-extra">{{ btn.text }}</a>
           </template>
@@ -65,6 +65,7 @@ const props = defineProps({
   isTriggered: { type: Boolean, default: false },
   previewDevice: { type: String, default: 'desktop' },
   fieldFonts: { type: Object, default: () => ({}) },
+  fieldFontSizes: { type: Object, default: () => ({}) },
   promotedFields: { type: Array, default: () => [] },
 })
 // Un champ promu ("Rendre déplaçable") vide sa valeur fixe pour exister

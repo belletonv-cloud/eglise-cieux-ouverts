@@ -6,7 +6,7 @@
   >
     <div class="footer-inner" :ref="titleAnim.setRef">
       <div class="footer-left">
-        <h2 class="footer-title" data-field-key="title" :style="fieldFontStyle(fieldFonts, 'title')">
+        <h2 class="footer-title" data-field-key="title" :style="fieldFontStyle(fieldFonts, 'title', fieldFontSizes)">
           <span
             v-for="(char, i) in titleChars"
             :key="i"
@@ -21,9 +21,9 @@
 
       <div class="footer-right">
         <div class="footer-info" :style="infoStyle">
-          <a :href="'mailto:' + email" class="footer-email" data-field-key="email" :style="{ ...emailStyle, ...fieldFontStyle(fieldFonts, 'email') }">{{ email }}</a>
-          <p data-field-key="schedule" :style="fieldFontStyle(fieldFonts, 'schedule')" v-html="formattedSchedule"></p>
-          <p data-field-key="address" :style="fieldFontStyle(fieldFonts, 'address')" v-html="formattedAddress"></p>
+          <a :href="'mailto:' + email" class="footer-email" data-field-key="email" :style="{ ...emailStyle, ...fieldFontStyle(fieldFonts, 'email', fieldFontSizes) }">{{ email }}</a>
+          <p data-field-key="schedule" :style="fieldFontStyle(fieldFonts, 'schedule', fieldFontSizes)" v-html="formattedSchedule"></p>
+          <p data-field-key="address" :style="fieldFontStyle(fieldFonts, 'address', fieldFontSizes)" v-html="formattedAddress"></p>
         </div>
       </div>
     </div>
@@ -53,6 +53,7 @@ const props = defineProps({
   blockId: { type: String, default: '' },
   visibility: { type: Object, default: () => ({}) },
   fieldFonts: { type: Object, default: () => ({}) },
+  fieldFontSizes: { type: Object, default: () => ({}) },
 })
 
 const { addElement } = useAnimatedElements(props.blockId)

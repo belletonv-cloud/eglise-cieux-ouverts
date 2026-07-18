@@ -19,6 +19,18 @@
             :title="isPromoted(field) ? 'Déplacer/redimensionner cet élément sur la page' : 'Rendre cet élément déplaçable, redimensionnable et le sortir de sa place fixe dans le bloc'"
             @click="onMoveField(field)"
           >⇱ Déplacer</button>
+          <input
+            v-if="!isPromoted(field) && isFontableField(field)"
+            type="number"
+            step="0.1"
+            min="0.3"
+            max="5"
+            class="field-size-input"
+            :value="fieldFontSizeValue(field.key)"
+            title="Taille de police relative (1 = taille par défaut)"
+            placeholder="Taille"
+            @change="onFontSizeChange(field.key, ($event.target as HTMLInputElement).value)"
+          />
           <select
             v-if="!isPromoted(field) && isFontableField(field)"
             class="field-font-picker"
@@ -141,6 +153,28 @@ function onFontChange(key: string, font: string) {
   const updated = {
     ...props.modelValue,
     props: { ...props.modelValue.props, fieldFonts },
+  }
+  emit('update', updated)
+}
+
+// Valeur affichée dans le champ numérique (multiplicateur, ex: "1.4"),
+// vide si aucun override — fieldFontSizes stocke la valeur CSS complète
+// (ex: "1.4em") pour être directement utilisable par fieldFontStyle().
+function fieldFontSizeValue(key: string) {
+  const raw = props.modelValue?.props?.fieldFontSizes?.[key]
+  const n = raw ? parseFloat(String(raw)) : NaN
+  return Number.isFinite(n) ? String(n) : ''
+}
+
+function onFontSizeChange(key: string, value: string) {
+  if (!props.modelValue) return
+  const fieldFontSizes = { ...(props.modelValue.props?.fieldFontSizes || {}) }
+  const n = parseFloat(value)
+  if (!value || !Number.isFinite(n) || n <= 0) delete fieldFontSizes[key]
+  else fieldFontSizes[key] = `${n}em`
+  const updated = {
+    ...props.modelValue,
+    props: { ...props.modelValue.props, fieldFontSizes },
   }
   emit('update', updated)
 }
@@ -276,5 +310,14 @@ function onDesignUpdate(block: BlockInstance) {
   color: #555;
   padding: 2px 5px;
   max-width: 130px;
+}
+.field-size-input {
+  font-size: 0.72em;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  color: #555;
+  padding: 2px 5px;
+  width: 52px;
 }
 </style>

@@ -422,7 +422,7 @@ if (typeof window !== "undefined" && import.meta.client) {
             // cours. Les éléments STATIQUES (non en positionnement) doivent
             // au contraire sélectionner normalement leur bloc — c'est ce qui
             // ouvre la sidebar et les identifie, comme un champ fixe de bloc.
-            if (target.closest && (target.closest(".drag-handle") || target.closest(".bee-el-drag"))) return;
+            if (target.closest && (target.closest(".drag-handle") || target.closest(".bee-el-drag") || target.closest(".bee-validate-btn"))) return;
             const wrapper = target.closest && target.closest(".block-wrapper");
             if (wrapper) {
                 const bid = wrapper.getAttribute("data-block-id");
@@ -470,7 +470,7 @@ if (typeof window !== "undefined" && import.meta.client) {
             if (!target) return;
             // Idem docClickHandler : la poignée de drag et l'élément
             // additionnel en cours de positionnement ne sélectionnent pas le bloc
-            if (target.closest && (target.closest(".drag-handle") || target.closest(".bee-el-drag"))) return;
+            if (target.closest && (target.closest(".drag-handle") || target.closest(".bee-el-drag") || target.closest(".bee-validate-btn"))) return;
             const wrapper = target.closest && target.closest(".block-wrapper");
             if (wrapper) {
                 const bid = wrapper.getAttribute("data-block-id");
@@ -528,7 +528,7 @@ function wrapperClick(id, ev) {
     // bloc depuis un élément additionnel EN COURS DE POSITIONNEMENT, sous
     // peine de rouvrir/re-render la sidebar en pleine interaction et avaler
     // le drag/resize en cours.
-    if (ev && ev.target && ev.target.closest && ev.target.closest(".bee-el-drag")) return;
+    if (ev && ev.target && ev.target.closest && (ev.target.closest(".bee-el-drag") || ev.target.closest(".bee-validate-btn"))) return;
     onBlockSelected(id)
     try {
         if (editingBlockId && editingBlockId.value !== id) {
