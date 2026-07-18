@@ -21,6 +21,16 @@ function parseContactEmails(body: any): string[] {
   return emails
 }
 
+// Réseaux sociaux : réglage global (voir index.get.ts) — filtre les entrées
+// incomplètes (platform/url vides) plutôt que de rejeter toute la requête,
+// pour rester tolérant à une ligne laissée vide dans l'UI de gestion.
+function parseSocialLinks(body: any): { platform: string; url: string }[] {
+  if (!Array.isArray(body?.socialLinks)) return []
+  return body.socialLinks
+    .map((l: any) => ({ platform: String(l?.platform || '').trim(), url: String(l?.url || '').trim() }))
+    .filter((l: { platform: string; url: string }) => l.platform && l.url)
+}
+
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
   const isTest = process.env.NODE_ENV === 'test' || process.env.PW_TEST === '1' || process.env.TEST_ENV === '1'
@@ -35,10 +45,11 @@ export default defineEventHandler(async (event) => {
   }
 
   const hideEventsPageIfEmpty = body?.hideEventsPageIfEmpty === true // par défaut false (toujours visible)
+  const socialLinks = parseSocialLinks(body)
 
   if (isTest) {
     const { setSettings } = await import('../../utils/firestore-mock.js')
-    setSettings({ contactEmails, hideEventsPageIfEmpty })
+    setSettings({ contactEmails, hideEventsPageIfEmpty, socialLinks })
     return { ok: true }
   }
 
@@ -54,6 +65,7 @@ export default defineEventHandler(async (event) => {
     await setFirestoreDoc(config.projectId, accessToken, 'settings', 'config', {
       contactEmails: contactEmails,
       hideEventsPageIfEmpty: hideEventsPageIfEmpty,
+      socialLinks: socialLinks,
       updatedAt: new Date().toISOString(),
     })
     return { ok: true }

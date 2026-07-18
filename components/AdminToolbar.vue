@@ -872,6 +872,22 @@
                         </label>
                         <p class="settings-hint">La page et le lien de menu seront masqués du site public tant qu'aucun événement n'est prévu. Toujours visible en mode admin.</p>
                     </div>
+                    <div class="settings-field">
+                        <label>Réseaux sociaux</label>
+                        <p class="settings-hint">Réglage unique pour tout le site — ces liens s'affichent dans le menu, le bloc Bienvenue et le bloc Contact.</p>
+                        <div v-for="(link, i) in socialLinksForm" :key="i" class="social-link-row">
+                            <select v-model="link.platform" class="settings-input social-link-platform">
+                                <option v-for="p in Object.keys(SOCIAL_ICONS)" :key="p" :value="p">{{ SOCIAL_ICONS[p].label }}</option>
+                            </select>
+                            <input v-model="link.url" type="text" placeholder="https://..." class="settings-input social-link-url" />
+                            <button type="button" class="social-link-del" @click="socialLinksForm.splice(i, 1)" aria-label="Supprimer">✕</button>
+                        </div>
+                        <button
+                            type="button"
+                            class="social-link-add"
+                            @click="socialLinksForm.push({ platform: 'instagram', url: '' })"
+                        >+ Ajouter un réseau</button>
+                    </div>
                 </div>
                 <div class="settings-modal-footer">
                     <button class="btn-cancel" @click="showSettings = false">Annuler</button>
@@ -900,7 +916,10 @@ import {
     onAuthStateChanged,
 } from "firebase/auth";
 import { BLOCK_TYPES, ANIMATIONS } from "~/utils/blockTypes.js";
+import { SOCIAL_ICONS } from "~/utils/socialIcons.js";
 import { useToast } from '~/composables/useToast'
+
+const { socialLinks: liveSocialLinks } = useSiteSettings()
 
 const { showToast } = useToast()
 
@@ -1351,6 +1370,7 @@ async function toggleContactArchived(message) {
 const showSettings = ref(false)
 const settingsForm = ref({ hideEventsPageIfEmpty: false })
 const contactEmailsText = ref('')
+const socialLinksForm = ref([])
 const emailQuota = ref(null)
 const settingsSaving = ref(false)
 
@@ -1378,6 +1398,7 @@ async function loadSettings() {
     const data = await res.json()
     settingsForm.value = { hideEventsPageIfEmpty: data.hideEventsPageIfEmpty === true }
     contactEmailsText.value = (data.contactEmails || []).join(', ')
+    socialLinksForm.value = Array.isArray(data.socialLinks) ? data.socialLinks.map(l => ({ ...l })) : []
   } catch (e) {
     console.error('[admin] load settings failed:', e)
     showToast('Erreur : ' + (e.message || e), 'toast-error')
@@ -1413,12 +1434,15 @@ async function saveSettings() {
     const res = await fetch('/api/settings', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ ...settingsForm.value, contactEmails }),
+      body: JSON.stringify({ ...settingsForm.value, contactEmails, socialLinks: socialLinksForm.value }),
     })
     if (!res.ok) {
       const body = await res.json().catch(() => null)
       throw new Error(body?.message || `HTTP ${res.status}`)
     }
+    // Reflète immédiatement le changement dans SiteHeader/BlockContact/
+    // BlockBienvenue (state partagé useSiteSettings.js) sans recharger la page.
+    liveSocialLinks.value = socialLinksForm.value.map(l => ({ ...l }))
     showToast('Configuration sauvegardée', 'toast-success')
     showSettings.value = false
   } catch (e) {
@@ -3260,6 +3284,46 @@ async function saveChanges() {
     margin: 6px 0 0 0;
     font-size: 13px;
     color: #6b7280;
+}
+.social-link-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-top: 8px;
+}
+.social-link-platform {
+    flex: 0 0 140px;
+}
+.social-link-url {
+    flex: 1;
+}
+.social-link-del {
+    background: none;
+    border: none;
+    color: #EF4B54;
+    cursor: pointer;
+    font-size: 0.9em;
+    padding: 4px 8px;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+.social-link-del:hover {
+    background: rgba(239, 75, 84, 0.1);
+}
+.social-link-add {
+    margin-top: 10px;
+    background: #f3f4f6;
+    border: 1.5px dashed #d1d5db;
+    border-radius: 8px;
+    color: #555;
+    font-size: 0.85em;
+    padding: 8px 12px;
+    cursor: pointer;
+}
+.social-link-add:hover {
+    border-color: #064886;
+    color: #064886;
+    background: #eef4fa;
 }
 .settings-hint.quota-warning {
     color: #b45309;
