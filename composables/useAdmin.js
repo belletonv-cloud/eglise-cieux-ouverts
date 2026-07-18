@@ -161,6 +161,31 @@ export function useAdmin() {
     };
   }
 
+  // Garde-fou : ramène un rectangle (%) dans les limites du bloc (0-100 sur
+  // chaque axe). Utilisé après avoir converti la taille RÉELLE en pixels
+  // d'un champ promu en % du bloc — si le bloc a beaucoup rétréci en
+  // perdant ce champ (ex: une image qui donnait sa hauteur au bloc), garder
+  // la taille pixel d'origine peut dépasser la hauteur du nouveau bloc.
+  // Sans ce clamp, l'élément débordait visuellement sous le bloc, donnant
+  // l'impression qu'un bloc supplémentaire venait d'apparaître en dessous.
+  // Réduit proportionnellement (garde le ratio) seulement si nécessaire,
+  // puis décale pour rester dans les bords — ne modifie rien si l'élément
+  // tenait déjà dans le bloc.
+  function clampRectPct({ xPct, yPct, wPct, hPct }) {
+    let scale = 1;
+    if (wPct > 100) scale = Math.min(scale, 100 / wPct);
+    if (hPct > 100) scale = Math.min(scale, 100 / hPct);
+    if (scale < 1) {
+      wPct *= scale;
+      hPct *= scale;
+    }
+    if (xPct + wPct > 100) xPct = Math.max(0, 100 - wPct);
+    if (yPct + hPct > 100) yPct = Math.max(0, 100 - hPct);
+    xPct = Math.max(0, xPct);
+    yPct = Math.max(0, yPct);
+    return { xPct, yPct, wPct, hPct };
+  }
+
   // « Rendre déplaçable »/« Déplacer » (AutoEditor.vue) : convertit un champ
   // fixe du bloc en élément libre du canvas, en conservant sa position/
   // taille RÉELLE (mesurée sur la page) pour que rien ne change visuellement
@@ -247,12 +272,12 @@ export function useAdmin() {
       const i2 = localBlocks.value.findIndex((b) => b.id === blockId);
       if (i2 >= 0) {
         const b2 = localBlocks.value[i2];
-        const corrected = {
+        const corrected = clampRectPct({
           xPct: (pixelRect.xPx / box.width) * 100,
           yPct: (pixelRect.yPx / box.height) * 100,
           wPct: (pixelRect.wPx / box.width) * 100,
           hPct: (pixelRect.hPx / box.height) * 100,
-        };
+        });
         const els2 = (b2.props?.extraElements || []).map((el) =>
           el.id === newId ? { ...el, ...corrected } : el,
         );
