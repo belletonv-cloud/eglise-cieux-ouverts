@@ -227,10 +227,10 @@
 
     <div
         class="admin-sidebar-overlay"
-        v-if="sidebarBlock && user && !positioningElementId"
-        @click="closeSidebar"
+        v-if="sidebarBlock && user"
+        @click="positioningElementId ? stopPositioning() : closeSidebar()"
     ></div>
-    <div class="admin-sidebar" v-if="sidebarBlock && user && !positioningElementId">
+    <div class="admin-sidebar" v-if="sidebarBlock && user" :class="{ 'positioning-mode': positioningElementId }">
         <div class="admin-sidebar-header">
             <h3>{{ getBlockLabel(sidebarBlock.type) }}</h3>
             <button class="admin-close-btn" @click="closeSidebar">
