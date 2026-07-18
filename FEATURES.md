@@ -97,3 +97,414 @@ Ces bugs ont causé des pertes de contenu réel ou des blocages de l'admin en pr
 ## Déploiement
 
 Push sur `main` → déploiement automatique Cloudflare Pages (`eglise-cieux-ouverts.pages.dev`). Voir CLAUDE.md pour les détails opérationnels (Node version, commandes, cache, environnements).
+
+## Features demandées (roadmap)
+
+### Comptes membres
+
+- **Authentification membre** : système d'authentification dédié (actuellement seuls les comptes admin via Firebase existent)
+- **Page perso membre** (`/member` ou `/ressources`) : espace membre sur le site public
+- **Notifications** : alertes (email/push) quand une ressource est disponible
+
+### Envoi de ressources ciblées
+
+- **Backend manquant** :
+  - Table `resources` (`id`, `title`, `description`, `url`, `file_url`, `type`, `created_by`, `created_at`, `expires_at`)
+  - Table `resource_access` (`resource_id`, `member_id`, `accessed_at`, `ip_address`, `user_agent`)
+  - Endpoint `POST /api/resources` (création ciblée)
+  - Endpoint `GET /api/member/resources` (liste côté membre)
+  - Endpoint `POST /api/resources/:id/access` (tracking consultation)
+  - Permission `manage_resources` dans RBAC (`src/auth.js`)
+- **Frontend admin manquant** :
+  - Vue `ResourcesView.vue` dans eglise-app
+  - Modal création avec sélection destinataire
+  - Dashboard avec colonnes "Consultée ?", "Date consultation"
+- **Frontend public manquant** :
+  - Route `/ressources` dans eglise-cieux-ouverts
+  - Composant `BlockMemberResources.vue`
+  - Store Pinia `useResources()`
+
+### Suivi de consultation
+
+- **Backend** : Table `resource_access` avec timestamp d'accès
+- **Frontend** : Badge/statut "Lu/non lu" dans le tableau admin
+- **Filtrage** : Afficher uniquement les ressources non lues
+
+### Éléments réutilisables existants
+
+- **Pattern des messages** (`messages.js`) : structure `message_recipients` avec `read_at` peut servir de base
+- **Sélection de membres** : `AdminMembers.vue` et `BLOCK_TYPES.equipe` montrent comment faire
+- **Authentification** : les tokens Firebase sont déjà acceptés mutuellement entre les deux apps
+
+## Incohérences détectées (à corriger)
+
+Cette section suit le pattern de documentation des projets open source comme PayloadCMS et Directus : chaque inconsistence est catégorisée par impact et complexité.
+
+### 🐛 Bugs fonctionnels (priorité haute)
+
+| Champ/Propriété | Impact | Bloc(s) concerné(s) | Détails |
+|-----------------|--------|---------------------|---------|
+| `visibility` | ✅ Corrigé | `BlockStats.vue`, `BlockQuote.vue`, `BlockFooter.vue` | `visibilityClasses` appliqué sur la racine de chaque composant (pattern BlockRichText). Indispensable pour le footer, rendu hors PageRenderer (`layouts/default.vue`) — pour les blocs de page, le wrapper PageRenderer l'appliquait déjà. Testé dans `tests/playwright/visibility-device.spec.ts`. |
+| `richtext` (éléments additionnels) | ✅ Corrigé | `FieldElements.vue` | Bouton `+ Texte HTML` ajouté, avec placeholder `<p>Nouveau contenu HTML...</p>` à la création. |
+
+### 🐛 Bugs de rendu inline (priorité haute)
+
+| Champ/Propriété | Bloc(s) concerné(s) | Détails |
+|-----------------|---------------------|---------|
+| `questionSize`/`answerSize` | `BlockFaq.vue` | ✅ Corrigé : style conditionnel (`item.questionSize ? { fontSize: ... } : {}`) — aucun style inline émis quand le champ n'est pas défini. |
+
+### 🔧 Actions recommandées
+
+1. ✅ **Uniformiser `visibility`** : `visibilityClasses` ajouté dans `BlockStats.vue`, `BlockQuote.vue`, `BlockFooter.vue`
+2. **Centraliser `minHeight`** : Déplacer la logique depuis `AdminToolbar.vue` vers `utils/designDefaults.js`
+3. **Documenter les champs inactifs** : Soit les implémenter, soit les retirer du schema, soit les marquer comme "non fonctionnel" dans la UI
+4. ✅ **Ajouter le bouton "+ Texte HTML"** dans `FieldElements.vue` — fait
+5. ✅ **Appliquer `fieldFonts`/`fieldFontSizes` au texte du Spacer** — en place sur `.spacer-text`
+6. ✅ **Vérifier l'animation des blocs Stats et Quote** — `animClass` appliqué dans les composants, cohérent avec le wrapper PageRenderer
+
+### ✅ TODO - Vérification des éléments modifiables
+
+| TO DO | Bloc/Fichier | Type | Priorité | État |
+|-------|--------------|------|----------|------|
+| Ajouter `visibilityClasses` computed dans BlockStats.vue | `components/blocks/BlockStats.vue` | Bug | Haute | ✅ Fait |
+| Ajouter `animClass` dans BlockStats.vue | `components/blocks/BlockStats.vue` | Bug | Haute | ✅ Fait |
+| Ajouter `visibilityClasses` computed dans BlockQuote.vue | `components/blocks/BlockQuote.vue` | Bug | Haute | ✅ Fait |
+| Ajouter `animClass` dans BlockQuote.vue | `components/blocks/BlockQuote.vue` | Bug | Haute | ✅ Fait |
+| Ajouter `visibilityClasses` computed dans BlockFooter.vue | `components/blocks/BlockFooter.vue` | Bug | Haute | ✅ Fait |
+| Appliquer `fieldFontStyle()` sur texte du Spacer | `components/blocks/BlockSpacer.vue` | Amélioration | Moyenne | ✅ Déjà en place (`.spacer-text`) |
+| Ajouter bouton `+ Texte HTML` dans FieldElements.vue | `components/editor/FieldElements.vue` | Feature | Haute | ✅ Fait |
+| Protéger `fontSize` contre `undefined` dans FAQ | `components/blocks/BlockFaq.vue` | Bug | Haute | ✅ Fait |
+| Examiner `animations: "wrapper"` vs réel pour Stats/Quote | `utils/blockTypes.js`, composants | Design | Basse | ✅ Vérifié : wrapper PageRenderer + classes internes cohérents |
+
+## 📐 Fonctionnalités de modification disponibles par bloc (sidebar)
+
+Cette section documente ce qui peut être modifié depuis la sidebar pour chaque bloc, basé sur l'analyse de la cohérence `schema` → `props` → `template`.
+
+### Bloc Hero (`hero`)
+| Champ | Modifiable depuis sidebar | Appliqué au rendu | Tests |
+|-------|--------------------------|-------------------|-------|
+| image | ✅ | ✅ | ✅ |
+| nameImage | ✅ | ✅ | ✅ |
+| height | ✅ | ✅ | ✅ |
+| overlay | ✅ | ✅ | ✅ |
+| overlayColor | ✅ | ✅ | ✅ |
+| overlayText | ✅ | ✅ | ✅ |
+| textColor | ✅ | ✅ | ✅ |
+| showButton | ✅ | ✅ | ✅ |
+| **Design** | | | |
+| fontFamily | ✅ | ✅ | ✅ |
+| fontSize | ✅ | ✅ | ✅ |
+| fontWeight | ✅ | ❌ Non applicable (pas de champ fontWeight dans schema) | N/A |
+| **Note** | Aucun champ avec `sizable` dans les sous-éléments (pas de tableau) | | |
+
+### Bloc Bienvenue (`bienvenue`)
+| Champ | Modifiable | Appliqué | Tests |
+|-------|-----------|----------|-------|
+| title | ✅ | ✅ | ✅ |
+| subtitle | ✅ | ✅ | ✅ |
+| backgroundColor | ✅ | ✅ | ✅ |
+| textColor | ✅ | ✅ | ✅ |
+| animation | ✅ | ✅ | ✅ |
+| fontSize | ✅ | ✅ (titre seulement) | ✅ |
+
+### Bloc Rejoins (`rejoins`)
+| Champ | Modifiable | Appliqué | Tests |
+|-------|-----------|----------|-------|
+| title | ✅ | ✅ | ✅ |
+| subtitle | ✅ | ✅ | ✅ |
+| location | ✅ | ✅ | ✅ |
+| backgroundGradient | ✅ | ✅ | ✅ |
+| horaires[] | ✅ | ✅ | ✅ |
+| **Design** | | | |
+| fontFamily | ✅ | ✅ | ✅ |
+| fontSize | ✅ | ✅ | ✅ |
+| **Note** | Animation `internal` (cercles qui bougent) | | |
+
+### Bloc Aspirations (`aspirations`)
+| Champ | Modifiable | Appliqué | Tests |
+|-------|-----------|----------|-------|
+| title | ✅ | ✅ | ✅ |
+| items[] | ✅ | ✅ | ✅ |
+| backgroundColor | ✅ | ✅ | ✅ |
+| textColor | ✅ | ✅ | ✅ |
+| **Design** | | | |
+| fontFamily | ✅ | ✅ | ✅ |
+| fontSize | ✅ | ❌ Pas de contrôle pour items individuels | |
+| **Note** | Animation `internal` avec cercles | | |
+
+### Bloc Nous rejoindre (`nousRejoindre`)
+| Champ | Modifiable | Appliqué | Tests |
+|-------|-----------|----------|-------|
+| title | ✅ | ✅ | ✅ |
+| link | ✅ | ✅ | ✅ |
+| backgroundGradient | ✅ | ✅ | ✅ |
+| **Design** | | | |
+| fontFamily | ✅ | ✅ | ✅ |
+| fontSize | ✅ | ✅ | ✅ |
+| **Note** | Animation `internal` avec cercles | | |
+
+### Bloc Vision (`vision`)
+| Champ | Modifiable | Appliqué | Tests |
+|-------|-----------|----------|-------|
+| label | ✅ | ✅ | ✅ |
+| quote | ✅ | ✅ | ✅ |
+| ctaText | ✅ | ✅ | ✅ |
+| ctaLink | ✅ | ✅ | ✅ |
+| backgroundGradient | ✅ | ✅ | ✅ |
+| textColor | ✅ | ✅ | ✅ |
+| animation | ✅ | ✅ | ✅ |
+| **Design** | | | |
+| fontFamily | ✅ | ✅ | ✅ |
+| fontSize | ✅ | ✅ | ✅ |
+
+### Bloc FAQ (`faq`)
+| Champ | Modifiable | Appliqué | Tests |
+|-------|-----------|----------|-------|
+| title | ✅ | ✅ | ✅ |
+| subtitle | ✅ | ✅ | ✅ |
+| items[].question | ✅ | ✅ | ✅ |
+| items[].answer | ✅ | ✅ | ✅ |
+| items[].questionSize | ✅ | ✅ Style conditionnel (rien si undefined) | ✅ |
+| items[].answerSize | ✅ | ✅ Style conditionnel (rien si undefined) | ✅ |
+| openFirst | ✅ | ✅ | ✅ |
+| backgroundColor | ✅ | ✅ | ✅ |
+| textColor | ✅ | ✅ | ✅ |
+| animation | ✅ | ✅ | ✅ |
+| **Design** | | | |
+| fontFamily | ✅ | ✅ | ✅ |
+| fontSize | ✅ (top-level) | ✅ | ✅ |
+| **Note** | Les sous-champs ont un contrôle `sizable` mais pas `fieldFonts`/`fieldFontSizes` | | |
+
+### Bloc Stats (`stats`)
+| Champ | Modifiable | Appliqué | Tests |
+|-------|-----------|----------|-------|
+| title | ✅ | ✅ | ✅ |
+| items[] | ✅ | ✅ | ✅ |
+| backgroundColor | ✅ | ✅ | ✅ |
+| textColor | ✅ | ✅ | ✅ |
+| animation | ✅ | ✅ `animClass` + `isTriggered` (pattern BlockRichText) | ✅ `visibility-device.spec.ts` |
+| **Design** | | | |
+| fontFamily | ✅ | ✅ | ✅ |
+| fontSize | ✅ | ✅ | ✅ |
+
+### Bloc Quote (`quote`)
+| Champ | Modifiable | Appliqué | Tests |
+|-------|-----------|----------|-------|
+| quote | ✅ | ✅ | ✅ |
+| author | ✅ | ✅ | ✅ |
+| backgroundColor | ✅ | ✅ | ✅ |
+| textColor | ✅ | ✅ | ✅ |
+| animation | ✅ | ✅ `animClass` + `isTriggered` (pattern BlockRichText) | ✅ `visibility-device.spec.ts` |
+| **Design** | | | |
+| fontFamily | ✅ | ✅ | ✅ |
+| fontSize | ✅ | ✅ | ✅ |
+
+### Bloc Galerie (`gallery`)
+| Champ | Modifiable | Appliqué | Tests |
+|-------|-----------|----------|-------|
+| title | ✅ | ✅ | ✅ |
+| textColor | ✅ | ✅ | ✅ |
+| images[] | ✅ | ✅ | ✅ |
+| columns | ✅ | ✅ | ✅ |
+| backgroundColor | ✅ | ✅ | ✅ |
+| animation | ✅ | ✅ | ✅ |
+| **Design** | | | |
+| fontFamily | ✅ | ✅ | ✅ |
+| fontSize | ✅ | ✅ | ✅ |
+
+### Bloc Spacer (`spacer`)
+| Champ | Modifiable | Appliqué | Tests |
+|-------|-----------|----------|-------|
+| height | ✅ | ✅ | ✅ |
+| backgroundColor | ✅ | ✅ | ✅ |
+| text | ✅ | ✅ | ✅ |
+| image | ✅ | ✅ | ✅ |
+| contentAlign | ✅ | ✅ | ✅ |
+| contentVerticalAlign | ✅ | ✅ | ✅ |
+| **Design** | | | |
+| fontFamily | ✅ | ✅ Appliqué sur `.spacer-text` via `fieldFontStyle` | ✅ |
+| fontSize | ✅ | ✅ Appliqué sur `.spacer-text` | ✅ |
+| **Note** | Non appliqué sur l'image (`<img>`) : une police n'a aucun effet sur une image | | |
+
+### Bloc Texte/Image (`textImage`)
+| Champ | Modifiable | Appliqué | Tests |
+|-------|-----------|----------|-------|
+| title | ✅ | ✅ | ✅ |
+| subtitle | ✅ | ✅ | ✅ |
+| body | ✅ | ✅ | ✅ |
+| image | ✅ | ✅ | ✅ |
+| reverse | ✅ | ✅ | ✅ |
+| visualStyle | ✅ | ✅ | ✅ |
+| ctaText | ✅ | ✅ | ✅ |
+| ctaLink | ✅ | ✅ | ✅ |
+| buttons[] | ✅ | ✅ | ✅ |
+| backgroundColor | ✅ | ✅ | ✅ |
+| textColor | ✅ | ✅ | ✅ |
+| animation | ✅ | ✅ | ✅ |
+| **Design** | | | |
+| fontFamily | ✅ | ✅ | ✅ |
+| fontSize | ✅ | ✅ | ✅ |
+
+### Bloc Équipe (`equipe`)
+| Champ | Modifiable | Appliqué | Tests |
+|-------|-----------|----------|-------|
+| title | ✅ | ✅ | ✅ |
+| subtitle | ✅ | ✅ | ✅ |
+| members[].name | ✅ | ✅ | ✅ |
+| members[].role | ✅ | ✅ | ✅ |
+| members[].photo | ✅ | ✅ | ✅ |
+| members[].description | ✅ | ✅ | ✅ |
+| columns | ✅ | ✅ | ✅ |
+| backgroundColor | ✅ | ✅ | ✅ |
+| textColor | ✅ | ✅ | ✅ |
+| animation | ✅ | ✅ | ✅ |
+| **Design** | | | |
+| fontFamily | ✅ | ✅ | ✅ |
+| fontSize | ✅ | ✅ | ✅ |
+| **Note** | Les sous-champs ne bénéficient pas de `fieldFonts` individuels | | |
+
+### Bloc Vidéo (`youtube`)
+| Champ | Modifiable | Appliqué | Tests |
+|-------|-----------|----------|-------|
+| videoId | ✅ | ✅ | ✅ |
+| title | ✅ | ✅ | ✅ |
+| backgroundColor | ✅ | ✅ | ✅ |
+| animation | ✅ | ✅ | ✅ |
+| **Design** | | | |
+| fontFamily | ✅ | ✅ | ✅ |
+| fontSize | ✅ | ✅ | ✅ |
+
+### Bloc Image pleine largeur (`fullWidthImage`)
+| Champ | Modifiable | Appliqué | Tests |
+|-------|-----------|----------|-------|
+| src | ✅ | ✅ | ✅ |
+| alt | ✅ | ✅ | ✅ |
+| height | ✅ | ✅ | ✅ |
+| **Design** | | | |
+| fontFamily | ❌ Absent des props | - | N/A |
+| fontSize | ❌ Absent des props | - | N/A |
+| **Note** | Pas de props `fieldFonts`/`fieldFontSizes` - le texte alternatif ne peut pas être stylisé via sidebar | | |
+
+### Bloc Footer (`footer`)
+| Champ | Modifiable | Appliqué | Tests |
+|-------|-----------|----------|-------|
+| title | ✅ | ✅ | ✅ |
+| email | ✅ | ✅ | ✅ |
+| schedule | ✅ | ✅ | ✅ |
+| address | ✅ | ✅ | ✅ |
+| bgColorStart/Mid/End | ✅ | ✅ | ✅ |
+| bgColorMobileStart/End | ✅ | ✅ | ✅ |
+| fontSize | ✅ | ✅ | ✅ |
+| titleFontSize | ✅ | ✅ | ✅ |
+| textColor | ✅ | ✅ | ✅ |
+| titleBoldStart/End | ✅ | ✅ | ✅ |
+| **Design** | | | |
+| animation | ❌ Absent du schema | - | N/A (animation intern via shutter) |
+| **Note** | Le footer a `animations: "internal"` et utilise `useAnimatedElements` pour l'animation d'entrée, pas le champ `animation` wrapper. **Problème : `visibility` non appliqué.** | | |
+
+### Bloc Contact (`contact`)
+| Champ | Modifiable | Appliqué | Tests |
+|-------|-----------|----------|-------|
+| title | ✅ | ✅ | ✅ |
+| addressTitle | ✅ | ✅ | ✅ |
+| addressLine | ✅ | ✅ | ✅ |
+| image | ✅ | ✅ | ✅ |
+| mapEmbedUrl | ✅ | ✅ | ✅ |
+| backgroundGradient | ✅ | ✅ | ✅ |
+| showQuestions | ✅ | ✅ | ✅ |
+| showSocials | ✅ | ✅ | ✅ |
+| textColor | ✅ | ✅ | ✅ |
+| animation | ✅ | ✅ | ✅ |
+| **Design** | | | |
+| fontFamily | ✅ | ✅ | ✅ |
+| fontSize | ✅ | ✅ | ✅ |
+
+### Éléments additionnels (`FieldElements.vue`)
+| Type | Ajoutable depuis sidebar | Contrôles disponibles | Notes |
+|------|-------------------------|---------------------|-------|
+| text | ✅ `+ Texte` | Police, taille, texte, animation, position | |
+| image | ✅ `+ Image` | URL, alt, animation, position | |
+| button | ✅ `+ Bouton` | Texte, lien, animation, position | |
+| richtext | ✅ `+ Texte HTML` | Police, taille, HTML, animation, position | Placeholder `<p>Nouveau contenu HTML...</p>` à la création |
+
+### 🐛 Incohérences Schema vs Rendu (priorité haute)
+
+| Bloc | Champ Schema | Présence dans composant | Détails |
+|------|-------------|------------------------|---------|
+| Tous | `fieldFonts` / `fieldFontSizes` | ✅ | Tous les blocs récents l'acceptent, mais les champs texte dans les tableaux (activities.items[].title, faq.items[].question) n'ont pas accès à la police/taille par champ. |
+| `BlockStats.vue` | `animation` | ✅ Prop | ✅ Corrigé : `animClass` + `isTriggered` appliqués sur la `<section>` (pattern BlockRichText). |
+| `BlockQuote.vue` | `animation` | ✅ Prop | ✅ Corrigé : idem Stats. |
+| `BlockFooter.vue` | `animation` | ❌ Absente | Schema n'a pas de champ `animation`, mais le composant a `animation: "none"` en default. Animation gérée via `animations: "internal"` et `useAnimatedElements`. |
+| `BlockSpacer.vue` | `fieldFonts` / `fieldFontSizes` | ✅ Props | ✅ Appliqués sur `.spacer-text` via `fieldFontStyle`. |
+| `BlockFullWidthImage.vue` | `fieldFonts` / `fieldFontSizes` | ❌ Absents | Pas de props `fieldFonts`/`fieldFontSizes`. Le texte alternatif ne peut pas être stylisé. |
+
+### 📋 Ce qui manque pour une cohérence complète des éléments modifiables
+
+Pour que **tous les éléments affichés dans la sidebar soient modifiables** de manière uniforme sur n'importe quelle page, il faut ajouter :
+
+#### Dans `components/blocks/BlockStats.vue`
+| Élément manquant | Ligne à modifier | Action requise |
+|------------------|-----------------|--------------|
+| `:class="visibilityClasses"` | Ligne 2 | Ajouter computed `visibilityClasses` + `:class="[visibilityClasses]"` dans le `<section>` |
+| Animation wrapper | Ligne 2 | Ajouter `animClass` et `:class="animClass"` comme dans les autres blocs |
+
+#### Dans `components/blocks/BlockQuote.vue`
+| Élément manquant | Ligne à modifier | Action requise |
+|------------------|-----------------|--------------|
+| `:class="visibilityClasses"` | Ligne 2 | Ajouter computed `visibilityClasses` + `:class="[visibilityClasses]"` dans le `<section>` |
+| Animation wrapper | Ligne 2 | Ajouter `animClass` et `:class="animClass"` comme dans les autres blocs |
+
+#### Dans `components/blocks/BlockFooter.vue`
+| Élément manquant | Ligne à modifier | Action requise |
+|------------------|-----------------|--------------|
+| `:class="visibilityClasses"` | Ligne 4 | Ajouter computed `visibilityClasses` + `:class="[visibilityClasses]"` dans le `<footer>` |
+
+#### Dans `components/blocks/BlockSpacer.vue`
+| Élément manquant | Ligne à modifier | Action requise |
+|------------------|-----------------|--------------|
+| `fieldFontStyle()` sur texte/image | Ligne 9 | Appliquer `:style="fieldFontStyle(fieldFonts, 'text', fieldFontSizes)"` sur `.spacer-text` et `.spacer-img` |
+
+#### Dans `components/editor/FieldElements.vue`
+| Élément manquant | Ligne à modifier | Action requise |
+|------------------|-----------------|--------------|
+| Bouton `+ Texte HTML` | Ligne 115 | Ajouter `<button class="array-add-btn" @click="addItem('richtext')">+ Texte HTML</button>` |
+
+#### Correction dans `components/blocks/BlockFaq.vue`
+| Élément à corriger | Ligne actuelle | Action requise |
+|-------------------|---------------|--------------|
+| Style `fontSize: undefined` | Ligne 14, 17 | Modifier `:style="{ fontSize: item.questionSize }"` en `:style="item.questionSize ? { fontSize: item.questionSize } : {}"` |
+
+### 🧪 Scénarios de test supplémentaires recommandés
+
+Pour valider la cohérence complète sidebar ↔ rendu, il manque ces tests :
+
+| Scénario | Fichier test actuel | Action |
+|----------|-------------------|--------|
+| Masquage d'un bloc Stats via visibility | ✅ `tests/playwright/visibility-device.spec.ts` | Vérifie `.hide-mobile` sur wrapper + section, et le masquage réel en viewport mobile |
+| Masquage d'un bloc Quote via visibility | ✅ `visibility-device.spec.ts` | Idem que Stats |
+| Masquage du Footer via visibility | ✅ `visibility-device.spec.ts` | Seed via `PUT /api/footer` (props.visibility), classe sur `.site-footer` |
+| Animation d'entrée sur Stats | ✅ `visibility-device.spec.ts` | Vérifie `block-anim-fadeIn` sur la section interne |
+| Animation d'entrée sur Quote | ✅ `visibility-device.spec.ts` | Vérifie `block-anim-slideUp` sur la section interne |
+| Police personnalisée sur texte du Spacer | ❌ Manquant | Ouvrir sidebar → changer police → vérifier le style appliqué |
+| Taille personnalisée sur questions FAQ | ⚠️ Partiel | Style conditionnel en place ; test dédié `undefined` non écrit |
+| Ajout d'élément richtext dans canvas | ⚠️ À tester | Bouton `+ Texte HTML` ajouté — test E2E dédié non écrit |
+
+### 🔧 Checklist de vérification
+
+- [ ] Stats + Quote : `visibilityClasses` appliqué
+- [ ] Stats + Quote : `animClass` ajouté (ou champ `animation` retiré du schema)
+- [ ] Footer : `visibilityClasses` appliqué
+- [ ] Spacer : `fieldFontStyle()` appliqué au texte
+- [ ] FieldElements : bouton `+ Texte HTML` ajouté
+- [ ] FAQ : protection contre `undefined` dans les styles inline
+
+## 📚 Références open source
+
+Inspiration pour la structure de documentation et les patterns de gestion des incohérences :
+
+| Projet | Patterns pertinents |
+|--------|-------------------|
+| **PayloadCMS** | [Blocks Field](https://payloadcms.com/docs/fields/blocks) : Structure de blocs schema-driven avec templates |
+| **Directus** | [Interfaces & Layouts](https://docs.directus.io/guides/customizing-admin-app.html) : Champs techniques vs champs visuels |
+| **Sanity** | [Structure Builder](https://www.sanity.io/docs/structure-builder) : Documentation "Gotchas" pour les incohérences attendues |
+| **Builder.io** | [Custom Components](https://www.builder.io/c/docs/custom-components) : Pattern de champs qui n'ont pas toujours d'effet rendu |

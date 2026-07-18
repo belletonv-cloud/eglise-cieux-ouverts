@@ -1,7 +1,7 @@
 <template>
   <footer
     class="site-footer"
-    :class="{ animate: isAnimated }"
+    :class="[{ animate: isAnimated }, visibilityClasses]"
     :style="footerBgStyle"
   >
     <div class="footer-inner" :ref="titleAnim.setRef">
@@ -60,6 +60,12 @@ const { addElement } = useAnimatedElements(props.blockId)
 const titleAnim = addElement('title', { animation: 'fadeIn', delay: 0 })
 const isEditor = inject('isEditor', ref(false))
 const isAnimated = computed(() => titleAnim.triggered.value || isEditor.value)
+
+const visibilityClasses = computed(() => ({
+  'hide-mobile': props.visibility?.mobile === false,
+  'hide-tablet': props.visibility?.tablet === false,
+  'hide-desktop': props.visibility?.desktop === false,
+}))
 
 const titleChars = computed(() => props.title.split(''))
 

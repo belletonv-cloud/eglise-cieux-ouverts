@@ -111,6 +111,7 @@
 
     <div class="array-actions">
       <button class="array-add-btn" @click="addItem('text')">+ Texte</button>
+      <button class="array-add-btn" @click="addItem('richtext')">+ Texte HTML</button>
       <button class="array-add-btn" @click="addItem('image')">+ Image</button>
       <button class="array-add-btn" @click="addItem('button')">+ Bouton</button>
     </div>
@@ -208,6 +209,7 @@ function addItem(kind: ExtraElementKind) {
     z: localItems.value.length,
   }
   if (kind === 'button') base.buttonLabel = 'En savoir plus'
+  if (kind === 'richtext') base.text = '<p>Nouveau contenu HTML...</p>'
   localItems.value.push({ ...base, _key: nextKey++ })
   emitChange()
   emit('select', base.id)

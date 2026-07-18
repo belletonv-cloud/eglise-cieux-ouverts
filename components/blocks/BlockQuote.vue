@@ -1,5 +1,5 @@
 <template>
-  <section class="block-quote" :style="{ background: backgroundColor, color: textColor }">
+  <section class="block-quote" :style="{ background: backgroundColor, color: textColor }" :class="[visibilityClasses, animClass]">
     <div class="quote-inner">
       <blockquote class="quote-text" data-field-key="quote" :style="fieldFontStyle(fieldFonts, 'quote', fieldFontSizes)">{{ quote }}</blockquote>
       <cite v-if="author" class="quote-author" data-field-key="author" :style="fieldFontStyle(fieldFonts, 'author', fieldFontSizes)">{{ author }}</cite>
@@ -9,7 +9,7 @@
 
 <script setup>
 import { fieldFontStyle } from '~/utils/fonts.js'
-defineProps({
+const props = defineProps({
   quote: { type: String, default: '' },
   author: { type: String, default: '' },
   backgroundColor: { type: String, default: '#f8f9fa' },
@@ -21,6 +21,17 @@ defineProps({
   fieldFonts: { type: Object, default: () => ({}) },
   fieldFontSizes: { type: Object, default: () => ({}) },
 })
+
+const animClass = computed(() => {
+  if (!props.animation || props.animation === 'none') return ''
+  return `block-anim-${props.animation} ${props.isTriggered ? 'triggered' : ''}`
+})
+
+const visibilityClasses = computed(() => ({
+  'hide-mobile': props.visibility?.mobile === false,
+  'hide-tablet': props.visibility?.tablet === false,
+  'hide-desktop': props.visibility?.desktop === false,
+}))
 </script>
 
 <style scoped>

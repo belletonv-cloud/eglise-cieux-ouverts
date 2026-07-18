@@ -1,5 +1,5 @@
 <template>
-  <section class="block-stats" :style="{ background: backgroundColor, color: textColor }">
+  <section class="block-stats" :style="{ background: backgroundColor, color: textColor }" :class="[visibilityClasses, animClass]">
     <div class="stats-inner">
       <h2 v-if="title" class="stats-title" data-field-key="title" :style="fieldFontStyle(fieldFonts, 'title', fieldFontSizes)">{{ title }}</h2>
       <div class="stats-grid">
@@ -14,7 +14,7 @@
 
 <script setup>
 import { fieldFontStyle } from '~/utils/fonts.js'
-defineProps({
+const props = defineProps({
   title: { type: String, default: '' },
   items: { type: Array, default: () => [] },
   backgroundColor: { type: String, default: '#064886' },
@@ -26,6 +26,17 @@ defineProps({
   fieldFonts: { type: Object, default: () => ({}) },
   fieldFontSizes: { type: Object, default: () => ({}) },
 })
+
+const animClass = computed(() => {
+  if (!props.animation || props.animation === 'none') return ''
+  return `block-anim-${props.animation} ${props.isTriggered ? 'triggered' : ''}`
+})
+
+const visibilityClasses = computed(() => ({
+  'hide-mobile': props.visibility?.mobile === false,
+  'hide-tablet': props.visibility?.tablet === false,
+  'hide-desktop': props.visibility?.desktop === false,
+}))
 </script>
 
 <style scoped>
