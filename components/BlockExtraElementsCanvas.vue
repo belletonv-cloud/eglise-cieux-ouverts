@@ -20,7 +20,7 @@
         <div
           v-else
           class="bee-el bee-el-static"
-          :class="{ 'bee-el-selected': el.id === selectedId }"
+          :class="[elemAnimClass(el), { 'bee-el-selected': el.id === selectedId, triggered: isTriggered }]"
           :style="staticElementStyle(el)"
           @click.stop="$emit('select', el.id)"
         >
@@ -34,13 +34,13 @@
         @click="$emit('stop-positioning')"
       >✓ Valider</button>
       <template #fallback>
-        <div v-for="el in elements" :key="el.id" class="bee-el" :style="elementStyle(el)">
+        <div v-for="el in elements" :key="el.id" class="bee-el" :class="[elemAnimClass(el), { triggered: isTriggered }]" :style="elementStyle(el)">
           <BlockExtraElementContent :element="el" />
         </div>
       </template>
     </ClientOnly>
     <template v-else>
-      <div v-for="el in elements" :key="el.id" class="bee-el" :style="elementStyle(el)">
+      <div v-for="el in elements" :key="el.id" class="bee-el" :class="[elemAnimClass(el), { triggered: isTriggered }]" :style="elementStyle(el)">
         <BlockExtraElementContent :element="el" />
       </div>
     </template>
@@ -51,10 +51,12 @@
 import type { ExtraElement } from '~/lib/blocks/types'
 import VueDraggableResizable from 'vue-draggable-resizable'
 import 'vue-draggable-resizable/style.css'
+import { ANIMATIONS } from '~/utils/blockTypes.js'
 
 const props = defineProps<{
   elements: ExtraElement[]
   isAdmin?: boolean
+  isTriggered?: boolean
   selectedId?: string | null
   positioningId?: string | null
 }>()
@@ -124,6 +126,16 @@ function elementStyle(el: ExtraElement) {
 // éléments qui ne l'utilisent plus.
 function staticElementStyle(el: ExtraElement) {
   return { ...elementStyle(el), zIndex: 10000 + (el.z ?? 0) }
+}
+
+// Réutilise les classes .block-anim-* (déjà globales, assets/css/main.css)
+// et le déclenchement du bloc parent (isTriggered) plutôt qu'un observer
+// dédié par élément — même principe que getAnimClass() pour les blocs
+// (lib/blocks/renderer.ts), transposé aux éléments libres.
+function elemAnimClass(el: ExtraElement) {
+  if (!el.animation || el.animation === 'none') return ''
+  const anim = ANIMATIONS.find((a) => a.id === el.animation)
+  return anim ? `block-${anim.css}` : ''
 }
 
 // Commit uniquement au relâchement (dragStop/resizeStop), jamais sur chaque

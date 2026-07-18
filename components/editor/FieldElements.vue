@@ -33,6 +33,19 @@
           >✕</button>
         </div>
 
+        <div class="array-item-anim-row">
+          <label class="array-item-anim-label">Animation</label>
+          <select
+            class="field-select"
+            :value="item.animation || 'none'"
+            title="Animation d'entrée de cet élément"
+            @change="updateItem(idx, { animation: ($event.target as HTMLSelectElement).value })"
+            @click.stop
+          >
+            <option v-for="a in animations" :key="a.id" :value="a.id">{{ a.label }}</option>
+          </select>
+        </div>
+
         <template v-if="item.kind === 'text'">
           <textarea
             class="field-textarea"
@@ -111,6 +124,7 @@
 import { ref, watch, nextTick } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 import type { ExtraElement, ExtraElementKind } from '~/lib/blocks/types'
+import { ANIMATIONS as animations } from '~/utils/blockTypes.js'
 
 const props = defineProps<{
   elements: ExtraElement[]
@@ -214,6 +228,9 @@ function addItem(kind: ExtraElementKind) {
 .array-item-position-btn:hover { background: rgba(6,72,134,0.1); }
 .array-item-del { background: none; border: none; color: #EF4B54; cursor: pointer; font-size: 0.85em; padding: 2px 5px; border-radius: 4px; }
 .array-item-del:hover { background: rgba(239,75,84,0.1); }
+.array-item-anim-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.array-item-anim-label { font-size: 0.7em; color: #888; font-weight: 500; }
+.field-select { font-size: 0.78em; background: #fff; border: 1px solid #ddd; border-radius: 5px; color: #555; padding: 3px 6px; max-width: 150px; }
 .array-actions { display: flex; gap: 8px; }
 .array-add-btn { flex: 1; background: #f3f4f6; border: 1.5px dashed #d1d5db; border-radius: 8px; color: #555; font-size: 0.8em; padding: 8px; cursor: pointer; }
 .array-add-btn:hover { border-color: #064886; color: #064886; background: #eef4fa; }

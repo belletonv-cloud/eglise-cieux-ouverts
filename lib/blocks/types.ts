@@ -104,6 +104,10 @@ export interface ExtraElement {
   // l'élément déjà promu pour relancer le positionnement dessus (bouton
   // toujours visible) sans en recréer un doublon à chaque clic.
   promotedFrom?: string
+  // Animation d'entrée jouée quand le bloc parent devient visible (id de
+  // utils/blockTypes.js ANIMATIONS, ex: "fadeIn") — même déclenchement que
+  // l'animation "wrapper" du bloc, pas d'observer dédié par élément.
+  animation?: string
 }
 
 export interface EditorFieldProps {
