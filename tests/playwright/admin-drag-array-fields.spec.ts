@@ -79,30 +79,21 @@ test.describe('Drag & drop des éléments à l\'intérieur d\'un champ liste (Fi
     await block.locator('..').click()
     await page.waitForTimeout(300)
 
-    // Le fixture mock de cette page a des props vides pour ce bloc (le rendu
-    // public affiche les valeurs par défaut du type de bloc, mais la sidebar
-    // d'édition — qui lit les props brutes — part donc d'une liste vide) :
-    // on construit les 3 éléments explicitement via l'UI avant de tester le
-    // réordonnancement, pour ne pas dépendre de cet état de fixture.
-    const addBtn = page.locator('.admin-sidebar button', { hasText: '+ Ajouter' })
-    for (const title of ['Premier', 'Deuxième', 'Troisième']) {
-      await addBtn.click()
-      const titleInputs = page.locator('.admin-sidebar .array-item input[placeholder="Titre"]')
-      await titleInputs.last().fill(title)
-      await page.waitForTimeout(150)
-    }
-
+    // Le fixture mock de cette page a des props vides pour ce bloc — la
+    // sidebar affiche désormais les valeurs par défaut du type de bloc
+    // (comme le rendu public), donc les 3 activités par défaut sont déjà
+    // présentes sans action préalable.
     const titlesBefore = await page.locator('.admin-sidebar .array-item input[placeholder="Titre"]').evaluateAll((els) => (els as HTMLInputElement[]).map(e => e.value))
-    expect(titlesBefore).toEqual(['Premier', 'Deuxième', 'Troisième'])
+    expect(titlesBefore).toEqual(['Rencontre du dimanche', 'Groupe de partage', 'Repas convivial'])
 
     await dragHandleTo(page, '.admin-sidebar .array-drag-handle', '.admin-sidebar .array-item', 0, titlesBefore.length - 1)
 
     const titlesAfter = await page.locator('.admin-sidebar .array-item input[placeholder="Titre"]').evaluateAll((els) => (els as HTMLInputElement[]).map(e => e.value))
     expect(titlesAfter).not.toEqual(titlesBefore)
-    expect(titlesAfter[titlesAfter.length - 1]).toBe('Premier')
+    expect(titlesAfter[titlesAfter.length - 1]).toBe('Rencontre du dimanche')
 
     // Le rendu public (slides) reflète le nouvel ordre
     const slideTitles = await page.locator('.block-activities .overlay-title').allTextContents()
-    expect(slideTitles[slideTitles.length - 1]).toBe('Premier')
+    expect(slideTitles[slideTitles.length - 1]).toBe('Rencontre du dimanche')
   })
 })

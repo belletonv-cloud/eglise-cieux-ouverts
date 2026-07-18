@@ -49,7 +49,7 @@
           v-else
           :is="fieldComponent(field.type)"
           :field="field"
-          :value="modelValue?.props?.[field.key]"
+          :value="effectiveFieldValue(field)"
           @change="onChange(field.key, $event)"
         />
       </div>

@@ -405,6 +405,15 @@ function onFooterClick(e) {
 #app-root.admin-mode .site-header {
     top: var(--admin-offset, 48px);
 }
+/* .site-main { flex: 1 } (assets/css/main.css) colle le footer en bas de
+   viewport sur une page courte — comportement "sticky footer" voulu côté
+   site public, mais qui laisse un grand espace vide avant le footer en
+   admin (particulièrement visible sur une page vide/en cours de création).
+   Désactivé uniquement en mode admin : le footer suit directement le
+   dernier bloc, quelle que soit la longueur de la page. */
+#app-root.admin-mode .site-main {
+    flex: none;
+}
 #app-root.is-preview {
     background: #f5f5f5;
 }

@@ -118,7 +118,18 @@ export const BLOCK_TYPES = {
         },
       ],
     },
-    schema: [{ key: "items", label: "Activités", type: "array" }],
+    schema: [
+      {
+        key: "items",
+        label: "Activités",
+        type: "array",
+        subFields: [
+          { key: "title", label: "Titre", type: "text" },
+          { key: "description", label: "Description", type: "textarea" },
+          { key: "image", label: "URL image", type: "text" },
+        ],
+      },
+    ],
   },
 
   textImage: {
@@ -220,7 +231,15 @@ export const BLOCK_TYPES = {
       { key: "subtitle", label: "Sous-titre", type: "text" },
       { key: "location", label: "Lieu", type: "text" },
       { key: "backgroundGradient", label: "Fond (CSS)", type: "text" },
-      { key: "horaires", label: "Horaires", type: "array" },
+      {
+        key: "horaires",
+        label: "Horaires",
+        type: "array",
+        subFields: [
+          { key: "heure", label: "Heure", type: "text" },
+          { key: "label", label: "Libellé", type: "text" },
+        ],
+      },
     ],
   },
 
@@ -242,7 +261,7 @@ export const BLOCK_TYPES = {
     },
     schema: [
       { key: "title", label: "Titre", type: "text" },
-      { key: "items", label: "Aspirations", type: "array" },
+      { key: "items", label: "Aspirations", type: "array", itemType: "text" },
       { key: "backgroundColor", label: "Fond", type: "color" },
       { key: "textColor", label: "Couleur texte", type: "color" },
     ],

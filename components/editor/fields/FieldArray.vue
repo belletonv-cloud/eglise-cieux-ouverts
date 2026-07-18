@@ -24,7 +24,16 @@
             aria-label="Supprimer l'élément {{ idx + 1 }}"
           >✕</button>
         </div>
-        <template v-if="hasSubFields">
+        <template v-if="isPrimitiveMode">
+          <input
+            type="text"
+            class="field-input"
+            placeholder="Texte"
+            :value="item._value"
+            @input="updatePrimitiveItem(idx, ($event.target as HTMLInputElement).value)"
+          />
+        </template>
+        <template v-else-if="hasSubFields">
           <div
             v-for="sub in field.subFields"
             :key="sub.key"
@@ -92,8 +101,31 @@ let isEditing = false
 let nextKey = 0
 const localItems = ref<any[]>([])
 
+const hasSubFields = computed(() => {
+  return Array.isArray(props.field?.subFields) && props.field.subFields.length > 0
+})
+
+// Certains champs "array" stockent des valeurs PRIMITIVES (ex: aspirations.items
+// = tableau de chaînes), pas des objets — les brancher sur le rendu
+// title/description/image (ou des subFields) affichait des champs vides
+// alors que le texte existait bien (item.title sur une string est undefined).
+// Détecté via field.itemType (déclaré dans le schema) ou, à défaut, le type
+// du premier élément déjà présent dans les données.
+const isPrimitiveMode = computed(() => {
+  if (hasSubFields.value) return false
+  if (props.field?.itemType === 'text') return true
+  const first = Array.isArray(props.value) ? props.value[0] : undefined
+  return typeof first === 'string' || typeof first === 'number'
+})
+
 function initItems(val: any) {
-  localItems.value = Array.isArray(val) ? val.map(item => ({ ...item, _key: nextKey++ })) : []
+  if (!Array.isArray(val)) {
+    localItems.value = []
+    return
+  }
+  localItems.value = isPrimitiveMode.value
+    ? val.map((v) => ({ _key: nextKey++, _value: v }))
+    : val.map((item) => ({ ...item, _key: nextKey++ }))
 }
 
 initItems(props.value)
@@ -102,11 +134,8 @@ watch(() => props.value, (v) => {
   if (!isEditing) initItems(v)
 }, { deep: true })
 
-const hasSubFields = computed(() => {
-  return Array.isArray(props.field?.subFields) && props.field.subFields.length > 0
-})
-
 function getEmptyItem(): any {
+  if (isPrimitiveMode.value) return { _value: '' }
   if (hasSubFields.value) {
     const item: any = {}
     for (const sub of props.field.subFields) {
@@ -120,13 +149,21 @@ function getEmptyItem(): any {
 function emitChange() {
   isEditing = true
   // _key est un identifiant interne pour le drag & drop uniquement — jamais
-  // persisté dans les données du bloc.
-  emit('change', localItems.value.map(({ _key, ...rest }) => rest))
+  // persisté dans les données du bloc. En mode primitif, _value EST la
+  // donnée à émettre (pas un objet) — pas de spread d'une chaîne en objet.
+  emit('change', localItems.value.map(({ _key, ...rest }) =>
+    isPrimitiveMode.value ? rest._value : rest,
+  ))
   setTimeout(() => { isEditing = false }, 0)
 }
 
 function updateItem(idx: number, prop: string, val: string) {
   localItems.value[idx] = { ...localItems.value[idx], [prop]: val }
+  emitChange()
+}
+
+function updatePrimitiveItem(idx: number, val: string) {
+  localItems.value[idx] = { ...localItems.value[idx], _value: val }
   emitChange()
 }
 
