@@ -478,14 +478,14 @@ test.describe('Navigation client-side en mode admin', () => {
 
   test("navigation client-side préserve l'offset du header", async ({ page }) => {
     await page.goto('/messages?admin=true')
-    await page.waitForSelector('.site-header', { timeout: 5000 })
+    await page.waitForSelector('.admin-toolbar', { timeout: 5000 })
 
     const siteHeader = page.locator('.site-header')
     const headerTopBefore = await siteHeader.evaluate(el => parseInt(window.getComputedStyle(el).top) || 0)
     expect(headerTopBefore).toBeGreaterThanOrEqual(48)
 
     await page.goto('/?admin=true')
-    await page.waitForSelector('.site-header', { timeout: 5000 })
+    await page.waitForSelector('.admin-toolbar', { timeout: 5000 })
 
     const headerTopAfter = await siteHeader.evaluate(el => parseInt(window.getComputedStyle(el).top) || 0)
     expect(headerTopAfter).toBeGreaterThanOrEqual(48)
