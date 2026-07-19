@@ -1,0 +1,59 @@
+{
+    "blocks": [
+        {
+            "id": "3f73bd7f-313b-46f4-8b48-a5a2814fffcb",
+            "type": "vision",
+            "props": {
+                "label": "NOTRE VISION",
+                "quote": "Faire d\u00e9couvrir Dieu par la puissance de l'\u00c9vangile \u2014 vivre un r\u00e9veil spirituel afin de transformer les vies et manifester la pr\u00e9sence de Dieu.",
+                "ctaText": "",
+                "ctaLink": "",
+                "backgroundGradient": "#E8F0FA",
+                "textColor": "#1A4C8B",
+                "animation": "fadeIn"
+            },
+            "visibility": {
+                "desktop": true,
+                "tablet": true,
+                "mobile": true
+            }
+        },
+        {
+            "id": "a3cf0d67-afca-4de9-a8f5-0549ba0172ea",
+            "type": "richText",
+            "props": {
+                "content": "<style>\n.vmv-missions{max-width:1000px;margin:0 auto;font-family:'Nunito',sans-serif}\n.vmv-missions h2{color:#1A4C8B;text-align:center;text-transform:uppercase;letter-spacing:0.06em;font-size:2em;margin:0 0 12px}\n.vmv-missions .vmv-sep{width:56px;height:4px;background:#C62828;border-radius:2px;margin:0 auto 36px}\n.vmv-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}\n.vmv-card{background:#F2F2F2;border-radius:14px;padding:28px 24px;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,0.08);transition:transform .2s ease}\n.vmv-card:hover{transform:scale(1.02)}\n.vmv-icon{width:64px;height:64px;border-radius:50%;border:2px solid #1A4C8B;display:flex;align-items:center;justify-content:center;margin:0 auto 14px}\n.vmv-icon svg{width:30px;height:30px;stroke:#1A4C8B;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}\n.vmv-card h3{color:#1A4C8B;font-size:1.1em;margin:0 0 8px}\n.vmv-card p{color:#4A4A4A;font-size:0.95em;line-height:1.55;margin:0}\n@media (max-width:700px){.vmv-grid{grid-template-columns:1fr}}\n</style>\n<div class=\"vmv-missions\">\n<h2>Nos missions</h2>\n<div class=\"vmv-sep\"></div>\n<div class=\"vmv-grid\">\n<div class=\"vmv-card\"><div class=\"vmv-icon\"><svg viewBox=\"0 0 24 24\"><path d=\"M12 21C7 16.5 3 13.3 3 9.3 3 6.4 5.2 4.5 7.8 4.5c1.7 0 3.2.9 4.2 2.3 1-1.4 2.5-2.3 4.2-2.3 2.6 0 4.8 1.9 4.8 4.8 0 4-4 7.2-9 11.7z\"/></svg></div><h3>Accueillir &amp; vivre l'unit\u00e9</h3><p>Ouvrir grand nos portes et former une famille o\u00f9 chacun a sa place.</p></div>\n<div class=\"vmv-card\"><div class=\"vmv-icon\"><svg viewBox=\"0 0 24 24\"><path d=\"M12 3c1.5 3-1.5 4.5-1.5 7a3.5 3.5 0 0 0 7 .3C19.5 14 17 21 12 21S4.5 16 6.5 10.5C7.6 7.6 10 5 12 3z\"/></svg></div><h3>C\u00e9l\u00e9brer &amp; cultiver la pr\u00e9sence de Dieu</h3><p>Vivre l'adoration et chercher Sa pr\u00e9sence dans chaque rassemblement.</p></div>\n<div class=\"vmv-card\"><div class=\"vmv-icon\"><svg viewBox=\"0 0 24 24\"><circle cx=\"9\" cy=\"8\" r=\"3\"/><circle cx=\"16.5\" cy=\"9.5\" r=\"2.5\"/><path d=\"M4 19c0-2.8 2.2-5 5-5s5 2.2 5 5M13.5 16.7c.8-1.6 2.3-2.7 4-2.7 2 0 3.5 1.6 3.5 3.5\"/></svg></div><h3>Accompagner &amp; restaurer les vies</h3><p>Marcher aux c\u00f4t\u00e9s de chacun pour voir les c\u0153urs gu\u00e9ris et relev\u00e9s.</p></div>\n<div class=\"vmv-card\"><div class=\"vmv-icon\"><svg viewBox=\"0 0 24 24\"><path d=\"M4 5.5A2.5 2.5 0 0 1 6.5 3H12v18H6.5A2.5 2.5 0 0 0 4 23.5zM12 3h5.5A2.5 2.5 0 0 1 20 5.5v15a2.5 2.5 0 0 0-2.5-2.5H12z\"/></svg></div><h3>T\u00e9moigner &amp; former des disciples</h3><p>Partager la Bonne Nouvelle et transmettre ce que nous avons re\u00e7u.</p></div>\n</div></div>",
+                "backgroundColor": "#ffffff",
+                "backgroundGradient": "",
+                "textColor": "#1a1a2e",
+                "textAlign": "left",
+                "padding": 60,
+                "animation": "fadeIn"
+            },
+            "visibility": {
+                "desktop": true,
+                "tablet": true,
+                "mobile": true
+            }
+        },
+        {
+            "id": "8e010359-034d-4704-ad3f-7965069c17b5",
+            "type": "richText",
+            "props": {
+                "content": "<style>\n.vmv-valeurs{max-width:900px;margin:0 auto;font-family:'Nunito',sans-serif;color:#FFFFFF}\n.vmv-valeurs h2{color:#FFFFFF;text-align:center;text-transform:uppercase;letter-spacing:0.06em;font-size:2em;margin:0 0 12px}\n.vmv-valeurs .vmv-sep{width:56px;height:4px;background:#C62828;border-radius:2px;margin:0 auto 36px}\n.vmv-vgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;text-align:center}\n.vmv-val{padding:18px 8px}\n.vmv-val svg{width:34px;height:34px;stroke:#FFFFFF;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;margin-bottom:10px}\n.vmv-val span{display:block;font-size:1.05em;letter-spacing:0.08em;text-transform:uppercase}\n@media (max-width:700px){.vmv-vgrid{grid-template-columns:repeat(2,1fr)}}\n</style>\n<div class=\"vmv-valeurs\">\n<h2>Nos valeurs</h2>\n<div class=\"vmv-sep\"></div>\n<div class=\"vmv-vgrid\">\n<div class=\"vmv-val\"><svg viewBox=\"0 0 24 24\"><path d=\"M3 11l9-7 9 7M5 10v9h5v-5h4v5h5v-9\"/></svg><span>Accueil</span></div>\n<div class=\"vmv-val\"><svg viewBox=\"0 0 24 24\"><circle cx=\"8\" cy=\"9\" r=\"3\"/><circle cx=\"16\" cy=\"9\" r=\"3\"/><path d=\"M2.5 19c0-2.5 2.5-4.5 5.5-4.5S13.5 16.5 13.5 19M10.5 19c0-2.5 2.5-4.5 5.5-4.5s5.5 2 5.5 4.5\"/></svg><span>Unit\u00e9</span></div>\n<div class=\"vmv-val\"><svg viewBox=\"0 0 24 24\"><path d=\"M12 3l2.5 5 5.5.8-4 3.9.9 5.5-4.9-2.6-4.9 2.6.9-5.5-4-3.9 5.5-.8z\"/></svg><span>Honneur</span></div>\n<div class=\"vmv-val\"><svg viewBox=\"0 0 24 24\"><path d=\"M12 21s-6-4.3-6-9.5C6 8.5 8 7 10 7c.9 0 1.6.4 2 1 .4-.6 1.1-1 2-1 2 0 4 1.5 4 4.5 0 5.2-6 9.5-6 9.5z\"/></svg><span>Humilit\u00e9</span></div>\n<div class=\"vmv-val\"><svg viewBox=\"0 0 24 24\"><path d=\"M12 3v4M12 7c-3 2-5 4-5 7a5 5 0 0 0 10 0c0-3-2-5-5-7zM8 21h8\"/></svg><span>Adoration</span></div>\n<div class=\"vmv-val\"><svg viewBox=\"0 0 24 24\"><circle cx=\"12\" cy=\"8\" r=\"5\"/><path d=\"M9 12.5L7 21l5-2.5L17 21l-2-8.5\"/></svg><span>Excellence</span></div>\n<div class=\"vmv-val\"><svg viewBox=\"0 0 24 24\"><path d=\"M4 5.5A2.5 2.5 0 0 1 6.5 3H12v18H6.5A2.5 2.5 0 0 0 4 23.5zM12 3h5.5A2.5 2.5 0 0 1 20 5.5v15a2.5 2.5 0 0 0-2.5-2.5H12z\"/></svg><span>T\u00e9moignage</span></div>\n</div></div>",
+                "backgroundColor": "#1A4C8B",
+                "backgroundGradient": "",
+                "textColor": "#FFFFFF",
+                "textAlign": "left",
+                "padding": 64,
+                "animation": "fadeIn"
+            },
+            "visibility": {
+                "desktop": true,
+                "tablet": true,
+                "mobile": true
+            }
+        }
+    ],
+    "exists": true
+}
