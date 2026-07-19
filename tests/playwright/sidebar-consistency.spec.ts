@@ -176,6 +176,40 @@ test.describe('Sidebar consistency — All editable fields work', () => {
     })
   })
 
+  test.describe('Rapid multi-field edits', () => {
+    test('modifier plusieurs champs coup sur coup conserve toutes les valeurs (pas de lost-update)', async ({ page }) => {
+      // Régression réelle : AutoEditor.onChange reconstruisait TOUT props
+      // depuis modelValue (mis à jour au tick suivant seulement) — deux
+      // champs modifiés dans le même tick s'écrasaient mutuellement, seule
+      // la dernière modification survivait. Corrigé en n'émettant que le
+      // delta (le récepteur updateBlock fusionne).
+      await page.goto('/?admin=true')
+      await page.waitForSelector('.admin-toolbar', { timeout: 10000 })
+
+      const bienvenue = page.locator('.block-wrapper[data-block-type="bienvenue"]')
+      await bienvenue.click()
+      await page.waitForTimeout(300)
+
+      // Remplir titre + sous-titre dans le même tick (rafale synchrone)
+      await page.evaluate(() => {
+        const fields = [...document.querySelectorAll('.auto-field')]
+        const byLabel = (name: string) =>
+          fields.find(f => f.querySelector('.field-label')?.textContent?.trim() === name)
+        const set = (el: HTMLInputElement, val: string) => {
+          el.value = val
+          el.dispatchEvent(new Event('input', { bubbles: true }))
+        }
+        set(byLabel('Titre')!.querySelector('input.field-input')!, 'TITRE RAFALE')
+        set(byLabel('Sous-titre')!.querySelector('input.field-input')!, 'SOUS-TITRE RAFALE')
+      })
+      await page.waitForTimeout(300)
+
+      // Les DEUX modifications doivent être appliquées au rendu
+      await expect(bienvenue).toContainText('TITRE RAFALE')
+      await expect(bienvenue).toContainText('SOUS-TITRE RAFALE')
+    })
+  })
+
   test.describe('Feature coverage checks', () => {
     test('richtext element kind has an add button in the extra elements toolbar', async ({ page }) => {
       await page.goto('/?admin=true')

@@ -49,6 +49,12 @@ function _defaultFooterBlock() {
 }
 const footerBlock = ref(_defaultFooterBlock());
 const editingFooter = ref(false);
+// true dès que l'utilisateur modifie réellement le footer (updateFooterBlock),
+// remis à false après sauvegarde. Sert au bouton « Sauvegarder » principal
+// pour inclure le footer SEULEMENT s'il a été touché — jamais sauvegarder un
+// footer non modifié : settings/footer peut être null en Firestore (site sur
+// defaults) et une écriture automatique figerait ces defaults (voir CLAUDE.md).
+const footerDirty = ref(false);
 let _footerLoaded = false;
 
 function _blockLabel(type) {
@@ -114,6 +120,7 @@ export function useAdmin() {
     positioningElementId.value = null;
     activeFieldKey.value = null;
     footerBlock.value = _defaultFooterBlock();
+    footerDirty.value = false;
     localBlocks.value = [];
     localBlocksPage.value = "";
     undoStack.value = [];
@@ -554,6 +561,7 @@ export function useAdmin() {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.message || `HTTP ${res.status}`);
     }
+    footerDirty.value = false;
   }
 
   function selectFooter() {
@@ -597,6 +605,7 @@ export function useAdmin() {
       props: { ...footerBlock.value.props, ...props },
     };
     hasUnsavedChanges.value = true;
+    footerDirty.value = true;
   }
 
   return {
@@ -645,5 +654,6 @@ export function useAdmin() {
     selectFooter,
     closeFooterEditor,
     updateFooterBlock,
+    footerDirty,
   };
 }

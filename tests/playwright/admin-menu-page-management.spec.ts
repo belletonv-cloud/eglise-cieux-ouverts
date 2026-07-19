@@ -1,6 +1,17 @@
 import { test, expect } from './fixtures/admin-fixtures'
 
 test.describe('Gestion des pages depuis le menu', () => {
+  test('le bouton « Pages » de la toolbar ouvre la gestion du menu', async ({ page, adminLogin }) => {
+    // Avant, le MenuEditor ne s'ouvrait qu'en cliquant sur le menu du site
+    // en mode admin — aucun point d'entrée visible dans la toolbar.
+    await page.goto('/?admin=true')
+    await page.waitForSelector('.admin-toolbar', { timeout: 10000 })
+
+    await page.locator('.admin-toolbar button', { hasText: 'Pages' }).click()
+    await page.waitForSelector('.menu-editor-modal', { timeout: 5000 })
+    await expect(page.locator('.btn-add-page')).toBeVisible()
+  })
+
   test('supprimer la page actuellement affichée redirige vers l\'accueil et la retire du sélecteur', async ({ page, adminLogin }) => {
     // Auto-accepte tous les confirm()/alert() de la session (fermeture avec
     // modifications non sauvegardées, confirmation de suppression, etc.)

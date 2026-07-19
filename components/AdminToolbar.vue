@@ -160,6 +160,17 @@
                         >
                             <span class="icon">🕐</span><span class="label">Versions</span>
                         </button>
+                        <!-- Le MenuEditor (créer/gérer les pages, ordonner le menu)
+                             ne s'ouvrait qu'en cliquant sur le menu du site en mode
+                             admin — introuvable sans le savoir. Point d'entrée
+                             explicite ici. -->
+                        <button
+                            class="admin-btn admin-btn-secondary admin-btn-compact"
+                            @click="openMenuEditor()"
+                            title="Gérer le menu et les pages (créer, renommer, ordonner)"
+                        >
+                            <span class="icon">📄</span><span class="label">Pages</span>
+                        </button>
                         <button
                             class="admin-btn admin-btn-secondary admin-btn-compact"
                             @click="showAdminManager = true"
@@ -961,6 +972,7 @@ const {
     closeFooterEditor,
     updateFooterBlock,
     saveFooterBlock,
+    footerDirty,
     addBlock,
     localBlocksPage,
     selectedElementId,
@@ -968,7 +980,7 @@ const {
     startPositioning,
 } = useAdmin();
 
-const { saveMenuToFirestore, customPages, loadCustomPages, menuChanged } = useMenuEditor();
+const { saveMenuToFirestore, customPages, loadCustomPages, menuChanged, openMenuEditor } = useMenuEditor();
 
 // Fusionner l'état des modifications (blocs + menu) pour une UX unifiée
 const hasAnyUnsavedChanges = computed(() => hasUnsavedChanges.value || menuChanged.value)
@@ -1906,6 +1918,11 @@ async function autoSave() {
     if (!user.value) return;
     try {
         await saveToServer()
+        // Même logique que saveChanges() : le footer modifié doit partir
+        // avec l'auto-save, sinon ses modifs sont perdues à la fermeture.
+        if (footerDirty.value) {
+            await saveFooterBlock();
+        }
         markSaved();
         saveStatus.value = "Auto-sauvegardé";
         setTimeout(() => {
@@ -2150,6 +2167,15 @@ async function saveChanges() {
         // Sauvegarde aussi le menu s'il a changé (fusion UX: une seule sauvegarde)
         if (menuChanged.value) {
             await saveMenuToFirestore();
+        }
+        // Idem pour le footer : il vit hors localBlocks (settings/footer) et
+        // n'est PAS couvert par saveToServer — sans ça, modifier le footer
+        // puis cliquer « Sauvegarder » perdait silencieusement les modifs
+        // (il fallait deviner le bouton dédié en bas de la sidebar footer).
+        // Uniquement s'il a été réellement modifié (footerDirty) : ne jamais
+        // écrire un footer resté sur ses defaults (voir CLAUDE.md).
+        if (footerDirty.value) {
+            await saveFooterBlock();
         }
         markSaved();
         saveStatus.value = "Sauvegardé";

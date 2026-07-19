@@ -452,6 +452,44 @@ test.describe('« Rendre déplaçable » — promouvoir un champ existant en él
     await expect(page.locator('.bee-el')).toHaveCount(1)
   })
 
+  test('après sauvegarde + rechargement, re-cliquer « Déplacer » ne crée pas de doublon', async ({ page }) => {
+    // Scénario utilisateur réel : promouvoir un champ, sauvegarder, revenir
+    // plus tard (reload) et re-cliquer « Déplacer ». promotedFields et
+    // extraElements doivent survivre au cycle save/reload — sinon le champ
+    // réapparaît (default restauré par normalizeBlock) et chaque re-clic
+    // empile un nouvel élément « Texte #N » dans la sidebar.
+    await page.goto('/accueil?admin=true')
+    await page.waitForSelector('.admin-toolbar', { timeout: 10000 })
+    await selectBienvenueBlock(page)
+
+    const titreField = page.locator('.auto-field').filter({ has: page.locator('.field-label', { hasText: /^Titre$/ }) })
+    await titreField.locator('.field-promote-btn').click()
+    await page.waitForTimeout(200)
+    await page.locator('.bee-validate-btn').click()
+    await page.waitForTimeout(200)
+
+    await page.locator('button[title="Sauvegarder les modifications"]').click()
+    await expect(page.locator('.admin-toolbar')).toContainText('Sauvegardé', { timeout: 5000 })
+
+    await page.goto('/accueil?admin=true')
+    await page.waitForSelector('.admin-toolbar', { timeout: 10000 })
+    await selectBienvenueBlock(page)
+
+    // L'état promu a survécu : un seul élément dans la sidebar, note affichée
+    await expect(page.locator('.field-elements .array-item')).toHaveCount(1)
+    await expect(page.locator('.field-promoted-note')).toBeVisible()
+
+    // Re-cliquer « Déplacer » relance le positionnement sur le même élément
+    const titreField2 = page.locator('.auto-field').filter({ has: page.locator('.field-label', { hasText: /^Titre$/ }) })
+    await titreField2.locator('.field-promote-btn').click()
+    await page.waitForTimeout(200)
+    await expect(page.locator('.bee-el')).toHaveCount(1)
+    await page.locator('.bee-validate-btn').click()
+    await page.waitForTimeout(200)
+    await expect(page.locator('.bee-el')).toHaveCount(1)
+    await expect(page.locator('.field-elements .array-item')).toHaveCount(1)
+  })
+
   test('un champ richtext (bloc Texte riche) est promouvable et son HTML est rendu, pas affiché en texte brut', async ({ page }) => {
     // Le champ "content" du bloc richText était le seul type de champ exclu
     // de « Rendre déplaçable » : son HTML aurait été affiché tel quel en

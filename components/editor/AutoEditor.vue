@@ -136,11 +136,17 @@ function isFontableField(field: FieldSchema) {
   return !NON_VISUAL_FIELD_PATTERN.test(field.key)
 }
 
+// N'émettre QUE le champ modifié (le récepteur fusionne : updateBlock /
+// updateFooterBlock font `{ ...current.props, ...patch }`). Reconstruire tout
+// `props` depuis modelValue perdait des modifications : les props Vue ne se
+// mettent à jour qu'au tick suivant, donc deux champs modifiés dans le même
+// tick (collage, autofill, remplissage scripté) partaient chacun d'un état
+// périmé et le second écrasait le premier avec les anciennes valeurs.
 function onChange(key: string, value: any) {
   if (!props.modelValue) return
   const updated = {
     ...props.modelValue,
-    props: { ...props.modelValue.props, [key]: value },
+    props: { [key]: value },
   }
   emit('update', updated)
 }
@@ -184,9 +190,11 @@ function onFontChange(key: string, font: string) {
   const fieldFonts = { ...(props.modelValue.props?.fieldFonts || {}) }
   if (font) fieldFonts[key] = font
   else delete fieldFonts[key]
+  // Delta seul (voir onChange) : ne pas renvoyer tout props depuis un
+  // modelValue potentiellement périmé dans le même tick.
   const updated = {
     ...props.modelValue,
-    props: { ...props.modelValue.props, fieldFonts },
+    props: { fieldFonts },
   }
   emit('update', updated)
 }
@@ -218,9 +226,10 @@ function onFontSizeChange(key: string, value: string) {
   const fieldFontSizes = { ...(props.modelValue.props?.fieldFontSizes || {}) }
   if (size) fieldFontSizes[key] = size
   else delete fieldFontSizes[key]
+  // Delta seul (voir onChange).
   const updated = {
     ...props.modelValue,
-    props: { ...props.modelValue.props, fieldFontSizes },
+    props: { fieldFontSizes },
   }
   emit('update', updated)
 }
@@ -233,6 +242,11 @@ function onFontSizeChange(key: string, value: string) {
 // (BlockExtraElementContent applique sanitizeHtml + v-html, comme
 // BlockRichText.vue) plutôt qu'affiché tel quel comme texte brut.
 function isPromotableField(field: FieldSchema) {
+  // Le footer est rendu hors PageRenderer (layouts/default.vue) : pas de
+  // .block-wrapper ni de BlockExtraElementsCanvas, donc la promotion en
+  // élément libre ne peut pas fonctionner — promoteFieldToElement ne le
+  // trouve pas dans localBlocks et retournait null en silence (bouton mort).
+  if (props.modelValue?.type === 'footer') return false
   if (!['image', 'text', 'textarea', 'richtext'].includes(field.type)) return false
   return !NON_VISUAL_FIELD_PATTERN.test(field.key)
 }
