@@ -45,19 +45,30 @@
                   </div>
                 </div>
 
-                <div v-if="editingMenuItemId === item.id" class="menu-item-edit">
-                  <label>Libellé affiché</label>
-                  <input v-model="editLabel" @input="applyEdit(item.id)" class="input-sm" />
-                  <template v-if="!item.pageSlug">
-                    <label>Lien (URL ou chemin)</label>
-                    <input v-model="editTo" @input="applyEdit(item.id)" class="input-sm" />
-                  </template>
-                  <template v-else>
-                    <p class="page-url-hint">URL : <code>/{{ item.pageSlug }}</code></p>
+                <div v-if="isItemPanelOpen(item)" class="menu-item-edit">
+                  <template v-if="editingMenuItemId === item.id">
+                    <label>Libellé affiché</label>
+                    <input v-model="editLabel" @input="applyEdit(item.id)" class="input-sm" />
+                    <template v-if="!item.pageSlug">
+                      <label>Lien (URL ou chemin)</label>
+                      <input v-model="editTo" @input="applyEdit(item.id)" class="input-sm" />
+                    </template>
+                    <template v-else>
+                      <p class="page-url-hint">URL : <code>/{{ item.pageSlug }}</code></p>
+                    </template>
                   </template>
                   <div v-if="item.children?.length" class="sub-items">
-                    <div v-for="sub in item.children" :key="sub.id" class="sub-item">
-                      <span>{{ sub.label }}</span>
+                    <div
+                      v-for="sub in item.children"
+                      :key="sub.id"
+                      class="sub-item"
+                      :class="{ active: editingMenuItemId === sub.id }"
+                    >
+                      <template v-if="editingMenuItemId === sub.id">
+                        <input v-model="editLabel" @input="applyEdit(sub.id)" class="input-sm" placeholder="Libellé" />
+                        <input v-model="editTo" @input="applyEdit(sub.id)" class="input-sm" placeholder="Lien" />
+                      </template>
+                      <span v-else @click="selectMenuItem(sub.id)">{{ sub.label }}</span>
                       <button class="btn-mini btn-danger" @click="removeMenuItem(sub.id)">🗑</button>
                     </div>
                   </div>
@@ -155,6 +166,19 @@ watch(activeMenuItem, (item) => {
 
 function applyEdit(id) {
   updateMenuItem(id, { label: editLabel.value, to: editTo.value })
+}
+
+// Bug corrigé : addSubMenuItem() sélectionne le NOUVEAU sous-item
+// (editingMenuItemId = sub.id) pour permettre son édition immédiate, mais le
+// panneau `.menu-item-edit` d'un item de premier niveau ne s'affichait qu'à
+// la condition stricte `editingMenuItemId === item.id` — dès qu'un sous-menu
+// était ajouté (ou sélectionné), ce panneau se refermait, cachant le
+// sous-item qu'on venait justement de créer (invisible jusqu'à re-cliquer le
+// parent). On garde le panneau ouvert si l'édition en cours porte sur l'item
+// OU l'un de ses enfants.
+function isItemPanelOpen(item) {
+  return editingMenuItemId.value === item.id
+    || (item.children || []).some((c) => c.id === editingMenuItemId.value)
 }
 
 function onBgChange() { setMenuBgImage(bgInput.value) }
@@ -347,8 +371,12 @@ onMounted(() => {
 .page-url-hint code { background:#eee; padding:1px 5px; border-radius:3px; font-family:monospace; }
 .input-sm { width:100%; padding:6px 10px; border:1px solid #ddd; border-radius:6px; font-size:.84em; box-sizing:border-box; }
 .input-sm:focus { outline:none; border-color:#3B82F6; }
-.sub-items { margin-top:8px; padding:8px; background:#fff; border:1px solid #e5e7eb; border-radius:6px; }
-.sub-item { display:flex; align-items:center; justify-content:space-between; padding:4px 0; font-size:.8em; }
+.sub-items { margin-top:8px; padding:8px; background:#fff; border:1px solid #e5e7eb; border-radius:6px; display:flex; flex-direction:column; gap:6px; }
+.sub-item { display:flex; align-items:center; justify-content:space-between; gap:6px; padding:4px 0; font-size:.8em; }
+.sub-item span { cursor:pointer; flex:1; }
+.sub-item span:hover { text-decoration:underline; }
+.sub-item.active { background:#eff6ff; border-radius:4px; padding:4px 6px; }
+.sub-item .input-sm { font-size:.9em; padding:5px 8px; }
 .btn-sm { margin-top:8px; padding:5px 12px; background:#3B82F6; color:#fff; border:none; border-radius:6px; font-size:.78em; cursor:pointer; }
 .btn-sm:hover { background:#2563eb; }
 

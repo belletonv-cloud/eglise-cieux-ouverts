@@ -12,6 +12,43 @@ test.describe('Gestion des pages depuis le menu', () => {
     await expect(page.locator('.btn-add-page')).toBeVisible()
   })
 
+  test('ajouter un sous-menu garde le panneau ouvert et permet de le renommer immédiatement', async ({ page, adminLogin }) => {
+    // Bug réel : addSubMenuItem() sélectionne le sous-item fraîchement créé
+    // (editingMenuItemId = sub.id) pour permettre son édition, mais le
+    // panneau .menu-item-edit d'un item de premier niveau ne s'affichait
+    // qu'à la condition stricte editingMenuItemId === item.id — le panneau
+    // (et le sous-item qu'on venait de créer) disparaissait donc
+    // immédiatement après l'ajout, invisible jusqu'à re-cliquer le parent.
+    await page.goto('/?admin=true')
+    await page.waitForSelector('.admin-toolbar', { timeout: 10000 })
+    await page.locator('.admin-toolbar button', { hasText: 'Pages' }).click()
+    await page.waitForSelector('.menu-editor-modal', { timeout: 5000 })
+
+    const accueilRow = page.locator('.menu-editor-item', { hasText: 'Accueil' })
+    await accueilRow.locator('.menu-item-row').click()
+    await page.getByRole('button', { name: '+ Ajouter un sous-menu' }).click()
+
+    // Le panneau reste ouvert et le sous-item est immédiatement éditable
+    const subItem = page.locator('.sub-item')
+    await expect(subItem).toBeVisible()
+    const labelInput = subItem.locator('input').first()
+    await expect(labelInput).toHaveValue('Sous-menu')
+
+    // Renommer immédiatement, sans avoir à rouvrir quoi que ce soit
+    await labelInput.fill('Notre équipe')
+
+    // Cliquer ailleurs puis revenir : le renommage a bien persisté
+    await page.locator('.menu-editor-item', { hasText: 'Messages' }).locator('.menu-item-row').click()
+    await accueilRow.locator('.menu-item-row').click()
+    await expect(page.locator('.sub-item span')).toHaveText('Notre équipe')
+
+    // Et le sous-menu s'affiche bien sur le site public une fois sauvegardé
+    await page.locator('.menu-editor-header-actions .btn-save').click()
+    await page.locator('.version-modal-close').click()
+    await page.goto('/')
+    await expect(page.locator('.nav-desktop a', { hasText: 'Notre équipe' })).toBeVisible()
+  })
+
   test('supprimer la page actuellement affichée redirige vers l\'accueil et la retire du sélecteur', async ({ page, adminLogin }) => {
     // Auto-accepte tous les confirm()/alert() de la session (fermeture avec
     // modifications non sauvegardées, confirmation de suppression, etc.)
