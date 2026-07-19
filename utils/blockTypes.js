@@ -596,6 +596,65 @@ export const BLOCK_TYPES = {
     ],
   },
 
+  iconGrid: {
+    label: "Grille à icônes",
+    icon: "🔷",
+    category: "content",
+    animations: "wrapper",
+    defaults: {
+      title: "Nos missions",
+      items: [
+        {
+          icon: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRkZGRkZGIiBzdHJva2Utd2lkdGg9IjEuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNMTIgMTEuMmMtMS4yLTEuNS0zLjMtMS42LTQuNC0uMy0xLjEgMS4zLS45IDMuMS40IDQuNEwxMiAxOWwzLjktMy43YzEuMy0xLjMgMS41LTMuMS40LTQuNC0xLjEtMS4zLTMuMi0xLjItNC4zLjN6Ii8+PHBhdGggZD0iTTMuNSAxNC41YzAgMi43IDEuNyA0LjcgMy42IDVNMjAuNSAxNC41YzAgMi43LTEuNyA0LjctMy42IDUiLz48L3N2Zz4=",
+          title: "Accueillir et vivre l'unité",
+          description: "",
+        },
+        {
+          icon: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRkZGRkZGIiBzdHJva2Utd2lkdGg9IjEuOCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNMTIgM3YxOE03LjUgOC41aDkiLz48L3N2Zz4=",
+          title: "Célébrer et cultiver la présence de Dieu",
+          description: "",
+        },
+        {
+          icon: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRkZGRkZGIiBzdHJva2Utd2lkdGg9IjEuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNMTIgNi4zYy0xLTEuMi0yLjctMS4zLTMuNi0uMi0uOSAxLjEtLjcgMi41LjMgMy41TDEyIDEzbDMuMy0zLjRjMS0xIDEuMi0yLjQuMy0zLjUtLjktMS4xLTIuNi0xLTMuNi4yeiIvPjxwYXRoIGQ9Ik01IDE0LjVjMCAzLjMgMy4xIDYgNyA2czctMi43IDctNiIvPjwvc3ZnPg==",
+          title: "Accompagner et restaurer les vies",
+          description: "",
+        },
+        {
+          icon: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRkZGRkZGIiBzdHJva2Utd2lkdGg9IjEuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48Y2lyY2xlIGN4PSI3IiBjeT0iOCIgcj0iMi4zIi8+PHBhdGggZD0iTTIuNiAxOGMwLTIuOCAyLTQuOCA0LjQtNC44czQuNCAyIDQuNCA0LjgiLz48Y2lyY2xlIGN4PSIxNi41IiBjeT0iNyIgcj0iMiIvPjxwYXRoIGQ9Ik0yMSAxNS4yYzAtMi4xLTEuNy0zLjctMy45LTMuNy0uNSAwLTEgLjEtMS41LjMiLz48cGF0aCBkPSJNMTUuMyAxNS4yaDQuNGEyIDIgMCAwIDEgMiAydjEuMWwxLjMgMS41LTIuMS0uNGgtNS42YTIgMiAwIDAgMS0yLTJ2LS4yYTIgMiAwIDAgMSAyLTJ6Ii8+PC9zdmc+",
+          title: "Témoigner et former des disciples",
+          description: "",
+        },
+      ],
+      columns: 2,
+      backgroundColor: "#FFFFFF",
+      cardBackgroundColor: "#F2F2F2",
+      iconBackgroundColor: "#1A4C8B",
+      titleColor: "#1A4C8B",
+      textColor: "#4A4A4A",
+      animation: "fadeIn",
+    },
+    schema: [
+      { key: "title", label: "Titre", type: "text" },
+      {
+        key: "items",
+        label: "Cartes",
+        type: "array",
+        subFields: [
+          { key: "icon", label: "Icône (URL image)", type: "text" },
+          { key: "title", label: "Titre", type: "text" },
+          { key: "description", label: "Description", type: "textarea" },
+        ],
+      },
+      { key: "columns", label: "Colonnes", type: "number", min: 1, max: 4 },
+      { key: "backgroundColor", label: "Fond section", type: "color" },
+      { key: "cardBackgroundColor", label: "Fond des cartes", type: "color" },
+      { key: "iconBackgroundColor", label: "Fond du rond d'icône", type: "color" },
+      { key: "titleColor", label: "Couleur des titres", type: "color" },
+      { key: "textColor", label: "Couleur du texte", type: "color" },
+      { key: "animation", label: "Animation", type: "animation" },
+    ],
+  },
+
   stats: {
     label: "Chiffres clés",
     icon: "📊",
