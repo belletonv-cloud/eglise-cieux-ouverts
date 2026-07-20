@@ -1,0 +1,265 @@
+{
+  "hero": {
+    "image": "/foule-croix.png",
+    "height": 700,
+    "overlay": false,
+    "overlayColor": "rgba(0,0,0,0.3)",
+    "overlayText": "",
+    "textColor": "#064886",
+    "showButton": false,
+    "nameImage": "/images/hero-name-image.png"
+  },
+  "bienvenue": {
+    "title": "BIENVENUE",
+    "subtitle": "à votre église",
+    "backgroundColor": "#ffffff",
+    "textColor": "#064886",
+    "animation": "portal",
+    "fontSize": 5
+  },
+  "activities": {
+    "items": [
+      {
+        "title": "Rencontre du dimanche",
+        "description": "Un temps hebdomadaire pour se retrouver, célébrer et échanger ensemble.\n\nDécrivez ici le déroulé type : accueil, temps de louange, message, temps de prière.",
+        "image": "/images/activites-celebration.jpg"
+      },
+      {
+        "title": "Groupe de partage",
+        "description": "Un petit groupe qui se réunit régulièrement pour discuter, prier et grandir ensemble.\n\nPrécisez ici le rythme, le lieu et le public visé.",
+        "image": "/images/activites-priere.jpg"
+      },
+      {
+        "title": "Repas convivial",
+        "description": "Un moment de partage autour d'un repas, ouvert à tous.\n\nIndiquez ici la fréquence et les modalités de participation.",
+        "image": "/images/activites-repas.jpg"
+      }
+    ]
+  },
+  "textImage": {
+    "title": "Titre de la section",
+    "subtitle": "",
+    "body": "Contenu de la section.",
+    "image": "/photos/salle.jpg",
+    "images": [],
+    "reverse": false,
+    "visualStyle": "default",
+    "ctaText": "",
+    "ctaLink": "",
+    "buttons": [],
+    "backgroundColor": "#ffffff",
+    "textColor": "#1a1a2e",
+    "animation": "slideLeft"
+  },
+  "rejoins": {
+    "title": "Rejoins-nous",
+    "subtitle": "Chaque dimanche",
+    "location": "dans votre ville",
+    "horaires": [
+      {
+        "heure": "9h30",
+        "label": "Accueil café"
+      },
+      {
+        "heure": "10h00",
+        "label": "Célébration"
+      }
+    ],
+    "backgroundGradient": "linear-gradient(to bottom, #064886 0%, #e58b8b 100%)"
+  },
+  "aspirations": {
+    "title": "Nos aspirations",
+    "items": [
+      "Accueillir chacun avec bienveillance",
+      "Célébrer et vivre notre foi ensemble",
+      "Accompagner et soutenir les uns les autres",
+      "Partager et transmettre nos convictions"
+    ],
+    "backgroundColor": "#064886",
+    "textColor": "#ffffff"
+  },
+  "contact": {
+    "title": "Tu veux nous contacter ?",
+    "addressTitle": "",
+    "addressLine": "",
+    "image": "",
+    "mapEmbedUrl": "",
+    "backgroundColor": "#064886",
+    "backgroundGradient": "#064886",
+    "textColor": "#ffffff",
+    "showQuestions": true,
+    "showSocials": true,
+    "animation": "fadeIn"
+  },
+  "nousRejoindre": {
+    "title": "Nous rejoindre",
+    "link": "/contact",
+    "backgroundGradient": "linear-gradient(to bottom, #d97777 0%, #064886 100%)"
+  },
+  "richText": {
+    "content": "Écrivez votre texte ici...",
+    "backgroundColor": "#ffffff",
+    "backgroundGradient": "",
+    "textColor": "#1a1a2e",
+    "textAlign": "left",
+    "padding": 60,
+    "animation": "fadeIn"
+  },
+  "gallery": {
+    "title": "",
+    "textColor": "#064886",
+    "images": [],
+    "columns": 3,
+    "backgroundColor": "#ffffff",
+    "animation": "fadeIn"
+  },
+  "spacer": {
+    "height": 60,
+    "backgroundColor": "transparent",
+    "text": "",
+    "image": "",
+    "contentAlign": "center",
+    "contentVerticalAlign": "middle"
+  },
+  "youtube": {
+    "videoId": "",
+    "title": "Message récent",
+    "backgroundColor": "#ffffff",
+    "animation": "fadeIn"
+  },
+  "vision": {
+    "label": "Ce qui nous anime",
+    "quote": "Notre vision : voir des vies transformées et une communauté qui grandit ensemble.",
+    "ctaText": "",
+    "ctaLink": "",
+    "backgroundGradient": "#f8f9fa",
+    "textColor": "#064886",
+    "animation": "fadeIn"
+  },
+  "fullWidthImage": {
+    "src": "",
+    "alt": "Image pleine largeur",
+    "height": 400
+  },
+  "equipe": {
+    "title": "Notre équipe",
+    "subtitle": "",
+    "members": [
+      {
+        "name": "Prénom Nom",
+        "role": "Pasteur",
+        "photo": "",
+        "description": ""
+      }
+    ],
+    "columns": 3,
+    "backgroundColor": "#ffffff",
+    "textColor": "#064886",
+    "animation": "fadeIn"
+  },
+  "louange": {
+    "title": "Rejoins l'équipe louange",
+    "intro": "Nous cherchons des personnes pour servir dans la louange. Postule au poste qui te correspond !",
+    "positions": [
+      {
+        "key": "chant",
+        "poste": "Chant",
+        "description": "Chanter lors des cultes du dimanche.",
+        "places": 2
+      }
+    ],
+    "backgroundColor": "#ffffff",
+    "textColor": "#064886",
+    "animation": "fadeIn"
+  },
+  "faq": {
+    "title": "Questions fréquentes",
+    "subtitle": "",
+    "items": [
+      {
+        "question": "Comment se déroule un culte / une célébration ?",
+        "answer": "Décrivez ici le déroulé type : accueil, temps de louange, message et temps de prière."
+      }
+    ],
+    "openFirst": false,
+    "backgroundColor": "#ffffff",
+    "textColor": "#064886",
+    "animation": "fadeIn"
+  },
+  "iconGrid": {
+    "title": "Nos missions",
+    "items": [
+      {
+        "icon": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRkZGRkZGIiBzdHJva2Utd2lkdGg9IjEuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNMTIgMTEuMmMtMS4yLTEuNS0zLjMtMS42LTQuNC0uMy0xLjEgMS4zLS45IDMuMS40IDQuNEwxMiAxOWwzLjktMy43YzEuMy0xLjMgMS41LTMuMS40LTQuNC0xLjEtMS4zLTMuMi0xLjItNC4zLjN6Ii8+PHBhdGggZD0iTTMuNSAxNC41YzAgMi43IDEuNyA0LjcgMy42IDVNMjAuNSAxNC41YzAgMi43LTEuNyA0LjctMy42IDUiLz48L3N2Zz4=",
+        "title": "Accueillir et vivre l'unité",
+        "description": ""
+      },
+      {
+        "icon": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRkZGRkZGIiBzdHJva2Utd2lkdGg9IjEuOCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNMTIgM3YxOE03LjUgOC41aDkiLz48L3N2Zz4=",
+        "title": "Célébrer et cultiver la présence de Dieu",
+        "description": ""
+      },
+      {
+        "icon": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRkZGRkZGIiBzdHJva2Utd2lkdGg9IjEuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNMTIgNi4zYy0xLTEuMi0yLjctMS4zLTMuNi0uMi0uOSAxLjEtLjcgMi41LjMgMy41TDEyIDEzbDMuMy0zLjRjMS0xIDEuMi0yLjQuMy0zLjUtLjktMS4xLTIuNi0xLTMuNi4yeiIvPjxwYXRoIGQ9Ik01IDE0LjVjMCAzLjMgMy4xIDYgNyA2czctMi43IDctNiIvPjwvc3ZnPg==",
+        "title": "Accompagner et restaurer les vies",
+        "description": ""
+      },
+      {
+        "icon": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRkZGRkZGIiBzdHJva2Utd2lkdGg9IjEuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48Y2lyY2xlIGN4PSI3IiBjeT0iOCIgcj0iMi4zIi8+PHBhdGggZD0iTTIuNiAxOGMwLTIuOCAyLTQuOCA0LjQtNC44czQuNCAyIDQuNCA0LjgiLz48Y2lyY2xlIGN4PSIxNi41IiBjeT0iNyIgcj0iMiIvPjxwYXRoIGQ9Ik0yMSAxNS4yYzAtMi4xLTEuNy0zLjctMy45LTMuNy0uNSAwLTEgLjEtMS41LjMiLz48cGF0aCBkPSJNMTUuMyAxNS4yaDQuNGEyIDIgMCAwIDEgMiAydjEuMWwxLjMgMS41LTIuMS0uNGgtNS42YTIgMiAwIDAgMS0yLTJ2LS4yYTIgMiAwIDAgMSAyLTJ6Ii8+PC9zdmc+",
+        "title": "Témoigner et former des disciples",
+        "description": ""
+      }
+    ],
+    "columns": 2,
+    "backgroundColor": "#FFFFFF",
+    "cardBackgroundColor": "#F2F2F2",
+    "iconBackgroundColor": "#1A4C8B",
+    "titleColor": "#1A4C8B",
+    "textColor": "#4A4A4A",
+    "animation": "fadeIn"
+  },
+  "stats": {
+    "title": "En quelques chiffres",
+    "items": [
+      {
+        "value": "10",
+        "label": "Années d'existence"
+      },
+      {
+        "value": "200",
+        "label": "Membres"
+      },
+      {
+        "value": "5",
+        "label": "Groupes actifs"
+      }
+    ],
+    "backgroundColor": "#064886",
+    "textColor": "#ffffff",
+    "animation": "fadeIn"
+  },
+  "quote": {
+    "quote": "Une citation inspirante à mettre en avant.",
+    "author": "",
+    "backgroundColor": "#f8f9fa",
+    "textColor": "#064886",
+    "animation": "fadeIn"
+  },
+  "footer": {
+    "title": "Il y a une place pour toi !",
+    "email": "contact@cieuxouverts.bzh",
+    "schedule": "Rdv chaque dimanche | 10H",
+    "address": "2 rue Jean Monnet | 29600 Morlaix, Bretagne",
+    "bgColorStart": "#064886",
+    "bgColorMid": "#064886",
+    "bgColorEnd": "#5a9fcf",
+    "bgColorMobileStart": "#d46269",
+    "bgColorMobileEnd": "#be4f56",
+    "fontSize": 19,
+    "titleFontSize": 24,
+    "textColor": "#ffffff",
+    "titleBoldStart": 10,
+    "titleBoldEnd": 14,
+    "animation": "none"
+  }
+}
