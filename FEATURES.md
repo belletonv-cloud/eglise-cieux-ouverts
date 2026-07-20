@@ -17,6 +17,7 @@ Chaque page est composée de blocs (voir « Système de blocs »). Le contenu r�
 - **Messages** (`/messages`, `pages/messages.vue`) — messages/prédications, bloc `textImage` + `youtube`.
 - **Photos** (`/photos`, `pages/photos.vue`) — galerie.
 - **Admin** (`/admin`, `pages/admin.vue`) — page de connexion dédiée, redirige vers `/?admin=true` après authentification. Ce n'est pas un dashboard séparé — toute l'édition se fait en admin mode sur les pages publiques elles-mêmes.
+- **Espace membre** (`/membre`, `pages/membre.vue`) — voir « Espace membre » ci-dessous.
 - **Pages custom** — un admin peut créer des pages additionnelles (slug libre) via le menu ; route catch-all `pages/[slug].vue`.
 
 ## Système de blocs (schema-driven)
@@ -80,6 +81,17 @@ Ces bugs ont causé des pertes de contenu réel ou des blocages de l'admin en pr
 - **`normalizeBlock()`** (`lib/blocks/renderer.ts`) réapplique `BLOCK_TYPES[type].defaults` à CHAQUE rendu (pas seulement à la création) pour tout prop vide/absent — changer un default de type peut donc changer l'affichage de contenu déjà existant si ce contenu n'a jamais explicitement écrasé ce champ. C'est ce mécanisme qui a causé la neutralisation accidentelle du footer réel.
 - **Crash Vue après connexion admin réelle** : `pages/admin.vue` avait un listener `onAuthStateChanged` jamais désabonné, combiné à une course entre sa navigation post-connexion (SPA) et `layouts/default.vue` (layout persistant) réagissant en parallèle au même changement de route — corrompait l'état interne de Vue, rendant l'admin totalement inerte (aucun bouton ne répondait) jusqu'à un hard refresh. Non reproductible avec le raccourci de test habituel (`?admin=true` direct) — seulement en passant réellement par `/admin`. Corrigé : cleanup du listener + rechargement complet (`window.location.href`) au lieu de navigation SPA après connexion.
 
+## Espace membre
+
+**Page `/membre`** (`pages/membre.vue`, slug réservé dans `HARDCODED_SLUGS`) — espace personnel des membres, distinct de l'admin :
+
+- **Auth membre** : Firebase Auth du projet `eglise-cieux-ouverts`, Google **et** email/mot de passe (+ création de compte + reset). Composable `useMemberAuth.ts` (refs singleton module-scope, pattern `useAdmin`). Le Worker eglise-app associe/auto-crée le membre par email (`getMemberFromRequest`). Lien « Espace membre » dans le SiteHeader (devient `👤 Prénom` connecté).
+- **Ressources partagées** : liste des ressources ciblées vers le membre (partagées depuis la SPA admin eglise-app, vue `/resources` — ciblage tous/équipe/groupe de maison/membres, snapshot des destinataires au partage). Ouvrir une ressource **logge automatiquement la consultation** (`POST /api/member/resources/:id/access` : première/dernière consultation + compteur) puis ouvre l'URL. L'admin voit « consulté par X/Y » avec détail par membre ; un **digest email quotidien** (cron 8h du Worker, Resend → `ADMIN_EMAIL`, marqueur `digested_at`) récapitule les nouvelles consultations (+ push FCM admins si configuré).
+- **Demandes & candidatures** : table D1 `participation_requests` (`kind` = `admin_request` | `candidacy`). L'admin envoie une demande ciblée (« peux-tu chanter dimanche ? ») que le membre accepte/refuse depuis `/membre` (accepter avec `event_id` → participation `present`) ; le membre postule aux postes du bloc `louange`, l'admin tranche dans la vue `/requests` d'eglise-app.
+- **Agenda personnel** : le membre connecté voit ses événements surlignés (`.event-mine`, ⭐) dans `/agenda` et indique sa présence (Présent/Peut-être/Absent) depuis la modale d'événement — table D1 `church_event_participants` (occurrence par date pour les récurrents). Badge « X/Y confirmés » + modale participants côté admin (ChurchEvents.vue d'eglise-app).
+- **Bloc `louange`** : postes ouverts (tableau `positions`) avec bouton « Je postule ! » (redirige vers `/membre` si déconnecté, candidature dédupliquée sinon).
+- **Proxies Nuxt** `server/api/member/*` : forwardent le Bearer vers le Worker en prod ; en test (`PW_TEST=1`), branche mock `server/utils/member-mock.js` (reset dédié `POST /api/reset-member-mock`, **séparé** du reset global pour éviter les courses entre fichiers de spec parallèles). Tests : `tests/playwright/membre-espace.spec.ts` (un seul fichier, volontairement — exécution séquentielle).
+
 ## Intégration eglise-app (backend partagé)
 
 **Repo séparé** : `/Users/vic/Projects/eglise-app` (Worker Cloudflare + D1). Les deux sites partagent l'**authentification Firebase** (deux projets distincts `eglise-app-b81b0` et `eglise-cieux-ouverts`, mais auth mutuelle via tokens `Bearer`). eglise-app expose plusieurs ressources :
@@ -100,41 +112,13 @@ Push sur `main` → déploiement automatique Cloudflare Pages (`eglise-cieux-ouv
 
 ## Features demandées (roadmap)
 
-### Comptes membres
+### ✅ Comptes membres, ressources ciblées, suivi de consultation — implémentés (juillet 2026)
 
-- **Authentification membre** : système d'authentification dédié (actuellement seuls les comptes admin via Firebase existent)
-- **Page perso membre** (`/member` ou `/ressources`) : espace membre sur le site public
-- **Notifications** : alertes (email/push) quand une ressource est disponible
+Voir la section « Espace membre » ci-dessus. Réalisation vs plan initial :
 
-### Envoi de ressources ciblées
-
-- **Backend manquant** :
-  - Table `resources` (`id`, `title`, `description`, `url`, `file_url`, `type`, `created_by`, `created_at`, `expires_at`)
-  - Table `resource_access` (`resource_id`, `member_id`, `accessed_at`, `ip_address`, `user_agent`)
-  - Endpoint `POST /api/resources` (création ciblée)
-  - Endpoint `GET /api/member/resources` (liste côté membre)
-  - Endpoint `POST /api/resources/:id/access` (tracking consultation)
-  - Permission `manage_resources` dans RBAC (`src/auth.js`)
-- **Frontend admin manquant** :
-  - Vue `ResourcesView.vue` dans eglise-app
-  - Modal création avec sélection destinataire
-  - Dashboard avec colonnes "Consultée ?", "Date consultation"
-- **Frontend public manquant** :
-  - Route `/ressources` dans eglise-cieux-ouverts
-  - Composant `BlockMemberResources.vue`
-  - Store Pinia `useResources()`
-
-### Suivi de consultation
-
-- **Backend** : Table `resource_access` avec timestamp d'accès
-- **Frontend** : Badge/statut "Lu/non lu" dans le tableau admin
-- **Filtrage** : Afficher uniquement les ressources non lues
-
-### Éléments réutilisables existants
-
-- **Pattern des messages** (`messages.js`) : structure `message_recipients` avec `read_at` peut servir de base
-- **Sélection de membres** : `AdminMembers.vue` et `BLOCK_TYPES.equipe` montrent comment faire
-- **Authentification** : les tokens Firebase sont déjà acceptés mutuellement entre les deux apps
+- Page membre : `/membre` (pas `/ressources`), tables D1 `resources` + `resource_recipients` (pattern `message_recipients`, pas de table `resource_access` séparée — le suivi vit sur la ligne destinataire : `first_accessed_at`, `last_accessed_at`, `access_count`, `digested_at`), vue admin `ResourcesList.vue` (pas `ResourcesView.vue`), composable `useMemberAuth` (pas de store Pinia).
+- Alertes : digest email quotidien via le cron du Worker (pas d'email temps réel par consultation), badge « consulté par X/Y » dans la SPA admin.
+- En plus du plan : demandes de participation/candidatures (`participation_requests`), agenda personnel avec présence (`church_event_participants`), bloc CMS `louange`, envoi d'emails aux groupes de maison.
 
 ## Incohérences détectées (à corriger)
 

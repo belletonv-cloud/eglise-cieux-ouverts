@@ -11,7 +11,7 @@
 // un admin pouvait créer une page "Contact" ou "Photos" en Firestore qui
 // n'était jamais rendue nulle part, l'URL restant capturée par le fichier
 // statique).
-export const HARDCODED_SLUGS = ["accueil", "contact", "messages", "event-list", "agenda", "photos"];
+export const HARDCODED_SLUGS = ["accueil", "contact", "messages", "event-list", "agenda", "photos", "membre"];
 
 export const ANIMATIONS = [
   { id: "none", label: "Aucune", css: "" },
@@ -551,6 +551,46 @@ export const BLOCK_TYPES = {
         ],
       },
       { key: "columns", label: "Colonnes", type: "number", min: 1, max: 4 },
+      { key: "backgroundColor", label: "Fond", type: "color" },
+      { key: "textColor", label: "Couleur texte", type: "color" },
+      { key: "animation", label: "Animation", type: "animation" },
+    ],
+  },
+
+  louange: {
+    label: "Louange — postes ouverts",
+    icon: "🎤",
+    category: "content",
+    animations: "wrapper",
+    defaults: {
+      title: "Rejoins l'équipe louange",
+      intro: "Nous cherchons des personnes pour servir dans la louange. Postule au poste qui te correspond !",
+      positions: [
+        {
+          key: "chant",
+          poste: "Chant",
+          description: "Chanter lors des cultes du dimanche.",
+          places: 2,
+        },
+      ],
+      backgroundColor: "#ffffff",
+      textColor: "#064886",
+      animation: "fadeIn",
+    },
+    schema: [
+      { key: "title", label: "Titre", type: "text" },
+      { key: "intro", label: "Introduction", type: "textarea" },
+      {
+        key: "positions",
+        label: "Postes",
+        type: "array",
+        subFields: [
+          { key: "key", label: "Clé (identifiant unique)", type: "text" },
+          { key: "poste", label: "Poste", type: "text" },
+          { key: "description", label: "Description", type: "textarea" },
+          { key: "places", label: "Places", type: "number", min: 1, max: 20 },
+        ],
+      },
       { key: "backgroundColor", label: "Fond", type: "color" },
       { key: "textColor", label: "Couleur texte", type: "color" },
       { key: "animation", label: "Animation", type: "animation" },

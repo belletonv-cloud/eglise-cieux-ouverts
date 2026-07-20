@@ -46,6 +46,7 @@ export const BLOCK_MAP: Record<string, () => Promise<any>> = {
   vision: () => import('../../components/blocks/BlockVision.vue'),
   youtube: () => import('../../components/blocks/BlockYoutube.vue'),
   equipe: () => import('../../components/blocks/BlockEquipe.vue'),
+  louange: () => import('../../components/blocks/BlockLouange.vue'),
   faq: () => import('../../components/blocks/BlockFaq.vue'),
   stats: () => import('../../components/blocks/BlockStats.vue'),
   iconGrid: () => import('../../components/blocks/BlockIconGrid.vue'),

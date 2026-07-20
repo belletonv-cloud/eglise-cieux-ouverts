@@ -58,6 +58,9 @@
                         </template>
                     </template>
                 </template>
+                <NuxtLink to="/membre" class="nav-membre-link" active-class="active">
+                    {{ membreLinkLabel }}
+                </NuxtLink>
                 <div class="nav-desktop-socials">
                     <SocialLinks :links="socialLinks" />
                 </div>
@@ -106,6 +109,7 @@
                         >
                     </template>
                 </template>
+                <NuxtLink to="/membre" class="nav-membre-link">{{ membreLinkLabel }}</NuxtLink>
             </div>
             <div class="nav-mobile-socials">
                 <SocialLinks :links="socialLinks" :size="26" />
@@ -123,6 +127,12 @@ const menuOpen = ref(false);
 const isScrolled = ref(false);
 const route = useRoute();
 const mobileMq = ref(null);
+
+// Lien espace membre : prénom si connecté, libellé générique sinon
+const { isLoggedIn: memberLoggedIn, firstName: memberFirstName } = useMemberAuth();
+const membreLinkLabel = computed(() =>
+    memberLoggedIn.value && memberFirstName.value ? `👤 ${memberFirstName.value}` : "Espace membre",
+);
 
 function handleEscape(e) {
     if (e.key === "Escape") closeMenu();
@@ -326,11 +336,32 @@ onUnmounted(() => {
     opacity: 0.5;
 }
 
+.nav-membre-link {
+    margin-left: auto;
+    padding: 6px 14px;
+    border: 1px solid rgba(6, 72, 134, 0.35);
+    border-radius: 999px;
+    font-size: 0.85em;
+    white-space: nowrap;
+}
+
+.nav-membre-link:hover,
+.nav-membre-link.active {
+    background: #064886;
+    color: #fff;
+}
+
+.nav-mobile .nav-membre-link {
+    margin-left: 0;
+    align-self: flex-start;
+    margin-top: 8px;
+}
+
 .nav-desktop-socials {
     display: flex;
     align-items: center;
     gap: 6px;
-    margin-left: auto;
+    margin-left: 12px;
 }
 
 .nav-desktop-socials a {

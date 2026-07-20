@@ -8,6 +8,9 @@ export default defineEventHandler(() => {
   if (import.meta.dev === false && !isTest) {
     throw createError({ statusCode: 404, message: 'Not found' })
   }
+  // NB : l'état membre (member-mock.js) a son propre endpoint de reset
+  // (/api/reset-member-mock) pour ne pas être écrasé par les resetMock
+  // lancés en parallèle par les autres fichiers de spec Playwright.
   resetMock && resetMock();
   return {
     pages: {

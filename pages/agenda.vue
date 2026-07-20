@@ -37,10 +37,10 @@
   v-for="evt in getDayEvents(day)"
   :key="evt.id"
   class="event-pill"
-  :class="getEventColor(evt)"
+  :class="[getEventColor(evt), { 'event-mine': isMine(evt) }]"
   :title="evt.titre"
   @click.stop="openEventModal(evt)"
->{{ evt.emoji || '•' }} {{ evt.titre }}</span>
+>{{ isMine(evt) ? '⭐ ' : '' }}{{ evt.emoji || '•' }} {{ evt.titre }}</span>
               </div>
             </div>
           </div>
@@ -63,10 +63,10 @@
   v-for="evt in day.events"
   :key="evt.id"
   class="event-pill"
-  :class="getEventColor(evt)"
+  :class="[getEventColor(evt), { 'event-mine': isMine(evt) }]"
   :title="evt.titre"
   @click.stop="openEventModal(evt)"
->{{ evt.emoji || '•' }} {{ evt.titre }}</span>
+>{{ isMine(evt) ? '⭐ ' : '' }}{{ evt.emoji || '•' }} {{ evt.titre }}</span>
               </div>
             </div>
           </div>
@@ -100,7 +100,7 @@
           <p v-if="nextEvents.length === 0" class="empty-msg">Aucun événement à venir.</p>
         </div>
         <div v-if="currentView === 'cards'" class="events-list">
-          <article v-for="evt in filteredEvents" :key="evt.id" class="event-card" @click="openEventModal(evt)" style="cursor:pointer">
+          <article v-for="evt in filteredEvents" :key="evt.id" class="event-card" :class="{ 'event-mine': isMine(evt) }" @click="openEventModal(evt)" style="cursor:pointer">
   <div style="position:relative;min-height:160px;width:100%">
   <template v-if="evt.images && evt.images.length">
     <EventImageSlider
@@ -146,7 +146,7 @@
         <div v-if="currentView === 'agenda'" class="agenda-list">
 <div v-for="(group, gIdx) in groupedByDate" :key="gIdx" class="agenda-day-group">
   <h3 class="agenda-day-label">{{ formatDayLabel(group.date) }}</h3>
-  <div v-for="evt in group.events" :key="evt.id" class="agenda-event" @click="openEventModal(evt)" style="cursor:pointer">
+  <div v-for="evt in group.events" :key="evt.id" class="agenda-event" :class="{ 'event-mine': isMine(evt) }" @click="openEventModal(evt)" style="cursor:pointer">
     <span class="agenda-time">{{ evt.heure || '—' }}</span>
     <div class="agenda-event-body">
       <strong>{{ evt.titre }}</strong>
@@ -184,6 +184,24 @@
         <div class="event-modal-links" v-if="eventModal.event.lien || eventModal.event.billetterie">
           <a v-if="eventModal.event.lien" :href="eventModal.event.lien" target="_blank" rel="noopener" class="btn-event">En savoir plus</a>
           <a v-if="eventModal.event.billetterie" :href="eventModal.event.billetterie" target="_blank" rel="noopener" class="btn-event btn-event-outline">🎟️ Billetterie</a>
+        </div>
+        <!-- Présence : visible uniquement pour un membre connecté participant à cet événement -->
+        <div v-if="memberLoggedIn && isMine(eventModal.event)" class="event-attendance">
+          <p class="attendance-label">Ta présence :</p>
+          <div class="attendance-choices">
+            <button
+              :class="{ active: attendanceFor(eventModal.event) === 'present' }"
+              @click="setModalAttendance('present')"
+            >✓ Présent</button>
+            <button
+              :class="{ active: attendanceFor(eventModal.event) === 'maybe' }"
+              @click="setModalAttendance('maybe')"
+            >? Peut-être</button>
+            <button
+              :class="{ active: attendanceFor(eventModal.event) === 'absent' }"
+              @click="setModalAttendance('absent')"
+            >✗ Absent</button>
+          </div>
         </div>
       </div>
     </template>
@@ -235,6 +253,64 @@ const { evenements, loading } = useChurchEvents()
 const currentDate = ref(new Date())
 const currentView = ref('month')
 
+// --- Agenda personnel du membre connecté ---
+const { isLoggedIn: memberLoggedIn, authedFetch } = useMemberAuth()
+const myParticipations = ref([])
+
+async function loadMyParticipations() {
+  if (!memberLoggedIn.value) return
+  try {
+    const res = await authedFetch('/api/member/events')
+    myParticipations.value = res?.data || []
+  } catch (e) {
+    console.warn('agenda: participations membre indisponibles', e)
+  }
+}
+
+function toIsoDay(d) {
+  const date = d instanceof Date ? d : new Date(d)
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+}
+
+function participationFor(evt) {
+  if (!evt || !myParticipations.value.length) return null
+  const day = evt.date ? toIsoDay(evt.date) : null
+  return (
+    myParticipations.value.find(
+      (p) => p.event_id === evt.id && (p.occurrence_date === day || !p.occurrence_date),
+    ) || null
+  )
+}
+
+function isMine(evt) {
+  return !!participationFor(evt)
+}
+
+function attendanceFor(evt) {
+  return participationFor(evt)?.attendance_status || 'pending'
+}
+
+async function setModalAttendance(status) {
+  const evt = eventModal.value.event
+  const p = participationFor(evt)
+  if (!p) return
+  const previous = p.attendance_status
+  p.attendance_status = status // optimiste
+  try {
+    await authedFetch(`/api/member/events/${evt.id}/attendance`, {
+      method: 'POST',
+      body: { status, occurrence_date: p.occurrence_date || toIsoDay(evt.date) },
+    })
+  } catch (e) {
+    p.attendance_status = previous
+    console.warn('agenda: présence non enregistrée', e)
+  }
+}
+
+watch(memberLoggedIn, (v) => {
+  if (v) loadMyParticipations()
+})
+
 onMounted(() => {
   const saved = localStorage.getItem('agenda_view')
   if (saved && ['month','next','cards','agenda','week'].includes(saved)) {
@@ -242,6 +318,7 @@ onMounted(() => {
   } else if (window.innerWidth < 480) {
     currentView.value = 'cards'
   }
+  loadMyParticipations()
 })
 watch(currentView, (v) => {
   if (import.meta.client) localStorage.setItem('agenda_view', v)
@@ -454,6 +531,21 @@ function formatDayModalDate(date) {
 .day-cell.has-events .day-number { font-weight: 600; }
 .day-events { display: flex; flex-direction: column; gap: 2px; padding: 0; }
 .event-pill { font-size: 0.75em; padding: 1px 6px; border-radius: 3px; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; display: block; }
+
+/* Événements du membre connecté : surbrillance */
+.event-pill.event-mine { outline: 2px solid #f6b93b; outline-offset: 1px; font-weight: 700; }
+.event-card.event-mine { box-shadow: 0 0 0 2px #f6b93b, 0 2px 8px rgba(0,0,0,0.07); }
+.agenda-event.event-mine { box-shadow: 0 0 0 2px #f6b93b; border-radius: 8px; }
+
+/* Présence dans la modale */
+.event-attendance { margin-top: 16px; padding-top: 14px; border-top: 1px solid #eee; }
+.attendance-label { font-size: 0.85em; font-weight: 600; color: #555; margin-bottom: 8px; }
+.attendance-choices { display: flex; gap: 8px; flex-wrap: wrap; }
+.attendance-choices button {
+  padding: 7px 14px; border: 1px solid #ddd; border-radius: 8px; background: #fff;
+  font-size: 0.85em; cursor: pointer; color: #555; transition: all 0.15s;
+}
+.attendance-choices button.active { border-color: #064886; background: #064886; color: #fff; font-weight: 600; }
 .color-blue { background: #2563eb; }
 .color-red { background: #ef4444; }
 .color-orange { background: #f59e0b; }

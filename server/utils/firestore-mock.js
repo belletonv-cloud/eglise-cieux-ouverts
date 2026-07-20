@@ -7,6 +7,24 @@
 // naviguant vers /test-blocks après un appel à resetMock()).
 function defaultPages() {
   return {
+  // Page de test du bloc louange (dans les defaults pour survivre aux
+  // resetMock concurrents des autres fichiers de spec Playwright)
+  'louange-test': {
+    blocks: [
+      {
+        id: 'block-louange-1',
+        type: 'louange',
+        props: {
+          title: "Rejoins l'équipe louange",
+          intro: 'Postule au poste qui te correspond.',
+          positions: [
+            { key: 'chant', poste: 'Chant', description: 'Chanter le dimanche.', places: 2 },
+            { key: 'batterie', poste: 'Batterie', description: 'Tenir le rythme.', places: 1 },
+          ],
+        },
+      },
+    ],
+  },
   'event-list': {
     blocks: [
       {
