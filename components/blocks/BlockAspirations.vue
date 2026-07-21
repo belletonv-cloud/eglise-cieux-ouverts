@@ -11,7 +11,7 @@
             }"
         >
             <div class="aspirations-content">
-                <h1 class="aspirations-title">{{ title }}</h1>
+                <h1 class="aspirations-title" data-field-key="title" :style="fieldFontStyle(fieldFonts, 'title', fieldFontSizes)">{{ title }}</h1>
                 <div class="aspirations-divider"></div>
                 <ol class="aspirations-list">
                     <li
@@ -30,6 +30,7 @@
 
 <script setup>
 import { computed } from "vue";
+import { fieldFontStyle } from "~/utils/fonts.js";
 const {
     backgroundGradient = "",
     backgroundColor = "#fff",
@@ -38,6 +39,8 @@ const {
     items = [],
     visibility = {},
     isTriggered = false,
+    fieldFonts = {},
+    fieldFontSizes = {},
 } = defineProps({
     backgroundGradient: { type: String, default: "" },
     backgroundColor: { type: String, default: "#fff" },
@@ -46,6 +49,8 @@ const {
     items: { type: Array, default: () => [] },
     visibility: { type: Object, default: () => ({}) },
     isTriggered: { type: Boolean, default: false },
+    fieldFonts: { type: Object, default: () => ({}) },
+    fieldFontSizes: { type: Object, default: () => ({}) },
 });
 
 const visibilityClasses = computed(() => ({
@@ -108,7 +113,7 @@ function getCircleStyle(index) {
     padding: 0 2rem;
 }
 .aspirations-title {
-    font-family: "Playfair Display", serif;
+    font-family: var(--font-heading);
     font-style: italic;
     font-weight: 700;
     font-size: 3rem;

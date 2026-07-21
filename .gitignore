@@ -6,6 +6,10 @@
 .cache
 dist
 
+# Régénéré à chaque build (hook build:before dans nuxt.config.ts) — ne
+# doit jamais être commité avec une valeur figée
+public/version.txt
+
 # Node dependencies
 node_modules
 
@@ -44,3 +48,19 @@ messages.html
 # Standalone Node.js binaries
 node-v*.tar.gz
 reggae-songmaker/
+
+# GSD Planning files
+.planning/
+
+# Scratch test files
+tests/scratch/
+
+# Audit artifacts
+fade_audit/
+audit-*.js
+
+# BMAD Method - AI-driven development framework
+# Contains agents, workflows, tasks, and generated artifacts
+# These are user-specific planning documents and should not be committed
+_bmad/
+_bmad-output/

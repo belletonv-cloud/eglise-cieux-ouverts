@@ -38,12 +38,13 @@ test.describe('/admin page — authenticated (mock user)', () => {
   })
 
   test('admin page renders spinner briefly before redirect', async ({ page }) => {
-    // Navigate and capture the initial content before redirect
-    const response = await page.goto('/admin', { waitUntil: 'commit' })
-    expect(response?.status()).toBe(200)
-    // The spinner should be in the SSR HTML
-    const html = await page.content()
-    expect(html).toContain('Vérification de l\'authentification')
+    // Récupère le HTML SSR brut : page.content() après 'commit' est une course
+    // (DOM partiellement parsé, ou redirection client déjà effectuée)
+    const response = await page.request.get('/admin')
+    expect(response.status()).toBe(200)
+    const html = await response.text()
+    // L'apostrophe est encodée en entité HTML (&#39;) dans le HTML brut
+    expect(html).toMatch(/Vérification de l.{0,6}authentification/)
   })
 })
 

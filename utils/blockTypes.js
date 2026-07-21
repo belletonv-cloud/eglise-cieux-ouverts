@@ -3,6 +3,16 @@
  * Chaque bloc a : type, label, icône, props par défaut, schema de propriétés éditables
  */
 
+// Slugs occupés par une route statique dédiée (pages/*.vue) : jamais
+// atteignables via le catch-all pages/[slug].vue. Source de vérité unique,
+// importée à la fois côté client (useMenuEditor, pour filtrer/masquer ces
+// entrées de la liste des pages custom) et côté serveur
+// (server/api/pages/index.post.ts, pour interdire leur création — sans ça
+// un admin pouvait créer une page "Contact" ou "Photos" en Firestore qui
+// n'était jamais rendue nulle part, l'URL restant capturée par le fichier
+// statique).
+export const HARDCODED_SLUGS = ["accueil", "contact", "messages", "event-list", "agenda", "photos", "membre"];
+
 export const ANIMATIONS = [
   { id: "none", label: "Aucune", css: "" },
   { id: "fadeIn", label: "Apparition", css: "anim-fadeIn" },
@@ -17,9 +27,6 @@ export const ANIMATIONS = [
 
 const DEFAULT_MESSAGES_BODY = `<p>Les messages partages a l'eglise ne sont pas faits pour s'arreter au dimanche.</p><p>📺 Replonge dans la parole sur notre chaine YouTube :</p><ul><li>(Re)decouvre les messages qui t'ont touche.</li><li>Laisse Dieu te parler a nouveau, ou d'une maniere nouvelle.</li><li>Partage-les avec tes proches pour semer l'esperance autour de toi.</li></ul><p>Que ce soit pour approfondir, reentendre une parole qui t'a marque(e), ou rester connecte(e) dans la semaine, ces moments sont la pour toi.</p><p><strong>Abonne-toi des maintenant pour ne rien manquer et garde la flamme allumee.</strong></p>`;
 const DEFAULT_MESSAGES_GRADIENT = `radial-gradient(circle at 94.35% 89.61%, #054886 0%, 20%, rgba(5, 72, 134, 0) 40%), radial-gradient(circle at 9.07% 95.57%, rgba(238, 108, 113, 0.99) 0%, 25%, rgba(238, 108, 113, 0) 50%), radial-gradient(circle at 4.04% 13.51%, #054886 0%, 42%, rgba(5, 72, 134, 0) 70%), radial-gradient(circle at 93.32% 10.65%, #EF4B54 0%, 42%, rgba(239, 75, 84, 0) 70%), radial-gradient(circle at 48.90% 49.52%, #FFFFFF 0%, 100%, rgba(255, 255, 255, 0) 100%)`;
-const DEFAULT_CONTACT_MAP_EMBED_URL =
-  "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2688.0!2d-3.8275!3d48.5775!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4816a3c4e3d89c3b%3A0x1!2s2+Rue+Jean+Monnet%2C+29600+Morlaix!5e0!3m2!1sfr!2sfr!4v1700000000000";
-
 // ─── TYPES DE BLOCS ────────────────────────────────────────────────────────────
 export const BLOCK_TYPES = {
   hero: {
@@ -62,11 +69,11 @@ export const BLOCK_TYPES = {
     animations: "wrapper",
     defaults: {
       title: "BIENVENUE",
-      subtitle: "à l'Église Cieux Ouverts à Morlaix",
+      subtitle: "à votre église",
       backgroundColor: "#ffffff",
-      textColor: "#1a1a2e",
+      textColor: "#064886",
       animation: "portal",
-      fontSize: 7,
+      fontSize: 5,
     },
     schema: [
       { key: "title", label: "Titre", type: "text" },
@@ -76,10 +83,10 @@ export const BLOCK_TYPES = {
       { key: "animation", label: "Animation", type: "animation" },
       {
         key: "fontSize",
-        label: "Taille police (em)",
+        label: "Taille police (titre uniquement, em)",
         type: "number",
-        min: 3,
-        max: 12,
+        min: 2,
+        max: 10,
       },
     ],
   },
@@ -92,56 +99,37 @@ export const BLOCK_TYPES = {
     defaults: {
       items: [
         {
-          title: "Célébration dimanche",
+          title: "Rencontre du dimanche",
           description:
-            "Viens célébrer avec nous chaque dimanche !\n\nRejoins-nous pour un moment chaleureux, joyeux dans l'unité et la bienveillance.\n\nAu programme :\n✨ Un accueil convivial autour d’un café offert !\n🎵 Un temps de louange (chants rythmés) et d’adoration (chants plus doux) avec des chants qui disposent le cœur.\n📖 Un message inspirant, délivré par un prédicateur ou le pasteur, pour nourrir ta foi.\n🙏 Un temps de prière, si tu souhaites recevoir un soutien ou partager ton cœur.\n\nRendez-vous chaque semaine :\n\n9h30 : Accueil-café.\n10h00 : Début de la célébration.\n\nEt pour les enfants ?\nDe 1 à 18 ans, ils sont les bienvenus dans des espaces dédiés, encadrés par des moniteurs bienveillants et qualifiés.",
+            "Un temps hebdomadaire pour se retrouver, célébrer et échanger ensemble.\n\nDécrivez ici le déroulé type : accueil, temps de louange, message, temps de prière.",
           image: "/images/activites-celebration.jpg",
         },
         {
-          title: "Soirée Cieux Ouverts",
+          title: "Groupe de partage",
           description:
-            "Viens expérimenter Sa présence !\n\n🙌 As-tu envie de louer Dieu et de Le célébrer de tout ton être ?\n🙏 Ressens-tu le besoin d’un moment intime avec Lui ?\n❤️‍🩹 Aspires-tu à une guérison, une délivrance ou un nouveau départ ?\n\nNe manque pas nos Soirées Cieux Ouverts, des instants privilégiés où le ciel touche la terre et où la gloire de Dieu transforme les vies.\nUn moment unique pour te connecter à Son cœur et vivre Sa puissance à l'œuvre.\n\n👉 Nous t'attendons avec joie – sois le/la bienvenu(e) !",
-          image: "/images/activites-soiree.png",
-        },
-        {
-          title: "Groupe de prière",
-          description:
-            "Unissons nos voix chaque mercredi soir !\n\n🙏Rejoins-nous les mercredis à 20h pour un temps puissant de prières et d’intercessions. \n📣 Ensemble, nous élevons nos voix pour porter devant Dieu les sujets qui touchent nos cœurs et le monde qui nous entoure.\n\nViens participer à ce moment d’impact – ta prière compte !",
+            "Un petit groupe qui se réunit régulièrement pour discuter, prier et grandir ensemble.\n\nPrécisez ici le rythme, le lieu et le public visé.",
           image: "/images/activites-priere.jpg",
         },
         {
-          title: "Groupe de marche",
+          title: "Repas convivial",
           description:
-            "Rejoins-nous pour une marche conviviale chaque mois !\n\nUne belle occasion de :\n🤝 Créer des liens et partager des moments authentiques ensemble.\n🌍 Explorer une nouvelle commune ou un coin pittoresque de notre magnifique région.\n🚶‍♀️ Bouger à ton rythme, avec deux parcours adaptés pour que chacun y trouve son plaisir.\n\nEt si le soleil est au rendez-vous, nous prolongeons la journée avec un pique-nique avant le départ de la randonnée ! 🌞\n\nViens marcher, découvrir et partager avec nous – c’est ouvert à tous !",
-          image: "/images/activites-marche.jpeg",
-        },
-        {
-          title: "Groupes de maison",
-          description:
-            "Des groupes de maison près de chez toi !\n\nRejoins l’un de nos groupes de maison dans les communes de :\n📍 Carhaix\n📍 Pleyber-Christ\n📍 Plouénan\n📍 Plouvorn\n📍 Saint-Martin-des-Champs\n📍 Saint-Pol-de-Léon\n... et d'autres à venir !\n\nCes rencontres conviviales sont l’occasion de :\n💬 Échanger et répondre à tes questions.\n🤝 Partager nos expériences et notre foi.\n✨ Grandir ensemble dans la découverte de Christ.\n\nCes groupes sont ouverts à tous, en particulier aux personnes qui explorent leur cheminement spirituel ou souhaitent en savoir plus sur Jésus.\n\nViens comme tu es, une place t’attend !",
-          image: "/images/activites-maison.jpeg",
-        },
-        {
-          title: "Soirée femmes",
-          description:
-            "Rejoins les SentinElles !\n\nℹ️ Un jeudi par mois, de 18h30 à 21h, le groupe des SentinElles se rassemble pour vivre des moments uniques entre femmes.\n\n💬 C'est l'occasion de plonger dans des thèmes bibliques inspirants, d'échanger librement et de partager des expériences qui nous enrichissent mutuellement. 💫\n\nViens comme tu es, avec ton histoire, ton énergie ou ta curiosité – il y a une place pour toi parmi nous ! ✨",
-          image: "/images/activites-femmes.jpeg",
-        },
-        {
-          title: "Jeunesse",
-          description:
-            'Les "Potentiel" : un groupe pour les 12-18 ans !\n\nUn espace dédié aux ados pour :\n❓ Partager leurs questionnements et explorer leur foi en toute liberté.\n✨ Vivre des expériences fortes, qui marquent et transforment.\n🌱 Grandir ensemble, en apprenant à s’épanouir dans leur potentiel.\n🎉 Et surtout, s’amuser et créer des souvenirs mémorables !\n\nDes moments uniques pour se connecter, se découvrir et avancer dans un cadre bienveillant.\n\nSi tu as entre 12 et 18 ans, ce groupe est fait pour toi – viens nous rejoindre !',
-          image: "/images/activites-jeunesse.jpeg",
-        },
-        {
-          title: "Repas partagé",
-          description:
-            "Repas partagé – chaque dernier dimanche du mois !\n\nUn moment chaleureux et convivial où :\n🍲 Chacun apporte un plat, une boisson et/ ou un dessert à partager.\n🍽️ Un grand buffet est installé pour que tout le monde puisse se servir librement.\n🤝 Nous profitons ensemble d’un temps de communion fraternelle, riche en échanges et en joie.\n\nViens vivre ce moment de partage – ouvert à tous, dans une ambiance familiale et accueillante !",
+            "Un moment de partage autour d'un repas, ouvert à tous.\n\nIndiquez ici la fréquence et les modalités de participation.",
           image: "/images/activites-repas.jpg",
         },
       ],
     },
-    schema: [{ key: "items", label: "Activités", type: "array" }],
+    schema: [
+      {
+        key: "items",
+        label: "Activités",
+        type: "array",
+        subFields: [
+          { key: "title", label: "Titre", type: "text" },
+          { key: "description", label: "Description", type: "textarea" },
+          { key: "image", label: "URL image", type: "text" },
+        ],
+      },
+    ],
   },
 
   textImage: {
@@ -154,10 +142,12 @@ export const BLOCK_TYPES = {
       subtitle: "",
       body: "Contenu de la section.",
       image: "/photos/salle.jpg",
+      images: [],
       reverse: false,
       visualStyle: "default",
       ctaText: "",
       ctaLink: "",
+      buttons: [],
       backgroundColor: "#ffffff",
       textColor: "#1a1a2e",
       animation: "slideLeft",
@@ -166,7 +156,8 @@ export const BLOCK_TYPES = {
       { key: "title", label: "Titre", type: "text" },
       { key: "subtitle", label: "Sous-titre", type: "text" },
       { key: "body", label: "Contenu", type: "textarea" },
-      { key: "image", label: "Image", type: "image" },
+      { key: "image", label: "Image principale", type: "image" },
+      { key: "images", label: "Images supplémentaires (galerie)", type: "images" },
       { key: "reverse", label: "Image à gauche", type: "boolean" },
       {
         key: "visualStyle",
@@ -174,11 +165,48 @@ export const BLOCK_TYPES = {
         type: "select",
         options: ["default", "messagesLaptop"],
       },
-      { key: "ctaText", label: "Texte bouton", type: "text" },
-      { key: "ctaLink", label: "Lien bouton", type: "text" },
+      { key: "ctaText", label: "Texte bouton principal", type: "text" },
+      { key: "ctaLink", label: "Lien bouton principal", type: "text" },
+      {
+        key: "buttons",
+        label: "Boutons supplémentaires",
+        type: "array",
+        subFields: [
+          { key: "text", label: "Texte", type: "text" },
+          { key: "link", label: "Lien", type: "text" },
+        ],
+      },
       { key: "backgroundColor", label: "Fond", type: "color" },
       { key: "textColor", label: "Couleur texte", type: "color" },
       { key: "animation", label: "Animation", type: "animation" },
+    ],
+    templates: [
+      { id: "blank", label: "Vierge", icon: "📝", props: {} },
+      {
+        id: "ministry-presentation",
+        label: "Présentation d'un ministère",
+        icon: "🙌",
+        props: {
+          title: "Nom du ministère",
+          subtitle: "Une équipe à votre service",
+          body: "Présentez ici la mission et les activités de ce ministère.",
+          ctaText: "En savoir plus",
+          ctaLink: "/contact",
+        },
+      },
+      {
+        id: "event-highlight",
+        label: "Mise en avant d'un événement",
+        icon: "📅",
+        props: {
+          title: "Nom de l'événement",
+          subtitle: "Date à préciser",
+          body: "Décrivez l'événement, le lieu et comment s'inscrire.",
+          reverse: true,
+          ctaText: "S'inscrire",
+          ctaLink: "/contact",
+        },
+      },
     ],
   },
 
@@ -190,7 +218,7 @@ export const BLOCK_TYPES = {
     defaults: {
       title: "Rejoins-nous",
       subtitle: "Chaque dimanche",
-      location: "à Morlaix",
+      location: "dans votre ville",
       horaires: [
         { heure: "9h30", label: "Accueil café" },
         { heure: "10h00", label: "Célébration" },
@@ -203,7 +231,15 @@ export const BLOCK_TYPES = {
       { key: "subtitle", label: "Sous-titre", type: "text" },
       { key: "location", label: "Lieu", type: "text" },
       { key: "backgroundGradient", label: "Fond (CSS)", type: "text" },
-      { key: "horaires", label: "Horaires", type: "array" },
+      {
+        key: "horaires",
+        label: "Horaires",
+        type: "array",
+        subFields: [
+          { key: "heure", label: "Heure", type: "text" },
+          { key: "label", label: "Libellé", type: "text" },
+        ],
+      },
     ],
   },
 
@@ -215,17 +251,17 @@ export const BLOCK_TYPES = {
     defaults: {
       title: "Nos aspirations",
       items: [
-        "Accueillir et vivre l'unité",
-        "Célébrer et cultiver la présence de Dieu",
-        "Accompagner et restaurer les vies",
-        "Témoigner et former des disciples",
+        "Accueillir chacun avec bienveillance",
+        "Célébrer et vivre notre foi ensemble",
+        "Accompagner et soutenir les uns les autres",
+        "Partager et transmettre nos convictions",
       ],
       backgroundColor: "#064886",
       textColor: "#ffffff",
     },
     schema: [
       { key: "title", label: "Titre", type: "text" },
-      { key: "items", label: "Aspirations", type: "array" },
+      { key: "items", label: "Aspirations", type: "array", itemType: "text" },
       { key: "backgroundColor", label: "Fond", type: "color" },
       { key: "textColor", label: "Couleur texte", type: "color" },
     ],
@@ -315,6 +351,43 @@ export const BLOCK_TYPES = {
       },
       { key: "animation", label: "Animation", type: "animation" },
     ],
+    templates: [
+      { id: "blank", label: "Vierge", icon: "📄", props: {} },
+      {
+        id: "announcement",
+        label: "Annonce",
+        icon: "📢",
+        props: {
+          content:
+            "<h2>Titre de l'annonce</h2><p>Détails de l'annonce à venir.</p>",
+          backgroundColor: "#fff7e6",
+          textColor: "#7a4a00",
+          textAlign: "center",
+        },
+      },
+      {
+        id: "testimony",
+        label: "Témoignage",
+        icon: "💬",
+        props: {
+          content:
+            "<p><em>« Un témoignage marquant à partager ici. »</em></p><p>— Nom du témoin</p>",
+          backgroundColor: "#f8f9fa",
+          textAlign: "left",
+        },
+      },
+      {
+        id: "article",
+        label: "Article",
+        icon: "📰",
+        props: {
+          content:
+            "<h2>Titre de l'article</h2><p>Introduction...</p><p>Développement...</p>",
+          textAlign: "left",
+          padding: 80,
+        },
+      },
+    ],
   },
 
   gallery: {
@@ -348,6 +421,10 @@ export const BLOCK_TYPES = {
     defaults: {
       height: 60,
       backgroundColor: "transparent",
+      text: "",
+      image: "",
+      contentAlign: "center",
+      contentVerticalAlign: "middle",
     },
     schema: [
       {
@@ -358,6 +435,20 @@ export const BLOCK_TYPES = {
         max: 400,
       },
       { key: "backgroundColor", label: "Fond", type: "color" },
+      { key: "text", label: "Texte (optionnel)", type: "textarea" },
+      { key: "image", label: "Image (optionnelle)", type: "image" },
+      {
+        key: "contentAlign",
+        label: "Alignement horizontal",
+        type: "select",
+        options: ["left", "center", "right"],
+      },
+      {
+        key: "contentVerticalAlign",
+        label: "Alignement vertical",
+        type: "select",
+        options: ["top", "middle", "bottom"],
+      },
     ],
   },
 
@@ -373,7 +464,7 @@ export const BLOCK_TYPES = {
       animation: "fadeIn",
     },
     schema: [
-      { key: "videoId", label: "ID vidéo YouTube", type: "text" },
+      { key: "videoId", label: "ID ou URL YouTube", type: "text", placeholder: "ID (ex: dQw4w9WgXcQ) ou lien complet youtube.com/watch?v=..." },
       { key: "title", label: "Titre", type: "text" },
       { key: "backgroundColor", label: "Fond", type: "color" },
       { key: "animation", label: "Animation", type: "animation" },
@@ -388,7 +479,7 @@ export const BLOCK_TYPES = {
     defaults: {
       label: "Ce qui nous anime",
       quote:
-        "Voir la gloire, le royaume et la volonté de Dieu\nse manifester sur la terre comme aux Cieux",
+        "Notre vision : voir des vies transformées et une communauté qui grandit ensemble.",
       ctaText: "",
       ctaLink: "",
       backgroundGradient: "#f8f9fa",
@@ -426,6 +517,235 @@ export const BLOCK_TYPES = {
         min: 100,
         max: 800,
       },
+    ],
+  },
+
+  equipe: {
+    label: "Équipe (membres)",
+    icon: "👥",
+    category: "content",
+    animations: "wrapper",
+    defaults: {
+      title: "Notre équipe",
+      subtitle: "",
+      members: [
+        { name: "Prénom Nom", role: "Pasteur", photo: "", description: "" },
+      ],
+      columns: 3,
+      backgroundColor: "#ffffff",
+      textColor: "#064886",
+      animation: "fadeIn",
+    },
+    schema: [
+      { key: "title", label: "Titre", type: "text" },
+      { key: "subtitle", label: "Sous-titre", type: "text" },
+      {
+        key: "members",
+        label: "Membres",
+        type: "array",
+        subFields: [
+          { key: "name", label: "Nom", type: "text" },
+          { key: "role", label: "Rôle", type: "text" },
+          { key: "photo", label: "URL photo", type: "text" },
+          { key: "description", label: "Description", type: "textarea" },
+        ],
+      },
+      { key: "columns", label: "Colonnes", type: "number", min: 1, max: 4 },
+      { key: "backgroundColor", label: "Fond", type: "color" },
+      { key: "textColor", label: "Couleur texte", type: "color" },
+      { key: "animation", label: "Animation", type: "animation" },
+    ],
+  },
+
+  louange: {
+    label: "Louange — postes ouverts",
+    icon: "🎤",
+    category: "content",
+    animations: "wrapper",
+    defaults: {
+      title: "Rejoins l'équipe louange",
+      intro: "Nous cherchons des personnes pour servir dans la louange. Postule au poste qui te correspond !",
+      positions: [
+        {
+          key: "chant",
+          poste: "Chant",
+          description: "Chanter lors des cultes du dimanche.",
+          places: 2,
+        },
+      ],
+      backgroundColor: "#ffffff",
+      textColor: "#064886",
+      animation: "fadeIn",
+    },
+    schema: [
+      { key: "title", label: "Titre", type: "text" },
+      { key: "intro", label: "Introduction", type: "textarea" },
+      {
+        key: "positions",
+        label: "Postes",
+        type: "array",
+        subFields: [
+          { key: "key", label: "Clé (identifiant unique)", type: "text" },
+          { key: "poste", label: "Poste", type: "text" },
+          { key: "description", label: "Description", type: "textarea" },
+          { key: "places", label: "Places", type: "number", min: 1, max: 20 },
+        ],
+      },
+      { key: "backgroundColor", label: "Fond", type: "color" },
+      { key: "textColor", label: "Couleur texte", type: "color" },
+      { key: "animation", label: "Animation", type: "animation" },
+    ],
+  },
+
+  faq: {
+    label: "FAQ (accordéon)",
+    icon: "❓",
+    category: "content",
+    animations: "wrapper",
+    defaults: {
+      title: "Questions fréquentes",
+      subtitle: "",
+      items: [
+        {
+          question: "Comment se déroule un culte / une célébration ?",
+          answer:
+            "Décrivez ici le déroulé type : accueil, temps de louange, message et temps de prière.",
+        },
+      ],
+      openFirst: false,
+      backgroundColor: "#ffffff",
+      textColor: "#064886",
+      animation: "fadeIn",
+    },
+    schema: [
+      { key: "title", label: "Titre", type: "text" },
+      { key: "subtitle", label: "Sous-titre", type: "text" },
+      {
+        key: "items",
+        label: "Questions",
+        type: "array",
+        subFields: [
+          { key: "question", label: "Question", type: "text", sizable: true },
+          { key: "answer", label: "Réponse", type: "textarea", sizable: true },
+        ],
+      },
+      { key: "openFirst", label: "Première question ouverte", type: "boolean" },
+      { key: "backgroundColor", label: "Fond", type: "color" },
+      { key: "textColor", label: "Couleur texte", type: "color" },
+      { key: "animation", label: "Animation", type: "animation" },
+    ],
+  },
+
+  iconGrid: {
+    label: "Grille à icônes",
+    icon: "🔷",
+    category: "content",
+    animations: "wrapper",
+    defaults: {
+      title: "Nos missions",
+      items: [
+        {
+          icon: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRkZGRkZGIiBzdHJva2Utd2lkdGg9IjEuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNMTIgMTEuMmMtMS4yLTEuNS0zLjMtMS42LTQuNC0uMy0xLjEgMS4zLS45IDMuMS40IDQuNEwxMiAxOWwzLjktMy43YzEuMy0xLjMgMS41LTMuMS40LTQuNC0xLjEtMS4zLTMuMi0xLjItNC4zLjN6Ii8+PHBhdGggZD0iTTMuNSAxNC41YzAgMi43IDEuNyA0LjcgMy42IDVNMjAuNSAxNC41YzAgMi43LTEuNyA0LjctMy42IDUiLz48L3N2Zz4=",
+          title: "Accueillir et vivre l'unité",
+          description: "",
+        },
+        {
+          icon: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRkZGRkZGIiBzdHJva2Utd2lkdGg9IjEuOCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNMTIgM3YxOE03LjUgOC41aDkiLz48L3N2Zz4=",
+          title: "Célébrer et cultiver la présence de Dieu",
+          description: "",
+        },
+        {
+          icon: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRkZGRkZGIiBzdHJva2Utd2lkdGg9IjEuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNMTIgNi4zYy0xLTEuMi0yLjctMS4zLTMuNi0uMi0uOSAxLjEtLjcgMi41LjMgMy41TDEyIDEzbDMuMy0zLjRjMS0xIDEuMi0yLjQuMy0zLjUtLjktMS4xLTIuNi0xLTMuNi4yeiIvPjxwYXRoIGQ9Ik01IDE0LjVjMCAzLjMgMy4xIDYgNyA2czctMi43IDctNiIvPjwvc3ZnPg==",
+          title: "Accompagner et restaurer les vies",
+          description: "",
+        },
+        {
+          icon: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRkZGRkZGIiBzdHJva2Utd2lkdGg9IjEuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48Y2lyY2xlIGN4PSI3IiBjeT0iOCIgcj0iMi4zIi8+PHBhdGggZD0iTTIuNiAxOGMwLTIuOCAyLTQuOCA0LjQtNC44czQuNCAyIDQuNCA0LjgiLz48Y2lyY2xlIGN4PSIxNi41IiBjeT0iNyIgcj0iMiIvPjxwYXRoIGQ9Ik0yMSAxNS4yYzAtMi4xLTEuNy0zLjctMy45LTMuNy0uNSAwLTEgLjEtMS41LjMiLz48cGF0aCBkPSJNMTUuMyAxNS4yaDQuNGEyIDIgMCAwIDEgMiAydjEuMWwxLjMgMS41LTIuMS0uNGgtNS42YTIgMiAwIDAgMS0yLTJ2LS4yYTIgMiAwIDAgMSAyLTJ6Ii8+PC9zdmc+",
+          title: "Témoigner et former des disciples",
+          description: "",
+        },
+      ],
+      columns: 2,
+      backgroundColor: "#FFFFFF",
+      cardBackgroundColor: "#F2F2F2",
+      iconBackgroundColor: "#1A4C8B",
+      titleColor: "#1A4C8B",
+      textColor: "#4A4A4A",
+      animation: "fadeIn",
+    },
+    schema: [
+      { key: "title", label: "Titre", type: "text" },
+      {
+        key: "items",
+        label: "Cartes",
+        type: "array",
+        subFields: [
+          { key: "icon", label: "Icône (URL image)", type: "text" },
+          { key: "title", label: "Titre", type: "text" },
+          { key: "description", label: "Description", type: "textarea" },
+        ],
+      },
+      { key: "columns", label: "Colonnes", type: "number", min: 1, max: 4 },
+      { key: "backgroundColor", label: "Fond section", type: "color" },
+      { key: "cardBackgroundColor", label: "Fond des cartes", type: "color" },
+      { key: "iconBackgroundColor", label: "Fond du rond d'icône", type: "color" },
+      { key: "titleColor", label: "Couleur des titres", type: "color" },
+      { key: "textColor", label: "Couleur du texte", type: "color" },
+      { key: "animation", label: "Animation", type: "animation" },
+    ],
+  },
+
+  stats: {
+    label: "Chiffres clés",
+    icon: "📊",
+    category: "content",
+    animations: "wrapper",
+    defaults: {
+      title: "En quelques chiffres",
+      items: [
+        { value: "10", label: "Années d'existence" },
+        { value: "200", label: "Membres" },
+        { value: "5", label: "Groupes actifs" },
+      ],
+      backgroundColor: "#064886",
+      textColor: "#ffffff",
+      animation: "fadeIn",
+    },
+    schema: [
+      { key: "title", label: "Titre", type: "text" },
+      {
+        key: "items",
+        label: "Chiffres",
+        type: "array",
+        subFields: [
+          { key: "value", label: "Valeur", type: "text" },
+          { key: "label", label: "Libellé", type: "text" },
+        ],
+      },
+      { key: "backgroundColor", label: "Fond", type: "color" },
+      { key: "textColor", label: "Couleur texte", type: "color" },
+      { key: "animation", label: "Animation", type: "animation" },
+    ],
+  },
+
+  quote: {
+    label: "Citation",
+    icon: "💬",
+    category: "content",
+    animations: "wrapper",
+    defaults: {
+      quote: "Une citation inspirante à mettre en avant.",
+      author: "",
+      backgroundColor: "#f8f9fa",
+      textColor: "#064886",
+      animation: "fadeIn",
+    },
+    schema: [
+      { key: "quote", label: "Citation", type: "textarea" },
+      { key: "author", label: "Auteur / source", type: "text" },
+      { key: "backgroundColor", label: "Fond", type: "color" },
+      { key: "textColor", label: "Couleur texte", type: "color" },
+      { key: "animation", label: "Animation", type: "animation" },
     ],
   },
 
@@ -576,9 +896,9 @@ export function getDefaultContactPage() {
   return [
     createBlock("contact", {
       title: "Nous contacter",
-      addressTitle: "Eglise Cieux Ouverts",
-      addressLine: "2 rue Jean Monnet | 29600 Morlaix",
-      mapEmbedUrl: DEFAULT_CONTACT_MAP_EMBED_URL,
+      addressTitle: "",
+      addressLine: "",
+      mapEmbedUrl: "",
       backgroundGradient: "#064886",
       showQuestions: false,
       showSocials: false,
@@ -683,11 +1003,9 @@ function normalizeContactBlocks(blocks) {
       ...BLOCK_TYPES.contact.defaults,
       ...contactBlock.props,
       title: contactBlock.props?.title || "Nous contacter",
-      addressTitle: contactBlock.props?.addressTitle || "Eglise Cieux Ouverts",
-      addressLine:
-        contactBlock.props?.addressLine || "2 rue Jean Monnet | 29600 Morlaix",
-      mapEmbedUrl:
-        contactBlock.props?.mapEmbedUrl || DEFAULT_CONTACT_MAP_EMBED_URL,
+      addressTitle: contactBlock.props?.addressTitle || "",
+      addressLine: contactBlock.props?.addressLine || "",
+      mapEmbedUrl: contactBlock.props?.mapEmbedUrl || "",
       backgroundGradient: contactBlock.props?.backgroundGradient || "#064886",
       showQuestions: contactBlock.props?.showQuestions ?? false,
       showSocials: contactBlock.props?.showSocials ?? false,

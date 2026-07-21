@@ -11,12 +11,13 @@
     :class="[visibilityClasses, animClass]"
     ref="sectionRef"
   >
-    <div class="richtext-inner" v-html="sanitizedContent"></div>
+    <div class="richtext-inner" data-field-key="content" :style="fieldFontStyle(fieldFonts, 'content', fieldFontSizes)" v-html="sanitizedContent"></div>
   </section>
 </template>
 
 <script setup>
 import { sanitizeHtml } from '~/utils/sanitize.js'
+import { fieldFontStyle } from '~/utils/fonts.js'
 const {
   backgroundGradient = '',
   backgroundColor = '#ffffff',
@@ -27,6 +28,8 @@ const {
   animation = 'none',
   visibility = {},
   isTriggered = false,
+  fieldFonts = {},
+  fieldFontSizes = {},
 } = defineProps({
   backgroundGradient: { type: String, default: '' },
   backgroundColor: { type: String, default: '#ffffff' },
@@ -37,15 +40,15 @@ const {
   animation: { type: String, default: 'none' },
   visibility: { type: Object, default: () => ({}) },
   isTriggered: { type: Boolean, default: false },
+  fieldFonts: { type: Object, default: () => ({}) },
+  fieldFontSizes: { type: Object, default: () => ({}) },
 })
 const sectionRef = ref(null)
-const triggered = ref(false)
-const isEditor = inject('isEditor', false)
 const sanitizedContent = computed(() => content ? sanitizeHtml(content) : '')
 
 const animClass = computed(() => {
   if (!animation || animation === 'none') return ''
-  return `block-anim-${animation} ${triggered.value ? 'triggered' : ''}`
+  return `block-anim-${animation} ${isTriggered ? 'triggered' : ''}`
 })
 
 const visibilityClasses = computed(() => ({
@@ -53,18 +56,6 @@ const visibilityClasses = computed(() => ({
   'hide-tablet': visibility.tablet === false,
   'hide-desktop': visibility.desktop === false,
 }))
-
-onMounted(() => {
-  if (isTriggered || isEditor) {
-    triggered.value = true
-    return
-  }
-  const observer = new IntersectionObserver(
-    ([entry]) => { if (entry.isIntersecting) { triggered.value = true; observer.disconnect() } },
-    { threshold: 0.1 }
-  )
-  if (sectionRef.value) observer.observe(sectionRef.value)
-})
 </script>
 
 <style scoped>

@@ -25,7 +25,7 @@ export function getAnimClass(block: BlockInstance): string {
 
 export function shouldUseTrigger(block: BlockInstance): boolean {
   const strategy = getAnimationStrategy(block.type);
-  return strategy === "wrapper" || strategy === "internal";
+  return strategy === "wrapper";
 }
 
 export function normalizeBlock(block: BlockInstance): BlockInstance {
@@ -38,9 +38,25 @@ export function normalizeBlock(block: BlockInstance): BlockInstance {
   propsSrc = propsSrc || {};
 
   if (copy.type && BLOCK_TYPES[copy.type]) {
+    // Champs vidés intentionnellement via "Rendre déplaçable" (promus en
+    // élément libre de props.extraElements) : ne pas retomber sur le
+    // default du type de bloc, qui recréerait visuellement le même
+    // contenu qu'on vient de détacher de sa place fixe. N'affecte que
+    // CETTE instance de bloc — les autres blocs du même type qui n'ont
+    // jamais touché ce champ gardent leur default normalement.
+    const promotedFields: string[] = Array.isArray(propsSrc.promotedFields)
+      ? propsSrc.promotedFields
+      : [];
     const safe: Record<string, any> = {};
     for (const [k, v] of Object.entries(propsSrc)) {
-      if (v !== "" && v !== null && v !== undefined) safe[k] = v;
+      // Un champ promu reste vide en permanence : ni son default, ni une
+      // valeur re-saisie par mégarde dans la sidebar ne doivent réafficher
+      // le contenu à sa place fixe — il vit désormais dans extraElements.
+      if (promotedFields.includes(k)) {
+        safe[k] = "";
+      } else if (v !== "" && v !== null && v !== undefined) {
+        safe[k] = v;
+      }
     }
     copy.props = { ...BLOCK_TYPES[copy.type].defaults, ...safe };
   } else {
@@ -52,6 +68,33 @@ export function normalizeBlock(block: BlockInstance): BlockInstance {
 
 export function normalizeBlocks(blocks: BlockInstance[]): BlockInstance[] {
   return (blocks || []).map(normalizeBlock);
+}
+
+type Device = "desktop" | "tablet" | "mobile";
+
+// Merge per-device overrides (block.responsive[device]) on top of base props.
+// Desktop uses the base props unchanged. Returns a new block when overrides
+// apply, otherwise the same block reference.
+export function resolveResponsive(
+  block: BlockInstance,
+  device: Device,
+): BlockInstance {
+  if (!block || device === "desktop") return block;
+  const overrides = (block as any).responsive?.[device];
+  if (!overrides || typeof overrides !== "object") return block;
+  const safe: Record<string, any> = {};
+  for (const [k, v] of Object.entries(overrides)) {
+    if (v !== "" && v !== null && v !== undefined) safe[k] = v;
+  }
+  if (Object.keys(safe).length === 0) return block;
+  return { ...block, props: { ...block.props, ...safe } };
+}
+
+export function resolveBlocksForDevice(
+  blocks: BlockInstance[],
+  device: Device,
+): BlockInstance[] {
+  return (blocks || []).map((b) => resolveResponsive(b, device));
 }
 
 export function filterByVisibility(

@@ -1,0 +1,37 @@
+tools:
+    shell:
+        allow:
+            - ls *
+            - which whisper ffmpeg *
+            - pip list
+            - grep *
+            - echo *
+            - whisper *
+            - head *
+            - sleep 30
+            - sleep 60
+            - sleep 120
+            - du *
+            - df *
+            - sleep 180
+            - '[ ! *'
+            - sleep 90
+            - sleep 240
+            - sleep 300
+            - ps aux
+            - awk *
+            - ffprobe *
+            - sleep 600
+            - find *
+            - seq 1 *
+            - break
+            - ffmpeg *
+            - pgrep *
+            - sleep 900
+            - date *
+            - ps *
+            - pkill *
+            - cp *
+paths:
+    allow:
+        - path: /Users/vic/Downloads/**

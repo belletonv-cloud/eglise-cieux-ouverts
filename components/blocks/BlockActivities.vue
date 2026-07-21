@@ -87,15 +87,17 @@ const activeItem = computed(() => {
 
 function getShortDesc(desc) {
   if (!desc) return ''
-  const first = desc.split('\n')[0]
+  const first = desc.replace(/\\n/g, '\n').split('\n')[0]
   return first.length > 120 ? first.slice(0, 120) + '…' : first
 }
 
 import { sanitizeHtml } from '~/utils/sanitize'
 
+// Les descriptions venant de l'API eglise-app stockent parfois des "\n"
+// littéraux (backslash+n) au lieu d'un vrai retour à la ligne.
 function sanitizeDesc(desc) {
   if (!desc) return ''
-  return sanitizeHtml(desc.replace(/\n/g, '<br>'))
+  return sanitizeHtml(desc.replace(/\\n/g, '\n').replace(/\n/g, '<br>'))
 }
 
 const visibilityClasses = computed(() => ({
@@ -241,7 +243,7 @@ onMounted(() => {
 }
 .overlay-title {
   color: white;
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-heading);
   font-size: 1.2em;
   font-style: italic;
   font-weight: 700;
@@ -340,7 +342,7 @@ onMounted(() => {
 }
 .modal-close:hover { color: #333; }
 .modal-title {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--font-heading);
   font-size: 32px;
   font-style: italic;
   font-weight: 700;

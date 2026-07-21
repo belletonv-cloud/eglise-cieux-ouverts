@@ -26,7 +26,7 @@ defineEmits<{ change: [value: boolean] }>()
 .toggle-slider {
   width: 40px;
   height: 22px;
-  background: #3d3d55;
+  background: #d1d5db;
   border-radius: 11px;
   position: relative;
   transition: background 0.2s;

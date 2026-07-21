@@ -16,6 +16,16 @@ export const DESIGN_FIELDS = [
   { key: 'textColor', label: 'Couleur texte', type: 'color' },
   { key: 'bgColor', label: 'Couleur fond', type: 'color' },
   { key: 'padding', label: 'Padding', type: 'text' },
+  // ─── Position / emplacement (appliqué sur le wrapper du bloc) ───
+  { key: 'blockAlign', label: 'Alignement du bloc', type: 'select', options: [
+    { value: 'full', label: 'Pleine largeur' },
+    { value: 'left', label: 'Gauche' },
+    { value: 'center', label: 'Centre' },
+    { value: 'right', label: 'Droite' },
+  ]},
+  { key: 'maxWidth', label: 'Largeur max (ex: 800px)', type: 'text' },
+  { key: 'marginTop', label: 'Marge haut (ex: 24px)', type: 'text' },
+  { key: 'marginBottom', label: 'Marge bas (ex: 24px)', type: 'text' },
 ]
 
 export const DESIGN_DEFAULTS = {
@@ -26,6 +36,10 @@ export const DESIGN_DEFAULTS = {
   textColor: '',
   bgColor: '',
   padding: '',
+  blockAlign: 'full',
+  maxWidth: '',
+  marginTop: '',
+  marginBottom: '',
 }
 
 export function mergeDesignDefaults(block) {

@@ -6,9 +6,9 @@
     >
         <div class="rejoins-inner">
             <div class="rejoins-text-container">
-                <p class="rejoins-title">{{ title }}</p>
-                <p class="rejoins-subtitle">{{ subtitle }}</p>
-                <p class="rejoins-location">{{ location }}</p>
+                <p class="rejoins-title" data-field-key="title" :style="fieldFontStyle(fieldFonts, 'title', fieldFontSizes)">{{ title }}</p>
+                <p class="rejoins-subtitle" data-field-key="subtitle" :style="fieldFontStyle(fieldFonts, 'subtitle', fieldFontSizes)">{{ subtitle }}</p>
+                <p class="rejoins-location" data-field-key="location" :style="fieldFontStyle(fieldFonts, 'location', fieldFontSizes)">{{ location }}</p>
             </div>
             <div class="rejoins-grid">
                 <div
@@ -27,6 +27,7 @@
 
 <script setup>
 import { computed } from "vue";
+import { fieldFontStyle } from "~/utils/fonts.js";
 
 const {
     backgroundGradient = "",
@@ -36,6 +37,8 @@ const {
     horaires = [],
     visibility = {},
     isTriggered = false,
+    fieldFonts = {},
+    fieldFontSizes = {},
 } = defineProps({
     backgroundGradient: { type: String, default: "" },
     title: { type: String, default: "" },
@@ -44,6 +47,8 @@ const {
     horaires: { type: Array, default: () => [] },
     visibility: { type: Object, default: () => ({}) },
     isTriggered: { type: Boolean, default: false },
+    fieldFonts: { type: Object, default: () => ({}) },
+    fieldFontSizes: { type: Object, default: () => ({}) },
 });
 
 const visibilityClasses = computed(() => ({
@@ -149,7 +154,7 @@ const visibilityClasses = computed(() => ({
 }
 .rejoins-subtitle,
 .rejoins-location {
-    font-family: "Playfair Display", serif;
+    font-family: var(--font-heading);
     font-size: 75px;
     font-weight: 700;
     font-style: italic;
@@ -165,7 +170,7 @@ const visibilityClasses = computed(() => ({
     color: white;
 }
 .horaire-label {
-    font-family: "Playfair Display", serif;
+    font-family: var(--font-heading);
     font-size: 30px;
     font-weight: 700;
     font-style: normal;

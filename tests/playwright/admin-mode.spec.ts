@@ -18,7 +18,14 @@ test.describe('Mode édition', () => {
     await expect(select).toBeVisible()
 
     const options = page.locator('.admin-page-select option')
-    await expect(options).toHaveCount(5)
+    // 5 pages de base toujours présentes ; les pages CMS custom du mock
+    // s'ajoutent après le fetch async — ne pas figer le compte exact
+    await page.waitForTimeout(1500)
+    const values = await options.evaluateAll((els) => els.map((o) => (o as HTMLOptionElement).value))
+    for (const base of ['accueil', 'contact', 'messages', 'event-list', 'agenda']) {
+      expect(values).toContain(base)
+    }
+    expect(values.length).toBeGreaterThanOrEqual(5)
   })
 
   test('l avatar du mock utilisateur est visible avec auth mock', async ({ page }) => {
@@ -117,7 +124,7 @@ test.describe('Boutons device — iframe preview', () => {
 
     const iframe = page.locator('.device-iframe')
     const src = await iframe.getAttribute('src')
-    expect(src).toContain('preview=true')
+    expect(src).toContain('preview-inner=1')
   })
 
   test('revenir en desktop supprime l iframe', async ({ page }) => {
@@ -471,14 +478,14 @@ test.describe('Navigation client-side en mode admin', () => {
 
   test("navigation client-side préserve l'offset du header", async ({ page }) => {
     await page.goto('/messages?admin=true')
-    await page.waitForSelector('.site-header', { timeout: 5000 })
+    await page.waitForSelector('.admin-toolbar', { timeout: 5000 })
 
     const siteHeader = page.locator('.site-header')
     const headerTopBefore = await siteHeader.evaluate(el => parseInt(window.getComputedStyle(el).top) || 0)
     expect(headerTopBefore).toBeGreaterThanOrEqual(48)
 
     await page.goto('/?admin=true')
-    await page.waitForSelector('.site-header', { timeout: 5000 })
+    await page.waitForSelector('.admin-toolbar', { timeout: 5000 })
 
     const headerTopAfter = await siteHeader.evaluate(el => parseInt(window.getComputedStyle(el).top) || 0)
     expect(headerTopAfter).toBeGreaterThanOrEqual(48)

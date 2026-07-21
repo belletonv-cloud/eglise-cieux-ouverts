@@ -8,16 +8,21 @@ if (isCI && process.env.NODE_ENV === "production" && !process.env.NUXT_PUBLIC_FI
 }
 
 export default defineNuxtConfig({
-  css: ['~/assets/css/main.css', '~/assets/css/event-modal.css'],
+  css: ['~/assets/css/main.css', '~/assets/css/event-modal.css', '~/assets/css/no-js.css'],
   experimental: {
     appManifest: false
   },
+  // @ts-expect-error: routeRules valid at runtime but absent from this Nuxt version's InputConfig type
   routeRules: {
     '/billetterie': { redirect: '/event-list' },
+    '/**': { headers: { 'x-frame-options': 'SAMEORIGIN' } },
   },
   app: {
     head: {
-      htmlAttrs: { lang: 'fr' },
+      htmlAttrs: { lang: 'fr', class: 'no-js' },
+      // Retire la classe no-js dès que JS s'exécute : avec JS désactivé elle
+      // reste et active les fallbacks CSS (contenu/animations visibles, SEO).
+      script: [{ innerHTML: "document.documentElement.classList.remove('no-js')", tagPosition: 'head' }],
       meta: process.env.CF_PAGES_BRANCH === 'recette'
         ? [{ name: 'robots', content: 'noindex, nofollow' }]
         : [],
@@ -33,14 +38,20 @@ export default defineNuxtConfig({
     { path: '~/components', global: true },
     { path: '~/components/editor', global: true }
   ],
-  // @ts-expect-error: 'nitro' is valid at runtime but not in Nuxt 3.20's InputConfig type
   nitro: {
     preset: process.env.PW_TEST === '1' ? 'node-server' : 'cloudflare-pages',
   },
   hooks: {
     'build:before': async () => {
-      const { mkdirSync } = await import('node:fs')
+      const { mkdirSync, writeFileSync } = await import('node:fs')
       mkdirSync('.nuxt/dist/server', { recursive: true })
+      // Horodatage de build lu par plugins/deployment-check.client.ts pour
+      // détecter un nouveau déploiement et forcer un reload. Placé ici (hook
+      // Nuxt) plutôt que dans un script npm : `nuxt build` est invoqué
+      // directement par plusieurs scripts (deploy, build:e2e) qui ne
+      // passaient pas tous par le script `build` — le fichier n'était donc
+      // jamais rafraîchi lors d'un vrai déploiement.
+      writeFileSync('public/version.txt', Date.now().toString())
     }
   },
   watchers: {

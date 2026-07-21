@@ -25,6 +25,17 @@ export type FieldType =
 
 export type AnimationStrategy = 'wrapper' | 'internal' | 'none'
 
+// A named starting point for a block type, offered as a second step in the
+// admin block picker when a type defines more than one. `props` is a
+// partial override merged on top of `defaults` (see createBlock()) — it
+// does not need to repeat every schema field, only the ones it changes.
+export interface BlockTemplate {
+  id: string
+  label: string
+  icon?: string
+  props: Record<string, any>
+}
+
 export interface BlockSchema {
   type: string
   label: string
@@ -36,6 +47,7 @@ export interface BlockSchema {
   adminComponent?: string
   adminRenderer?: string
   animations: AnimationStrategy
+  templates?: BlockTemplate[]
 }
 
 export type BlockCategory = 'content' | 'layout' | 'media' | 'hero'
@@ -49,6 +61,53 @@ export interface BlockInstance {
     tablet: boolean
     mobile: boolean
   }
+  // Per-device prop overrides merged on top of `props` at render time.
+  // Desktop always uses the base `props`; tablet/mobile may override any key.
+  responsive?: {
+    tablet?: Record<string, any>
+    mobile?: Record<string, any>
+  }
+}
+
+// Éléments additionnels librement positionnables/redimensionnables, greffés
+// après le contenu propre d'un bloc via `props.extraElements` (n'importe quel
+// type de bloc, absent par défaut — voir components/blocks/BlockExtraElementsCanvas.vue
+// et components/editor/FieldElements.vue). Position/taille en % de la zone
+// canvas (pas en px) pour une mise à l'échelle proportionnelle responsive
+// sans authoring séparé par device.
+export type ExtraElementKind = 'text' | 'richtext' | 'image' | 'button'
+
+export interface ExtraElement {
+  id: string
+  kind: ExtraElementKind
+  text?: string
+  imageUrl?: string
+  imageAlt?: string
+  buttonLabel?: string
+  buttonLink?: string
+  xPct: number
+  yPct: number
+  wPct: number
+  hPct: number
+  z: number
+  // Style optionnel repris d'un champ promu via « Rendre déplaçable » pour
+  // que le texte détaché conserve l'apparence qu'il avait dans le bloc.
+  // color/fontSize/textAlign : valeurs CSS prêtes à l'emploi. fontFamily :
+  // NOM de police (ex: "Lora"), résolu en stack + chargé à l'affichage,
+  // même convention que props.fieldFonts (voir utils/fonts.js).
+  color?: string
+  fontSize?: string
+  fontFamily?: string
+  textAlign?: string
+  // Clé du champ de schema d'origine si cet élément a été créé via « Rendre
+  // déplaçable »/« Déplacer » (AutoEditor.vue) — permet de retrouver
+  // l'élément déjà promu pour relancer le positionnement dessus (bouton
+  // toujours visible) sans en recréer un doublon à chaque clic.
+  promotedFrom?: string
+  // Animation d'entrée jouée quand le bloc parent devient visible (id de
+  // utils/blockTypes.js ANIMATIONS, ex: "fadeIn") — même déclenchement que
+  // l'animation "wrapper" du bloc, pas d'observer dédié par élément.
+  animation?: string
 }
 
 export interface EditorFieldProps {
@@ -134,6 +193,28 @@ export function validateBlockSchema(schema: BlockSchema): ValidationError[] {
     }
     if (schema.animations === 'none' && field.type === 'animation') {
       errors.push({ type: schema.type, field: field.key, message: `block with animations='none' cannot have animation field "${field.key}"` })
+    }
+  }
+
+  if (schema.templates) {
+    const schemaKeys = new Set(schema.schema.map((f) => f.key))
+    const seenTemplateIds = new Set<string>()
+    for (const tpl of schema.templates) {
+      if (!tpl.id) {
+        errors.push({ type: schema.type, field: '(unnamed template)', message: 'template id is required' })
+      } else if (seenTemplateIds.has(tpl.id)) {
+        errors.push({ type: schema.type, field: tpl.id, message: `duplicate template id: ${tpl.id}` })
+      } else {
+        seenTemplateIds.add(tpl.id)
+      }
+      if (!tpl.label) {
+        errors.push({ type: schema.type, field: tpl.id || '(unnamed template)', message: `template "${tpl.id}" has no label` })
+      }
+      for (const propKey of Object.keys(tpl.props || {})) {
+        if (!schemaKeys.has(propKey)) {
+          errors.push({ type: schema.type, field: tpl.id || '(unnamed template)', message: `template "${tpl.id}" references unknown prop "${propKey}" (not in schema)` })
+        }
+      }
     }
   }
 

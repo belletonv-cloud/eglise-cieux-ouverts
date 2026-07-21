@@ -22,11 +22,14 @@ test.describe('Undo/Redo system', () => {
     await page.goto('/?admin=true')
     await page.waitForTimeout(1500)
     const wrapper = page.locator('.block-wrapper').first()
-    await wrapper.click()
+    // force: animations scroll-driven → élément jamais « stable » pour Playwright.
+    await wrapper.click({ force: true })
     await page.waitForTimeout(300)
-    const moveUp = page.locator('.admin-action-btn').first()
-    if (await moveUp.isVisible()) {
-      await moveUp.click()
+    // Le premier bloc ne peut pas « monter » (no-op) → on utilise « Descendre »
+    // (2e bouton) pour produire une modification qui active l'undo.
+    const moveDown = page.locator('.admin-action-btn').nth(1)
+    if (await moveDown.isVisible()) {
+      await moveDown.click({ force: true })
       await page.waitForTimeout(200)
       const undoBtn = page.locator('.admin-icon-btn').first()
       await expect(undoBtn).not.toBeDisabled()
@@ -88,16 +91,16 @@ test.describe('Drag-and-drop', () => {
     expect(text?.trim()).toBe('⠿')
   })
 
-  test('drag container is present in admin mode', async ({ page }) => {
+  test('drag handle is present on blocks in admin mode', async ({ page }) => {
     await page.goto('/?admin=true')
     await page.waitForTimeout(1500)
-    await expect(page.locator('.drag-container')).toBeAttached()
+    await expect(page.locator('.drag-handle').first()).toBeAttached()
   })
 
-  test('drag container is absent in public mode', async ({ page }) => {
+  test('drag handle is absent in public mode', async ({ page }) => {
     await page.goto('/')
     await page.waitForTimeout(1000)
-    await expect(page.locator('.drag-container')).not.toBeAttached()
+    await expect(page.locator('.drag-handle')).toHaveCount(0)
   })
 
   test('block ghost CSS class is defined', async ({ page }) => {
@@ -107,7 +110,7 @@ test.describe('Drag-and-drop', () => {
       for (const sheet of document.styleSheets) {
         try {
           for (const rule of sheet.cssRules || []) {
-            if (rule.selectorText === '.block-ghost') return true
+            if ((rule as CSSStyleRule).selectorText?.includes('.block-ghost')) return true
           }
         } catch (_) {}
       }
@@ -126,7 +129,7 @@ test.describe('Page transitions', () => {
       for (const sheet of document.styleSheets) {
         try {
           for (const rule of sheet.cssRules || []) {
-            if (rule.selectorText === '.page-enter-active,.page-leave-active') return true
+            if ((rule as CSSStyleRule).selectorText?.includes('page-enter-active')) return true
           }
         } catch (_) {}
       }
@@ -138,15 +141,22 @@ test.describe('Page transitions', () => {
 
 test.describe('Auto-save', () => {
 
-  test('login button is visible in admin toolbar when logged out', async ({ page }) => {
+  test('logged out: ?admin=true redirects to the login page with sign-in button', async ({ page }) => {
+    // Comportement auth-gated réel : un visiteur déconnecté qui demande le
+    // mode édition est redirigé vers /admin (page de connexion).
+    await page.addInitScript(() => { (window as any).__MOCK_AUTH_RESULT = null })
     await page.goto('/?admin=true')
-    await page.waitForTimeout(1500)
-    await expect(page.locator('.admin-btn-login')).toBeVisible()
+    await page.waitForURL(/\/admin/, { timeout: 15000 })
+    await expect(page.locator('.admin-login-card')).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Se connecter avec Google' })).toBeVisible()
   })
 
-  test('save button is visible inside ClientOnly block when logged in', async ({ page }) => {
+  test('logged out: no page-save button is reachable', async ({ page }) => {
+    // Sans connexion, la barre d'édition et son bouton de sauvegarde ne sont
+    // jamais accessibles (redirection vers la page de connexion).
+    await page.addInitScript(() => { (window as any).__MOCK_AUTH_RESULT = null })
     await page.goto('/?admin=true')
-    await page.waitForTimeout(1500)
+    await page.waitForURL(/\/admin/, { timeout: 15000 })
     const saveBtn = page.locator('.admin-btn:not(.admin-btn-secondary):not(.admin-btn-login)')
     await expect(saveBtn).not.toBeVisible()
   })
@@ -198,8 +208,10 @@ test.describe('Admin mode UI integrity', () => {
   test('server-side renders without errors in admin mode', async ({ page }) => {
     const errors: string[] = []
     page.on('pageerror', err => errors.push(err.message))
-    await page.goto('/?admin=true', { waitUntil: 'networkidle' })
-    await page.waitForTimeout(1000)
+    // 'load' plutôt que 'networkidle' : la connexion temps réel Firebase
+    // garde le réseau actif, donc networkidle ne se stabilise jamais.
+    await page.goto('/?admin=true', { waitUntil: 'load' })
+    await page.waitForTimeout(1500)
     expect(errors.length).toBe(0)
   })
 })

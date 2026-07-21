@@ -1,12 +1,12 @@
 <template>
   <footer
     class="site-footer"
-    :class="{ animate: isAnimated }"
+    :class="[{ animate: isAnimated }, visibilityClasses]"
     :style="footerBgStyle"
   >
     <div class="footer-inner" :ref="titleAnim.setRef">
       <div class="footer-left">
-        <h2 class="footer-title">
+        <h2 class="footer-title" data-field-key="title" :style="fieldFontStyle(fieldFonts, 'title', fieldFontSizes)">
           <span
             v-for="(char, i) in titleChars"
             :key="i"
@@ -21,9 +21,9 @@
 
       <div class="footer-right">
         <div class="footer-info" :style="infoStyle">
-          <a :href="'mailto:' + email" class="footer-email" :style="emailStyle">{{ email }}</a>
-          <p v-html="formattedSchedule"></p>
-          <p v-html="formattedAddress"></p>
+          <a :href="'mailto:' + email" class="footer-email" data-field-key="email" :style="{ ...emailStyle, ...fieldFontStyle(fieldFonts, 'email', fieldFontSizes) }">{{ email }}</a>
+          <p data-field-key="schedule" :style="fieldFontStyle(fieldFonts, 'schedule', fieldFontSizes)" v-html="formattedSchedule"></p>
+          <p data-field-key="address" :style="fieldFontStyle(fieldFonts, 'address', fieldFontSizes)" v-html="formattedAddress"></p>
         </div>
       </div>
     </div>
@@ -33,6 +33,7 @@
 <script setup>
 import { computed, inject, ref } from 'vue'
 import { useAnimatedElements } from '~/composables/useAnimatedElements'
+import { fieldFontStyle } from '~/utils/fonts.js'
 
 const props = defineProps({
   title: { type: String, default: "Il y a une place pour toi !" },
@@ -50,12 +51,21 @@ const props = defineProps({
   titleBoldStart: { type: Number, default: 11 },
   titleBoldEnd: { type: Number, default: 15 },
   blockId: { type: String, default: '' },
+  visibility: { type: Object, default: () => ({}) },
+  fieldFonts: { type: Object, default: () => ({}) },
+  fieldFontSizes: { type: Object, default: () => ({}) },
 })
 
 const { addElement } = useAnimatedElements(props.blockId)
 const titleAnim = addElement('title', { animation: 'fadeIn', delay: 0 })
 const isEditor = inject('isEditor', ref(false))
 const isAnimated = computed(() => titleAnim.triggered.value || isEditor.value)
+
+const visibilityClasses = computed(() => ({
+  'hide-mobile': props.visibility?.mobile === false,
+  'hide-tablet': props.visibility?.tablet === false,
+  'hide-desktop': props.visibility?.desktop === false,
+}))
 
 const titleChars = computed(() => props.title.split(''))
 
@@ -129,7 +139,7 @@ function getShutterStyle(i) {
 }
 
 .footer-title {
-  font-family: 'Nunito', sans-serif;
+  font-family: var(--font-body);
   font-size: var(--bf-title-font-size, 24px);
   font-weight: 800;
   color: var(--bf-text-color, #ffffff);
@@ -194,7 +204,7 @@ function getShutterStyle(i) {
   gap: 6px;
   font-weight: 800;
   text-align: left;
-  font-family: 'Nunito', sans-serif;
+  font-family: var(--font-body);
   font-size: 19px;
   -webkit-font-smoothing: antialiased;
 }
@@ -225,7 +235,7 @@ function getShutterStyle(i) {
 
 .footer-info :deep(strong) {
   font-weight: 700;
-  color: #064886;
+  color: var(--bf-text-color, white);
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -9,6 +9,10 @@ export default defineNuxtPlugin((nuxtApp) => {
     email: 'ci-admin@tests.fr',
     displayName: 'Admin CI',
     photoURL: 'https://robohash.org/fakeci.png?set=set4',
+    // Un vrai User Firebase expose toujours getIdToken() ; sans ça, tout
+    // appel client qui fait `if (!token) throw 'Non authentifié'` échoue
+    // silencieusement en mode mock (aucun test n'exerçait ce chemin).
+    getIdToken: async () => 'mock-test-token',
   }
 
   // Allow tests to override mock auth result via window.__MOCK_AUTH_RESULT.

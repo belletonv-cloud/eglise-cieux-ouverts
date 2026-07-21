@@ -3,7 +3,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import { getDefaultBilletteriePage } from '~/utils/blockTypes.js'
 
 useSeoMeta({
@@ -12,6 +12,20 @@ useSeoMeta({
 })
 
 const { isAdminMode, enterAdmin, localBlocks, localBlocksPage } = useAdmin()
+const router = useRouter()
+
+// Masquer la page si aucun événement à venir n'est publié (option admin),
+// sauf en mode admin où elle reste accessible pour la gestion du contenu.
+const { data: settingsData } = await useFetch('/api/settings')
+const hideIfEmpty = computed(() => settingsData.value?.hideEventsPageIfEmpty === true)
+const { hasEvenements, loading: eventsLoading } = useChurchEvents()
+
+watch([isAdminMode, hideIfEmpty, hasEvenements, eventsLoading], () => {
+  if (isAdminMode.value || eventsLoading.value) return
+  if (hideIfEmpty.value && !hasEvenements.value) {
+    router.push('/')
+  }
+}, { immediate: true })
 
 // On utilise useFetch au lieu de useLazyFetch pour que les données
 // soient sérialisées dans le payload Nuxt et disponibles côté client

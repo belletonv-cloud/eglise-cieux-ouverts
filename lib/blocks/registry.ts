@@ -120,6 +120,7 @@ class BlockRegistry {
         defaults: def.defaults,
         schema: def.schema as FieldSchema[],
         component: getBlockComponentName(type),
+        templates: def.templates,
       }
       const schemaErrors = validateBlockSchema(schema)
       if (schemaErrors.length > 0) {

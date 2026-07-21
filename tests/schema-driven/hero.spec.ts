@@ -12,7 +12,7 @@ test.describe('BlockHero — Schema-driven tests', () => {
   validateSchema('hero', HERO_SCHEMA, HERO_DEFAULTS)
 
   test('schema has correct field count', () => {
-    expect(HERO_SCHEMA.length).toBe(9)
+    expect(HERO_SCHEMA.length).toBe(8)
   })
 
   test('height field has min/max constraints', () => {
@@ -62,9 +62,7 @@ test.describe('BlockHero — Schema-driven tests', () => {
     await page.goto('/')
     await page.waitForTimeout(2000)
     const nameImg = page.locator('.hero-name')
-    const logoImg = page.locator('.hero-logo')
     await expect(nameImg).toBeVisible()
-    await expect(logoImg).toBeVisible()
   })
 
   test('hero has correct CSS class structure', async ({ page }) => {

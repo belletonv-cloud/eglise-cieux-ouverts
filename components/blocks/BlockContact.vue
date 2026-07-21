@@ -7,10 +7,10 @@
     <div v-if="isClassicPageContact" class="contact-page-shell">
       <section class="contact-page-header">
         <div class="contact-page-header-inner">
-          <h2 class="contact-page-title">{{ title }}</h2>
+          <h2 class="contact-page-title" data-field-key="title" :style="fieldFontStyle(fieldFonts, 'title', fieldFontSizes)">{{ title }}</h2>
           <div v-if="addressTitle || addressLine" class="contact-page-address">
-            <p v-if="addressTitle">{{ addressTitle }}</p>
-            <p v-if="addressLine">{{ addressLine }}</p>
+            <p v-if="addressTitle" data-field-key="addressTitle" :style="fieldFontStyle(fieldFonts, 'addressTitle', fieldFontSizes)">{{ addressTitle }}</p>
+            <p v-if="addressLine" data-field-key="addressLine" :style="fieldFontStyle(fieldFonts, 'addressLine', fieldFontSizes)">{{ addressLine }}</p>
           </div>
         </div>
       </section>
@@ -82,20 +82,15 @@
     </div>
 
     <div v-else class="contact-inner">
-      <h2 class="contact-title">{{ title }}</h2>
+      <h2 class="contact-title" data-field-key="title" :style="fieldFontStyle(fieldFonts, 'title', fieldFontSizes)">{{ title }}</h2>
 
       <div class="contact-wrap">
         <div class="contact-left">
-          <img v-if="image" :src="image" alt="" class="contact-phone" />
-          <div v-else class="contact-phone-placeholder"></div>
+          <img v-if="image" :src="image" alt="" class="contact-phone" data-field-key="image" loading="lazy" />
+          <div v-else-if="!imagePromoted" class="contact-phone-placeholder"></div>
 
           <div class="contact-socials" v-if="showSocials">
-            <a href="https://instagram.com/eglise_cieux_ouverts" target="_blank" rel="noopener" class="contact-social-icon" aria-label="Instagram Cieux Ouverts">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
-            </a>
-            <a href="https://facebook.com/eglisecieuxouverts" target="_blank" rel="noopener" class="contact-social-icon" aria-label="Facebook Cieux Ouverts">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.971h-1.513c-1.491 0-1.956.93-1.956 1.874v2.25h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/></svg>
-            </a>
+            <SocialLinks :links="socialLinks" :size="22" />
           </div>
         </div>
 
@@ -132,7 +127,11 @@
 </template>
 
 <script setup>
-import { ref, computed, inject } from 'vue'
+import { ref, computed, inject, onMounted } from 'vue'
+import { fieldFontStyle } from '~/utils/fonts.js'
+
+const { socialLinks, loadSiteSettings } = useSiteSettings()
+onMounted(() => loadSiteSettings())
 
 const {
   backgroundGradient = '',
@@ -145,6 +144,9 @@ const {
   showSocials = false,
   showQuestions = false,
   visibility = {},
+  fieldFonts = {},
+  fieldFontSizes = {},
+  promotedFields = [],
 } = defineProps({
   backgroundGradient: { type: String, default: '' },
   textColor: { type: String, default: '#fff' },
@@ -156,7 +158,15 @@ const {
   showSocials: { type: Boolean, default: false },
   showQuestions: { type: Boolean, default: false },
   visibility: { type: Object, default: () => ({}) },
+  fieldFonts: { type: Object, default: () => ({}) },
+  fieldFontSizes: { type: Object, default: () => ({}) },
+  promotedFields: { type: Array, default: () => [] },
 })
+// Un champ promu ("Rendre déplaçable") vide sa valeur fixe pour exister
+// ailleurs en élément libre — sans ce garde-fou, le placeholder "image
+// manquante" resterait affiché à son ancien emplacement alors que l'image
+// existe toujours (juste déplacée), donnant l'impression d'un bug visuel.
+const imagePromoted = computed(() => promotedFields.includes('image'))
 
 const isEditor = inject('isEditor', false)
 
@@ -237,7 +247,10 @@ async function submitForm() {
     form.value = { prenom: '', nom: '', ville: '', email: '', message: '', newsletter: false, website: '' }
   } catch (e) {
     console.error(e)
-    errorMessage.value = e?.data?.statusMessage || 'L\'envoi a echoue. Verifie la connexion ou reessaie dans un instant.'
+    // createError({ message }) côté serveur (server/api/contact.post.ts) place le
+    // texte dans data.message — data.statusMessage ne contient que la formule HTTP
+    // générique associée au code (ex. "Server Error" pour 503), pas le vrai message.
+    errorMessage.value = e?.data?.message || 'L\'envoi a echoue. Verifie la connexion ou reessaie dans un instant.'
   } finally { sending.value = false }
 }
 </script>
@@ -271,7 +284,7 @@ async function submitForm() {
 .contact-page-title {
   margin: 0;
   flex-shrink: 0;
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--font-heading);
   font-style: italic;
   font-size: 2.8em;
   font-weight: 700;
@@ -286,7 +299,7 @@ async function submitForm() {
   color: #064886;
   font-style: italic;
   line-height: 1.7;
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--font-heading);
 }
 .contact-page-main {
   background: white;
@@ -386,7 +399,7 @@ async function submitForm() {
 
 /* ── Title ── */
 .contact-title {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--font-heading);
   font-size: clamp(2.5em, 5vw, 4em);
   text-align: center;
   margin-bottom: 60px;
@@ -414,7 +427,7 @@ async function submitForm() {
   animation-timeline: --contact;
   animation-range: entry 25% entry 75%;
 }
-.contact-social-icon {
+.contact-socials :deep(.social-link) {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -425,7 +438,7 @@ async function submitForm() {
   color: white;
   transition: background 0.2s, transform 0.2s;
 }
-.contact-social-icon:hover { background: rgba(255,255,255,0.3); transform: scale(1.1); }
+.contact-socials :deep(.social-link:hover) { background: rgba(255,255,255,0.3); transform: scale(1.1); }
 
 /* ── Right col ── */
 .contact-right {

@@ -1,109 +1,10 @@
 <template>
-    <BlockHero
-        v-if="btype === 'hero'"
+    <component
+        v-if="resolvedComponent"
+        :is="resolvedComponent"
         v-bind="sprops"
         :block-id="bid"
         :visibility="bvisibility"
-        :is-triggered="isTriggered"
-        :data-admin="isAdmin || undefined"
-    />
-    <BlockBienvenue
-        v-else-if="btype === 'bienvenue'"
-        v-bind="sprops"
-        :block-id="bid"
-        :visibility="bvisibility"
-        :is-triggered="isTriggered"
-        :data-admin="isAdmin || undefined"
-    />
-    <BlockRejoins
-        v-else-if="btype === 'rejoins'"
-        v-bind="sprops"
-        :block-id="bid"
-        :visibility="bvisibility"
-        :is-triggered="isTriggered"
-        :data-admin="isAdmin || undefined"
-    />
-    <BlockAspirations
-        v-else-if="btype === 'aspirations'"
-        v-bind="sprops"
-        :block-id="bid"
-        :is-triggered="isTriggered"
-        :data-admin="isAdmin || undefined"
-    />
-    <BlockVision
-        v-else-if="btype === 'vision'"
-        v-bind="sprops"
-        :block-id="bid"
-        :is-triggered="isTriggered"
-        :data-admin="isAdmin || undefined"
-    />
-    <BlockActivities
-        v-else-if="btype === 'activities'"
-        v-bind="sprops"
-        :block-id="bid"
-        :is-triggered="isTriggered"
-        :data-admin="isAdmin || undefined"
-    />
-    <BlockNousRejoindre
-        v-else-if="btype === 'nousRejoindre'"
-        v-bind="sprops"
-        :block-id="bid"
-        :is-triggered="isTriggered"
-        :data-admin="isAdmin || undefined"
-    />
-    <BlockContact
-        v-else-if="btype === 'contact'"
-        v-bind="sprops"
-        :block-id="bid"
-        :is-triggered="isTriggered"
-        :data-admin="isAdmin || undefined"
-    />
-    <BlockRichText
-        v-else-if="btype === 'richText'"
-        v-bind="sprops"
-        :block-id="bid"
-        :is-triggered="isTriggered"
-        :data-admin="isAdmin || undefined"
-    />
-    <BlockGallery
-        v-else-if="btype === 'gallery'"
-        v-bind="sprops"
-        :block-id="bid"
-        :is-triggered="isTriggered"
-        :data-admin="isAdmin || undefined"
-    />
-    <BlockSpacer
-        v-else-if="btype === 'spacer'"
-        v-bind="sprops"
-        :block-id="bid"
-        :is-triggered="isTriggered"
-        :data-admin="isAdmin || undefined"
-    />
-    <BlockFullWidthImage
-        v-else-if="btype === 'fullWidthImage'"
-        v-bind="sprops"
-        :block-id="bid"
-        :is-triggered="isTriggered"
-        :data-admin="isAdmin || undefined"
-    />
-    <BlockTextImage
-        v-else-if="btype === 'textImage'"
-        v-bind="sprops"
-        :block-id="bid"
-        :is-triggered="isTriggered"
-        :data-admin="isAdmin || undefined"
-    />
-    <BlockYoutube
-        v-else-if="btype === 'youtube'"
-        v-bind="sprops"
-        :block-id="bid"
-        :is-triggered="isTriggered"
-        :data-admin="isAdmin || undefined"
-    />
-    <BlockFooter
-        v-else-if="btype === 'footer'"
-        v-bind="sprops"
-        :block-id="bid"
         :is-triggered="isTriggered"
         :data-admin="isAdmin || undefined"
     />
@@ -114,21 +15,27 @@
 
 <script setup>
 import { computed } from "vue";
-import BlockHero from "~/components/blocks/BlockHero.vue";
-import BlockBienvenue from "~/components/blocks/BlockBienvenue.vue";
-import BlockRejoins from "~/components/blocks/BlockRejoins.vue";
-import BlockAspirations from "~/components/blocks/BlockAspirations.vue";
-import BlockVision from "~/components/blocks/BlockVision.vue";
-import BlockActivities from "~/components/blocks/BlockActivities.vue";
-import BlockNousRejoindre from "~/components/blocks/BlockNousRejoindre.vue";
-import BlockContact from "~/components/blocks/BlockContact.vue";
-import BlockRichText from "~/components/blocks/BlockRichText.vue";
-import BlockGallery from "~/components/blocks/BlockGallery.vue";
-import BlockSpacer from "~/components/blocks/BlockSpacer.vue";
-import BlockFullWidthImage from "~/components/blocks/BlockFullWidthImage.vue";
-import BlockTextImage from "~/components/blocks/BlockTextImage.vue";
-import BlockYoutube from "~/components/blocks/BlockYoutube.vue";
-import BlockFooter from "~/components/blocks/BlockFooter.vue";
+
+// Découvre automatiquement tous les components/blocks/Block*.vue au build
+// (eager: true = import statique classique, pas de lazy-loading — même
+// comportement qu'avant, juste plus besoin de lister chaque bloc à la main
+// ici). Ajouter un type de bloc ne demande plus que : entrée BLOCK_TYPES
+// (utils/blockTypes.js) + fichier components/blocks/Block<Type>.vue —
+// avant il fallait aussi se souvenir d'ajouter une ligne d'import ET un
+// v-else-if ici, un oubli rendait le bloc invisible sans erreur explicite.
+const blockModules = import.meta.glob("~/components/blocks/Block*.vue", { eager: true });
+
+// BlockTextImage.vue -> textImage (inverse de pascalCase() dans
+// lib/blocks/component-registry.ts ; aucun type de BLOCK_TYPES ne contient
+// de tiret, la première lettre suffit à inverser la transformation).
+function typeFromFileName(path) {
+    const fileName = path.split("/").pop().replace(/^Block/, "").replace(/\.vue$/, "");
+    return fileName.charAt(0).toLowerCase() + fileName.slice(1);
+}
+
+const componentsByType = Object.fromEntries(
+    Object.entries(blockModules).map(([path, mod]) => [typeFromFileName(path), mod.default]),
+);
 
 const props = defineProps({
     block: { type: Object, required: true },
@@ -139,6 +46,7 @@ const props = defineProps({
 const btype = computed(() => props.block?.type);
 const bid = computed(() => props.block?.id);
 const bvisibility = computed(() => props.block?.visibility || {});
+const resolvedComponent = computed(() => componentsByType[btype.value] || null);
 
 function clean(value, path = "") {
     if (value === null || value === undefined) return value;

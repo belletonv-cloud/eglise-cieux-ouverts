@@ -48,41 +48,107 @@ export function useChurchEvents(options = {}) {
     }
   }
 
+  function getNthWeekdayOfMonth(year, month, weekday, ordinal) {
+    if (ordinal === -1) {
+      const last = new Date(year, month + 1, 0)
+      const diff = (last.getDay() - weekday + 7) % 7
+      return new Date(year, month, last.getDate() - diff)
+    }
+    const first = new Date(year, month, 1)
+    const diff  = (weekday - first.getDay() + 7) % 7
+    const date  = 1 + diff + (ordinal - 1) * 7
+    if (date > new Date(year, month + 1, 0).getDate()) return null
+    return new Date(year, month, date)
+  }
+
   function expandRecurring(ev, now, maxCount) {
+    const rp    = ev.repeat_period
     const start = new Date(ev.start_date + 'T00:00:00')
     const results = []
-    let d = new Date(start)
 
-    // Si la date de début est dans le passé, avancer jusqu'au futur
-    if (d < now) {
-      if (ev.repeat_period === 'week') {
-        while (d < now) d.setDate(d.getDate() + 7)
-      } else if (ev.repeat_period === 'month') {
-        while (d < now) d.setMonth(d.getMonth() + 1)
+    // Multi-rule: '|'-separated, expand each and merge
+    if (rp.includes('|')) {
+      const allResults = []
+      for (const ruleStr of rp.split('|').filter(Boolean)) {
+        const tempEv = { ...ev, repeat_period: ruleStr }
+        allResults.push(...expandRecurring(tempEv, now, maxCount))
       }
+      allResults.sort((a, b) => a.date - b.date)
+      const seen = new Set()
+      const unique = []
+      for (const r of allResults) {
+        const key = r.date.toISOString().slice(0, 10)
+        if (!seen.has(key)) { seen.add(key); unique.push(r) }
+      }
+      return unique.slice(0, maxCount)
     }
 
-    let count = 0
-    while (count < maxCount) {
-      const dateStr = d.toISOString().slice(0, 10)
-
-      // Vérifier les exceptions (annulé ou déplacé) — maintenant chargées depuis l'API
-      const cancelled = isException(ev, dateStr, 'cancelled')
-      const moved = getException(ev, dateStr, 'moved')
-
-      if (!cancelled) {
-        const targetDate = moved ? new Date(moved.new_date + 'T00:00:00') : new Date(d)
-        results.push(mapEvent(ev, targetDate))
-        count++
+    if (rp === 'month') {
+      let d = new Date(start)
+      while (d < now) d.setMonth(d.getMonth() + 1)
+      let count = 0, safety = 0
+      while (count < maxCount && safety++ < 500) {
+        const dateStr = d.toISOString().slice(0, 10)
+        if (!isException(ev, dateStr, 'cancelled')) {
+          const moved = getException(ev, dateStr, 'moved')
+          results.push(mapEvent(ev, moved ? new Date(moved.new_date + 'T00:00:00') : new Date(d)))
+          count++
+        }
+        d.setMonth(d.getMonth() + 1)
       }
 
-      // Avancer à la prochaine occurrence
-      if (ev.repeat_period === 'week') {
-        d.setDate(d.getDate() + 7)
-      } else if (ev.repeat_period === 'month') {
-        d.setMonth(d.getMonth() + 1)
-      } else {
-        break
+    } else if (rp === 'week' || rp === 'biweek' || rp.startsWith('weekly:') || rp.startsWith('biweekly:')) {
+      let days, interval
+      if      (rp === 'week')              { days = [start.getDay()]; interval = 1 }
+      else if (rp === 'biweek')            { days = [start.getDay()]; interval = 2 }
+      else if (rp.startsWith('weekly:'))   { days = rp.split(':')[1].split(',').map(Number); interval = 1 }
+      else                                 { days = rp.split(':')[1].split(',').map(Number); interval = 2 }
+      days.sort((a, b) => a - b)
+
+      // Lundi de la semaine de start_date
+      const dow = start.getDay()
+      const startMon = new Date(start)
+      startMon.setDate(start.getDate() - (dow === 0 ? 6 : dow - 1))
+      let curMon = new Date(startMon)
+      let count = 0, safety = 0
+      while (count < maxCount && safety++ < 500) {
+        for (const day of days) {
+          const offset = day === 0 ? 6 : day - 1
+          const date = new Date(curMon)
+          date.setDate(curMon.getDate() + offset)
+          if (date >= now && date >= start) {
+            const dateStr = date.toISOString().slice(0, 10)
+            if (!isException(ev, dateStr, 'cancelled')) {
+              const moved = getException(ev, dateStr, 'moved')
+              results.push(mapEvent(ev, moved ? new Date(moved.new_date + 'T00:00:00') : new Date(date)))
+              count++
+            }
+          }
+        }
+        curMon.setDate(curMon.getDate() + 7 * interval)
+      }
+      results.sort((a, b) => a.date - b.date)
+      results.splice(maxCount)
+
+    } else if (rp.startsWith('monthly_weekday:')) {
+      const p = rp.split(':')
+      const ordinal = parseInt(p[1]) || 1
+      const weekday = parseInt(p[2]) ?? 1
+      // Chercher à partir du mois précédent pour ne pas rater le mois courant
+      let year = now.getFullYear(), month = now.getMonth()
+      if (month === 0) { month = 11; year-- } else { month-- }
+      let count = 0, safety = 0
+      while (count < maxCount && safety++ < 200) {
+        const occ = getNthWeekdayOfMonth(year, month, weekday, ordinal)
+        if (occ && occ >= now) {
+          const dateStr = occ.toISOString().slice(0, 10)
+          if (!isException(ev, dateStr, 'cancelled')) {
+            const moved = getException(ev, dateStr, 'moved')
+            results.push(mapEvent(ev, moved ? new Date(moved.new_date + 'T00:00:00') : new Date(occ)))
+            count++
+          }
+        }
+        if (++month > 11) { month = 0; year++ }
       }
     }
 
@@ -106,7 +172,10 @@ export function useChurchEvents(options = {}) {
       date,
       heure: ev.start_time || null,
       lieu: ev.location || null,
-      description: ev.description || null,
+      // Certaines descriptions en base contiennent des "\n" littéraux (texte
+      // backslash+n, pas de vrai retour à la ligne) — normalisé ici une fois
+      // pour tous les consommateurs (agenda, etc).
+      description: ev.description ? ev.description.replace(/\\n/g, '\n') : null,
       source: ev.source || null,
       image_url: ev.image_url || null,
       images: ev.images ? ev.images : (ev.image_url ? [ev.image_url] : []),

@@ -6,23 +6,38 @@
   >
     <div class="ti-inner">
       <div class="ti-text">
-        <h2 class="ti-title" :style="{ color: textColor }">{{ title }}</h2>
-        <p v-if="subtitle" class="ti-subtitle">{{ subtitle }}</p>
-        <div class="ti-body" v-html="sanitizedBody"></div>
-        <a v-if="ctaText" :href="ctaLink" class="ti-cta">{{ ctaText }}</a>
+        <h2 class="ti-title" data-field-key="title" :style="{ color: textColor, ...fieldFontStyle(fieldFonts, 'title', fieldFontSizes) }">{{ title }}</h2>
+        <p v-if="subtitle" class="ti-subtitle" data-field-key="subtitle" :style="fieldFontStyle(fieldFonts, 'subtitle', fieldFontSizes)">{{ subtitle }}</p>
+        <div class="ti-body" data-field-key="body" :style="fieldFontStyle(fieldFonts, 'body', fieldFontSizes)" v-html="sanitizedBody"></div>
+        <div v-if="ctaText || buttons.length" class="ti-buttons">
+          <a v-if="ctaText" :href="ctaLink" class="ti-cta" data-field-key="ctaText" :style="fieldFontStyle(fieldFonts, 'ctaText', fieldFontSizes)">{{ ctaText }}</a>
+          <template v-for="(btn, i) in buttons" :key="i">
+            <a v-if="btn.text" :href="btn.link" class="ti-cta ti-cta-extra">{{ btn.text }}</a>
+          </template>
+        </div>
       </div>
       <div class="ti-image">
         <div v-if="visualStyle === 'messagesLaptop'" class="ti-laptop-shell">
           <div class="ti-laptop-screen-frame">
             <div class="ti-laptop-content">
-              <img v-if="image" :src="image" :alt="title" class="ti-img" />
-              <div v-else class="ti-img-placeholder">🖼️</div>
+              <img v-if="image" :src="image" :alt="title" class="ti-img" data-field-key="image" loading="lazy" />
+              <div v-else-if="!imagePromoted" class="ti-img-placeholder">🖼️</div>
             </div>
           </div>
           <div class="ti-laptop-base"></div>
         </div>
-        <img v-else-if="image" :src="image" :alt="title" class="ti-img" />
-        <div v-else class="ti-img-placeholder">🖼️</div>
+        <img v-else-if="image" :src="image" :alt="title" class="ti-img" data-field-key="image" loading="lazy" />
+        <div v-else-if="!imagePromoted" class="ti-img-placeholder">🖼️</div>
+        <div v-if="images.length" class="ti-gallery-extra">
+          <img
+            v-for="(src, i) in images"
+            :key="i"
+            :src="src"
+            :alt="`${title} — image ${i + 2}`"
+            class="ti-gallery-thumb"
+            loading="lazy"
+          />
+        </div>
       </div>
     </div>
   </section>
@@ -30,23 +45,34 @@
 
 <script setup>
 import { sanitizeHtml } from '~/utils/sanitize.js'
+import { fieldFontStyle } from '~/utils/fonts.js'
 const props = defineProps({
   blockId: { type: String, default: '' },
   title: { type: String, default: '' },
   subtitle: { type: String, default: '' },
   body: { type: String, default: '' },
   image: { type: String, default: '' },
+  images: { type: Array, default: () => [] },
   reverse: { type: Boolean, default: false },
   visualStyle: { type: String, default: 'default' },
   ctaText: { type: String, default: '' },
   ctaLink: { type: String, default: '' },
+  buttons: { type: Array, default: () => [] },
   backgroundColor: { type: String, default: '#ffffff' },
   textColor: { type: String, default: '#1a1a2e' },
   animation: { type: String, default: 'slideLeft' },
   visibility: { type: Object, default: () => ({}) },
   isTriggered: { type: Boolean, default: false },
   previewDevice: { type: String, default: 'desktop' },
+  fieldFonts: { type: Object, default: () => ({}) },
+  fieldFontSizes: { type: Object, default: () => ({}) },
+  promotedFields: { type: Array, default: () => [] },
 })
+// Un champ promu ("Rendre déplaçable") vide sa valeur fixe pour exister
+// ailleurs en élément libre — sans ce garde-fou, le placeholder "image
+// manquante" resterait affiché à son ancien emplacement alors que l'image
+// existe toujours (juste déplacée), donnant l'impression d'un bug visuel.
+const imagePromoted = computed(() => props.promotedFields.includes('image'))
 const visibilityClasses = computed(() => ({
   'hide-mobile': props.visibility.mobile === false,
   'hide-tablet': props.visibility.tablet === false,
@@ -78,9 +104,10 @@ const sanitizedBody = computed(() => props.body ? sanitizeHtml(props.body) : '')
   margin: -4px 0 22px;
   font-size: 1.4em;
   font-weight: 700;
-  color: #333;
+  opacity: 0.85;
 }
 .ti-body { font-size: 1.05em; line-height: 1.75; opacity: 0.9; margin-bottom: 28px; }
+.ti-buttons { display: flex; flex-wrap: wrap; gap: 12px; }
 .ti-cta {
   display: inline-block;
   padding: 12px 28px;
@@ -92,8 +119,26 @@ const sanitizedBody = computed(() => props.body ? sanitizeHtml(props.body) : '')
   transition: transform 0.2s, box-shadow 0.2s;
 }
 .ti-cta:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.15); }
+.ti-cta-extra {
+  background: transparent;
+  color: inherit;
+  border: 2px solid currentColor;
+}
 .ti-img { width: 100%; border-radius: 16px; box-shadow: 0 8px 40px rgba(0,0,0,0.15); }
 .ti-img-placeholder { width: 100%; aspect-ratio: 4/3; border-radius: 16px; background: rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; font-size: 3em; }
+.ti-gallery-extra {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+.ti-gallery-thumb {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+}
 
 .style-messagesSeamless {
   padding: 30px 24px;
@@ -106,7 +151,7 @@ const sanitizedBody = computed(() => props.body ? sanitizeHtml(props.body) : '')
 }
 
 .style-messagesSeamless .ti-title {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--font-heading);
   font-size: 48px;
   font-style: italic;
   margin-bottom: 10px;
@@ -115,13 +160,12 @@ const sanitizedBody = computed(() => props.body ? sanitizeHtml(props.body) : '')
 .style-messagesSeamless .ti-body {
   font-size: 18px;
   line-height: 1.8;
-  color: #555;
+  opacity: 0.85;
 }
 
 .style-messagesSeamless .ti-subtitle {
   font-family: Helvetica, Arial, sans-serif;
   font-size: 24px;
-  color: #333;
   margin-bottom: 30px;
 }
 

@@ -45,6 +45,12 @@ export const BLOCK_MAP: Record<string, () => Promise<any>> = {
   fullWidthImage: () => import('../../components/blocks/BlockFullWidthImage.vue'),
   vision: () => import('../../components/blocks/BlockVision.vue'),
   youtube: () => import('../../components/blocks/BlockYoutube.vue'),
+  equipe: () => import('../../components/blocks/BlockEquipe.vue'),
+  louange: () => import('../../components/blocks/BlockLouange.vue'),
+  faq: () => import('../../components/blocks/BlockFaq.vue'),
+  stats: () => import('../../components/blocks/BlockStats.vue'),
+  iconGrid: () => import('../../components/blocks/BlockIconGrid.vue'),
+  quote: () => import('../../components/blocks/BlockQuote.vue'),
   footer: () => import('../../components/blocks/BlockFooter.vue'),
 }
 

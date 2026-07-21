@@ -15,10 +15,19 @@ export default defineNuxtPlugin((nuxtApp) => {
       console.warn('[Firebase] Missing FIREBASE_API_KEY — skipping Firebase initialization')
     }
 
+    // Create a wrapper that mimics the Firebase Auth API (with onAuthStateChanged as method)
+    const mockAuthWrapper = {
+      currentUser: null,
+      onAuthStateChanged: (callback) => {
+        callback(null)
+        return () => {} // unsubscribe
+      }
+    }
+
     return {
       provide: {
         db: null,
-        ...(nuxtApp.$auth ? {} : { auth: null }),
+        ...(nuxtApp.$auth ? {} : { auth: mockAuthWrapper }),
       },
     }
   }
@@ -37,6 +46,13 @@ export default defineNuxtPlugin((nuxtApp) => {
     const db = getFirestore(app)
     const auth = getAuth(app)
 
+    // auth.onAuthStateChanged existe déjà nativement sur le SDK Firebase (méthode
+    // du prototype, compat v8) — ne JAMAIS réassigner cette propriété : la
+    // fonction libre onAuthStateChanged(auth, callback) délègue en interne à
+    // auth.onAuthStateChanged(callback), donc l'écraser crée une récursion
+    // infinie (RangeError: Maximum call stack size exceeded, déjà constaté en
+    // prod). $auth.onAuthStateChanged fonctionnait déjà sans rien ajouter ici.
+
     return {
       provide: {
         db,
@@ -48,10 +64,17 @@ export default defineNuxtPlugin((nuxtApp) => {
     // app doesn't crash on mount (prevents hydration mismatches).
     // eslint-disable-next-line no-console
     console.error('[Firebase] Initialization failed:', err)
+    const mockAuthWrapper = {
+      currentUser: null,
+      onAuthStateChanged: (callback) => {
+        callback(null)
+        return () => {} // unsubscribe
+      }
+    }
     return {
       provide: {
         db: null,
-        ...(nuxtApp.$auth ? {} : { auth: null }),
+        ...(nuxtApp.$auth ? {} : { auth: mockAuthWrapper }),
       },
     }
   }

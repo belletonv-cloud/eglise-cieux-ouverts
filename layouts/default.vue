@@ -12,15 +12,17 @@
             <ClientOnly>
                 <AdminToolbar
                     v-if="isMounted && isAdminMode && !isPreviewMode && !isInnerPreview"
-                    :page-slug="currentPageSlug"
+                    :page-slug="effectiveSlug"
                     @navigate-preview="onNavigatePreview"
                 />
             </ClientOnly>
 
             <!-- Desktop: inline rendering (blocks editable) -->
-            <div v-if="previewDevice === 'desktop' || isInnerPreview" :class="deviceClass">
+            <div v-if="previewDevice === 'desktop' || isInnerPreview" class="page-shell" :class="deviceClass">
                 <SiteHeader />
-                <slot />
+                <main class="site-main">
+                    <slot />
+                </main>
                 <div
                     class="footer-editable-wrap"
                     :class="{ 'admin-selected': editingFooter }"
@@ -39,8 +41,9 @@
                 v-else-if="isMounted"
                 :src="previewIframeSrc"
                 :width="deviceWidth"
-                class="preview-iframe"
+                class="device-iframe"
                 :class="`preview-${previewDevice}`"
+                :style="{ width: deviceWidth ? deviceWidth + 'px' : '100%' }"
                 title="Aperçu mobile/tablet"
             />
         </div>
@@ -49,7 +52,7 @@
 </template>
 
 <script setup>
-import { provide, ref, onMounted, onUnmounted, computed } from "vue";
+import { provide, ref, onMounted, onUnmounted, computed, watch, nextTick } from "vue";
 import BlockFooter from "~/components/blocks/BlockFooter.vue";
 
 useSeoMeta({
@@ -69,6 +72,8 @@ const {
     footerBlock,
     loadFooterBlock,
     selectFooter,
+    localBlocks,
+    localBlocksPage,
 } = useAdmin();
 
 provide("isAdmin", isAdminMode);
@@ -77,9 +82,10 @@ provide("selectBlock", selectBlock);
 provide("previewDevice", previewDevice);
 provide("isEditor", isAdminMode);
 const isMounted = ref(false);
-const { loadMenuFromFirestore, saveMenuToFirestore } = useMenuEditor();
+const { loadMenuFromFirestore, saveMenuToFirestore, openMenuEditor } = useMenuEditor();
 
 const route = useRoute();
+const router = useRouter();
 const currentPageSlug = computed(() => {
     const path = route.path.replace("/", "");
     return path === "" ? "accueil" : path;
@@ -96,14 +102,84 @@ const deviceClass = computed(() => {
 // Slug used by the iframe (can differ from current page when dropdown changes)
 const previewSlug = ref(currentPageSlug.value)
 
+// In tablet/mobile, the "current page" for the admin dropdown is previewSlug (iframe page),
+// not the route (which never changes during tablet navigation).
+const effectiveSlug = computed(() => {
+    return previewDevice.value !== 'desktop' ? previewSlug.value : currentPageSlug.value
+})
+
+// Demandes développeur ouvertes sur la page courante — alimente le badge
+// 💬 affiché sur chaque bloc concerné (PageRenderer.vue), pour repérer les
+// demandes en attente sans avoir à ouvrir chaque bloc.
+const commentBlockIds = ref([])
+provide("commentBlockIds", commentBlockIds)
+
+async function loadCommentBlockIds(slug) {
+    if (!slug) { commentBlockIds.value = []; return }
+    try {
+        const { $auth } = useNuxtApp()
+        const token = await $auth?.currentUser?.getIdToken()
+        if (!token) return
+        const res = await fetch('/api/comments', { headers: { Authorization: `Bearer ${token}` } })
+        if (!res.ok) return
+        const data = await res.json()
+        commentBlockIds.value = (data.comments || [])
+            .filter((c) => c.pageSlug === slug && !c.resolved)
+            .map((c) => c.blockId)
+    } catch {
+        commentBlockIds.value = []
+    }
+}
+
+watch(effectiveSlug, (slug) => { if (isAdminMode.value) loadCommentBlockIds(slug) })
+watch(isAdminMode, (val) => { if (val) loadCommentBlockIds(effectiveSlug.value) })
+
+// À la sortie du mode admin SANS navigation (Escape, bouton Quitter), le
+// composant de page ne se remonte pas : son useAsyncData garde les blocs
+// fetchés au chargement initial, d'AVANT les éditions — l'admin voyait
+// l'ancien contenu et croyait ses modifications perdues (d'où des hard
+// refresh à répétition). On rafraîchit les données de page à cet instant.
+watch(isAdminMode, (val, old) => {
+    if (old && !val && import.meta.client) {
+        refreshNuxtData().catch((e) => console.warn("refreshNuxtData après sortie admin :", e))
+    }
+})
+
+// Navigation "aller au bloc" depuis la modale Demandes (?focusBlock=<id>) :
+// on attend que les blocs de la page CIBLE soient effectivement chargés
+// (localBlocksPage === effectiveSlug) avant de sélectionner/scroller, pour
+// ne pas agir sur les blocs de la page qu'on vient de quitter.
+watch(
+    () => [route.query.focusBlock, localBlocks.value.length, localBlocksPage.value],
+    async ([focusId, , loadedSlug]) => {
+        if (!focusId || !isAdminMode.value) return
+        if (loadedSlug !== effectiveSlug.value) return
+        const found = localBlocks.value.find((b) => b.id === focusId)
+        if (!found) return
+        selectBlock(focusId)
+        await nextTick()
+        const el = document.querySelector(`[data-block-id="${focusId}"]`)
+        el?.scrollIntoView({ behavior: "smooth", block: "center" })
+        const q = { ...route.query }
+        delete q.focusBlock
+        router.replace({ query: q }).catch(() => {})
+    },
+    { immediate: true }
+)
+
 const previewIframeSrc = computed(() => {
     const path = previewSlug.value === "accueil" ? "/" : `/${previewSlug.value}`
     const params = new URLSearchParams({
-        admin: "true",
         "preview-inner": "1",
         device: previewDevice.value,
     })
     return path + "?" + params.toString()
+})
+
+const deviceWidth = computed(() => {
+    if (previewDevice.value === "mobile") return "375"
+    if (previewDevice.value === "tablet") return "768"
+    return ""
 })
 
 function onNavigatePreview(slug) {
@@ -128,14 +204,49 @@ watch(previewSlug, async (slug) => {
     await syncPreviewBlocks(slug, previewDevice.value)
 })
 
-watch(previewDevice, async (device) => {
+watch(previewDevice, async (device, prevDevice) => {
+    if (device !== 'desktop' && prevDevice === 'desktop') {
+        // Only reset previewSlug when entering non-desktop FROM desktop.
+        // Switching between tablet and mobile keeps the current iframe page.
+        previewSlug.value = currentPageSlug.value
+    }
+    if (device === 'desktop' && prevDevice && prevDevice !== 'desktop' && previewSlug.value !== currentPageSlug.value) {
+        // Retour en desktop après avoir navigué DANS la préview (dropdown ou
+        // lien de l'iframe) : sans ceci, l'admin était silencieusement ramené
+        // à la page d'origine (la route ne change pas pendant la navigation
+        // iframe) — dropdown et page se "désynchronisaient" de sa position
+        // réelle. On reporte la navigation de préview vers la vraie route.
+        const path = previewSlug.value === 'accueil' ? '/' : `/${previewSlug.value}`
+        const q = { ...route.query, admin: 'true' }
+        delete q.device
+        router.push({ path, query: q }).catch(() => {})
+    }
     await syncPreviewBlocks(previewSlug.value, device)
+})
+
+// Keep previewSlug in sync when navigating in desktop mode (router.push).
+watch(currentPageSlug, (slug) => {
+    if (previewDevice.value === 'desktop') previewSlug.value = slug
 })
 
 async function waitForAuth() {
     if (import.meta.server || !import.meta.client) return null;
     const { $auth } = useNuxtApp();
     if (!$auth?.onAuthStateChanged) return null;
+    // Si l'état d'auth est déjà connu de façon synchrone (currentUser déjà
+    // résolu), le retourner directement plutôt que d'enregistrer un nouveau
+    // listener : cette fonction est appelée depuis 4 endroits différents,
+    // chacun créant sa propre souscription onAuthStateChanged. Firebase peut
+    // notifier des souscriptions enregistrées à des instants légèrement
+    // différents avec des snapshots différents pendant la résolution initiale
+    // — ça provoquait un aller-retour /admin ↔ page cible (chaque appel de
+    // waitForAuth() concluant différemment), avec des montages/démontages de
+    // page concurrents qui corrompaient l'état interne de Vue (crash
+    // "Cannot destructure property of null"). currentUser reflète l'état
+    // déjà résolu par n'importe quel appel précédent à onAuthStateChanged.
+    if ($auth.currentUser !== undefined && $auth.currentUser !== null) {
+        return $auth.currentUser;
+    }
     return await new Promise((resolve) => {
         const unsubscribe = $auth.onAuthStateChanged((user) => {
             resolve(user);
@@ -201,12 +312,7 @@ watch(isAdminMode, (val) => {
     }
 });
 
-watch(previewDevice, (device) => {
-    if (!isMounted.value) return;
-    const router = useRouter();
-    const query = { ...route.query, device };
-    router.replace({ query }).catch(() => {});
-});
+
 
 const onEscape = (e) => {
     if (e.key === "Escape" && isAdminMode.value && !isInnerPreview.value) {
@@ -236,16 +342,37 @@ onMounted(() => {
         // Force scroll to top so page content starts at viewport top
         window.scrollTo(0, 0)
         try { history.scrollRestoration = 'manual' } catch (e) {}
+        // Intercept link clicks to forward navigation to parent
+        function onPreviewLinkClick(e) {
+            let el = e.target
+            while (el && el.tagName !== 'A') el = el.parentElement
+            if (!el) return
+            if (el.closest('.burger')) return
+            const href = el.getAttribute('href')
+            if (!href || href.startsWith('#') || href.startsWith('http') || href.startsWith('mailto:')) return
+            e.preventDefault()
+            const path = href.startsWith('/') ? href : '/' + href
+            const slug = path === '/' ? 'accueil' : path.replace(/^\//, '')
+            try { window.parent.postMessage({ type: 'navigate', slug }, '*') } catch (e) { console.warn(e) }
+        }
+        document.addEventListener('click', onPreviewLinkClick, true)
+        onUnmounted(() => document.removeEventListener('click', onPreviewLinkClick, true))
     }
     if (["mobile", "tablet", "desktop"].includes(route.query.device)) {
         previewDevice.value = route.query.device;
     }
     loadFooterBlock();
+    loadMenuFromFirestore();
 
-    // Listen for block clicks from preview iframe
+    // Listen for messages from preview iframe
     function onIframeMessage(e) {
-        if (e.data?.type === "block-click" && isAdminMode.value && !isInnerPreview.value) {
+        if (!isAdminMode.value || isInnerPreview.value) return
+        if (e.data?.type === "block-click") {
             selectBlock(e.data.blockId)
+        } else if (e.data?.type === "navigate") {
+            onNavigatePreview(e.data.slug)
+        } else if (e.data?.type === "open-menu-editor") {
+            openMenuEditor()
         }
     }
     window.addEventListener("message", onIframeMessage)
@@ -278,6 +405,15 @@ function onFooterClick(e) {
 #app-root.admin-mode .site-header {
     top: var(--admin-offset, 48px);
 }
+/* .site-main { flex: 1 } (assets/css/main.css) colle le footer en bas de
+   viewport sur une page courte — comportement "sticky footer" voulu côté
+   site public, mais qui laisse un grand espace vide avant le footer en
+   admin (particulièrement visible sur une page vide/en cours de création).
+   Désactivé uniquement en mode admin : le footer suit directement le
+   dernier bloc, quelle que soit la longueur de la page. */
+#app-root.admin-mode .site-main {
+    flex: none;
+}
 #app-root.is-preview {
     background: #f5f5f5;
 }
@@ -291,6 +427,16 @@ function onFooterClick(e) {
     margin: 0 auto;
     width: 100%;
     transition: max-width 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+}
+.page-shell {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
 }
 .admin-preview-frame.preview-tablet {
     max-width: 768px;
@@ -318,7 +464,7 @@ function onFooterClick(e) {
 #app-root.is-inner-preview .admin-toolbar {
     display: none !important;
 }
-.preview-iframe {
+.device-iframe {
     width: 100%;
     height: calc(100vh - 48px - 12px);
     border: none;

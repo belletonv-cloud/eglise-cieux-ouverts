@@ -1,0 +1,120 @@
+{
+    "blocks": [
+        {
+            "id": "0f3e77f6-4f0d-48c3-b1d1-e8edf8340cab",
+            "type": "vision",
+            "props": {
+                "label": "NOTRE VISION",
+                "quote": "FAIRE D\u00c9COUVRIR DIEU PAR LA PUISSANCE DE L'\u00c9VANGILE AFIN DE VIVRE UN R\u00c9VEIL SPIRITUEL",
+                "ctaText": "",
+                "ctaLink": "",
+                "backgroundGradient": "#E8F0FA",
+                "textColor": "#1A4C8B",
+                "animation": "fadeIn"
+            },
+            "visibility": {
+                "desktop": true,
+                "tablet": true,
+                "mobile": true
+            }
+        },
+        {
+            "id": "0a1ca279-80dd-4bea-b055-c0fdef1224fc",
+            "type": "iconGrid",
+            "props": {
+                "title": "NOS MISSIONS",
+                "items": [
+                    {
+                        "icon": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRkZGRkZGIiBzdHJva2Utd2lkdGg9IjEuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNMTIgMTEuMmMtMS4yLTEuNS0zLjMtMS42LTQuNC0uMy0xLjEgMS4zLS45IDMuMS40IDQuNEwxMiAxOWwzLjktMy43YzEuMy0xLjMgMS41LTMuMS40LTQuNC0xLjEtMS4zLTMuMi0xLjItNC4zLjN6Ii8+PHBhdGggZD0iTTMuNSAxNC41YzAgMi43IDEuNyA0LjcgMy42IDVNMjAuNSAxNC41YzAgMi43LTEuNyA0LjctMy42IDUiLz48L3N2Zz4=",
+                        "title": "Accueillir et vivre l'unit\u00e9",
+                        "description": ""
+                    },
+                    {
+                        "icon": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRkZGRkZGIiBzdHJva2Utd2lkdGg9IjEuOCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNMTIgM3YxOE03LjUgOC41aDkiLz48L3N2Zz4=",
+                        "title": "C\u00e9l\u00e9brer et cultiver la pr\u00e9sence de Dieu",
+                        "description": ""
+                    },
+                    {
+                        "icon": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRkZGRkZGIiBzdHJva2Utd2lkdGg9IjEuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNMTIgNi4zYy0xLTEuMi0yLjctMS4zLTMuNi0uMi0uOSAxLjEtLjcgMi41LjMgMy41TDEyIDEzbDMuMy0zLjRjMS0xIDEuMi0yLjQuMy0zLjUtLjktMS4xLTIuNi0xLTMuNi4yeiIvPjxwYXRoIGQ9Ik01IDE0LjVjMCAzLjMgMy4xIDYgNyA2czctMi43IDctNiIvPjwvc3ZnPg==",
+                        "title": "Accompagner et restaurer les vies",
+                        "description": ""
+                    },
+                    {
+                        "icon": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRkZGRkZGIiBzdHJva2Utd2lkdGg9IjEuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48Y2lyY2xlIGN4PSI3IiBjeT0iOCIgcj0iMi4zIi8+PHBhdGggZD0iTTIuNiAxOGMwLTIuOCAyLTQuOCA0LjQtNC44czQuNCAyIDQuNCA0LjgiLz48Y2lyY2xlIGN4PSIxNi41IiBjeT0iNyIgcj0iMiIvPjxwYXRoIGQ9Ik0yMSAxNS4yYzAtMi4xLTEuNy0zLjctMy45LTMuNy0uNSAwLTEgLjEtMS41LjMiLz48cGF0aCBkPSJNMTUuMyAxNS4yaDQuNGEyIDIgMCAwIDEgMiAydjEuMWwxLjMgMS41LTIuMS0uNGgtNS42YTIgMiAwIDAgMS0yLTJ2LS4yYTIgMiAwIDAgMSAyLTJ6Ii8+PC9zdmc+",
+                        "title": "T\u00e9moigner et former des disciples",
+                        "description": ""
+                    }
+                ],
+                "columns": 2,
+                "backgroundColor": "#FFFFFF",
+                "cardBackgroundColor": "#F2F2F2",
+                "iconBackgroundColor": "#1A4C8B",
+                "titleColor": "#1A4C8B",
+                "textColor": "#4A4A4A",
+                "animation": "fadeIn"
+            },
+            "visibility": {
+                "desktop": true,
+                "tablet": true,
+                "mobile": true
+            }
+        },
+        {
+            "id": "261d80bd-56ba-481e-b7d2-67595cdbe270",
+            "type": "iconGrid",
+            "props": {
+                "title": "NOS VALEURS",
+                "items": [
+                    {
+                        "icon": "",
+                        "title": "ACCUEIL",
+                        "description": ""
+                    },
+                    {
+                        "icon": "",
+                        "title": "UNIT\u00c9",
+                        "description": ""
+                    },
+                    {
+                        "icon": "",
+                        "title": "HONNEUR",
+                        "description": ""
+                    },
+                    {
+                        "icon": "",
+                        "title": "HUMILIT\u00c9",
+                        "description": ""
+                    },
+                    {
+                        "icon": "",
+                        "title": "ADORATION",
+                        "description": ""
+                    },
+                    {
+                        "icon": "",
+                        "title": "EXCELLENCE",
+                        "description": ""
+                    },
+                    {
+                        "icon": "",
+                        "title": "T\u00c9MOIGNAGE",
+                        "description": ""
+                    }
+                ],
+                "columns": 1,
+                "backgroundColor": "#1A4C8B",
+                "cardBackgroundColor": "#1A4C8B",
+                "iconBackgroundColor": "#1A4C8B",
+                "titleColor": "#FFFFFF",
+                "textColor": "#4A4A4A",
+                "animation": "fadeIn"
+            },
+            "visibility": {
+                "desktop": true,
+                "tablet": true,
+                "mobile": true
+            }
+        }
+    ],
+    "exists": true
+}

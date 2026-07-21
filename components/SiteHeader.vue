@@ -5,11 +5,11 @@
         :style="headerStyle"
     >
         <div class="header-inner">
-            <NuxtLink to="/" class="brand">
+            <NuxtLink to="/" class="brand" aria-label="Accueil — Cieux Ouverts">
                 <img src="/logo-nav.png" alt="Cieux Ouverts" class="logo" />
             </NuxtLink>
 
-            <nav class="nav-desktop">
+            <nav class="nav-desktop" aria-label="Navigation principale">
                 <template v-for="item in navItems" :key="item.id">
                     <!-- Render NuxtLink on SSR (isMounted=false) or when not in admin mode.
                When admin mode is active on the client, render plain anchors that
@@ -58,41 +58,11 @@
                         </template>
                     </template>
                 </template>
+                <NuxtLink to="/membre" class="nav-membre-link" active-class="active">
+                    {{ membreLinkLabel }}
+                </NuxtLink>
                 <div class="nav-desktop-socials">
-                    <a
-                        href="https://www.instagram.com/eglise_cieux_ouverts/"
-                        target="_blank"
-                        rel="noopener"
-                        aria-label="Instagram"
-                    >
-                        <svg
-                            width="20"
-                            height="20"
-                            viewBox="0 0 24 24"
-                            fill="currentColor"
-                        >
-                            <path
-                                d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"
-                            />
-                        </svg>
-                    </a>
-                    <a
-                        href="https://www.facebook.com/eglisecieuxouverts"
-                        target="_blank"
-                        rel="noopener"
-                        aria-label="Facebook"
-                    >
-                        <svg
-                            width="20"
-                            height="20"
-                            viewBox="0 0 24 24"
-                            fill="currentColor"
-                        >
-                            <path
-                                d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.971h-1.513c-1.491 0-1.956.93-1.956 1.874v2.25h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"
-                            />
-                        </svg>
-                    </a>
+                    <SocialLinks :links="socialLinks" />
                 </div>
             </nav>
 
@@ -107,72 +77,42 @@
             </button>
         </div>
 
-        <nav id="mobile-navigation" class="nav-mobile" :style="menuBgStyle">
-            <template v-for="item in navItems" :key="item.id">
-                <NuxtLink
-                    v-if="!isMounted || (!adminMode && item.visible !== false)"
-                    :to="item.to"
-                    >{{ item.label }}</NuxtLink
-                >
-                <a
-                    v-if="isMounted && adminMode"
-                    href="#"
-                    class="nav-admin-link"
-                    :class="{ dimmed: !item.visible }"
-                    @click.prevent="onNavClick($event, item)"
-                    >{{ item.label }}</a
-                >
-                <template v-for="sub in item.children || []" :key="sub.id">
+        <nav id="mobile-navigation" class="nav-mobile" aria-label="Navigation mobile" :style="menuBgStyle">
+            <div class="nav-links">
+                <template v-for="item in navItems" :key="item.id">
                     <NuxtLink
-                        v-if="!adminMode && sub.visible !== false"
-                        :to="sub.to"
-                        class="sub-link"
-                        >— {{ sub.label }}</NuxtLink
+                        v-if="!isMounted || (!adminMode && item.visible !== false)"
+                        :to="item.to"
+                        >{{ item.label }}</NuxtLink
                     >
                     <a
-                        v-if="adminMode"
+                        v-if="isMounted && adminMode"
                         href="#"
-                        class="nav-admin-link sub-link"
-                        @click.prevent="onNavClick($event, sub)"
-                        >— {{ sub.label }}</a
+                        class="nav-admin-link"
+                        :class="{ dimmed: !item.visible }"
+                        @click.prevent="onNavClick($event, item)"
+                        >{{ item.label }}</a
                     >
+                    <template v-for="sub in item.children || []" :key="sub.id">
+                        <NuxtLink
+                            v-if="!adminMode && sub.visible !== false"
+                            :to="sub.to"
+                            class="sub-link"
+                            >— {{ sub.label }}</NuxtLink
+                        >
+                        <a
+                            v-if="adminMode"
+                            href="#"
+                            class="nav-admin-link sub-link"
+                            @click.prevent="onNavClick($event, sub)"
+                            >— {{ sub.label }}</a
+                        >
+                    </template>
                 </template>
-            </template>
+                <NuxtLink to="/membre" class="nav-membre-link">{{ membreLinkLabel }}</NuxtLink>
+            </div>
             <div class="nav-mobile-socials">
-                <a
-                    href="https://www.instagram.com/eglise_cieux_ouverts/"
-                    target="_blank"
-                    rel="noopener"
-                    aria-label="Instagram"
-                >
-                    <svg
-                        width="26"
-                        height="26"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                    >
-                        <path
-                            d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"
-                        />
-                    </svg>
-                </a>
-                <a
-                    href="https://www.facebook.com/eglisecieuxouverts"
-                    target="_blank"
-                    rel="noopener"
-                    aria-label="Facebook"
-                >
-                    <svg
-                        width="26"
-                        height="26"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                    >
-                        <path
-                            d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.971h-1.513c-1.491 0-1.956.93-1.956 1.874v2.25h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"
-                        />
-                    </svg>
-                </a>
+                <SocialLinks :links="socialLinks" :size="26" />
             </div>
         </nav>
     </header>
@@ -187,6 +127,12 @@ const menuOpen = ref(false);
 const isScrolled = ref(false);
 const route = useRoute();
 const mobileMq = ref(null);
+
+// Lien espace membre : prénom si connecté, libellé générique sinon
+const { isLoggedIn: memberLoggedIn, firstName: memberFirstName } = useMemberAuth();
+const membreLinkLabel = computed(() =>
+    memberLoggedIn.value && memberFirstName.value ? `👤 ${memberFirstName.value}` : "Espace membre",
+);
 
 function handleEscape(e) {
     if (e.key === "Escape") closeMenu();
@@ -204,8 +150,9 @@ const headerStyle = computed(() => ({
     top: isMounted.value && adminMode.value ? "48px" : "0px",
 }));
 const { hasEvenements } = useChurchEvents();
+const { socialLinks, loadSiteSettings } = useSiteSettings();
 const showBilletterie = computed(
-    () => isAdminRoute.value || hasEvenements.value,
+    () => adminMode.value || isAdminRoute.value || hasEvenements.value,
 );
 
 // Menu editor integration — intercept clicks in admin mode
@@ -217,9 +164,14 @@ const {
     getMenuItems,
     menuBgImage,
 } = useMenuEditor();
-const navItems = computed(() =>
-    adminMode.value ? getMenuItems() : getVisibleItems(),
-);
+// La page Événements est masquée de la nav publique quand aucun événement
+// n'est à venir — évite un lien mort vers une page vide. Toujours visible
+// en mode admin pour permettre la gestion du contenu.
+const navItems = computed(() => {
+    const items = adminMode.value ? getMenuItems() : getVisibleItems();
+    if (showBilletterie.value) return items;
+    return items.filter((item) => item.to !== "/event-list");
+});
 const menuBgStyle = computed(() => {
     const img = menuBgImage.value || "/foule-croix.png";
     return { backgroundImage: `url("${img}")` };
@@ -241,6 +193,10 @@ function onNavClick(e, item) {
 
 function toggleMenu() {
     if (adminMode.value) {
+        if (window !== window.top) {
+            try { window.parent.postMessage({ type: 'open-menu-editor' }, '*') } catch (e) { console.warn(e) }
+            return
+        }
         openMenuEditor();
     } else {
         menuOpen.value = !menuOpen.value;
@@ -292,6 +248,7 @@ onMounted(() => {
     document.addEventListener("keydown", handleEscape);
     mobileMq.value = window.matchMedia("(min-width: 769px)");
     mobileMq.value.addEventListener("change", handleDesktopMediaChange);
+    loadSiteSettings();
 });
 
 onUnmounted(() => {
@@ -379,11 +336,32 @@ onUnmounted(() => {
     opacity: 0.5;
 }
 
+.nav-membre-link {
+    margin-left: auto;
+    padding: 6px 14px;
+    border: 1px solid rgba(6, 72, 134, 0.35);
+    border-radius: 999px;
+    font-size: 0.85em;
+    white-space: nowrap;
+}
+
+.nav-membre-link:hover,
+.nav-membre-link.active {
+    background: #064886;
+    color: #fff;
+}
+
+.nav-mobile .nav-membre-link {
+    margin-left: 0;
+    align-self: flex-start;
+    margin-top: 8px;
+}
+
 .nav-desktop-socials {
     display: flex;
     align-items: center;
     gap: 6px;
-    margin-left: auto;
+    margin-left: 12px;
 }
 
 .nav-desktop-socials a {
@@ -449,8 +427,8 @@ onUnmounted(() => {
     inset: 0;
     background: linear-gradient(
         180deg,
-        rgba(6, 72, 134, 0.92),
-        rgba(6, 72, 134, 0.8)
+        rgba(0, 0, 0, 0.35),
+        rgba(0, 0, 0, 0.55)
     );
     z-index: -1;
 }
@@ -529,7 +507,7 @@ onUnmounted(() => {
         filter: brightness(0) invert(1);
     }
     .header-inner {
-        padding: 10px 12px;
+        padding: 10px 16px;
         gap: 12px;
     }
     .logo {
@@ -544,39 +522,47 @@ onUnmounted(() => {
         left: 0;
         right: 0;
         bottom: 0;
-        background-color: #064886;
         background-size: cover;
         background-position: center center;
         background-repeat: no-repeat;
-        padding: 0 12px 18px;
-        gap: 8px;
+        padding: 0 16px;
         overflow-y: auto;
         border-top: none;
         box-shadow: none;
-        background-image: none;
+        align-items: center;
     }
 
     .nav-mobile::before {
         background: linear-gradient(
             180deg,
-            rgba(6, 72, 134, 1),
-            rgba(4, 48, 90, 1)
+            rgba(0, 0, 0, 0.35),
+            rgba(0, 0, 0, 0.6)
         );
     }
 
     .site-header.menu-open .nav-mobile {
         display: flex;
+        flex-direction: column;
     }
-    .nav-mobile a {
-        padding: 14px 16px;
+    .nav-links {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        padding: 20px 0;
+        margin: auto;
+    }
+    .nav-links a {
+        padding: 8px 0;
         font-size: 1.15em;
         font-weight: 700;
-        background: transparent;
-        border: none;
         color: #ffffff;
         text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
         text-decoration: none;
-        border-radius: 0;
+        text-align: left;
+    }
+    .nav-links a.sub-link,
+    .nav-links .nav-admin-link.sub-link {
+        padding-left: 20px;
     }
     .nav-mobile a:hover {
         text-decoration: underline;
@@ -587,12 +573,17 @@ onUnmounted(() => {
         border-bottom: 2px solid #ffd9dc;
         text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
     }
+    .nav-mobile a.sub-link,
+    .nav-mobile .nav-admin-link.sub-link {
+        padding-left: 24px;
+    }
     .nav-mobile-socials {
-        margin-top: auto;
-        padding: 16px;
+        padding: 20px 0 24px;
         display: flex;
-        gap: 20px;
+        gap: 16px;
         justify-content: center;
+        flex-shrink: 0;
+        align-self: stretch;
     }
     .nav-mobile-socials a {
         color: #064886;

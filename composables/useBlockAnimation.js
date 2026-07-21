@@ -1,4 +1,5 @@
 import { ref, nextTick, provide, watch } from "vue"
+import { ANIM_CONTROLLER_KEY } from "./useAnimatedElements"
 
 const SUPPORTS_SCROLL_TIMELINE =
   typeof CSS !== "undefined" &&
@@ -11,7 +12,7 @@ const INTERNAL_TYPES = ["aspirations", "nousRejoindre", "rejoins", "footer"]
 function shouldSkipTrigger(type, isAdmin) {
   if (!SUPPORTS_SCROLL_TIMELINE) return false
   if (!SCROLL_DRIVEN_TYPES.includes(type)) return false
-  if (isAdmin?.value) return false
+  if (isAdmin?.value) return true
   return true
 }
 
@@ -25,13 +26,38 @@ const wrapperRefs = ref({})
 
 let lastAnimations = {}
 let observer = null
+let elementObserver = null
 let replayHandler = null
 const fallbackObservers = new Map()
 let blocksCache = []
 
-export function useBlockAnimation(isAdmin, isServerAdminRef) {
-  const ANIM_CONTROLLER_KEY = Symbol('anim-controller')
+// Déclenche les animations par ÉLÉMENT au scroll en mode public (le grand
+// IntersectionObserver `observer` ne gère que le niveau bloc/wrapper).
+// Nécessaire pour les navigateurs sans animation-timeline CSS.
+function createElementObserver(elementRegistryRef, elementTriggersRef) {
+  return new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return
+        const key = entry.target.dataset?.animKey
+        try { elementObserver?.unobserve(entry.target) } catch {}
+        if (!key) return
+        const reg = elementRegistryRef.get(key)
+        if (!reg) return
+        setTimeout(() => {
+          elementTriggersRef.value = { ...elementTriggersRef.value, [key]: true }
+          if (reg.stateRef) reg.stateRef.value = true
+          if (entry.target.classList && !entry.target.classList.contains('triggered')) {
+            entry.target.classList.add('triggered')
+          }
+        }, reg.delay || 0)
+      })
+    },
+    { threshold: 0.05, rootMargin: '0px 0px -40px 0px' },
+  )
+}
 
+export function useBlockAnimation(isAdmin, isServerAdminRef) {
   // ── Element-level API (new) ──
 
   function registerElement(blockId, elementId, options = {}) {
@@ -50,9 +76,21 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
     elementTriggers.value = { ...elementTriggers.value, [key]: false }
 
     function setRef(el) {
-      if (elementRegistry.has(key)) {
-        elementRegistry.get(key).domRef = el
-        if (el) el.dataset.animKey = key
+      if (!elementRegistry.has(key)) return
+      const entry = elementRegistry.get(key)
+      if (!el && entry.domRef) {
+        // Démontage : libère l'ancien nœud de l'observer (référence DOM
+        // détachée sinon, l'état étant au niveau module)
+        try { elementObserver?.unobserve(entry.domRef) } catch {}
+      }
+      entry.domRef = el
+      if (el) {
+        el.dataset.animKey = key
+        // En public, l'élément est déclenché au scroll ; en admin tout est
+        // forcé triggered par setupClient/watch(isAdmin)
+        if (elementObserver && !(isAdmin && isAdmin.value) && !elementTriggers.value[key]) {
+          try { elementObserver.observe(el) } catch {}
+        }
       }
     }
 
@@ -139,7 +177,22 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
   }
 
   function setWrapperRef(el, id) {
-    if (el) wrapperRefs.value[id] = el
+    if (el) {
+      wrapperRefs.value[id] = el
+    } else if (wrapperRefs.value[id]) {
+      // Démontage : Vue rappelle la ref avec null. wrapperRefs est un état
+      // de MODULE qui survit aux navigations — sans purge, on accumule des
+      // nœuds DOM détachés sur lesquels observeElements/replay continuent
+      // d'opérer (observer.observe, classList…) après changement de page.
+      const stale = wrapperRefs.value[id]
+      try { observer?.unobserve(stale) } catch {}
+      const fbObserver = fallbackObservers.get(id)
+      if (fbObserver) {
+        try { fbObserver.disconnect() } catch {}
+        fallbackObservers.delete(id)
+      }
+      delete wrapperRefs.value[id]
+    }
   }
 
   function observeElements() {
@@ -277,6 +330,16 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
 
   function setup(blocks) {
     blocksCache = blocks || []
+    if (import.meta.server) {
+      // triggeredBlocks est un état de module PARTAGÉ entre les requêtes SSR
+      // du process Node : sans reset, un rendu ?admin=true (tout déclenché)
+      // pollue les rendus publics suivants → hydration mismatch chez tous
+      // les visiteurs
+      triggeredBlocks.value = (isAdmin.value || isServerAdminRef?.value)
+        ? (blocks || []).filter((b) => !shouldSkipTrigger(b.type, isAdmin)).map((b) => b.id).filter(Boolean)
+        : []
+      return
+    }
     if (isAdmin.value || isServerAdminRef?.value) {
       initAdminTrigger(blocks)
       return
@@ -304,6 +367,9 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
       },
       { threshold: 0.05, rootMargin: '0px 0px -40px 0px' },
     )
+    if (!elementObserver) {
+      elementObserver = createElementObserver(elementRegistry, elementTriggers)
+    }
   }
 
   function handleBlocksChange(blocks) {
@@ -427,6 +493,17 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
         { threshold: 0.05, rootMargin: '0px 0px -40px 0px' },
       )
     }
+    if (!elementObserver) {
+      elementObserver = createElementObserver(elementRegistry, elementTriggers)
+      // Les setRef déjà passés n'ont pas pu observer : rattrapage (public)
+      if (!(isAdmin && isAdmin.value) && !isCurrentlyAdmin()) {
+        for (const [key, entry] of elementRegistry) {
+          if (entry.domRef && !elementTriggers.value[key]) {
+            try { elementObserver.observe(entry.domRef) } catch {}
+          }
+        }
+      }
+    }
     nextTick(() => {
       observeElements()
       setupFallbackObservers(blocksCache)
@@ -475,6 +552,7 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
 
   function teardownClient() {
     if (observer) observer.disconnect()
+    if (elementObserver) elementObserver.disconnect()
     if (replayHandler) document.removeEventListener('replay-animation', replayHandler)
     for (const [, obs] of fallbackObservers) obs.disconnect()
     fallbackObservers.clear()

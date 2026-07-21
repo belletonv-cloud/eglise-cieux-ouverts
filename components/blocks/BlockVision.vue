@@ -6,25 +6,34 @@
     ref="sectionRef"
   >
     <div class="vision-content" :style="contentStyle">
+      <!-- .value explicite : les refs dans un objet simple ne sont PAS
+           déballées en template — sans .value on teste l'objet Ref
+           (toujours truthy) au lieu de son état -->
       <p
         v-if="label"
         class="vision-label"
+        data-field-key="label"
         :ref="labelAnim.setRef"
-        :class="[labelAnim.animClass, { triggered: labelAnim.triggered }]"
+        :class="[labelAnim.animClass, { triggered: labelAnim.triggered.value }]"
+        :style="fieldFontStyle(fieldFonts, 'label', fieldFontSizes)"
       >{{ label }}</p>
       <p
         v-if="quote"
         class="vision-quote"
+        data-field-key="quote"
         :ref="quoteAnim.setRef"
-        :class="[quoteAnim.animClass, { triggered: quoteAnim.triggered }]"
+        :class="[quoteAnim.animClass, { triggered: quoteAnim.triggered.value }]"
+        :style="fieldFontStyle(fieldFonts, 'quote', fieldFontSizes)"
         v-html="sanitizedContent"
       ></p>
       <NuxtLink
         v-if="ctaText && ctaLink"
         :to="ctaLink"
         class="btn btn-white"
+        data-field-key="ctaText"
         :ref="ctaAnim.setRef"
-        :class="[ctaAnim.animClass, { triggered: ctaAnim.triggered }]"
+        :class="[ctaAnim.animClass, { triggered: ctaAnim.triggered.value }]"
+        :style="fieldFontStyle(fieldFonts, 'ctaText', fieldFontSizes)"
       >{{ ctaText }}</NuxtLink>
     </div>
   </section>
@@ -33,6 +42,7 @@
 <script setup>
 import { computed, ref, onMounted, onUnmounted, inject } from 'vue'
 import { useAnimatedElements } from '~/composables/useAnimatedElements'
+import { fieldFontStyle } from '~/utils/fonts.js'
 
 const props = defineProps({
   backgroundGradient: { type: String, default: '' },
@@ -44,6 +54,8 @@ const props = defineProps({
   visibility: { type: Object, default: () => ({}) },
   isTriggered: { type: Boolean, default: false },
   blockId: { type: String, default: '' },
+  fieldFonts: { type: Object, default: () => ({}) },
+  fieldFontSizes: { type: Object, default: () => ({}) },
 })
 
 const isEditor = inject('isEditor', false)
@@ -81,8 +93,10 @@ const sanitizedContent = computed(() => {
   return sanitizeHtml(formattedQuote.value)
 })
 
+// Même valeur initiale côté serveur et client (sinon hydration mismatch) ;
+// onScroll() recalcule la vraie progression dès le montage
 const sectionRef = ref(null)
-const scrollProgress = ref(import.meta.client ? 0 : 1)
+const scrollProgress = ref(1)
 
 const onScroll = () => {
   if (!sectionRef.value) return
@@ -123,7 +137,7 @@ const contentStyle = computed(() => ({
 .vision-label {
   font-size: 1.4em;
   font-weight: 600;
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--font-heading);
   font-style: italic;
   margin-bottom: 20px;
   opacity: 1;
@@ -150,7 +164,7 @@ const contentStyle = computed(() => ({
 .vision-quote :deep(strong) {
   font-style: italic;
   font-weight: 600;
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: var(--font-heading);
 }
 .btn-white {
   display: inline-block;

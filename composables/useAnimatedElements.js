@@ -18,7 +18,12 @@
  */
 import { ref, inject, computed, onUnmounted } from 'vue'
 
-const ANIM_CONTROLLER_KEY = Symbol('anim-controller')
+// Clé PARTAGÉE entre le provide (useBlockAnimation) et l'inject (ici).
+// Historiquement chaque module créait son propre Symbol('anim-controller') :
+// deux Symbols distincts ne sont jamais égaux, donc inject retournait
+// toujours null et tout le système d'animations par éléments était
+// silencieusement inerte (fallback dummy).
+export const ANIM_CONTROLLER_KEY = Symbol('anim-controller')
 
 export function useAnimatedElements(blockId) {
   const controller = inject(ANIM_CONTROLLER_KEY, null)
