@@ -314,6 +314,7 @@
                 :elements="sidebarBlock.props?.extraElements || []"
                 :selected-id="selectedElementId"
                 @change="updateBlock(sidebarBlock.id, { extraElements: $event })"
+                @replay="onExtraElementReplay"
                 @select="selectedElementId = $event"
                 @position="startPositioning"
             />
@@ -919,7 +920,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted, inject } from "vue";
+import { ref, computed, watch, onMounted, onUnmounted, inject, nextTick } from "vue";
 import {
     GoogleAuthProvider,
     signInWithPopup,
@@ -1061,6 +1062,23 @@ function backToBlockPicker() {
 function onPromoted(id) {
     selectedElementId.value = id
     startPositioning(id)
+}
+
+// Les éléments additionnels (FieldElements.vue) réutilisent les classes
+// block-anim-* et l'état "triggered" du BLOC parent (BlockExtraElementsCanvas
+// n'a pas de déclenchement individuel) — sans rejeu explicite, changer
+// l'animation d'un élément ne produit aucune différence visible tant que le
+// bloc reste dans son état stable admin (même cause que pour le champ
+// "animation" du bloc lui-même, voir AutoEditor.onChange). Déclenché
+// uniquement sur le select Animation (événement 'replay' dédié), pas sur
+// chaque frappe de texte — sinon le bloc rejouerait son animation à chaque
+// caractère tapé dans un élément.
+function onExtraElementReplay() {
+    if (!sidebarBlock.value) return
+    const blockId = sidebarBlock.value.id
+    nextTick(() => {
+        document.dispatchEvent(new CustomEvent('replay-animation', { detail: { id: blockId } }))
+    })
 }
 
 function setDevice(device) {

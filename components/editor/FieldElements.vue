@@ -39,7 +39,7 @@
             class="field-select"
             :value="item.animation || 'none'"
             title="Animation d'entrée de cet élément"
-            @change="updateItem(idx, { animation: ($event.target as HTMLSelectElement).value })"
+            @change="updateItem(idx, { animation: ($event.target as HTMLSelectElement).value }); $emit('replay', item.id)"
             @click.stop
           >
             <option v-for="a in animations" :key="a.id" :value="a.id">{{ a.label }}</option>
@@ -136,6 +136,7 @@ const emit = defineEmits<{
   change: [elements: ExtraElement[]]
   select: [id: string]
   position: [id: string]
+  replay: [id: string]
 }>()
 
 // Scroll automatique vers l'élément sélectionné depuis le canvas (clic

@@ -216,6 +216,17 @@ function onChange(key: string, value: any) {
     props: { [key]: value },
   }
   emit('update', updated)
+  // Le bloc est déjà "triggered" (état stable) en admin dès son affichage —
+  // sans rejeu explicite, changer le type d'animation ne produit aucune
+  // différence visible tant qu'on ne revient pas sur la page publique.
+  // On attend le prochain tick pour laisser le wrapper récupérer la
+  // nouvelle classe block-anim-* avant de la rejouer.
+  if (key === 'animation') {
+    const blockId = props.modelValue.id
+    nextTick(() => {
+      document.dispatchEvent(new CustomEvent('replay-animation', { detail: { id: blockId } }))
+    })
+  }
 }
 
 // Un champ promu n'est plus rendu à sa place fixe (fieldFontStyle ne
