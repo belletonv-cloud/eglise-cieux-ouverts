@@ -29,6 +29,19 @@ export function useChurchEvents(options = {}) {
           // Événement récurrent — générer les occurrences futures
           const occurrences = expandRecurring(ev, now, 12)
           results.push(...occurrences)
+          // futureOnly: false (agenda.vue) — ajouter aussi l'historique
+          // récent (12 mois), sinon un événement récurrent (ex: culte du
+          // dimanche) n'apparaît jamais en naviguant vers un mois passé.
+          if (!futureOnly) {
+            const pastLimit = new Date(now)
+            pastLimit.setMonth(pastLimit.getMonth() - 12)
+            const pastOccurrences = expandPastRecurring(ev, pastLimit, now)
+            const seenDates = new Set(occurrences.map(o => o.date.toISOString().slice(0, 10)))
+            for (const o of pastOccurrences) {
+              const key = o.date.toISOString().slice(0, 10)
+              if (!seenDates.has(key)) { seenDates.add(key); results.push(o) }
+            }
+          }
         } else {
           // Événement ponctuel
           const evtDate = new Date(ev.start_date + 'T00:00:00')
@@ -149,6 +162,85 @@ export function useChurchEvents(options = {}) {
           }
         }
         if (++month > 11) { month = 0; year++ }
+      }
+    }
+
+    return results
+  }
+
+  // expandRecurring() ne génère que les prochaines occurrences à venir
+  // (ancrées sur `now`, jamais l'historique) — les vues calendrier qui
+  // naviguent aussi dans le passé (agenda.vue, futureOnly: false) ont donc
+  // besoin d'une génération séparée bornée à une fenêtre [rangeStart,
+  // rangeEnd) explicite, sans lien avec "maxCount prochaines occurrences".
+  function expandPastRecurring(ev, rangeStart, rangeEnd) {
+    const rp = ev.repeat_period
+    const start = new Date(ev.start_date + 'T00:00:00')
+    const results = []
+    const from = rangeStart < start ? start : rangeStart
+    if (from >= rangeEnd) return results
+
+    if (rp.includes('|')) {
+      for (const ruleStr of rp.split('|').filter(Boolean)) {
+        results.push(...expandPastRecurring({ ...ev, repeat_period: ruleStr }, from, rangeEnd))
+      }
+      return results
+    }
+
+    function pushOccurrence(date) {
+      const dateStr = date.toISOString().slice(0, 10)
+      if (isException(ev, dateStr, 'cancelled')) return
+      const moved = getException(ev, dateStr, 'moved')
+      results.push(mapEvent(ev, moved ? new Date(moved.new_date + 'T00:00:00') : new Date(date)))
+    }
+
+    if (rp === 'month') {
+      let d = new Date(start)
+      while (d < from) d.setMonth(d.getMonth() + 1)
+      let safety = 0
+      while (d < rangeEnd && safety++ < 500) {
+        pushOccurrence(d)
+        d.setMonth(d.getMonth() + 1)
+      }
+
+    } else if (rp === 'week' || rp === 'biweek' || rp.startsWith('weekly:') || rp.startsWith('biweekly:')) {
+      let days, interval
+      if      (rp === 'week')              { days = [start.getDay()]; interval = 1 }
+      else if (rp === 'biweek')            { days = [start.getDay()]; interval = 2 }
+      else if (rp.startsWith('weekly:'))   { days = rp.split(':')[1].split(',').map(Number); interval = 1 }
+      else                                 { days = rp.split(':')[1].split(',').map(Number); interval = 2 }
+      days.sort((a, b) => a - b)
+
+      const dow = start.getDay()
+      const startMon = new Date(start)
+      startMon.setDate(start.getDate() - (dow === 0 ? 6 : dow - 1))
+      let curMon = new Date(startMon)
+      let safety = 0
+      while (curMon < rangeEnd && safety++ < 500) {
+        for (const day of days) {
+          const offset = day === 0 ? 6 : day - 1
+          const date = new Date(curMon)
+          date.setDate(curMon.getDate() + offset)
+          if (date >= from && date < rangeEnd && date >= start) pushOccurrence(date)
+        }
+        curMon.setDate(curMon.getDate() + 7 * interval)
+      }
+      results.sort((a, b) => a.date - b.date)
+
+    } else if (rp.startsWith('monthly_weekday:')) {
+      const p = rp.split(':')
+      const ordinal = parseInt(p[1]) || 1
+      const weekday = parseInt(p[2]) ?? 1
+      let year = from.getFullYear(), month = from.getMonth()
+      let safety = 0
+      while (safety++ < 200) {
+        const occ = getNthWeekdayOfMonth(year, month, weekday, ordinal)
+        if (occ && occ >= from && occ >= start) {
+          if (occ >= rangeEnd) break
+          pushOccurrence(occ)
+        }
+        if (++month > 11) { month = 0; year++ }
+        if (year > rangeEnd.getFullYear() + 1) break
       }
     }
 

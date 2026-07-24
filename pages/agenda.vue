@@ -249,7 +249,11 @@ useSeoMeta({
   description: "Tous les événements à venir à l'Église Cieux Ouverts de Morlaix.",
 })
 
-const { evenements, loading } = useChurchEvents()
+// futureOnly: false — cette page permet de naviguer vers les mois/semaines
+// passés (goPrev), donc a besoin de tout l'historique. Le composable filtre
+// par défaut sur le futur (usage SiteHeader/event-list) ; ici c'est
+// nextEvents (vue "Prochain") qui applique son propre filtre >= aujourd'hui.
+const { evenements, loading } = useChurchEvents({ futureOnly: false })
 const currentDate = ref(new Date())
 const currentView = ref('month')
 
@@ -415,10 +419,16 @@ const filteredEvents = computed(() => {
 })
 
 const nextEvents = computed(() => {
+  // Vue "Prochain" : seule vue non bornée à un mois/semaine précis — doit
+  // rester filtrée aux événements à venir maintenant que evenements inclut
+  // aussi le passé (futureOnly: false ci-dessus, pour les vues calendrier).
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
   const seen = new Set()
   const groups = {}
   for (const evt of evenements.value) {
     if (seen.has(evt.id)) continue
+    if (toDate(evt.date) < today) continue
     seen.add(evt.id)
     const dateKey = toDate(evt.date).toDateString()
     if (!groups[dateKey]) groups[dateKey] = { date: toDate(evt.date), events: [] }
