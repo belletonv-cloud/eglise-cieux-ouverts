@@ -122,6 +122,7 @@ function defaultPages() {
       { id: 'tb-fullWidthImage', type: 'fullWidthImage', props: { image: '/test-img.gif', animation: 'portal' } },
       { id: 'tb-equipe', type: 'equipe', props: { members: [{ name: 'Jean Test', role: 'Pasteur', photo: '', description: 'Membre de démonstration' }] } },
       { id: 'tb-faq', type: 'faq', props: { items: [{ question: 'Question de test ?', answer: 'Réponse de test.' }] } },
+      { id: 'tb-louange', type: 'louange', props: {} },
       { id: 'tb-stats', type: 'stats', props: {} },
       { id: 'tb-iconGrid', type: 'iconGrid', props: {} },
       { id: 'tb-quote', type: 'quote', props: {} },
@@ -152,6 +153,8 @@ export function resetMock() {
   SETTINGS = { config: { contactEmails: ['belletonv@gmail.com'] } }
   EMAIL_QUOTA = { month: null, count: 0 }
   ADMIN_USERS = [{ email: 'ci-admin@tests.fr', role: 'admin' }]
+  MENU = { menuItems: null, menuBgImage: '' }
+  FOOTER = null
 }
 
 export function getPages() {

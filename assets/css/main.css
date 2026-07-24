@@ -263,6 +263,23 @@ a:hover, .nav-admin-link:hover {
 .block-anim-wave { opacity: 0; will-change: opacity, transform; }
 .block-anim-wave.triggered { animation: animWaveIn 0.85s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
 
+/* `will-change` sur une valeur (même déjà "réglée" à son état de repos)
+   crée un contexte d'empilement permanent sur .block-wrapper — ça plafonne
+   le z-index de toute UI admin absolument positionnée à l'intérieur (ex:
+   bouton "Valider" de BlockExtraElementsCanvas) sous la sidebar admin,
+   quel que soit son propre z-index. On le retire une fois l'entrée jouée :
+   plus besoin de l'optimisation, et ça libère ce contexte d'empilement. */
+.block-anim-fadeIn.triggered,
+.block-anim-slideUp.triggered,
+.block-anim-slideLeft.triggered,
+.block-anim-zoom.triggered,
+.block-anim-portal.triggered,
+.block-anim-bounce.triggered,
+.block-anim-flip.triggered,
+.block-anim-wave.triggered {
+  will-change: auto;
+}
+
 /* Scroll-driven animations — progressive enhancement */
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {

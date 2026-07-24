@@ -27,7 +27,12 @@ export default defineNuxtPlugin((nuxtApp) => {
   nuxtApp.provide('auth', {
     currentUser,
     onAuthStateChanged: (callback: (u: typeof fakeUser | null) => void) => {
-      callback(currentUser)
+      // Firebase n'appelle jamais ce callback de façon synchrone (même avec
+      // une session en cache, il arrive au plus tôt sur un microtask) — le
+      // composant a donc toujours fini son render initial avant. Un appel
+      // synchrone ici change `user` avant l'hydratation et provoque un faux
+      // mismatch SSR/client (ex: libellé "Espace membre" vs "👤 Admin").
+      queueMicrotask(() => callback(currentUser))
       return () => {} // unsubscribe
     },
   })

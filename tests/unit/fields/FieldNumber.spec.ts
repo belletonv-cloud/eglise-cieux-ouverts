@@ -7,8 +7,8 @@ test.describe('FieldNumber.vue (static/unit checks)', () => {
   const file = resolve(__dirname, '../../../components/editor/fields/FieldNumber.vue')
   const src = readFileSync(file, 'utf-8')
 
-  test('uses type="range" input and binds :value', () => {
-    expect(src).toContain('type="range"')
+  test('uses type="number" input and binds :value', () => {
+    expect(src).toContain('type="number"')
     expect(src).toContain(':value="value"')
   })
 

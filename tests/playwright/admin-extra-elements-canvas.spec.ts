@@ -42,7 +42,7 @@ test.describe('Éléments additionnels (canvas libre) — panneau sidebar', () =
 
     await expect(page.locator('.field-elements')).toBeVisible()
 
-    await page.locator('.array-add-btn', { hasText: '+ Texte' }).click()
+    await page.locator('.array-add-btn', { hasText: /^\+ Texte$/ }).click()
     await page.locator('.array-add-btn', { hasText: '+ Image' }).click()
     await page.locator('.array-add-btn', { hasText: '+ Bouton' }).click()
 
@@ -57,7 +57,7 @@ test.describe('Éléments additionnels (canvas libre) — panneau sidebar', () =
     await page.waitForSelector('.admin-toolbar', { timeout: 10000 })
     await selectHeroBlock(page)
 
-    await page.locator('.array-add-btn', { hasText: '+ Texte' }).click()
+    await page.locator('.array-add-btn', { hasText: /^\+ Texte$/ }).click()
     await page.locator('.field-elements .field-textarea').fill('Texte de test canvas')
     await expect(page.locator('.bee-text')).toHaveText('Texte de test canvas')
 
@@ -77,7 +77,7 @@ test.describe('Éléments additionnels (canvas libre) — panneau sidebar', () =
     await page.waitForSelector('.admin-toolbar', { timeout: 10000 })
     await selectHeroBlock(page)
 
-    await page.locator('.array-add-btn', { hasText: '+ Texte' }).click()
+    await page.locator('.array-add-btn', { hasText: /^\+ Texte$/ }).click()
     await page.locator('.array-add-btn', { hasText: '+ Image' }).click()
 
     // Sélection depuis la sidebar → le canvas surligne l'élément sélectionné
@@ -99,7 +99,7 @@ test.describe('Éléments additionnels (canvas libre) — panneau sidebar', () =
     await page.waitForSelector('.admin-toolbar', { timeout: 10000 })
     await selectHeroBlock(page)
 
-    await page.locator('.array-add-btn', { hasText: '+ Texte' }).click()
+    await page.locator('.array-add-btn', { hasText: /^\+ Texte$/ }).click()
     await page.locator('.field-elements .field-textarea').fill('Élément déplaçable')
 
     // Le drag ne s'active plus à la simple sélection : il faut cliquer ⤢
@@ -144,7 +144,7 @@ test.describe('Éléments additionnels (canvas libre) — panneau sidebar', () =
     await page.waitForSelector('.admin-toolbar', { timeout: 10000 })
     await selectHeroBlock(page)
 
-    await page.locator('.array-add-btn', { hasText: '+ Texte' }).click()
+    await page.locator('.array-add-btn', { hasText: /^\+ Texte$/ }).click()
 
     // Le resize ne s'active plus à la simple sélection : il faut cliquer ⤢
     // pour entrer en mode positionnement (la sidebar se cache).
@@ -176,7 +176,7 @@ test.describe('Éléments additionnels (canvas libre) — panneau sidebar', () =
     await page.waitForSelector('.admin-toolbar', { timeout: 10000 })
     await selectHeroBlock(page)
 
-    await page.locator('.array-add-btn', { hasText: '+ Texte' }).click()
+    await page.locator('.array-add-btn', { hasText: /^\+ Texte$/ }).click()
     await page.locator('.array-add-btn', { hasText: '+ Image' }).click()
     await expect(page.locator('.bee-el')).toHaveCount(2)
 
@@ -194,7 +194,7 @@ test.describe('Éléments additionnels (canvas libre) — panneau sidebar', () =
     await page.waitForSelector('.admin-toolbar', { timeout: 10000 })
     await selectHeroBlock(page)
 
-    await page.locator('.array-add-btn', { hasText: '+ Texte' }).click()
+    await page.locator('.array-add-btn', { hasText: /^\+ Texte$/ }).click()
 
     const heroWrapper = page.locator('.block-wrapper[data-block-id="bloc-hero"]')
     const heroBox = await heroWrapper.boundingBox()
@@ -215,7 +215,7 @@ test.describe('Éléments additionnels (canvas libre) — panneau sidebar', () =
     await page.goto('/accueil?admin=true')
     await page.waitForSelector('.admin-toolbar', { timeout: 10000 })
     await selectHeroBlock(page)
-    await page.locator('.array-add-btn', { hasText: '+ Texte' }).click()
+    await page.locator('.array-add-btn', { hasText: /^\+ Texte$/ }).click()
     await page.locator('button[title="Sauvegarder les modifications"], button:has-text("Sauvegarder")').first().click()
     await page.waitForTimeout(500)
 
@@ -242,7 +242,7 @@ test.describe('Éléments additionnels (canvas libre) — panneau sidebar', () =
     await page.goto('/accueil?admin=true')
     await page.waitForSelector('.admin-toolbar', { timeout: 10000 })
     await selectHeroBlock(page)
-    await page.locator('.array-add-btn', { hasText: '+ Texte' }).click()
+    await page.locator('.array-add-btn', { hasText: /^\+ Texte$/ }).click()
 
     // On sélectionne un AUTRE bloc — editingBlockId pointe maintenant vers lui.
     // Comportement préexistant de la sidebar (indépendant du canvas) : tant
@@ -278,7 +278,7 @@ test.describe('Éléments additionnels (canvas libre) — panneau sidebar', () =
     await page.goto('/accueil?admin=true')
     await page.waitForSelector('.admin-toolbar', { timeout: 10000 })
     await selectHeroBlock(page)
-    await page.locator('.array-add-btn', { hasText: '+ Texte' }).click()
+    await page.locator('.array-add-btn', { hasText: /^\+ Texte$/ }).click()
     await page.locator('.array-item-position-btn').click()
     await page.waitForTimeout(200)
 
@@ -293,7 +293,7 @@ test.describe('Éléments additionnels (canvas libre) — panneau sidebar', () =
     await page.waitForSelector('.admin-toolbar', { timeout: 10000 })
     await selectHeroBlock(page)
 
-    await page.locator('.array-add-btn', { hasText: '+ Texte' }).click()
+    await page.locator('.array-add-btn', { hasText: /^\+ Texte$/ }).click()
     await page.locator('.field-elements .field-textarea').fill('Persisté après reload')
 
     await page.locator('button[title="Sauvegarder les modifications"], button:has-text("Sauvegarder")').first().click()
@@ -345,8 +345,10 @@ test.describe('« Rendre déplaçable » — promouvoir un champ existant en él
     const bienvenueOccurrences = await wrapper.evaluate((el) => (el.textContent?.match(/BIENVENUE/g) || []).length)
     expect(bienvenueOccurrences).toBe(1)
 
-    // Le bouton disparaît après promotion (rien à re-promouvoir)
-    await expect(titreField.locator('.field-promote-btn')).toHaveCount(0)
+    // Le bouton reste affiché après promotion (il devient « Déplacer », pour
+    // relancer le positionnement — cf. tests dédiés plus bas), il ne
+    // disparaît pas.
+    await expect(titreField.locator('.field-promote-btn')).toHaveText('⇱ Déplacer')
 
     expect(errors).toEqual([])
   })

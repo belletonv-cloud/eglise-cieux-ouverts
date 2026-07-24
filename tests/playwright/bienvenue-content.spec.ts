@@ -45,8 +45,11 @@ test.describe('Bloc Bienvenue — title/subtitle réellement branchés', () => {
     // hasText fait un match par sous-chaîne insensible à la casse : "Titre"
     // matcherait aussi "Sous-titre". Regex ancrée pour une correspondance
     // exacte du label.
-    const titleInput = page.locator('.auto-field', { has: page.locator('.field-label', { hasText: /^Titre$/ }) }).locator('input')
-    const subtitleInput = page.locator('.auto-field', { has: page.locator('.field-label', { hasText: /^Sous-titre$/ }) }).locator('input')
+    // .locator('input') seul matcherait aussi l'input numérique de taille de
+    // police (le champ Titre est "fontable") — cibler .field-input (valeur
+    // texte) précisément.
+    const titleInput = page.locator('.auto-field', { has: page.locator('.field-label', { hasText: /^Titre$/ }) }).locator('.field-input')
+    const subtitleInput = page.locator('.auto-field', { has: page.locator('.field-label', { hasText: /^Sous-titre$/ }) }).locator('.field-input')
 
     await titleInput.fill('SALUT')
     await subtitleInput.fill('à notre communauté')
