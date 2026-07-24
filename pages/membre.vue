@@ -44,16 +44,15 @@
       </header>
 
       <nav class="dash-tabs" role="tablist">
-        <button :class="{ active: tab === 'ressources' }" @click="tab = 'ressources'" role="tab">
-          📚 Ressources
-          <span v-if="profile?.unread_resources" class="badge">{{ profile.unread_resources }}</span>
-        </button>
-        <button :class="{ active: tab === 'demandes' }" @click="tab = 'demandes'" role="tab">
-          🙋 Demandes
-          <span v-if="profile?.pending_requests" class="badge">{{ profile.pending_requests }}</span>
-        </button>
-        <button :class="{ active: tab === 'evenements' }" @click="tab = 'evenements'" role="tab">
-          📅 Mes événements
+        <button
+          v-for="t in orderedTabs"
+          :key="t.key"
+          :class="{ active: tab === t.key }"
+          @click="tab = t.key"
+          role="tab"
+        >
+          {{ t.icon }} {{ t.label }}
+          <span v-if="t.badge()" class="badge">{{ t.badge() }}</span>
         </button>
       </nav>
 
@@ -137,7 +136,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 
 useSeoMeta({
   title: 'Espace membre — Église Cieux Ouverts',
@@ -211,7 +210,7 @@ async function doEmailSubmit() {
 
 async function doLogout() {
   await logout()
-  tab.value = 'ressources'
+  tab.value = orderedTabs.value[0]?.key || 'ressources'
 }
 
 // --- Dashboard ---
@@ -222,6 +221,20 @@ const myEvents = ref([])
 const loadingResources = ref(false)
 const loadingRequests = ref(false)
 const loadingEvents = ref(false)
+
+// Ordre des onglets réglable depuis l'admin (modale Configuration) —
+// composable partagé avec SiteHeader/BlockContact (useSiteSettings.js).
+const { memberTabOrder, loadSiteSettings } = useSiteSettings()
+const MEMBER_TAB_META = {
+  ressources: { icon: '📚', label: 'Ressources', badge: () => profile.value?.unread_resources },
+  demandes: { icon: '🙋', label: 'Demandes', badge: () => profile.value?.pending_requests },
+  evenements: { icon: '📅', label: 'Mes événements', badge: () => null },
+}
+const orderedTabs = computed(() =>
+  memberTabOrder.value
+    .filter((key) => MEMBER_TAB_META[key])
+    .map((key) => ({ key, ...MEMBER_TAB_META[key] })),
+)
 
 function formatDate(d) {
   if (!d) return ''
@@ -324,6 +337,12 @@ watch(isLoggedIn, (v) => {
 })
 
 onMounted(() => {
+  // Onglet actif par défaut = premier de l'ordre configuré (peut différer
+  // de 'ressources' si l'admin a réordonné) — seulement au tout premier
+  // montage, avant toute interaction de l'utilisateur avec les onglets.
+  loadSiteSettings().then(() => {
+    if (orderedTabs.value[0]) tab.value = orderedTabs.value[0].key
+  })
   if (isLoggedIn.value) loadAll()
 })
 </script>

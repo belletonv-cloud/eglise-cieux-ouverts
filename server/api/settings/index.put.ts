@@ -31,6 +31,23 @@ function parseSocialLinks(body: any): { platform: string; url: string }[] {
     .filter((l: { platform: string; url: string }) => l.platform && l.url)
 }
 
+const MEMBER_TABS = ['ressources', 'demandes', 'evenements']
+
+// Ordre des onglets de l'espace membre (pages/membre.vue) — n'accepte qu'une
+// permutation complète des 3 clés connues, sinon retombe sur l'ordre
+// historique (voir normalizeMemberTabOrder côté GET, même garde-fou).
+function parseMemberTabOrder(body: any): string[] {
+  const order = body?.memberTabOrder
+  if (
+    Array.isArray(order) &&
+    order.length === MEMBER_TABS.length &&
+    MEMBER_TABS.every((t) => order.includes(t))
+  ) {
+    return order
+  }
+  return MEMBER_TABS
+}
+
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
   const isTest = process.env.NODE_ENV === 'test' || process.env.PW_TEST === '1' || process.env.TEST_ENV === '1'
@@ -46,10 +63,11 @@ export default defineEventHandler(async (event) => {
 
   const hideEventsPageIfEmpty = body?.hideEventsPageIfEmpty === true // par défaut false (toujours visible)
   const socialLinks = parseSocialLinks(body)
+  const memberTabOrder = parseMemberTabOrder(body)
 
   if (isTest) {
     const { setSettings } = await import('../../utils/firestore-mock.js')
-    setSettings({ contactEmails, hideEventsPageIfEmpty, socialLinks })
+    setSettings({ contactEmails, hideEventsPageIfEmpty, socialLinks, memberTabOrder })
     return { ok: true }
   }
 
@@ -66,6 +84,7 @@ export default defineEventHandler(async (event) => {
       contactEmails: contactEmails,
       hideEventsPageIfEmpty: hideEventsPageIfEmpty,
       socialLinks: socialLinks,
+      memberTabOrder: memberTabOrder,
       updatedAt: new Date().toISOString(),
     })
     return { ok: true }

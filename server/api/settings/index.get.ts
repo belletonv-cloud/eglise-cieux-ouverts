@@ -23,6 +23,25 @@ function normalizeSocialLinks(data: Record<string, any> | null): { platform: str
   ]
 }
 
+const MEMBER_TABS = ['ressources', 'demandes', 'evenements']
+
+// Ordre des onglets de l'espace membre (pages/membre.vue) — réglable depuis
+// l'admin. On ne fait confiance qu'à un tableau contenant exactement les 3
+// clés connues (une seule fois chacune) ; sinon on retombe sur l'ordre
+// historique codé en dur, pour ne jamais faire disparaître un onglet à
+// cause d'une valeur Firestore corrompue/partielle.
+function normalizeMemberTabOrder(data: Record<string, any> | null): string[] {
+  const order = data?.memberTabOrder
+  if (
+    Array.isArray(order) &&
+    order.length === MEMBER_TABS.length &&
+    MEMBER_TABS.every((t) => order.includes(t))
+  ) {
+    return order
+  }
+  return MEMBER_TABS
+}
+
 export default defineEventHandler(async (event) => {
   const isTest = process.env.NODE_ENV === 'test' || process.env.PW_TEST === '1' || process.env.TEST_ENV === '1'
 
@@ -33,12 +52,13 @@ export default defineEventHandler(async (event) => {
       contactEmails: normalizeContactEmails(data),
       hideEventsPageIfEmpty: data?.hideEventsPageIfEmpty === true,
       socialLinks: normalizeSocialLinks(data),
+      memberTabOrder: normalizeMemberTabOrder(data),
     }
   }
 
   const config = getFirestoreConfig(event)
   if (!config) {
-    return { contactEmails: normalizeContactEmails(null), socialLinks: normalizeSocialLinks(null) }
+    return { contactEmails: normalizeContactEmails(null), socialLinks: normalizeSocialLinks(null), memberTabOrder: normalizeMemberTabOrder(null) }
   }
 
   try {
@@ -50,9 +70,10 @@ export default defineEventHandler(async (event) => {
       contactEmails: normalizeContactEmails(data),
       hideEventsPageIfEmpty: data?.hideEventsPageIfEmpty === true,
       socialLinks: normalizeSocialLinks(data),
+      memberTabOrder: normalizeMemberTabOrder(data),
     }
   } catch (err: any) {
     console.error('Settings load error:', err)
-    return { contactEmails: normalizeContactEmails(null), socialLinks: normalizeSocialLinks(null) }
+    return { contactEmails: normalizeContactEmails(null), socialLinks: normalizeSocialLinks(null), memberTabOrder: normalizeMemberTabOrder(null) }
   }
 })

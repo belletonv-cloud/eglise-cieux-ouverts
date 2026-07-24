@@ -16,6 +16,10 @@ const socialLinks = ref([
   { platform: "instagram", url: "https://www.instagram.com/eglise_cieux_ouverts/" },
   { platform: "facebook", url: "https://www.facebook.com/eglisecieuxouverts" },
 ]);
+// Ordre des onglets de pages/membre.vue (Ressources/Demandes/Événements),
+// réglable depuis la modale Configuration admin — même valeur de repli que
+// normalizeMemberTabOrder() côté serveur (server/api/settings/index.get.ts).
+const memberTabOrder = ref(["ressources", "demandes", "evenements"]);
 let _loaded = false;
 let _loadPromise = null;
 
@@ -28,6 +32,7 @@ async function loadSiteSettings() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       if (Array.isArray(data.socialLinks)) socialLinks.value = data.socialLinks;
+      if (Array.isArray(data.memberTabOrder)) memberTabOrder.value = data.memberTabOrder;
     } catch (e) {
       console.warn("useSiteSettings: could not load settings", e);
     } finally {
@@ -40,6 +45,7 @@ async function loadSiteSettings() {
 export function useSiteSettings() {
   return {
     socialLinks,
+    memberTabOrder,
     loadSiteSettings,
   };
 }

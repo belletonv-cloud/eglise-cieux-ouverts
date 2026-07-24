@@ -885,6 +885,33 @@
                         <p class="settings-hint">La page et le lien de menu seront masqués du site public tant qu'aucun événement n'est prévu. Toujours visible en mode admin.</p>
                     </div>
                     <div class="settings-field">
+                        <label>Ordre des onglets de l'espace membre (/membre)</label>
+                        <p class="settings-hint">Ordre d'affichage des onglets Ressources/Demandes/Mes événements.</p>
+                        <div class="member-tab-order-list">
+                            <div
+                                v-for="(t, i) in memberTabOrderForm"
+                                :key="t"
+                                class="member-tab-order-row"
+                            >
+                                <span class="member-tab-order-label">{{ MEMBER_TAB_LABELS[t] }}</span>
+                                <button
+                                    type="button"
+                                    class="member-tab-order-btn"
+                                    :disabled="i === 0"
+                                    title="Monter"
+                                    @click="moveMemberTab(i, -1)"
+                                >↑</button>
+                                <button
+                                    type="button"
+                                    class="member-tab-order-btn"
+                                    :disabled="i === memberTabOrderForm.length - 1"
+                                    title="Descendre"
+                                    @click="moveMemberTab(i, 1)"
+                                >↓</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="settings-field">
                         <label>Réseaux sociaux</label>
                         <p class="settings-hint">Réglage unique pour tout le site — ces liens s'affichent dans le menu, le bloc Bienvenue et le bloc Contact.</p>
                         <div v-for="(link, i) in socialLinksForm" :key="i" class="social-link-row">
@@ -931,7 +958,7 @@ import { BLOCK_TYPES, ANIMATIONS } from "~/utils/blockTypes.js";
 import { SOCIAL_ICONS } from "~/utils/socialIcons.js";
 import { useToast } from '~/composables/useToast'
 
-const { socialLinks: liveSocialLinks } = useSiteSettings()
+const { socialLinks: liveSocialLinks, memberTabOrder: liveMemberTabOrder } = useSiteSettings()
 
 const { showToast } = useToast()
 
@@ -1404,6 +1431,16 @@ const socialLinksForm = ref([])
 const emailQuota = ref(null)
 const settingsSaving = ref(false)
 
+const MEMBER_TAB_LABELS = { ressources: '📚 Ressources', demandes: '🙋 Demandes', evenements: '📅 Mes événements' }
+const memberTabOrderForm = ref(['ressources', 'demandes', 'evenements'])
+function moveMemberTab(i, dir) {
+    const j = i + dir
+    if (j < 0 || j >= memberTabOrderForm.value.length) return
+    const arr = [...memberTabOrderForm.value]
+    ;[arr[i], arr[j]] = [arr[j], arr[i]]
+    memberTabOrderForm.value = arr
+}
+
 const quotaPercent = computed(() => {
   if (!emailQuota.value || !emailQuota.value.limit) return 0
   return Math.min(100, Math.round((emailQuota.value.count / emailQuota.value.limit) * 100))
@@ -1429,6 +1466,9 @@ async function loadSettings() {
     settingsForm.value = { hideEventsPageIfEmpty: data.hideEventsPageIfEmpty === true }
     contactEmailsText.value = (data.contactEmails || []).join(', ')
     socialLinksForm.value = Array.isArray(data.socialLinks) ? data.socialLinks.map(l => ({ ...l })) : []
+    memberTabOrderForm.value = Array.isArray(data.memberTabOrder) && data.memberTabOrder.length === 3
+      ? [...data.memberTabOrder]
+      : ['ressources', 'demandes', 'evenements']
   } catch (e) {
     console.error('[admin] load settings failed:', e)
     showToast('Erreur : ' + (e.message || e), 'toast-error')
@@ -1464,7 +1504,7 @@ async function saveSettings() {
     const res = await fetch('/api/settings', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ ...settingsForm.value, contactEmails, socialLinks: socialLinksForm.value }),
+      body: JSON.stringify({ ...settingsForm.value, contactEmails, socialLinks: socialLinksForm.value, memberTabOrder: memberTabOrderForm.value }),
     })
     if (!res.ok) {
       const body = await res.json().catch(() => null)
@@ -1473,6 +1513,7 @@ async function saveSettings() {
     // Reflète immédiatement le changement dans SiteHeader/BlockContact/
     // BlockBienvenue (state partagé useSiteSettings.js) sans recharger la page.
     liveSocialLinks.value = socialLinksForm.value.map(l => ({ ...l }))
+    liveMemberTabOrder.value = [...memberTabOrderForm.value]
     showToast('Configuration sauvegardée', 'toast-success')
     showSettings.value = false
   } catch (e) {
@@ -3272,6 +3313,9 @@ async function saveChanges() {
     border-radius: 8px;
     width: 90%;
     max-width: 500px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
 }
 .settings-modal-header {
@@ -3295,6 +3339,9 @@ async function saveChanges() {
 }
 .settings-modal-body {
     padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
 }
 .settings-field {
     margin-bottom: 16px;
@@ -3368,6 +3415,44 @@ async function saveChanges() {
     border-color: #064886;
     color: #064886;
     background: #eef4fa;
+}
+.member-tab-order-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 8px;
+}
+.member-tab-order-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 8px 10px;
+}
+.member-tab-order-label {
+    flex: 1;
+    font-size: 0.9em;
+    color: #1a1a2e;
+}
+.member-tab-order-btn {
+    background: #fff;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    color: #555;
+    cursor: pointer;
+    padding: 2px 9px;
+    font-size: 0.9em;
+}
+.member-tab-order-btn:hover:not(:disabled) {
+    border-color: #064886;
+    color: #064886;
+    background: #eef4fa;
+}
+.member-tab-order-btn:disabled {
+    opacity: 0.35;
+    cursor: default;
 }
 .settings-hint.quota-warning {
     color: #b45309;
