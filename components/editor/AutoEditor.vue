@@ -1,59 +1,79 @@
 <template>
   <div class="sidebar-autoeditor auto-editor">
-    <EditorFieldError
-      v-for="field in schema"
-      :key="field.key"
-      :field-key="field.key"
+    <!-- Panneaux groupés (Contenu / Médias / Mise en page / Couleurs / Avancé /
+         Scripts). Le groupe d'un champ vient de `field.group` s'il est défini,
+         sinon d'une classification automatique par type/nom (groupOf). -->
+    <section
+      v-for="group in groupedFields"
+      :key="group.id"
+      class="auto-group"
     >
-      <div
-        class="auto-field"
-        :class="{ 'auto-field-active': activeFieldKey === field.key }"
-        :ref="(el) => { if (el) fieldRefs[field.key] = el }"
+      <button
+        type="button"
+        class="auto-group-header"
+        :aria-expanded="!collapsed.has(group.id)"
+        @click="toggleGroup(group.id)"
       >
-        <div class="auto-field-header">
-          <label class="field-label">{{ field.label }}</label>
-          <button
-            v-if="isPromotableField(field) && (isPromoted(field) || effectiveFieldValue(field))"
-            type="button"
-            class="field-promote-btn"
-            :title="isPromoted(field) ? 'Déplacer/redimensionner cet élément sur la page' : 'Rendre cet élément déplaçable, redimensionnable et le sortir de sa place fixe dans le bloc'"
-            @click="onMoveField(field)"
-          >⇱ Déplacer</button>
-          <input
-            v-if="isFontableField(field)"
-            type="number"
-            step="0.1"
-            min="0.3"
-            max="5"
-            class="field-size-input"
-            :value="fieldFontSizeValue(field.key)"
-            title="Taille de police relative (1 = taille par défaut)"
-            placeholder="Taille"
-            @change="onFontSizeChange(field.key, ($event.target as HTMLInputElement).value)"
-          />
-          <select
-            v-if="isFontableField(field)"
-            class="field-font-picker"
-            :value="fieldFontValue(field.key)"
-            title="Police de ce champ"
-            @change="onFontChange(field.key, ($event.target as HTMLSelectElement).value)"
+        <span class="auto-group-title">{{ group.icon }} {{ group.label }}</span>
+        <span class="auto-group-chevron" :class="{ open: !collapsed.has(group.id) }">▾</span>
+      </button>
+      <div v-show="!collapsed.has(group.id)" class="auto-group-body">
+        <EditorFieldError
+          v-for="field in group.fields"
+          :key="field.key"
+          :field-key="field.key"
+        >
+          <div
+            class="auto-field"
+            :class="{ 'auto-field-active': activeFieldKey === field.key }"
+            :ref="(el) => { if (el) fieldRefs[field.key] = el }"
           >
-            <option value="">Police par défaut</option>
-            <option v-for="f in availableFonts" :key="f.value" :value="f.value">{{ f.label }}</option>
-          </select>
-        </div>
-        <p v-if="isPromoted(field)" class="field-promoted-note">
-          ↳ Déplacé sur la page. Clique « Déplacer » ci-dessus pour l'ajuster, ou sélectionne-le sur le bloc pour modifier son contenu.
-        </p>
-        <component
-          v-else
-          :is="fieldComponent(field.type)"
-          :field="field"
-          :value="effectiveFieldValue(field)"
-          @change="onChange(field.key, $event)"
-        />
+            <div class="auto-field-header">
+              <label class="field-label">{{ field.label }}</label>
+              <button
+                v-if="isPromotableField(field) && (isPromoted(field) || effectiveFieldValue(field))"
+                type="button"
+                class="field-promote-btn"
+                :title="isPromoted(field) ? 'Déplacer/redimensionner cet élément sur la page' : 'Rendre cet élément déplaçable, redimensionnable et le sortir de sa place fixe dans le bloc'"
+                @click="onMoveField(field)"
+              >⇱ Déplacer</button>
+              <input
+                v-if="isFontableField(field)"
+                type="number"
+                step="0.1"
+                min="0.3"
+                max="5"
+                class="field-size-input"
+                :value="fieldFontSizeValue(field.key)"
+                title="Taille de police relative (1 = taille par défaut)"
+                placeholder="Taille"
+                @change="onFontSizeChange(field.key, ($event.target as HTMLInputElement).value)"
+              />
+              <select
+                v-if="isFontableField(field)"
+                class="field-font-picker"
+                :value="fieldFontValue(field.key)"
+                title="Police de ce champ"
+                @change="onFontChange(field.key, ($event.target as HTMLSelectElement).value)"
+              >
+                <option value="">Police par défaut</option>
+                <option v-for="f in availableFonts" :key="f.value" :value="f.value">{{ f.label }}</option>
+              </select>
+            </div>
+            <p v-if="isPromoted(field)" class="field-promoted-note">
+              ↳ Déplacé sur la page. Clique « Déplacer » ci-dessus pour l'ajuster, ou sélectionne-le sur le bloc pour modifier son contenu.
+            </p>
+            <component
+              v-else
+              :is="fieldComponent(field.type)"
+              :field="field"
+              :value="effectiveFieldValue(field)"
+              @change="onChange(field.key, $event)"
+            />
+          </div>
+        </EditorFieldError>
       </div>
-    </EditorFieldError>
+    </section>
     <FieldDesign
       :model-value="modelValue"
       @update="onDesignUpdate"
@@ -78,12 +98,59 @@ import FieldImages from './fields/FieldImages.vue'
 import EditorFieldError from './EditorFieldError.vue'
 import FieldDesign from './FieldDesign.vue'
 import { AVAILABLE_FONTS as availableFonts, fontStack } from '~/utils/fonts.js'
-import { watch, nextTick } from 'vue'
+import { watch, nextTick, computed, reactive } from 'vue'
 
 const props = defineProps<{
   schema: FieldSchema[]
   modelValue: BlockInstance | null
 }>()
+
+// ─── Regroupement des champs en panneaux ───────────────────────────────────
+// Ordre fixe et libellés des panneaux de la sidebar. Un groupe sans champ
+// n'est pas rendu (groupedFields filtre les groupes vides).
+const GROUP_DEFS: { id: string; label: string; icon: string }[] = [
+  { id: 'contenu', label: 'Contenu', icon: '📝' },
+  { id: 'medias', label: 'Icônes / médias', icon: '🖼️' },
+  { id: 'mise-en-page', label: 'Mise en page', icon: '📐' },
+  { id: 'couleurs', label: 'Couleurs / thème', icon: '🎨' },
+  { id: 'avance', label: 'Paramètres avancés', icon: '⚙️' },
+  { id: 'scripts', label: 'Scripts / intégrations', icon: '🔌' },
+]
+const VALID_GROUPS = new Set(GROUP_DEFS.map((g) => g.id))
+
+// Classification d'un champ : `field.group` explicite s'il est valide, sinon
+// déduction par type + convention de nommage. Ne modifie jamais blockTypes.js
+// ni les defaults → neutre pour le rendu des vitrines.
+function groupOf(field: FieldSchema): string {
+  const explicit = (field as { group?: string }).group
+  if (explicit && VALID_GROUPS.has(explicit)) return explicit
+  const key = field.key || ''
+  if (field.type === 'color' || /colou?r|gradient|background|overlay(?!text)/i.test(key)) return 'couleurs'
+  if (field.type === 'image' || field.type === 'images' || /image|img|photo|icon|logo|src|videoid|mapembed/i.test(key)) return 'medias'
+  if (field.type === 'animation' || /height|width|column|align|reverse|visualstyle|openfirst|showbutton|spacing|padding|gap|layout|position/i.test(key)) return 'mise-en-page'
+  if (/script|embed|customcss|rawhtml|integration/i.test(key)) return 'scripts'
+  if (/advanced/i.test(key)) return 'avance'
+  return 'contenu'
+}
+
+const groupedFields = computed(() => {
+  const buckets: Record<string, FieldSchema[]> = {}
+  for (const field of props.schema || []) {
+    const g = groupOf(field)
+    ;(buckets[g] ||= []).push(field)
+  }
+  return GROUP_DEFS
+    .map((def) => ({ ...def, fields: buckets[def.id] || [] }))
+    .filter((g) => g.fields.length > 0)
+})
+
+// État de repli par groupe (tous ouverts par défaut : rien n'est caché sans
+// action de l'utilisateur). Les panneaux donnent la hiérarchie visuelle.
+const collapsed = reactive(new Set<string>())
+function toggleGroup(id: string) {
+  if (collapsed.has(id)) collapsed.delete(id)
+  else collapsed.add(id)
+}
 
 const emit = defineEmits<{
   update: [block: BlockInstance]
@@ -149,6 +216,17 @@ function onChange(key: string, value: any) {
     props: { [key]: value },
   }
   emit('update', updated)
+  // Le bloc est déjà "triggered" (état stable) en admin dès son affichage —
+  // sans rejeu explicite, changer le type d'animation ne produit aucune
+  // différence visible tant qu'on ne revient pas sur la page publique.
+  // On attend le prochain tick pour laisser le wrapper récupérer la
+  // nouvelle classe block-anim-* avant de la rejouer.
+  if (key === 'animation') {
+    const blockId = props.modelValue.id
+    nextTick(() => {
+      document.dispatchEvent(new CustomEvent('replay-animation', { detail: { id: blockId } }))
+    })
+  }
 }
 
 // Un champ promu n'est plus rendu à sa place fixe (fieldFontStyle ne
@@ -340,7 +418,29 @@ function onDesignUpdate(block: BlockInstance) {
 </script>
 
 <style scoped>
-.auto-editor { display: flex; flex-direction: column; gap: 14px; }
+.auto-editor { display: flex; flex-direction: column; gap: 10px; }
+
+/* Panneaux groupés repliables */
+.auto-group { border: 1px solid #e8edf3; border-radius: 10px; overflow: hidden; background: #fff; }
+.auto-group-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 12px;
+  background: #f7f9fc;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  transition: background-color 0.15s;
+}
+.auto-group-header:hover { background: #eef3f9; }
+.auto-group-title { font-size: 0.8em; font-weight: 600; color: #334155; letter-spacing: 0.01em; }
+.auto-group-chevron { font-size: 0.7em; color: #94a3b8; transition: transform 0.2s; }
+.auto-group-chevron.open { transform: rotate(180deg); }
+.auto-group-body { display: flex; flex-direction: column; gap: 14px; padding: 12px; }
+
 .auto-field { display: flex; flex-direction: column; gap: 5px; border-radius: 8px; transition: background-color 0.2s, box-shadow 0.2s; }
 .auto-field-active { background: rgba(59, 130, 246, 0.08); box-shadow: 0 0 0 2px #3b82f6; padding: 8px; margin: -8px; }
 .auto-field-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }

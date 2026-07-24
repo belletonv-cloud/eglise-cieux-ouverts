@@ -17,9 +17,9 @@ test.describe('FieldImages.vue (static/unit checks)', () => {
   })
 
   test('contains a v-for to render existing images and uses a stable key', () => {
-    expect(src).toContain('v-for="(url, idx) in localItems"')
-    // key pattern: :key="idx + '-' + (url || '')"
-    expect(src).toContain(":key=\"idx + '-' + (url || '')\"")
+    expect(src).toContain('v-for="(entry, idx) in localEntries"')
+    // key pattern: :key="entry.id"
+    expect(src).toContain(':key="entry.id"')
     expect(src).toContain('class="field-image-preview"')
   })
 

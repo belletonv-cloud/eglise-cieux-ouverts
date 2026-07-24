@@ -1,5 +1,5 @@
 <template>
-    <div v-if="isAdmin && isMounted" class="page-renderer admin-mode">
+    <div v-if="isAdmin && isMounted" class="page-renderer admin-mode" :class="{ 'bee-positioning-active': !!positioningElementId }">
         <VueDraggable
             v-model="draggableModel"
             handle=".drag-handle"
@@ -18,6 +18,7 @@
                 visibilityClass(block),
                 { triggered: isTriggered(block.id) },
                 { 'admin-selected': isSelected(block) },
+                { 'bee-positioning-active': block.props?.extraElements?.some((e) => e.id === positioningElementId) },
             ]"
             :style="wrapperStyle(block)"
             :ref="(el) => setWrapperRef(el, block.id)"
@@ -157,6 +158,34 @@ const props = defineProps({
 // le panneau sidebar (composables/useAdmin.js) pour garder la sélection, le
 // mode positionnement et le champ identifié par clic synchronisés.
 const { reorderBlocks, updateBlock, selectedElementId, positioningElementId, stopPositioning, activeFieldKey, identifySeq } = useAdmin();
+
+// Sur un premier chargement admin (bascule SSR public -> admin post-
+// hydratation), la transition de page Nuxt (page-enter-from/page-enter-
+// active) reste bloquée en plein vol (opacity:0 + transform) : le
+// `transitionend` qu'elle attend ne se déclenche jamais dans ce cas précis.
+// Chrome expose ces transitions CSS comme de vraies Animation (Web
+// Animations API), ce qui les fait gagner sur n'importe quelle règle CSS
+// même !important — impossible à corriger en pur CSS. On l'annule
+// explicitement dès qu'on entre en mode positionnement, où le contenu est
+// de toute façon censé être pleinement visible.
+watch(positioningElementId, (id) => {
+    if (!id) return;
+    nextTick(() => {
+        const pageEl = document.querySelector(".page-renderer");
+        if (pageEl) {
+            pageEl.getAnimations?.().forEach((a) => a.cancel());
+            pageEl.classList.remove("page-enter-from", "page-enter-active", "page-leave-active", "page-leave-to");
+        }
+        // Même souci pour l'animation d'entrée du bloc lui-même
+        // (.block-anim-portal etc.) : si elle est restée bloquée en plein
+        // vol, l'annuler laisse la cascade CSS normale reprendre la main —
+        // la classe .triggered (déjà posée) redonne alors l'état final
+        // correct (opacity:1) sans qu'on ait besoin d'y toucher.
+        document.querySelectorAll(".block-wrapper.bee-positioning-active").forEach((el) => {
+            el.getAnimations?.().forEach((a) => a.cancel());
+        });
+    });
+});
 
 // Sélectionner un élément additionnel (canvas ou sidebar) efface le champ
 // fixe éventuellement identifié par un clic précédent — évite un surlignage
@@ -670,5 +699,27 @@ watch(
 .admin-mode .block-wrapper:hover {
     outline: 2px dashed rgba(59, 130, 246, 0.5);
     outline-offset: -2px;
+}
+/* Les animations d'entrée (portal/flip) laissent un transform (perspective())
+   en place même une fois "triggered" — visuellement identité (rotateX(0)
+   scale(1)), mais ça crée un nouveau contexte d'empilement qui plafonne le
+   z-index du bouton "Valider" de BlockExtraElementsCanvas sous la sidebar
+   admin (position:fixed, z-index 9999), quel que soit son propre z-index.
+   On neutralise le transform seulement pendant le positionnement d'un
+   élément libre de CE bloc, où l'animation d'entrée est de toute façon déjà
+   terminée. */
+.block-wrapper.bee-positioning-active {
+    transform: none !important;
+}
+/* Même piège au niveau de .page-renderer : après un premier montage en mode
+   admin (bascule SSR public -> admin post-hydratation), la transition de
+   page Nuxt (page-enter-from/page-enter-active) reste accrochée en
+   opacity:0 + transform, ce qui plafonne pareillement le bouton "Valider".
+   Neutralisé uniquement pendant le positionnement, sans risque visuel
+   puisque le contenu est de toute façon censé être pleinement visible à ce
+   stade. */
+.page-renderer.bee-positioning-active {
+    opacity: 1 !important;
+    transform: none !important;
 }
 </style>

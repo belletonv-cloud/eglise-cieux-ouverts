@@ -9,7 +9,7 @@ test.describe('FieldArray.vue (static/unit checks)', () => {
 
   test('contains a v-for for localItems to render array elements', () => {
     expect(src).toContain('v-for="(item, idx) in localItems"')
-    expect(src).toContain(':key="getItemKey(item, idx)"')
+    expect(src).toContain(':key="item._key"')
   })
 
   test('contains an add button with class array-add-btn and an aria-label', () => {

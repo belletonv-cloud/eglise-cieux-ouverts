@@ -52,6 +52,6 @@ export default defineEventHandler(async (event) => {
     return { success: true, message: 'Premier admin créé' }
   } catch (e: any) {
     console.error('setup error:', e?.message || e?.toString() || e)
-    throw createError({ statusCode: 500, message: e?.message || 'Erreur interne' })
+    throw createError({ statusCode: 500, message: 'Erreur lors de la création du premier admin.' })
   }
 })

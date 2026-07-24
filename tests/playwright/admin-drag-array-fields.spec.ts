@@ -3,7 +3,9 @@ import { resetMock } from './helpers/reset'
 
 // Même stratégie que admin-drag-blocks.spec.ts : viewport haut pour que la
 // cible du drag soit dans le viewport (Sortable utilise elementFromPoint).
-test.use({ viewport: { width: 1280, height: 1400 } })
+// 1900px : les items du champ "activities" (titre+description+image, ~255px
+// chacun) poussent le dernier item hors d'un viewport de 1400px.
+test.use({ viewport: { width: 1280, height: 1900 } })
 
 async function dragHandleTo(
   page: import('@playwright/test').Page,
