@@ -190,7 +190,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onUnmounted } from 'vue'
 
 const props = defineProps({ open: Boolean })
 const emit = defineEmits(['close'])
@@ -503,8 +503,37 @@ function resetForm() {
   formError.value = ''
 }
 
-function close() { editing.value = null; creating.value = false; deleting.value = null; emit('close') }
-function cancelForm() { editing.value = null; creating.value = false; resetForm() }
+// Snapshot du formulaire pris à l'ouverture (édition/création) — permet de
+// détecter des modifications non enregistrées et d'empêcher de les perdre
+// silencieusement en fermant (× , clic hors modale, Echap).
+const formSnapshot = ref('')
+const isFormDirty = computed(() =>
+  (editing.value || creating.value) && JSON.stringify(form.value) !== formSnapshot.value
+)
+
+function confirmDiscard() {
+  if (!isFormDirty.value) return true
+  return window.confirm('Modifications non enregistrées — les abandonner ?')
+}
+
+function close() {
+  if (!confirmDiscard()) return
+  editing.value = null; creating.value = false; deleting.value = null; emit('close')
+}
+function cancelForm() {
+  if (!confirmDiscard()) return
+  editing.value = null; creating.value = false; resetForm()
+}
+
+// Echap doit fermer CETTE modale (avec garde-fou dirty) sans se propager au
+// document — sinon le handler global d'admin (layouts/default.vue) intercepte
+// la même touche et quitte tout le mode admin, perdant bien plus que prévu.
+function onKeydown(e) {
+  if (e.key !== 'Escape') return
+  e.stopPropagation()
+  if (editing.value || creating.value) cancelForm()
+  else close()
+}
 
 function startEdit(evt) {
   editing.value = evt.id; creating.value = false; deleting.value = null
@@ -520,10 +549,12 @@ function startEdit(evt) {
   }
   // Snapshot pour calculer les exceptions ajoutées/supprimées au save.
   originalExceptions.value = (evt.exceptions || []).map(ex => ({ ...ex }))
+  formSnapshot.value = JSON.stringify(form.value)
 }
 function startCreate() {
   creating.value = true; editing.value = null; deleting.value = null; resetForm()
   originalExceptions.value = []
+  formSnapshot.value = JSON.stringify(form.value)
 }
 
 function addException() {
@@ -681,7 +712,18 @@ function toggleUploadedList() {
   if (showUploadedList.value) loadUploadedImages()
 }
 
-watch(() => props.open, (v) => { if (v) fetchEvents() })
+watch(() => props.open, (v) => {
+  if (v) {
+    fetchEvents()
+    // Capture (pas bubble) : gagne sur le handler global admin
+    // (layouts/default.vue) qui quitte tout le mode admin sur Echap, quel
+    // que soit l'élément focus au moment de la touche.
+    document.addEventListener('keydown', onKeydown, true)
+  } else {
+    document.removeEventListener('keydown', onKeydown, true)
+  }
+})
+onUnmounted(() => document.removeEventListener('keydown', onKeydown, true))
 </script>
 
 <style scoped>
