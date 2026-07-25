@@ -325,7 +325,7 @@ onUnmounted(() => {
     text-underline-offset: 4px;
 }
 
-.nav-desktop a.active,
+.nav-desktop a.active:not(.nav-membre-link),
 .nav-admin-link.active {
     color: #ef4b54;
     text-decoration: none;
@@ -454,7 +454,7 @@ onUnmounted(() => {
     text-underline-offset: 4px;
 }
 
-.nav-mobile a.active,
+.nav-mobile a.active:not(.nav-membre-link),
 .nav-mobile .nav-admin-link.active {
     color: #ffd9dc;
     text-decoration: none;

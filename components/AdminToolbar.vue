@@ -7,12 +7,7 @@
                 :value="pageSlug"
                 @change="navigateToPage($event.target.value)"
             >
-                <option value="accueil">Accueil</option>
-                <option value="contact">Contact</option>
-                <option value="messages">Messages</option>
-                <option value="event-list">Événements</option>
-                <option value="agenda">Agenda</option>
-                <option v-for="p in customPages" :key="p.slug" :value="p.slug">{{ p.title || p.slug }}</option>
+                <option v-for="p in orderedPageOptions" :key="p.slug" :value="p.slug">{{ p.label }}</option>
             </select>
         </div>
         <div class="admin-toolbar-center">
@@ -954,7 +949,7 @@ import {
     signOut,
     onAuthStateChanged,
 } from "firebase/auth";
-import { BLOCK_TYPES, ANIMATIONS } from "~/utils/blockTypes.js";
+import { BLOCK_TYPES, ANIMATIONS, HARDCODED_SLUGS } from "~/utils/blockTypes.js";
 import { SOCIAL_ICONS } from "~/utils/socialIcons.js";
 import { useToast } from '~/composables/useToast'
 
@@ -1008,7 +1003,46 @@ const {
     startPositioning,
 } = useAdmin();
 
-const { saveMenuToFirestore, customPages, loadCustomPages, menuChanged, openMenuEditor } = useMenuEditor();
+const { saveMenuToFirestore, customPages, loadCustomPages, menuChanged, openMenuEditor, menuItems } = useMenuEditor();
+
+const HARDCODED_PAGE_OPTIONS = [
+    { slug: 'accueil', label: 'Accueil' },
+    { slug: 'contact', label: 'Contact' },
+    { slug: 'messages', label: 'Messages' },
+    { slug: 'event-list', label: 'Événements' },
+    { slug: 'agenda', label: 'Agenda' },
+]
+
+// Le menu déroulant de sélection de page listait les pages système dans un
+// ordre figé puis les pages perso dans l'ordre (arbitraire) de l'API — sans
+// rapport avec l'ordre réel du menu de navigation du site. On reconstruit
+// l'ordre en parcourant menuItems (profondeur d'abord, comme affiché dans le
+// menu) ; toute page non référencée dans le menu (supprimée de la nav sans
+// être supprimée elle-même) est ajoutée à la fin pour ne jamais disparaître
+// du sélecteur.
+const orderedPageOptions = computed(() => {
+    const bySlug = new Map()
+    for (const p of HARDCODED_PAGE_OPTIONS) bySlug.set(p.slug, p)
+    for (const p of customPages.value) bySlug.set(p.slug, { slug: p.slug, label: p.title || p.slug })
+
+    const ordered = []
+    const seen = new Set()
+    function walk(items) {
+        for (const item of items || []) {
+            const slug = item.pageSlug || (HARDCODED_SLUGS.includes(item.id) ? item.id : null)
+            if (slug && bySlug.has(slug) && !seen.has(slug)) {
+                ordered.push(bySlug.get(slug))
+                seen.add(slug)
+            }
+            if (item.children?.length) walk(item.children)
+        }
+    }
+    walk(menuItems.value)
+    for (const p of bySlug.values()) {
+        if (!seen.has(p.slug)) ordered.push(p)
+    }
+    return ordered
+})
 
 // Fusionner l'état des modifications (blocs + menu) pour une UX unifiée
 const hasAnyUnsavedChanges = computed(() => hasUnsavedChanges.value || menuChanged.value)
