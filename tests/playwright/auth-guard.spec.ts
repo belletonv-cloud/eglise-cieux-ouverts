@@ -86,13 +86,14 @@ test.describe('Auth guard — unauthenticated (redirect to login)', () => {
     expect(params.get('redirect')).toBe('/contact?admin=true')
   })
 
-  test('login page renders with Google sign-in button after redirect', async ({ page }) => {
+  test('login page renders with email/password sign-in form after redirect', async ({ page }) => {
     await page.goto('/?admin=true')
     await page.waitForURL(/\/admin/, { timeout: 15000 })
     await page.waitForSelector('.admin-login-card', { timeout: 5000 })
     await expect(page.locator('.admin-login-card h1')).toHaveText('Administration')
+    await expect(page.locator('.admin-login-form input[type="email"]')).toBeVisible()
     await expect(
-      page.getByRole('button', { name: 'Se connecter avec Google' })
+      page.getByRole('button', { name: 'Se connecter' })
     ).toBeVisible()
   })
 

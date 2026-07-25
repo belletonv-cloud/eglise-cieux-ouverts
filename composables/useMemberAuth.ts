@@ -1,7 +1,5 @@
 import { ref, computed } from 'vue'
 import {
-  GoogleAuthProvider,
-  signInWithPopup,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   sendPasswordResetEmail,
@@ -61,11 +59,6 @@ export function useMemberAuth() {
     }
   }
 
-  async function loginGoogle() {
-    const provider = new GoogleAuthProvider()
-    await signInWithPopup($auth, provider)
-  }
-
   async function loginEmail(email: string, password: string) {
     await signInWithEmailAndPassword($auth, email, password)
   }
@@ -101,7 +94,6 @@ export function useMemberAuth() {
     getToken,
     authedFetch,
     fetchProfile,
-    loginGoogle,
     loginEmail,
     registerEmail,
     resetPassword,

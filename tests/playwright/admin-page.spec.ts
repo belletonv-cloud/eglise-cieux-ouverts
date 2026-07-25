@@ -55,12 +55,13 @@ test.describe('/admin page — unauthenticated', () => {
     })
   })
 
-  test('login page renders with Google sign-in button', async ({ page }) => {
+  test('login page renders with email/password sign-in form', async ({ page }) => {
     await page.goto('/admin')
     await page.waitForSelector('.admin-login-card', { timeout: 10000 })
     await expect(page.locator('.admin-login-card h1')).toHaveText('Administration')
+    await expect(page.locator('.admin-login-form input[type="email"]')).toBeVisible()
     await expect(
-      page.getByRole('button', { name: 'Se connecter avec Google' })
+      page.getByRole('button', { name: 'Se connecter' })
     ).toBeVisible()
   })
 

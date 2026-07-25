@@ -46,7 +46,6 @@ test.describe('Espace membre — /membre', () => {
     await logoutAll(page)
     await page.goto('/membre')
     await expect(page.getByRole('heading', { name: 'Espace membre' })).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Continuer avec Google' })).toBeVisible()
     await expect(page.getByPlaceholder('Email')).toBeVisible()
     await expect(page.getByRole('button', { name: 'Se connecter' })).toBeVisible()
   })
@@ -219,7 +218,7 @@ test.describe('Bloc Louange', () => {
     await page.goto('/louange-test')
     await page.getByRole('button', { name: 'Je postule !' }).first().click()
     await page.waitForURL(/\/membre\?redirect=/, { timeout: 5000 })
-    await expect(page.getByRole('button', { name: 'Continuer avec Google' })).toBeVisible()
+    await expect(page.getByPlaceholder('Email')).toBeVisible()
   })
 
   test('connecté : la candidature part et le bouton se verrouille', async ({ page }) => {

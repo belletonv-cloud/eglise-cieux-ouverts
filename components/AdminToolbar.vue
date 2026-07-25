@@ -213,7 +213,7 @@
                 <template v-else>
                     <button
                         class="admin-btn admin-btn-login"
-                        @click="signInWithGoogle"
+                        @click="goToAdminLogin"
                     >
                         Se connecter
                     </button>
@@ -944,8 +944,6 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted, inject, nextTick } from "vue";
 import {
-    GoogleAuthProvider,
-    signInWithPopup,
     signOut,
     onAuthStateChanged,
 } from "firebase/auth";
@@ -2230,14 +2228,13 @@ async function navigateToPage(slug, focusBlockId) {
     }
 }
 
-async function signInWithGoogle() {
-    const provider = new GoogleAuthProvider();
-    try {
-        await signInWithPopup($auth, provider);
-    } catch (e) {
-        console.error("Login error:", e);
-        showToast("Connexion échouée : " + e.message, 'toast-error');
-    }
+// Ce bouton n'apparaît que dans le cas limite où la toolbar est montée
+// (isAdminMode actif) sans session Firebase (ex: session expirée pendant la
+// navigation) — redirige vers la page de connexion dédiée (email + mot de
+// passe) plutôt que de dupliquer un troisième formulaire de connexion ici.
+function goToAdminLogin() {
+    const current = window.location.pathname + window.location.search;
+    window.location.href = `/admin?redirect=${encodeURIComponent(current)}`;
 }
 
 async function signOutAndExit() {

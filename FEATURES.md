@@ -44,7 +44,7 @@ Chaque type déclare `label`, `icon`, `category`, `animations` (stratégie), `de
 
 ## Auth admin
 
-Firebase Auth (Google Sign-In), projet Firebase `eglise-cieux-ouverts`. `?admin=true` active le mode admin dans l'UI quel que soit le statut d'authentification — c'est la toolbar qui affiche "Se connecter" si besoin. `auth.onAuthStateChanged` existe nativement sur le SDK Firebase (compat v8) — ne jamais le réassigner (a causé une récursion infinie en prod, corrigé).
+Firebase Auth (email + mot de passe — connexion Google retirée), projet Firebase `eglise-cieux-ouverts`. `?admin=true` active le mode admin dans l'UI quel que soit le statut d'authentification — c'est la toolbar qui affiche "Se connecter" si besoin (redirige vers `/admin`). `auth.onAuthStateChanged` existe nativement sur le SDK Firebase (compat v8) — ne jamais le réassigner (a causé une récursion infinie en prod, corrigé).
 
 ## Événements
 
@@ -85,7 +85,7 @@ Ces bugs ont causé des pertes de contenu réel ou des blocages de l'admin en pr
 
 **Page `/membre`** (`pages/membre.vue`, slug réservé dans `HARDCODED_SLUGS`) — espace personnel des membres, distinct de l'admin :
 
-- **Auth membre** : Firebase Auth du projet `eglise-cieux-ouverts`, Google **et** email/mot de passe (+ création de compte + reset). Composable `useMemberAuth.ts` (refs singleton module-scope, pattern `useAdmin`). Le Worker eglise-app associe/auto-crée le membre par email (`getMemberFromRequest`). Lien « Espace membre » dans le SiteHeader (devient `👤 Prénom` connecté).
+- **Auth membre** : Firebase Auth du projet `eglise-cieux-ouverts`, email/mot de passe uniquement (connexion Google retirée) — connexion + création de compte + reset. Composable `useMemberAuth.ts` (refs singleton module-scope, pattern `useAdmin`). Le Worker eglise-app associe/auto-crée le membre par email (`getMemberFromRequest`). Lien « Espace membre » dans le SiteHeader (devient `👤 Prénom` connecté).
 - **Ressources partagées** : liste des ressources ciblées vers le membre (partagées depuis la SPA admin eglise-app, vue `/resources` — ciblage tous/équipe/groupe de maison/membres, snapshot des destinataires au partage). Ouvrir une ressource **logge automatiquement la consultation** (`POST /api/member/resources/:id/access` : première/dernière consultation + compteur) puis ouvre l'URL. L'admin voit « consulté par X/Y » avec détail par membre ; un **digest email quotidien** (cron 8h du Worker, Resend → `ADMIN_EMAIL`, marqueur `digested_at`) récapitule les nouvelles consultations (+ push FCM admins si configuré).
 - **Demandes & candidatures** : table D1 `participation_requests` (`kind` = `admin_request` | `candidacy`). L'admin envoie une demande ciblée (« peux-tu chanter dimanche ? ») que le membre accepte/refuse depuis `/membre` (accepter avec `event_id` → participation `present`) ; le membre postule aux postes du bloc `louange`, l'admin tranche dans la vue `/requests` d'eglise-app.
 - **Agenda personnel** : le membre connecté voit ses événements surlignés (`.event-mine`, ⭐) dans `/agenda` et indique sa présence (Présent/Peut-être/Absent) depuis la modale d'événement — table D1 `church_event_participants` (occurrence par date pour les récurrents). Badge « X/Y confirmés » + modale participants côté admin (ChurchEvents.vue d'eglise-app).

@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, message: 'Token invalide' })
   }
   if (!userInfo.email) {
-    throw createError({ statusCode: 400, message: 'Aucun email associé à ce compte Google' })
+    throw createError({ statusCode: 400, message: 'Aucun email associé à ce compte' })
   }
 
   const currentUsers = await getAdminUsers(event)

@@ -148,7 +148,7 @@ test.describe('Auto-save', () => {
     await page.goto('/?admin=true')
     await page.waitForURL(/\/admin/, { timeout: 15000 })
     await expect(page.locator('.admin-login-card')).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Se connecter avec Google' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Se connecter' })).toBeVisible()
   })
 
   test('logged out: no page-save button is reachable', async ({ page }) => {
