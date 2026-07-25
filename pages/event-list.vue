@@ -12,7 +12,6 @@ useSeoMeta({
 })
 
 const { isAdminMode, enterAdmin, localBlocks, localBlocksPage } = useAdmin()
-const router = useRouter()
 
 // Masquer la page si aucun événement à venir n'est publié (option admin),
 // sauf en mode admin où elle reste accessible pour la gestion du contenu.
@@ -23,7 +22,13 @@ const { hasEvenements, loading: eventsLoading } = useChurchEvents()
 watch([isAdminMode, hideIfEmpty, hasEvenements, eventsLoading], () => {
   if (isAdminMode.value || eventsLoading.value) return
   if (hideIfEmpty.value && !hasEvenements.value) {
-    router.push('/')
+    // navigateTo (pas router.push) : sur un premier chargement direct de
+    // /event-list, useChurchEvents() ne résout (onMounted, client-only)
+    // qu'après hydratation — ce watcher peut donc se déclencher une seule
+    // fois post-hydratation, en plein contexte Nuxt. router.push() y
+    // fonctionne, mais navigateTo() est la primitive Nuxt correcte ici
+    // (gère aussi le cas SSR si jamais ce timing venait à changer).
+    navigateTo('/')
   }
 }, { immediate: true })
 
