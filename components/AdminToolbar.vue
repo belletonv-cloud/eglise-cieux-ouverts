@@ -1397,6 +1397,7 @@ const filteredContactMessages = computed(() => {
 })
 
 watch(isAdminUser, (val) => { if (val) loadContactMessages() }, { immediate: true })
+watch(showContactMessages, (show) => { if (show) loadContactMessages() })
 
 async function loadContactMessages() {
     contactMessagesLoading.value = true
