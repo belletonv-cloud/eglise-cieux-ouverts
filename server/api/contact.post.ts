@@ -154,6 +154,7 @@ export default defineEventHandler(async (event) => {
 
     // Envoyer notification email via Resend, sous réserve du quota mensuel
     const resendApiKey = process.env.NUXT_RESEND_API_KEY || ''
+    const resendFromDomain = process.env.NUXT_RESEND_FROM_DOMAIN || 'onboarding@resend.dev'
 
     if (resendApiKey && contactEmails.length) {
       const quotaLimit = getEmailQuotaLimit()
@@ -190,7 +191,7 @@ export default defineEventHandler(async (event) => {
             'Authorization': `Bearer ${resendApiKey}`,
           },
           body: JSON.stringify({
-            from: 'Contact <onboarding@resend.dev>',
+            from: `Contact <${resendFromDomain}>`,
             to: contactEmails,
             subject: `Nouveau contact : ${prenom} ${nom}`,
             html: emailHtml,
