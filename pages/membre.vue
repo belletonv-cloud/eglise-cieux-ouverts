@@ -163,7 +163,10 @@ function authErrorMessage(e) {
   if (code.includes('weak-password')) return 'Mot de passe trop court (6 caractères minimum).'
   if (code.includes('invalid-email')) return 'Adresse email invalide.'
   if (code.includes('popup-closed')) return 'Connexion annulée.'
-  return 'Une erreur est survenue. Réessaie.'
+  // Erreurs Firebase/Auth problématiques
+  if (!e?.message) return 'Erreur de connexion. Vérifie ta connexion internet.'
+  if (!e?.code) return 'Erreur de connexion. Réessaie plus tard.'
+  return 'Une erreur est survenue: ' + (e.message || 'Réessaie.')
 }
 
 async function doEmailSubmit() {

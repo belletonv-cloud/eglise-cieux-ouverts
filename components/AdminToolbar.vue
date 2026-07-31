@@ -844,16 +844,6 @@
                 </div>
                 <div class="settings-modal-body">
                     <div class="settings-field">
-                        <label>Adresse d'envoi (formulaire contact)</label>
-                        <input
-                            v-model="contactFromEmail"
-                            type="email"
-                            placeholder="noreply@example.com"
-                            class="settings-input"
-                        />
-                        <p class="settings-hint">Adresse email qui apparaîtra comme expéditeur des notifications du formulaire de contact.</p>
-                    </div>
-                    <div class="settings-field">
                         <label>Emails de destination (formulaire contact)</label>
                         <textarea
                             v-model="contactEmailsText"
@@ -1469,7 +1459,6 @@ async function toggleContactArchived(message) {
 // Settings
 const showSettings = ref(false)
 const settingsForm = ref({ hideEventsPageIfEmpty: false })
-const contactFromEmail = ref('')
 const contactEmailsText = ref('')
 const socialLinksForm = ref([])
 const emailQuota = ref(null)
@@ -1508,7 +1497,6 @@ async function loadSettings() {
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     const data = await res.json()
     settingsForm.value = { hideEventsPageIfEmpty: data.hideEventsPageIfEmpty === true }
-    contactFromEmail.value = data.contactFromEmail || ''
     contactEmailsText.value = (data.contactEmails || []).join(', ')
     socialLinksForm.value = Array.isArray(data.socialLinks) ? data.socialLinks.map(l => ({ ...l })) : []
     memberTabOrderForm.value = Array.isArray(data.memberTabOrder) && data.memberTabOrder.length === 3
@@ -1549,7 +1537,7 @@ async function saveSettings() {
     const res = await fetch('/api/settings', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ ...settingsForm.value, contactFromEmail: contactFromEmail.value, contactEmails, socialLinks: socialLinksForm.value, memberTabOrder: memberTabOrderForm.value }),
+      body: JSON.stringify({ ...settingsForm.value, contactEmails, socialLinks: socialLinksForm.value, memberTabOrder: memberTabOrderForm.value }),
     })
     if (!res.ok) {
       const body = await res.json().catch(() => null)

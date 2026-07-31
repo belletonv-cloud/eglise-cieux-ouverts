@@ -131,9 +131,8 @@ export default defineEventHandler(async (event) => {
       throw new Error(`Firestore error: ${errorText}`)
     }
   
-    // Récupérer les emails de destination et l'adresse d'envoi depuis settings
+    // Récupérer les emails de destination depuis settings
     let contactEmails = [process.env.CONTACT_EMAIL || 'contact@example.com']
-    let contactFromEmail = 'noreply@example.com'
     try {
       const settingsResponse = await fetch(`https://firestore.googleapis.com/v1/projects/${firebaseProjectId}/databases/(default)/documents/settings/config`, {
         headers: { authorization: `Bearer ${accessToken}` },
@@ -142,19 +141,17 @@ export default defineEventHandler(async (event) => {
         const settingsDoc = await settingsResponse.json()
         const multiField = settingsDoc.fields?.contactEmails?.arrayValue?.values
         const legacyField = settingsDoc.fields?.contactEmail?.stringValue
-        const fromField = settingsDoc.fields?.contactFromEmail?.stringValue
         if (multiField?.length) {
           contactEmails = multiField.map((v: any) => v.stringValue).filter(Boolean)
         } else if (legacyField) {
           contactEmails = [legacyField]
         }
-        if (fromField) {
-          contactFromEmail = fromField
-        }
       }
     } catch (e) {
       console.error('Could not fetch settings, using fallback:', e)
     }
+
+    const contactFromEmail = 'noreply@example.com'
 
     // Envoyer notification email via Mailjet SMTP
     const mailjetSmtpHost = process.env.NUXT_MAILJET_SMTP_HOST || ''
