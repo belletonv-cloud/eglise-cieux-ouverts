@@ -152,65 +152,46 @@ export default defineEventHandler(async (event) => {
       console.error('Could not fetch settings, using fallback:', e)
     }
 
-    // Envoyer notification email via Resend (domaine par défaut onresend.com)
-    const resendApiKey = process.env.NUXT_RESEND_API_KEY || ''
+    // Envoyer notification email via AISend (domaine partagé send.aisend.app)
+    const aiSendApiKey = process.env.NUXT_AISEND_API_KEY || ''
 
-    if (resendApiKey && contactEmails.length) {
-      const quotaLimit = getEmailQuotaLimit()
-      const month = new Date().toISOString().slice(0, 7)
-      let quotaCount = 0
+    if (aiSendApiKey && contactEmails.length) {
+      const emailHtml = `
+        <h2>Nouveau contact reçu</h2>
+        <p><strong>Nom :</strong> ${prenom} ${nom}</p>
+        <p><strong>Email :</strong> <a href="mailto:${email}">${email}</a></p>
+        ${ville ? `<p><strong>Ville :</strong> ${ville}</p>` : ''}
+        <p><strong>Message :</strong></p>
+        <div style="background:#f5f5f5;padding:15px;border-radius:8px;margin:10px 0">
+          ${message.replace(/\n/g, '<br>')}
+        </div>
+        <p><small>Reçu le ${new Date().toLocaleString('fr-FR')}</small></p>
+        <p><a href="https://console.firebase.google.com/project/eglise-cieux-ouverts/firestore/data/~2Fcontacts">Voir dans Firestore</a></p>
+      `
+
       try {
-        const quotaDoc = await getFirestoreDoc(firebaseProjectId, accessToken, 'settings', 'emailQuota')
-        const quotaData = quotaDoc ? parseFirestoreDoc(quotaDoc) : null
-        quotaCount = quotaData?.month === month ? (quotaData.count || 0) : 0
-      } catch (e) {
-        console.error('Could not read email quota, assuming 0:', e)
-      }
-
-      if (quotaCount >= quotaLimit) {
-        console.warn(`Email quota reached (${quotaCount}/${quotaLimit} for ${month}) — skipping Resend, contact saved to Firestore only.`)
-      } else {
-        const emailHtml = `
-          <h2>Nouveau contact reçu</h2>
-          <p><strong>Nom :</strong> ${prenom} ${nom}</p>
-          <p><strong>Email :</strong> <a href="mailto:${email}">${email}</a></p>
-          ${ville ? `<p><strong>Ville :</strong> ${ville}</p>` : ''}
-          <p><strong>Message :</strong></p>
-          <div style="background:#f5f5f5;padding:15px;border-radius:8px;margin:10px 0">
-            ${message.replace(/\n/g, '<br>')}
-          </div>
-          <p><small>Reçu le ${new Date().toLocaleString('fr-FR')}</small></p>
-          <p><a href="https://console.firebase.google.com/project/eglise-cieux-ouverts/firestore/data/~2Fcontacts">Voir dans Firestore</a></p>
-        `
-
-        const resendResponse = await fetch('https://api.resend.com/emails', {
+        const aiSendResponse = await fetch('https://api.aisend.app/send', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${resendApiKey}`,
+            'Authorization': `Bearer ${aiSendApiKey}`,
           },
           body: JSON.stringify({
-            from: 'noreply@onresend.com',
+            from: 'noreply@send.aisend.app',
             to: contactEmails,
             subject: `Nouveau contact : ${prenom} ${nom}`,
             html: emailHtml,
           }),
         })
 
-        if (!resendResponse.ok) {
-          const errorText = await resendResponse.text()
-          console.error('Resend error:', errorText)
+        if (!aiSendResponse.ok) {
+          const errorText = await aiSendResponse.text()
+          console.error('AISend error:', errorText)
         } else {
-          console.log('Resend success')
-          try {
-            await setFirestoreDoc(firebaseProjectId, accessToken, 'settings', 'emailQuota', {
-              month,
-              count: quotaCount + 1,
-            })
-          } catch (e) {
-            console.error('Could not update email quota counter:', e)
-          }
+          console.log('AISend success')
         }
+      } catch (e) {
+        console.error('AISend request failed:', e)
       }
     }
 
