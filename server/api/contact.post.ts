@@ -152,9 +152,8 @@ export default defineEventHandler(async (event) => {
       console.error('Could not fetch settings, using fallback:', e)
     }
 
-    // Envoyer notification email via Resend, sous réserve du quota mensuel
+    // Envoyer notification email via Resend (domaine par défaut onresend.com)
     const resendApiKey = process.env.NUXT_RESEND_API_KEY || ''
-    const resendFromDomain = process.env.NUXT_RESEND_FROM_DOMAIN || 'onboarding@resend.dev'
 
     if (resendApiKey && contactEmails.length) {
       const quotaLimit = getEmailQuotaLimit()
@@ -191,7 +190,7 @@ export default defineEventHandler(async (event) => {
             'Authorization': `Bearer ${resendApiKey}`,
           },
           body: JSON.stringify({
-            from: `Contact <${resendFromDomain}>`,
+            from: 'noreply@onresend.com',
             to: contactEmails,
             subject: `Nouveau contact : ${prenom} ${nom}`,
             html: emailHtml,
