@@ -12,6 +12,7 @@ export default defineNuxtConfig({
   experimental: {
     appManifest: false
   },
+  compatibilityDate: '2026-07-31',
   // @ts-expect-error: routeRules valid at runtime but absent from this Nuxt version's InputConfig type
   routeRules: {
     '/billetterie': { redirect: '/event-list' },

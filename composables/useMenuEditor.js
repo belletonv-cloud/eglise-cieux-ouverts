@@ -11,8 +11,6 @@ const DEFAULT_MENU_ITEMS = [
 
 const MENU_EDITOR_KEY = Symbol('menu-editor')
 
-export { HARDCODED_SLUGS }
-
 const menuItems = ref(JSON.parse(JSON.stringify(DEFAULT_MENU_ITEMS)))
 const customPages = ref([])
 const editingMenuItemId = ref(null)

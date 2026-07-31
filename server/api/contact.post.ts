@@ -131,10 +131,9 @@ export default defineEventHandler(async (event) => {
       throw new Error(`Firestore error: ${errorText}`)
     }
   
-    // Récupérer les emails de destination depuis settings (nouveau format
-    // contactEmails[] ; repli sur l'ancien champ contactEmail string pour les
-    // documents Firestore écrits avant l'introduction des emails multiples)
+    // Récupérer les emails de destination et l'adresse d'envoi depuis settings
     let contactEmails = [process.env.CONTACT_EMAIL || 'contact@example.com']
+    let contactFromEmail = 'noreply@example.com'
     try {
       const settingsResponse = await fetch(`https://firestore.googleapis.com/v1/projects/${firebaseProjectId}/databases/(default)/documents/settings/config`, {
         headers: { authorization: `Bearer ${accessToken}` },
@@ -143,10 +142,14 @@ export default defineEventHandler(async (event) => {
         const settingsDoc = await settingsResponse.json()
         const multiField = settingsDoc.fields?.contactEmails?.arrayValue?.values
         const legacyField = settingsDoc.fields?.contactEmail?.stringValue
+        const fromField = settingsDoc.fields?.contactFromEmail?.stringValue
         if (multiField?.length) {
           contactEmails = multiField.map((v: any) => v.stringValue).filter(Boolean)
         } else if (legacyField) {
           contactEmails = [legacyField]
+        }
+        if (fromField) {
+          contactFromEmail = fromField
         }
       }
     } catch (e) {
@@ -158,10 +161,8 @@ export default defineEventHandler(async (event) => {
     const mailjetSmtpPort = parseInt(process.env.NUXT_MAILJET_SMTP_PORT || '587')
     const mailjetSmtpUser = process.env.NUXT_MAILJET_SMTP_USER || ''
     const mailjetSmtpPass = process.env.NUXT_MAILJET_SMTP_PASS || ''
-    const mailjetFromEmail = process.env.NUXT_MAILJET_FROM_EMAIL || ''
-    const mailjetFromName = process.env.NUXT_MAILJET_FROM_NAME || 'Église Cieux Ouverts'
 
-    if (mailjetSmtpUser && mailjetSmtpPass && contactEmails.length) {
+    if (mailjetSmtpUser && mailjetSmtpPass && contactFromEmail && contactEmails.length) {
       const emailHtml = `
         <h2>Nouveau contact reçu</h2>
         <p><strong>Nom :</strong> ${prenom} ${nom}</p>
@@ -187,7 +188,7 @@ export default defineEventHandler(async (event) => {
         })
 
         await transporter.sendMail({
-          from: `${mailjetFromName} <${mailjetFromEmail}>`,
+          from: contactFromEmail,
           to: contactEmails,
           subject: `Nouveau contact : ${prenom} ${nom}`,
           html: emailHtml,
