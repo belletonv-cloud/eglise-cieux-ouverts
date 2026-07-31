@@ -1,5 +1,6 @@
 import { getAccessToken, getFirestoreDoc, setFirestoreDoc, parseFirestoreDoc } from '../utils/firebase'
 import { getEmailQuotaLimit } from '../utils/email-quota'
+import nodemailer from 'nodemailer'
 
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token'
 // Note: in-memory rate limiting is best-effort on serverless (Cloudflare Pages).
@@ -152,10 +153,15 @@ export default defineEventHandler(async (event) => {
       console.error('Could not fetch settings, using fallback:', e)
     }
 
-    // Envoyer notification email via AISend (domaine partagé send.aisend.app)
-    const aiSendApiKey = process.env.NUXT_AISEND_API_KEY || ''
+    // Envoyer notification email via Mailjet SMTP
+    const mailjetSmtpHost = process.env.NUXT_MAILJET_SMTP_HOST || ''
+    const mailjetSmtpPort = parseInt(process.env.NUXT_MAILJET_SMTP_PORT || '587')
+    const mailjetSmtpUser = process.env.NUXT_MAILJET_SMTP_USER || ''
+    const mailjetSmtpPass = process.env.NUXT_MAILJET_SMTP_PASS || ''
+    const mailjetFromEmail = process.env.NUXT_MAILJET_FROM_EMAIL || ''
+    const mailjetFromName = process.env.NUXT_MAILJET_FROM_NAME || 'Église Cieux Ouverts'
 
-    if (aiSendApiKey && contactEmails.length) {
+    if (mailjetSmtpUser && mailjetSmtpPass && contactEmails.length) {
       const emailHtml = `
         <h2>Nouveau contact reçu</h2>
         <p><strong>Nom :</strong> ${prenom} ${nom}</p>
@@ -170,28 +176,26 @@ export default defineEventHandler(async (event) => {
       `
 
       try {
-        const aiSendResponse = await fetch('https://api.aisend.app/send', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${aiSendApiKey}`,
+        const transporter = nodemailer.createTransport({
+          host: mailjetSmtpHost,
+          port: mailjetSmtpPort,
+          secure: mailjetSmtpPort === 465,
+          auth: {
+            user: mailjetSmtpUser,
+            pass: mailjetSmtpPass,
           },
-          body: JSON.stringify({
-            from: 'noreply@send.aisend.app',
-            to: contactEmails,
-            subject: `Nouveau contact : ${prenom} ${nom}`,
-            html: emailHtml,
-          }),
         })
 
-        if (!aiSendResponse.ok) {
-          const errorText = await aiSendResponse.text()
-          console.error('AISend error:', errorText)
-        } else {
-          console.log('AISend success')
-        }
+        await transporter.sendMail({
+          from: `${mailjetFromName} <${mailjetFromEmail}>`,
+          to: contactEmails,
+          subject: `Nouveau contact : ${prenom} ${nom}`,
+          html: emailHtml,
+        })
+
+        console.log('Email sent successfully via Mailjet')
       } catch (e) {
-        console.error('AISend request failed:', e)
+        console.error('Email sending failed:', e)
       }
     }
 
