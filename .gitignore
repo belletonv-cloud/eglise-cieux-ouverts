@@ -64,3 +64,4 @@ audit-*.js
 # These are user-specific planning documents and should not be committed
 _bmad/
 _bmad-output/
+.dev.vars

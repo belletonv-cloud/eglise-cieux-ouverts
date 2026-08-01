@@ -1,6 +1,6 @@
-import { getAccessToken, getFirestoreDoc, setFirestoreDoc, parseFirestoreDoc } from '../utils/firebase'
+import { getFirestoreConfig, getAccessToken, getFirestoreDoc, setFirestoreDoc, parseFirestoreDoc } from '../utils/firebase'
 import { getEmailQuotaLimit } from '../utils/email-quota'
-import nodemailer from 'nodemailer'
+import { sendEmail } from '../utils/send-email'
 
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token'
 // Note: in-memory rate limiting is best-effort on serverless (Cloudflare Pages).
@@ -38,7 +38,6 @@ function assertString(value: unknown, max: number) {
 }
 
 export default defineEventHandler(async (event) => {
-  const config = useRuntimeConfig(event)
   const body = await readBody(event)
   const isTest = process.env.NODE_ENV === 'test' || process.env.PW_TEST === '1' || process.env.TEST_ENV === '1'
 
@@ -55,11 +54,14 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  // Cloudflare Pages: read from process.env directly
-  const firebaseProjectId = (process.env.NUXT_FIREBASE_PROJECT_ID || config.firebaseProjectId || '') as string
-  const firebaseClientEmail = (process.env.NUXT_FIREBASE_CLIENT_EMAIL || config.firebaseClientEmail || '') as string
-  const firebasePrivateKey = (process.env.NUXT_FIREBASE_PRIVATE_KEY || config.firebasePrivateKey || '') as string
-  
+  // Helper partagé (comme menu/footer/pages) plutôt qu'une résolution locale :
+  // cet endpoint lisait process.env AVANT runtimeConfig, soit l'inverse du
+  // reste du code. Quand les deux sources divergent — typiquement une valeur
+  // mal formée côté Cloudflare et une valeur correcte figée au build — seul
+  // /api/contact partait en erreur, avec un 500 opaque très difficile à
+  // rattacher à sa cause.
+  const firestore = getFirestoreConfig(event)
+
   const prenom = assertString(body?.prenom, 80)
   const nom = assertString(body?.nom, 80)
   const ville = assertString(body?.ville, 120)
@@ -93,13 +95,14 @@ export default defineEventHandler(async (event) => {
     return { ok: true }
   }
 
-  if (!firebaseClientEmail || !firebasePrivateKey || !firebaseProjectId) {
+  if (!firestore) {
     throw createError({ statusCode: 503, message: 'Configuration serveur contact incomplète.' })
   }
+  const { projectId: firebaseProjectId, clientEmail: firebaseClientEmail, privateKey: firebasePrivateKey } = firestore
 
   try {
     const accessToken = await getAccessToken(firebaseClientEmail, firebasePrivateKey)
-    
+
     const firestoreUrl = `https://firestore.googleapis.com/v1/projects/${firebaseProjectId}/databases/(default)/documents/contacts`
     
     const response = await fetch(firestoreUrl, {
@@ -131,8 +134,11 @@ export default defineEventHandler(async (event) => {
       throw new Error(`Firestore error: ${errorText}`)
     }
   
-    // Récupérer les emails de destination depuis settings
-    let contactEmails = [process.env.CONTACT_EMAIL || 'contact@example.com']
+    // Récupérer les emails de destination depuis settings. Pas de valeur de
+    // repli : l'adresse de destination se règle dans l'admin (⚙️ Config →
+    // « Emails de destination »), et un repli codé en dur enverrait les
+    // messages à une adresse que personne ne surveille.
+    let contactEmails: string[] = []
     try {
       const settingsResponse = await fetch(`https://firestore.googleapis.com/v1/projects/${firebaseProjectId}/databases/(default)/documents/settings/config`, {
         headers: { authorization: `Bearer ${accessToken}` },
@@ -151,15 +157,10 @@ export default defineEventHandler(async (event) => {
       console.error('Could not fetch settings, using fallback:', e)
     }
 
-    const contactFromEmail = 'noreply@example.com'
-
-    // Envoyer notification email via Mailjet SMTP
-    const mailjetSmtpHost = process.env.NUXT_MAILJET_SMTP_HOST || ''
-    const mailjetSmtpPort = parseInt(process.env.NUXT_MAILJET_SMTP_PORT || '587')
-    const mailjetSmtpUser = process.env.NUXT_MAILJET_SMTP_USER || ''
-    const mailjetSmtpPass = process.env.NUXT_MAILJET_SMTP_PASS || ''
-
-    if (mailjetSmtpUser && mailjetSmtpPass && contactFromEmail && contactEmails.length) {
+    // Notification email — best effort : le message est déjà enregistré dans
+    // Firestore et visible dans l'admin (📬 Messages), donc un échec d'envoi
+    // ne doit jamais faire échouer la requête ni perdre le message.
+    if (contactEmails.length) {
       const emailHtml = `
         <h2>Nouveau contact reçu</h2>
         <p><strong>Nom :</strong> ${prenom} ${nom}</p>
@@ -173,27 +174,16 @@ export default defineEventHandler(async (event) => {
         <p><a href="https://console.firebase.google.com/project/eglise-cieux-ouverts/firestore/data/~2Fcontacts">Voir dans Firestore</a></p>
       `
 
-      try {
-        const transporter = nodemailer.createTransport({
-          host: mailjetSmtpHost,
-          port: mailjetSmtpPort,
-          secure: mailjetSmtpPort === 465,
-          auth: {
-            user: mailjetSmtpUser,
-            pass: mailjetSmtpPass,
-          },
-        })
-
-        await transporter.sendMail({
-          from: contactFromEmail,
-          to: contactEmails,
-          subject: `Nouveau contact : ${prenom} ${nom}`,
-          html: emailHtml,
-        })
-
-        console.log('Email sent successfully via Mailjet')
-      } catch (e) {
-        console.error('Email sending failed:', e)
+      const sent = await sendEmail({
+        to: contactEmails,
+        subject: `Nouveau contact : ${prenom} ${nom}`,
+        html: emailHtml,
+        replyTo: email,
+      })
+      if (sent.ok) {
+        console.log(`[contact] notification envoyée à ${contactEmails.length} destinataire(s)`)
+      } else {
+        console.error('[contact] notification NON envoyée :', sent.error)
       }
     }
 

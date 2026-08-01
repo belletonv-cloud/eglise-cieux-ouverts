@@ -1,4 +1,18 @@
 {
+  // ⚠️ NE JAMAIS ajouter de bloc "env" (ni "vars") dans ce fichier.
+  //
+  // Ce projet est un Cloudflare Pages piloté par le dashboard : toutes les
+  // variables et tous les secrets (NUXT_FIREBASE_*, NUXT_MAILJET_*) y sont
+  // définis. Dès qu'un bloc "env.production" apparaît ici, ce fichier devient
+  // la source de vérité pour cet environnement et Cloudflare écrase les
+  // variables du dashboard — les secrets runtime disparaissent et tous les
+  // endpoints Firestore tombent en 500 « Firestore non configuré ».
+  //
+  // C'est arrivé le 01/08/2026 : le site est resté cassé jusqu'à ce que les
+  // secrets soient recréés à la main. Pour ajouter une variable, passer par
+  // Dashboard → Pages → eglise-cieux-ouverts → Settings → Variables & Secrets.
+  //
+  // Vérification en une requête : https://eglise-cieux-ouverts.pages.dev/api/health
   "name": "eglise-cieux-ouverts",
   "compatibility_date": "2024-10-01",
   "pages_build_output_dir": "./dist",

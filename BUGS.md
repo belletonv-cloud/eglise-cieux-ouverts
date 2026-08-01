@@ -1,40 +1,52 @@
 # Bugs connus et points d'attention
 
-## [2026-07-31] Formulaire de contact - Erreur validation Mailjet expéditeur
+## [2026-08-01] RÉSOLU — Emails du formulaire de contact
 
-### Symptôme
-Lors de l'envoi d'un message via le formulaire de contact, l'email n'est pas envoyé et l'erreur suivante apparaît dans les logs ou l'interface d'administration :
+### Ce qui bloquait (deux causes cumulées)
 
-```
-Hello Victor,
+**1. SMTP ne peut pas fonctionner sur Cloudflare Pages.**
+Le site tourne sur le runtime Workers, qui n'expose pas de sockets TCP façon
+Node. `nodemailer` ne peut donc ouvrir aucune connexion SMTP en production —
+ni sur 587, ni sur 465, quel que soit le fournisseur (Mailjet, Yahoo, Gmail,
+Proton). Le piège : en `nuxt dev` (vrai Node) l'envoi marche, ce qui donne
+l'illusion d'une configuration correcte. L'échec était de plus avalé par un
+`try/catch` silencieux, d'où des heures passées à soupçonner les identifiants.
 
-We are contacting you as you (or one of your team members) tried to send an email with sender address: noreply@cieuxouverts.bzh. But this sender address has not been validated yet on your account: 86185e1186f5f8b3e7217c38e39ca4a0.
+**2. Expéditeur non validé chez Mailjet.**
+Mailjet refuse tout envoi depuis une adresse non validée. `noreply@cieuxouverts.bzh`
+ne l'était pas — et la validation d'un *domaine* exige un accès DNS indisponible.
 
-Please validate the sender within 3 days, so that we can send your email. You can manage your senders in the Senders and domains page or by using the /sender API resource.
-```
+### Solution retenue
+- **API HTTP Mailjet** (`https://api.mailjet.com/v3.1/send`) via `fetch`, nativement
+  supporté par Workers. Voir `server/utils/send-email.ts`.
+- **Expéditeur `v.belleton@outlook.fr`**, déjà validé (statut `Active`) dans le compte
+  Mailjet. Valider une *adresse unique* se fait en cliquant un lien reçu par email :
+  aucun accès DNS requis, contrairement à un domaine entier.
+- Destinataires : configurables dans l'admin (⚙️ Config → « Emails de destination »),
+  stockés dans Firestore `settings/config` → `contactEmails`.
 
-### Cause
-L'adresse expéditeur `noreply@cieuxouverts.bzh` est configurée dans Firestore (`settings/config` → `contactFromEmail`) mais n'a pas été validée dans le compte Mailjet.
+Vérifié de bout en bout dans le runtime Workers réel (`wrangler pages dev`) :
+écriture Firestore + envoi Mailjet confirmés.
 
-### Solution
-1. **Option A** : Valider le domaine dans Mailjet
-   - Connexion à https://app.mailjet.com/
-   - Aller dans **Settings → Senders and domains**
-   - Ajouter/valider le domaine `cieuxouverts.bzh`
+### Variables d'environnement
+`NUXT_MAILJET_API_KEY`, `NUXT_MAILJET_API_SECRET`, `NUXT_MAILJET_FROM_EMAIL`,
+`NUXT_MAILJET_FROM_NAME` — à définir dans le dashboard Cloudflare Pages.
 
-2. **Option B** : Utiliser l'adresse par défaut
-   - Dans Firestore, supprimer ou modifier `contactFromEmail` dans le document `settings/config`
-   - Ou utiliser `noreply@example.com` comme valeur par défaut
+### Diagnostic
+`GET /api/health` indique en une requête quelles variables sont présentes
+(booléens uniquement, aucune valeur exposée).
 
-### Code concerné
-- `server/api/contact.post.ts` lignes 134-157 : récupération de `contactFromEmail` depuis Firestore
-- `server/api/contact.post.ts` lignes 165-200 : envoi email via nodemailer/Mailjet SMTP
+---
 
-### Variables d'environnement nécessaires
-- `NUXT_MAILJET_SMTP_HOST`
-- `NUXT_MAILJET_SMTP_PORT`
-- `NUXT_MAILJET_SMTP_USER`
-- `NUXT_MAILJET_SMTP_PASS`
+## [2026-08-01] Piège : bloc `env` dans wrangler.jsonc efface les secrets
 
-### Statut
-À vérifier/corriger en production
+Ajouter un bloc `env.production.vars` dans `wrangler.jsonc` fait de ce fichier la
+source de vérité pour l'environnement : Cloudflare **écrase alors les variables et
+secrets définis dans le dashboard**. Résultat observé le 01/08/2026 — les secrets
+`NUXT_FIREBASE_*` ont disparu du runtime et tous les endpoints Firestore sont
+tombés en 500 (`/api/menu`, `/api/footer` : « Firestore non configuré »).
+
+Retirer le bloc ne restaure rien : les secrets doivent être **recréés à la main**
+dans le dashboard. Ne jamais déclarer de `env` ni de `vars` dans `wrangler.jsonc`
+pour ce projet — tout passe par Dashboard → Settings → Variables & Secrets.
+
