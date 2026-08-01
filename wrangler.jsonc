@@ -13,22 +13,13 @@
   // Dashboard → Pages → eglise-cieux-ouverts → Settings → Variables & Secrets.
   //
   // Vérification en une requête : https://eglise-cieux-ouverts.pages.dev/api/health
+  //
+  // ⚠️ N'ajouter AUCUNE clé non couverte par le schéma Pages (ex. "observability",
+  // qui n'existe que pour les Workers). Le build Cloudflare valide ce fichier
+  // AVANT de builder le site : une seule clé refusée fait échouer tout le
+  // déploiement, sans toucher au site déjà en ligne (ce qui masque le problème).
+  // C'est ce qui s'est produit le 01/08/2026 avec "observability".
   "name": "eglise-cieux-ouverts",
   "compatibility_date": "2024-10-01",
   "pages_build_output_dir": "./dist",
-  "observability": {
-    "enabled": false,
-    "head_sampling_rate": 1,
-    "logs": {
-      "enabled": true,
-      "head_sampling_rate": 1,
-      "persist": true,
-      "invocation_logs": true
-    },
-    "traces": {
-      "enabled": false,
-      "persist": true,
-      "head_sampling_rate": 1
-    }
-  }
 }
