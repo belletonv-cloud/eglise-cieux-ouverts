@@ -48,6 +48,38 @@ test.describe('Messages de contact', () => {
     await page.locator('.version-item', { hasText: 'Marie Martin' }).locator('button', { hasText: '✓ Lu' }).click()
     await expect(page.locator('.version-item', { hasText: 'Marie Martin' }).locator('button', { hasText: '↺ Non lu' })).toBeVisible({ timeout: 3000 })
   })
+
+  test('un message archivé peut être restauré depuis l\'onglet Archivés', async ({ page, request }) => {
+    await request.post('/api/contact', {
+      data: {
+        prenom: 'Lucie', nom: 'Bernard', email: 'lucie@example.com',
+        message: 'Message destiné à être archivé puis restauré.',
+      },
+    })
+
+    await loginAsAdmin(page)
+    await page.locator('.admin-btn-secondary', { hasText: 'Messages' }).click()
+
+    const item = page.locator('.version-item', { hasText: 'Lucie Bernard' })
+    await expect(item).toBeVisible({ timeout: 3000 })
+
+    // Archiver : le message doit quitter la boîte de réception
+    await item.locator('button', { hasText: '📦 Archiver' }).click()
+    await expect(page.locator('.version-item', { hasText: 'Lucie Bernard' })).toHaveCount(0, { timeout: 3000 })
+
+    // Onglet Archivés : le message doit y réapparaître, avec le bouton Restaurer
+    await page.locator('.filter-btn', { hasText: 'Archivés' }).click()
+    const archived = page.locator('.version-item', { hasText: 'Lucie Bernard' })
+    await expect(archived).toBeVisible({ timeout: 3000 })
+
+    // Restaurer : le message sort de l'archivage, donc de cet onglet
+    await archived.locator('button', { hasText: '↺ Restaurer' }).click()
+    await expect(page.locator('.version-item', { hasText: 'Lucie Bernard' })).toHaveCount(0, { timeout: 3000 })
+
+    // Et il doit être de retour dans « Tous »
+    await page.locator('.filter-btn', { hasText: 'Tous' }).click()
+    await expect(page.locator('.version-item', { hasText: 'Lucie Bernard' })).toBeVisible({ timeout: 3000 })
+  })
 })
 
 test.describe('API /api/contacts', () => {
