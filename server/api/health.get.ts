@@ -11,6 +11,24 @@
 import { getFirestoreConfig } from '../utils/firebase'
 import { getMailjetConfig } from '../utils/send-email'
 
+// Une clé présente mais mal recopiée (retours à la ligne perdus, guillemets
+// conservés) échoue plus loin sur un `atob()` illisible. On vérifie donc la
+// forme, pas seulement la présence — sans jamais renvoyer le contenu.
+function privateKeyLooksValid(key: string): boolean {
+  if (!key.includes('BEGIN PRIVATE KEY') || !key.includes('END PRIVATE KEY')) return false
+  const body = key
+    .replace(/\\n/g, '\n')
+    .replace(/-----BEGIN [\w\s]+-----/g, '')
+    .replace(/-----END [\w\s]+-----/g, '')
+    .replace(/\s/g, '')
+  try {
+    atob(body)
+    return true
+  } catch {
+    return false
+  }
+}
+
 export default defineEventHandler((event) => {
   const firestore = getFirestoreConfig(event)
   const mailjet = getMailjetConfig()
@@ -22,6 +40,9 @@ export default defineEventHandler((event) => {
       projectId: Boolean(process.env.NUXT_FIREBASE_PROJECT_ID || useRuntimeConfig(event).firebaseProjectId),
       clientEmail: Boolean(process.env.NUXT_FIREBASE_CLIENT_EMAIL || useRuntimeConfig(event).firebaseClientEmail),
       privateKey: Boolean(process.env.NUXT_FIREBASE_PRIVATE_KEY || useRuntimeConfig(event).firebasePrivateKey),
+      privateKeyValide: privateKeyLooksValid(
+        (process.env.NUXT_FIREBASE_PRIVATE_KEY || useRuntimeConfig(event).firebasePrivateKey || '') as string
+      ),
     },
     email: {
       configured: Boolean(mailjet),
