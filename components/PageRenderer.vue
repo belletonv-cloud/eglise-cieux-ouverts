@@ -15,7 +15,7 @@
             class="block-wrapper"
             :class="[
                 getAnimClass(block),
-                getAnimOffClass(block),
+                getAnimControlClass(block),
                 visibilityClass(block),
                 { triggered: isTriggered(block.id) },
                 { 'admin-selected': isSelected(block) },
@@ -60,7 +60,7 @@
             class="block-wrapper"
             :class="[
                 getAnimClass(block),
-                getAnimOffClass(block),
+                getAnimControlClass(block),
                 visibilityClass(block),
                 { triggered: isTriggered(block.id) },
                 { 'admin-selected': isAdmin && isSelected(block) },
@@ -108,7 +108,7 @@ import {
 import {
     normalizeBlock,
     getAnimClass,
-    getAnimOffClass,
+    getAnimControlClass,
     getAnimationStrategy,
     filterByVisibility,
     resolveResponsive,

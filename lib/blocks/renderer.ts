@@ -24,20 +24,24 @@ export function getAnimClass(block: BlockInstance): string {
 }
 
 /**
- * Classe posée quand l'utilisateur choisit explicitement « Aucune ».
+ * Marque les blocs dont l'animation est pilotée par le sélecteur, pour que
+ * SEUL le choix de l'utilisateur soit visible.
  *
- * Retirer la classe `block-anim-*` ne suffit pas : certains blocs (Bienvenue,
- * Contact) embarquent leurs PROPRES @keyframes, indépendantes du sélecteur.
- * « Aucune » ne coupait donc qu'une partie de ce qui bouge. Le style associé
- * (assets/css/main.css) neutralise ces animations internes.
+ * Bienvenue, Contact et Vision embarquent leurs propres @keyframes sur des
+ * éléments INTERNES (lettres du titre, sous-titre, colonnes…), indépendantes
+ * du sélecteur. Elles s'ajoutaient à l'animation choisie et, bien plus
+ * spectaculaires, la masquaient : quel que soit le choix, on revoyait
+ * l'animation d'origine du bloc — et « Aucune » n'arrêtait pas tout.
  *
- * Réservé aux blocs qui offrent réellement le choix : les types 'internal'
+ * Le style associé (assets/css/main.css) neutralise ces animations internes
+ * sans toucher à celle du wrapper, qui porte le choix de l'utilisateur.
+ *
+ * Réservé aux blocs offrant réellement le choix : les types 'internal'
  * n'exposent aucun sélecteur, leur animation n'a jamais été décidée par
- * l'utilisateur et ne doit donc pas être coupée par un défaut vide.
+ * l'utilisateur et ne doit donc pas être coupée.
  */
-export function getAnimOffClass(block: BlockInstance): string {
-  if (getAnimationStrategy(block.type) !== "wrapper") return "";
-  return block.props?.animation === "none" ? "bloc-sans-animation" : "";
+export function getAnimControlClass(block: BlockInstance): string {
+  return getAnimationStrategy(block.type) === "wrapper" ? "bloc-anim-controlee" : "";
 }
 
 export function shouldUseTrigger(block: BlockInstance): boolean {

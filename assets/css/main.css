@@ -388,31 +388,35 @@ a:hover, .nav-admin-link:hover {
   transform: translateY(0);
 }
 
-/* ─── « Aucune » animation : neutralisation des animations internes ───
-   Retirer la classe block-anim-* ne suffisait pas. Bienvenue et Contact
-   embarquent leurs propres @keyframes (apparition lettre par lettre, etc.),
-   indépendantes du sélecteur d'animation : choisir « Aucune » n'en coupait
-   qu'une partie, et le bloc continuait de bouger.
+/* ─── Animations internes des blocs : seul le choix doit être visible ───
+   Bienvenue, Contact et Vision embarquent leurs propres @keyframes sur des
+   éléments internes (lettres du titre, sous-titre, colonnes…), indépendantes
+   du sélecteur d'animation. Elles s'ajoutaient à l'animation choisie et, bien
+   plus spectaculaires, la masquaient : quel que soit le choix, on revoyait
+   l'animation d'origine du bloc — et « Aucune » n'arrêtait pas tout.
 
-   On écrase la DURÉE plutôt que de poser `animation: none`. Ces blocs partent
-   d'un état masqué (opacity: 0 sur le premier keyframe) que seule l'animation
-   révèle : la couper net laisserait le contenu invisible. Avec une durée
-   quasi nulle et animation-fill-mode: both, l'élément atterrit immédiatement
-   sur son image finale — donc visible, sans mouvement perceptible. Même
-   procédé que le bloc prefers-reduced-motion plus haut.
+   La règle ne vise QUE les descendants : l'élément marqué est le wrapper, qui
+   porte précisément l'animation choisie par l'utilisateur et doit rester
+   intacte.
+
+   On écrase la DURÉE plutôt que de poser `animation: none`. Ces animations
+   partent d'un état masqué (opacity: 0 sur le premier keyframe) que seul le
+   mouvement révèle : les couper net laisserait le contenu invisible. Avec une
+   durée quasi nulle et animation-fill-mode: both, l'élément atterrit
+   immédiatement sur son image finale — visible et immobile. Même procédé que
+   le bloc prefers-reduced-motion plus haut.
 
    `animation-timeline: auto` est indispensable : ces animations sont pilotées
    au scroll (animation-timeline: view()), un mode où animation-duration est
-   ignoré. Il faut donc les ramener sur une base temporelle pour que la durée
+   ignoré. Il faut les ramener sur une base temporelle pour que la durée
    écrasée s'applique.
 
    Les transitions ne sont volontairement pas touchées : à l'intérieur d'un
    bloc, ce sont les retours au survol des liens et boutons, pas des
    animations d'entrée — les supprimer rendrait l'interface inerte. */
-.bloc-sans-animation,
-.bloc-sans-animation *,
-.bloc-sans-animation *::before,
-.bloc-sans-animation *::after {
+.bloc-anim-controlee *,
+.bloc-anim-controlee *::before,
+.bloc-anim-controlee *::after {
     animation-timeline: auto !important;
     animation-duration: 0.01ms !important;
     animation-delay: 0s !important;

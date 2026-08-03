@@ -1,17 +1,22 @@
 import { test, expect } from '@playwright/test'
-import { loginAsAdmin } from './helpers/admin'
 import { resetMock } from './helpers/reset'
 
 /**
- * « Aucune » doit vouloir dire AUCUNE animation — seul le choix fait la
- * différence.
+ * Seul le choix d'animation doit être visible.
  *
- * Le piège : certains blocs (Bienvenue, Contact) embarquent leurs propres
- * @keyframes, indépendantes du sélecteur. Elles partent d'un état masqué que
- * seule l'animation révèle : les couper naïvement laisse le contenu
- * invisible. On vérifie donc les deux à la fois — plus rien ne s'anime, et
- * tout reste visible.
+ * Bienvenue, Contact et Vision embarquent leurs propres @keyframes sur des
+ * éléments internes (lettres du titre, sous-titre, colonnes…), indépendantes
+ * du sélecteur. Elles s'ajoutaient à l'animation choisie et, bien plus
+ * spectaculaires, la masquaient : quel que soit le choix on revoyait
+ * l'animation d'origine du bloc, et « Aucune » n'arrêtait pas tout.
+ *
+ * Le piège de la correction : ces animations partent d'un état masqué que
+ * seul le mouvement révèle. Les couper net rendrait le contenu invisible —
+ * d'où la vérification systématique de l'opacité.
  */
+const TOKEN = { Authorization: 'Bearer mock-test-token' }
+const BLOCS_A_KEYFRAMES = ['bienvenue', 'contact', 'vision']
+
 test.beforeEach(async ({ request }) => {
   await resetMock(request)
 })
@@ -19,100 +24,100 @@ test.afterEach(async ({ request }) => {
   await resetMock(request)
 })
 
-async function choisir(page: any, animation: string) {
-  const bloc = page.locator('.block-wrapper[data-block-type="bienvenue"]').first()
-  await expect(bloc).toBeVisible({ timeout: 5000 })
-  await bloc.click()
-  await expect(page.locator('.admin-sidebar')).toBeVisible({ timeout: 5000 })
-  await page.locator('.anim-btn', { hasText: animation }).first().click()
-  await page.waitForTimeout(500)
-  return bloc
+async function prepare(page: any, request: any, animation: string) {
+  const lecture = await request.get('/api/pages/test-blocks')
+  const { blocks } = await lecture.json()
+  for (const b of blocks) b.props = { ...(b.props || {}), animation }
+  const ecriture = await request.put('/api/pages/test-blocks', { headers: TOKEN, data: { blocks } })
+  expect(ecriture.ok()).toBe(true)
+
+  await page.goto('/test-blocks')
+  await page.waitForLoadState('networkidle')
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
+  await page.waitForTimeout(1200)
 }
 
-function releve(page: any) {
-  return page.evaluate(() => {
-    const el = document.querySelector('.block-wrapper[data-block-type="bienvenue"]') as HTMLElement
-    const enCours: string[] = []
+function releve(page: any, type: string) {
+  return page.evaluate((t: string) => {
+    const w = document.querySelector(`.block-wrapper[data-block-type="${t}"]`) as HTMLElement
+    if (!w) return null
+    const duree = (a: Animation) => Number((a.effect as any)?.getTiming?.().duration) || 0
+    const wrapper = (w.getAnimations?.() || []).map((a) => ({
+      nom: (a as any).animationName || 'transition',
+      duree: duree(a),
+    }))
+    const internes: { nom: string; duree: number; opacite: number }[] = []
+    const vus = new Set<string>()
     const parcourt = (n: Element, prof: number) => {
       for (const a of (n as HTMLElement).getAnimations?.() || []) {
-        if (a.playState === 'running') enCours.push((a as any).animationName || 'transition')
+        const nom = ((a as any).animationName || '').replace(/-[a-f0-9]{6,}$/, '')
+        if (nom && !vus.has(nom)) {
+          vus.add(nom)
+          internes.push({ nom, duree: duree(a), opacite: Number(getComputedStyle(n as HTMLElement).opacity) })
+        }
       }
       if (prof < 5) for (const c of Array.from(n.children)) parcourt(c, prof + 1)
     }
-    parcourt(el, 0)
-    const car = el.querySelector('.hero-bienvenue-char') as HTMLElement | null
-    return {
-      classes: el.className,
-      animationsEnCours: enCours,
-      opaciteCaractere: car ? getComputedStyle(car).opacity : null,
-    }
-  })
+    for (const c of Array.from(w.children)) parcourt(c, 0)
+    return { classes: w.className, wrapper, internes }
+  }, type)
 }
 
-test('« Aucune » ne laisse tourner aucune animation, et le contenu reste visible', async ({ page }) => {
-  await loginAsAdmin(page)
-  await choisir(page, 'Aucune')
+test('« Aucune » : aucun bloc ne joue quoi que ce soit, et rien ne disparaît', async ({ page, request }) => {
+  await prepare(page, request, 'none')
 
-  const r = await releve(page)
-  console.log('AUCUNE →', JSON.stringify(r))
+  for (const type of BLOCS_A_KEYFRAMES) {
+    const r = await releve(page, type)
+    console.log(`AUCUNE ${type} →`, JSON.stringify(r))
+    expect(r, type).not.toBeNull()
 
-  // La classe de neutralisation est posée
-  expect(r.classes).toContain('bloc-sans-animation')
-  // Plus aucune classe d'animation de wrapper
-  expect(r.classes).not.toMatch(/block-anim-(fadeIn|slideUp|slideLeft|zoom|portal|bounce|flip|wave)/)
-  // Plus rien ne tourne, y compris les keyframes internes du bloc
-  expect(r.animationsEnCours).toEqual([])
-  // …sans rendre le texte invisible : c'était tout le piège
-  expect(Number(r.opaciteCaractere)).toBeGreaterThan(0.9)
-})
-
-test('sur le site public aussi, « Aucune » ne laisse rien s\'animer', async ({ page, request }) => {
-  // Surface la plus importante : c'est là que les visiteurs voient le site, et
-  // là que les animations internes sont pilotées au scroll (animation-timeline).
-  const lecture = await request.get('/api/pages/accueil')
-  const { blocks } = await lecture.json()
-  for (const b of blocks) {
-    if (b.type === 'bienvenue') b.props = { ...(b.props || {}), animation: 'none' }
+    // Aucune animation sur le wrapper : rien n'a été choisi
+    expect(r!.wrapper.filter((a: any) => a.nom !== 'transition'), type).toEqual([])
+    // Les animations internes sont réduites à une durée imperceptible
+    for (const i of r!.internes) {
+      expect(i.duree, `${type} / ${i.nom}`).toBeLessThan(1)
+      expect(i.opacite, `${type} / ${i.nom} doit rester visible`).toBeGreaterThan(0.9)
+    }
   }
-  const ecriture = await request.put('/api/pages/accueil', {
-    headers: { Authorization: 'Bearer mock-test-token' },
-    data: { blocks },
-  })
-  expect(ecriture.ok()).toBe(true)
-
-  await page.goto('/')
-  const bloc = page.locator('.block-wrapper[data-block-type="bienvenue"]').first()
-  await expect(bloc).toBeVisible({ timeout: 5000 })
-  await bloc.scrollIntoViewIfNeeded()
-  await page.waitForTimeout(600)
-
-  const r = await releve(page)
-  console.log('PUBLIC AUCUNE →', JSON.stringify(r))
-
-  expect(r.classes).toContain('bloc-sans-animation')
-  expect(r.animationsEnCours).toEqual([])
-  expect(Number(r.opaciteCaractere)).toBeGreaterThan(0.9)
 })
 
-test('choisir une animation la réactive : c\'est bien le choix qui fait la différence', async ({ page }) => {
-  await loginAsAdmin(page)
+test('avec une animation choisie, elle seule est visible', async ({ page, request }) => {
+  await prepare(page, request, 'fadeIn')
 
-  await choisir(page, 'Aucune')
-  const sans = await releve(page)
-  expect(sans.classes).toContain('bloc-sans-animation')
+  for (const type of BLOCS_A_KEYFRAMES) {
+    const r = await releve(page, type)
+    console.log(`FADEIN ${type} →`, JSON.stringify(r))
+    expect(r, type).not.toBeNull()
+    expect(r!.classes, type).toContain('bloc-anim-controlee')
 
-  await page.locator('.anim-btn', { hasText: 'Apparition' }).first().click()
-  await page.waitForTimeout(300)
-  const avec = await releve(page)
-  console.log('APPARITION →', JSON.stringify({ classes: avec.classes }))
+    // L'animation choisie se joue pleinement sur le wrapper
+    const choisie = r!.wrapper.find((a: any) => a.nom === 'animFadeIn')
+    expect(choisie, `${type} : l'animation choisie doit être présente`).toBeTruthy()
+    expect(choisie!.duree, type).toBeGreaterThan(500)
 
-  expect(avec.classes).not.toContain('bloc-sans-animation')
-  expect(avec.classes).toContain('block-anim-fadeIn')
+    // …et les animations propres au bloc ne viennent plus la masquer
+    for (const i of r!.internes) {
+      expect(i.duree, `${type} / ${i.nom} ne doit plus concurrencer le choix`).toBeLessThan(1)
+      expect(i.opacite, `${type} / ${i.nom} doit rester visible`).toBeGreaterThan(0.9)
+    }
+  }
+})
 
-  // Et l'opacité est bien la propriété animée, pas l'outline de l'éditeur
-  const propriete = await page.evaluate(() => {
-    const el = document.querySelector('.block-wrapper[data-block-type="bienvenue"]') as HTMLElement
-    return getComputedStyle(el).transitionProperty
-  })
-  expect(propriete).toContain('opacity')
+test('les blocs sans sélecteur gardent leur animation d\'origine', async ({ page, request }) => {
+  // rejoins, aspirations, nousRejoindre et footer n'exposent aucun choix :
+  // leur animation n'a jamais été décidée par l'utilisateur et ne doit pas
+  // être coupée par cette correction.
+  await prepare(page, request, 'none')
+
+  const r = await releve(page, 'rejoins')
+  expect(r).not.toBeNull()
+  console.log('REJOINS (intact) →', JSON.stringify(r!.internes))
+
+  // Pas marqué : la neutralisation ne s'y applique pas
+  expect(r!.classes).not.toContain('bloc-anim-controlee')
+  // Ses animations sont toujours là. On ne teste pas leur durée : elles sont
+  // pilotées au scroll (animation-timeline: view()), un mode où la durée
+  // n'est pas une valeur temporelle et vaut 0 dans getTiming().
+  expect(r!.internes.length, 'rejoins doit conserver ses animations').toBeGreaterThan(0)
+  expect(r!.internes.map((i: any) => i.nom)).toContain('text-from-left')
 })
