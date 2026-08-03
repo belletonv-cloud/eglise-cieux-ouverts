@@ -23,6 +23,11 @@
             <input type="checkbox" v-model="seulementLesMiennes" />
             Seulement les miennes
           </label>
+
+          <div class="taches-vues">
+            <button class="taches-vue" :class="{ actif: vue === 'kanban' }" @click="vue = 'kanban'">Tableau</button>
+            <button class="taches-vue" :class="{ actif: vue === 'gantt' }" @click="vue = 'gantt'">Frise</button>
+          </div>
         </div>
 
         <form class="taches-ajout" @submit.prevent="ajouter">
@@ -46,7 +51,7 @@
 
         <!-- Les colonnes restent affichées même à vide : elles montrent la
              structure du tableau et servent de cible de dépôt. -->
-        <div v-if="!chargement" class="taches-colonnes">
+        <div v-if="!chargement && vue === 'kanban'" class="taches-colonnes">
           <section v-for="col in COLONNES" :key="col.statut" class="taches-colonne">
             <h3>{{ col.libelle }} <span class="taches-compte">{{ parStatut(col.statut).length }}</span></h3>
 
@@ -63,9 +68,25 @@
                 <span class="taches-source" :data-source="t.source">{{ libelleSource(t.source) }}</span>
                 <p class="taches-titre">{{ t.titre }}</p>
 
-                <p v-if="t.debut || t.fin" class="taches-dates">
-                  {{ t.debut || '?' }} → {{ t.fin || '?' }}
-                </p>
+                <div class="taches-dates">
+                  <input
+                    type="date"
+                    class="taches-date-input"
+                    :value="t.debut || ''"
+                    aria-label="Date de début"
+                    @click.stop
+                    @change="majDate(t, 'debut', $event.target.value)"
+                  />
+                  <span class="taches-fleche">→</span>
+                  <input
+                    type="date"
+                    class="taches-date-input"
+                    :value="t.fin || ''"
+                    aria-label="Date de fin"
+                    @click.stop
+                    @change="majDate(t, 'fin', $event.target.value)"
+                  />
+                </div>
 
                 <p v-if="t.prisPar" class="taches-titulaire">
                   <template v-if="estMoi(t.prisPar)">✋ Tu as pris cette tâche</template>
@@ -94,6 +115,49 @@
               </article>
             </VueDraggable>
           </section>
+        </div>
+
+        <!-- Frise : une ligne par tâche datée, positionnée sur l'échelle de
+             temps commune. Les tâches sans dates sont listées à part plutôt
+             que masquées, sinon elles disparaîtraient sans explication. -->
+        <div v-if="!chargement && vue === 'gantt'" class="gantt">
+          <p v-if="tachesDatees.length === 0" class="taches-vide">
+            Aucune tâche datée. Renseigne un début et une fin sur une carte du tableau pour la voir apparaître ici.
+          </p>
+
+          <div v-else class="gantt-cadre">
+            <div class="gantt-entete">
+              <span class="gantt-col-titre">Tâche</span>
+              <div class="gantt-echelle">
+                <span
+                  v-for="(rep, i) in reperes"
+                  :key="i"
+                  class="gantt-repere"
+                  :style="{ left: rep.position + '%', transform: rep.decalage }"
+                >{{ rep.libelle }}</span>
+              </div>
+            </div>
+
+            <div v-for="t in tachesDatees" :key="t.id" class="gantt-ligne">
+              <span class="gantt-col-titre" :title="t.titre">{{ t.titre }}</span>
+              <div class="gantt-piste">
+                <div
+                  class="gantt-barre"
+                  :data-source="t.source"
+                  :class="{ terminee: t.statut === 'fait' }"
+                  :style="barre(t)"
+                  :title="`${t.titre} — ${t.debut} → ${t.fin}${t.prisPar ? ' — ' + t.prisPar : ' — libre'}`"
+                >
+                  <span class="gantt-etiquette">{{ t.prisPar ? abrege(t.prisPar) : 'libre' }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <p v-if="tachesSansDates.length" class="gantt-sans-dates">
+            Sans dates ({{ tachesSansDates.length }}) :
+            <span v-for="t in tachesSansDates" :key="t.id" class="gantt-puce">{{ t.titre }}</span>
+          </p>
         </div>
       </div>
     </div>
@@ -134,6 +198,7 @@ const enregistre = ref(false)
 const occupe = ref(null)
 const erreur = ref('')
 const filtre = ref('tous')
+const vue = ref('kanban')
 const seulementLesMiennes = ref(false)
 const nouveauTitre = ref('')
 const nouvelleSource = ref('projet')
@@ -273,6 +338,89 @@ async function supprimer(tache) {
   } catch (e) {
     erreur.value = e.message
   }
+}
+
+async function majDate(tache, champ, valeur) {
+  erreur.value = ''
+  try {
+    await appel(`/api/taches/${tache.id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ [champ]: valeur || null }),
+    })
+    await charger()
+  } catch (e) {
+    erreur.value = e.message
+    await charger()
+  }
+}
+
+// ─── Frise (Gantt) ────────────────────────────────────────────────────────
+const JOUR_MS = 86400000
+
+function versDate(iso) {
+  // Midi UTC : évite qu'un décalage horaire fasse basculer la date d'un jour.
+  return new Date(`${iso}T12:00:00Z`)
+}
+
+/** Seules les tâches ayant les DEUX bornes peuvent être placées sur la frise. */
+const tachesDatees = computed(() =>
+  tachesVisibles.value
+    .filter((t) => t.debut && t.fin)
+    .slice()
+    .sort((a, b) => a.debut.localeCompare(b.debut))
+)
+
+const tachesSansDates = computed(() => tachesVisibles.value.filter((t) => !t.debut || !t.fin))
+
+/** Échelle commune : de la première date au dernier terme, avec une marge. */
+const plage = computed(() => {
+  if (tachesDatees.value.length === 0) return null
+  let min = Infinity
+  let max = -Infinity
+  for (const t of tachesDatees.value) {
+    min = Math.min(min, versDate(t.debut).getTime())
+    max = Math.max(max, versDate(t.fin).getTime())
+  }
+  // Une tâche d'un seul jour donnerait une largeur nulle : on garantit au
+  // moins un jour d'amplitude, plus une marge visuelle de part et d'autre.
+  const marge = JOUR_MS
+  const debut = min - marge
+  const fin = Math.max(max + marge, debut + 2 * JOUR_MS)
+  return { debut, fin, duree: fin - debut }
+})
+
+function barre(t) {
+  const p = plage.value
+  if (!p) return {}
+  const d = versDate(t.debut).getTime()
+  const f = versDate(t.fin).getTime()
+  const gauche = ((d - p.debut) / p.duree) * 100
+  const largeur = Math.max(((f - d + JOUR_MS) / p.duree) * 100, 2)
+  return { left: `${gauche}%`, width: `${Math.min(largeur, 100 - gauche)}%` }
+}
+
+/** Quelques repères de date le long de l'échelle, pour situer les barres. */
+const reperes = computed(() => {
+  const p = plage.value
+  if (!p) return []
+  const nb = 4
+  const out = []
+  for (let i = 0; i <= nb; i++) {
+    const t = p.debut + (p.duree * i) / nb
+    // Les repères des extrémités sont alignés vers l'intérieur : centrés,
+    // le premier et le dernier déborderaient de moitié hors du cadre.
+    const decalage = i === 0 ? 'none' : i === nb ? 'translateX(-100%)' : 'translateX(-50%)'
+    out.push({
+      position: (i / nb) * 100,
+      decalage,
+      libelle: new Date(t).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }),
+    })
+  }
+  return out
+})
+
+function abrege(email) {
+  return email.split('@')[0]
 }
 
 /** Carte déposée dans une autre colonne : on persiste le nouvel avancement. */
@@ -464,7 +612,101 @@ async function deplacer(evenement, nouveauStatut) {
   font-weight: 600;
   color: #111827;
 }
-.taches-dates { margin: 0 0 4px; font-size: 0.72rem; color: #6b7280; }
+.taches-dates {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0 0 4px;
+}
+.taches-date-input {
+  border: 1px solid #e5e7eb;
+  border-radius: 5px;
+  padding: 2px 4px;
+  font-size: 0.68rem;
+  color: #4b5563;
+  background: #fff;
+  min-width: 0;
+  flex: 1;
+}
+.taches-fleche { font-size: 0.7rem; color: #9ca3af; }
+
+/* ─── Frise ─── */
+.taches-vues { display: flex; gap: 4px; }
+.taches-vue {
+  border: 1.5px solid #ddd;
+  background: #f9fafb;
+  border-radius: 20px;
+  padding: 5px 12px;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+.taches-vue.actif { background: #064886; border-color: #064886; color: #fff; font-weight: 600; }
+
+.gantt-cadre { border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; }
+.gantt-entete {
+  display: flex;
+  align-items: center;
+  background: #f3f4f6;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 6px 0;
+}
+.gantt-col-titre {
+  width: 180px;
+  flex: none;
+  padding: 0 10px;
+  font-size: 0.78rem;
+  color: #374151;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.gantt-echelle { position: relative; flex: 1; height: 16px; }
+.gantt-repere {
+  position: absolute;
+  font-size: 0.65rem;
+  color: #6b7280;
+  white-space: nowrap;
+}
+.gantt-ligne {
+  display: flex;
+  align-items: center;
+  border-top: 1px solid #f3f4f6;
+  padding: 6px 0;
+}
+.gantt-piste { position: relative; flex: 1; height: 22px; margin-right: 10px; }
+.gantt-barre {
+  position: absolute;
+  top: 0;
+  height: 22px;
+  border-radius: 5px;
+  background: #7c3aed;
+  display: flex;
+  align-items: center;
+  padding: 0 6px;
+  min-width: 2px;
+}
+.gantt-barre[data-source='service'] { background: #2563eb; }
+.gantt-barre[data-source='site'] { background: #d97706; }
+.gantt-barre[data-source='projet'] { background: #7c3aed; }
+.gantt-barre.terminee { opacity: 0.45; }
+.gantt-etiquette {
+  font-size: 0.62rem;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.gantt-sans-dates { margin: 10px 0 0; font-size: 0.75rem; color: #6b7280; }
+.gantt-puce {
+  display: inline-block;
+  background: #f3f4f6;
+  border-radius: 10px;
+  padding: 1px 8px;
+  margin: 2px 4px 0 0;
+}
+@media (max-width: 760px) {
+  .gantt-col-titre { width: 110px; }
+}
 .taches-titulaire { margin: 0; font-size: 0.75rem; color: #15803d; font-weight: 600; }
 .taches-libre { margin: 0; font-size: 0.75rem; color: #9ca3af; }
 .taches-actions {
