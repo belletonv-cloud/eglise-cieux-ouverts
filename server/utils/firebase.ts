@@ -198,6 +198,25 @@ export async function setFirestoreDoc(
   }
 }
 
+export async function deleteFirestoreDoc(
+  projectId: string,
+  accessToken: string,
+  collection: string,
+  docId: string
+): Promise<void> {
+  const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/${collection}/${docId}`
+
+  const response = await fetch(url, {
+    method: 'DELETE',
+    headers: { authorization: `Bearer ${accessToken}` },
+  })
+
+  if (!response.ok) {
+    const text = await response.text()
+    throw new Error(`Firestore delete error: ${text}`)
+  }
+}
+
 export function parseFirestoreDoc(doc: any): Record<string, any> | null {
   if (!doc || !doc.fields) return null
 

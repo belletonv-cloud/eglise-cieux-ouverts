@@ -731,10 +731,6 @@
                             <span class="stat-value">{{ unreadContactCount }}</span>
                         </div>
                         <div class="stat-item">
-                            <span class="stat-label">Archivés</span>
-                            <span class="stat-value">{{ archivedContactCount }}</span>
-                        </div>
-                        <div class="stat-item">
                             <span class="stat-label">Newsletter</span>
                             <span class="stat-value">{{ newsletterSubscriberCount }}</span>
                         </div>
@@ -750,11 +746,6 @@
                             :class="{ active: contactMessageFilter === 'unread' }"
                             @click="contactMessageFilter = 'unread'"
                         >Non lus ({{ unreadContactCount }})</button>
-                        <button
-                            class="filter-btn"
-                            :class="{ active: contactMessageFilter === 'archived' }"
-                            @click="contactMessageFilter = 'archived'"
-                        >Archivés ({{ archivedContactCount }})</button>
                     </div>
                     <div v-if="!contactMessagesLoading && contactMessages.length > 0" class="contact-sort">
                         <label>Tri:</label>
@@ -772,7 +763,7 @@
                             v-for="m in filteredContactMessages"
                             :key="m.id"
                             class="version-item"
-                            :class="{ 'comment-resolved': m.status === 'read', 'is-archived': m.status === 'archived' }"
+                            :class="{ 'comment-resolved': m.status === 'read' }"
                         >
                             <div class="version-item-row">
                                 <div class="version-info">
@@ -784,8 +775,8 @@
                                     <button class="admin-btn admin-btn-secondary" @click.stop="toggleContactRead(m)">
                                         {{ m.status === 'read' ? "↺ Non lu" : "✓ Lu" }}
                                     </button>
-                                    <button class="admin-btn admin-btn-secondary" @click.stop="toggleContactArchived(m)">
-                                        {{ m.status === 'archived' ? "↺ Restaurer" : "📦 Archiver" }}
+                                    <button class="version-del-btn" @click.stop="deleteContactMessage(m)" title="Supprimer définitivement ce message">
+                                        {{ deletingContactId === m.id ? "…" : "🗑" }}
                                     </button>
                                 </div>
                             </div>
@@ -1364,14 +1355,19 @@ watch(isAdminUser, (val) => { if (val) loadAllComments() }, { immediate: true })
 const showContactMessages = ref(false)
 const contactMessages = ref([])
 const contactMessagesLoading = ref(false)
-const contactMessageFilter = ref('all') // 'all', 'unread', 'archived'
+const contactMessageFilter = ref('all') // 'all' | 'unread'
 const contactMessageSort = ref('date-desc') // 'date-desc', 'date-asc', 'sender'
 
-// Comme Gmail : les messages archivés sortent de la boîte de réception
-// ("Tous" / "Non lus") et ne réapparaissent que dans l'onglet "Archivés".
-const inboxMessages = computed(() => contactMessages.value.filter(m => m.status !== 'archived'))
-const unreadContactCount = computed(() => inboxMessages.value.filter(m => m.status !== 'read').length)
-const archivedContactCount = computed(() => contactMessages.value.filter(m => m.status === 'archived').length)
+// L'archivage a été remplacé par une suppression définitive : il n'ajoutait
+// qu'un troisième état à côté de lu/non-lu tout en conservant indéfiniment
+// des données personnelles simplement masquées. Les messages restés au
+// statut 'archived' d'avant ce changement sont réaffichés normalement —
+// sans quoi ils seraient devenus invisibles pour toujours, l'onglet qui
+// les montrait n'existant plus.
+const inboxMessages = computed(() => contactMessages.value)
+const unreadContactCount = computed(() =>
+  inboxMessages.value.filter(m => m.status !== 'read').length
+)
 const newsletterSubscriberCount = computed(() => contactMessages.value.filter(m => m.newsletter === true).length)
 
 const filteredContactMessages = computed(() => {
@@ -1379,8 +1375,6 @@ const filteredContactMessages = computed(() => {
 
   if (contactMessageFilter.value === 'unread') {
     filtered = filtered.filter(m => m.status !== 'read')
-  } else if (contactMessageFilter.value === 'archived') {
-    filtered = contactMessages.value.filter(m => m.status === 'archived')
   }
 
   // Tri
@@ -1439,20 +1433,29 @@ async function toggleContactRead(message) {
     }
 }
 
-async function toggleContactArchived(message) {
+// Suppression définitive (l'archivage n'existe plus) : la confirmation est
+// indispensable, un message de contact effacé n'est récupérable nulle part.
+const deletingContactId = ref(null)
+
+async function deleteContactMessage(message) {
+    const qui = `${message.prenom} ${message.nom}`.trim() || message.email
+    if (!confirm(`Supprimer définitivement le message de ${qui} ?\n\nCette action est irréversible.`)) return
+
+    deletingContactId.value = message.id
     try {
         const token = await getFirebaseToken()
-        const newStatus = message.status === 'archived' ? 'new' : 'archived'
         const res = await fetch(`/api/contacts/${message.id}`, {
-            method: 'PUT',
-            headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: newStatus })
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token}` },
         })
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        message.status = newStatus
+        contactMessages.value = contactMessages.value.filter(m => m.id !== message.id)
+        showToast('Message supprimé', 'toast-success')
     } catch (e) {
-        console.error('[admin] toggle archived failed:', e)
-        showToast('Erreur lors de la mise à jour', 'toast-error')
+        console.error('[admin] delete contact failed:', e)
+        showToast('Erreur lors de la suppression', 'toast-error')
+    } finally {
+        deletingContactId.value = null
     }
 }
 
@@ -2729,10 +2732,6 @@ async function saveChanges() {
 .sort-select option {
     background: #1a1a2e;
     color: white;
-}
-
-.version-item.is-archived {
-    opacity: 0.6;
 }
 
 .admin-sidebar-overlay {

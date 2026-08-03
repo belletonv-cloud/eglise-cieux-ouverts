@@ -49,11 +49,11 @@ test.describe('Messages de contact', () => {
     await expect(page.locator('.version-item', { hasText: 'Marie Martin' }).locator('button', { hasText: '↺ Non lu' })).toBeVisible({ timeout: 3000 })
   })
 
-  test('un message archivé peut être restauré depuis l\'onglet Archivés', async ({ page, request }) => {
+  test('un message peut être supprimé définitivement, après confirmation', async ({ page, request }) => {
     await request.post('/api/contact', {
       data: {
         prenom: 'Lucie', nom: 'Bernard', email: 'lucie@example.com',
-        message: 'Message destiné à être archivé puis restauré.',
+        message: 'Message destiné à être supprimé par le test.',
       },
     })
 
@@ -63,22 +63,39 @@ test.describe('Messages de contact', () => {
     const item = page.locator('.version-item', { hasText: 'Lucie Bernard' })
     await expect(item).toBeVisible({ timeout: 3000 })
 
-    // Archiver : le message doit quitter la boîte de réception
-    await item.locator('button', { hasText: '📦 Archiver' }).click()
-    await expect(page.locator('.version-item', { hasText: 'Lucie Bernard' })).toHaveCount(0, { timeout: 3000 })
-
-    // Onglet Archivés : le message doit y réapparaître, avec le bouton Restaurer
-    await page.locator('.filter-btn', { hasText: 'Archivés' }).click()
-    const archived = page.locator('.version-item', { hasText: 'Lucie Bernard' })
-    await expect(archived).toBeVisible({ timeout: 3000 })
-
-    // Restaurer : le message sort de l'archivage, donc de cet onglet
-    await archived.locator('button', { hasText: '↺ Restaurer' }).click()
-    await expect(page.locator('.version-item', { hasText: 'Lucie Bernard' })).toHaveCount(0, { timeout: 3000 })
-
-    // Et il doit être de retour dans « Tous »
-    await page.locator('.filter-btn', { hasText: 'Tous' }).click()
+    // Refuser la confirmation ne doit rien supprimer
+    page.once('dialog', (d) => d.dismiss())
+    await item.locator('.version-del-btn').click()
     await expect(page.locator('.version-item', { hasText: 'Lucie Bernard' })).toBeVisible({ timeout: 3000 })
+
+    // Accepter supprime réellement le message
+    page.once('dialog', (d) => d.accept())
+    await item.locator('.version-del-btn').click()
+    await expect(page.locator('.version-item', { hasText: 'Lucie Bernard' })).toHaveCount(0, { timeout: 3000 })
+
+    // Et il ne revient pas après rechargement (suppression persistée)
+    const list = await request.get('/api/contacts')
+    const { contacts } = await list.json()
+    expect(contacts.some((c: any) => c.email === 'lucie@example.com')).toBe(false)
+  })
+
+  test('un message resté au statut archivé reste visible après le retrait de l\'archivage', async ({ page, request }) => {
+    // Régression : les messages archivés avant la suppression de la
+    // fonctionnalité ne doivent pas devenir invisibles pour toujours.
+    await request.post('/api/contact', {
+      data: {
+        prenom: 'Ancien', nom: 'Archivé', email: 'ancien@example.com',
+        message: 'Message archivé avant le retrait de la fonctionnalité.',
+      },
+    })
+    const list = await request.get('/api/contacts')
+    const { contacts } = await list.json()
+    const cible = contacts.find((c: any) => c.email === 'ancien@example.com')
+    await request.put(`/api/contacts/${cible.id}`, { data: { status: 'archived' } })
+
+    await loginAsAdmin(page)
+    await page.locator('.admin-btn-secondary', { hasText: 'Messages' }).click()
+    await expect(page.locator('.version-item', { hasText: 'Ancien Archivé' })).toBeVisible({ timeout: 3000 })
   })
 })
 

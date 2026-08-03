@@ -230,6 +230,11 @@ export function setContact(id, data) {
   return { success: true }
 }
 
+export function deleteContact(id) {
+  delete CONTACTS[id]
+  return { success: true }
+}
+
 // Mock de la config (collection 'settings', document 'config')
 let SETTINGS = { config: { contactEmails: ['belletonv@gmail.com'] } }
 
