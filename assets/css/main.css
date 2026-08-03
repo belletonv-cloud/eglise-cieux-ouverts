@@ -387,3 +387,34 @@ a:hover, .nav-admin-link:hover {
   opacity: 1;
   transform: translateY(0);
 }
+
+/* ─── « Aucune » animation : neutralisation des animations internes ───
+   Retirer la classe block-anim-* ne suffisait pas. Bienvenue et Contact
+   embarquent leurs propres @keyframes (apparition lettre par lettre, etc.),
+   indépendantes du sélecteur d'animation : choisir « Aucune » n'en coupait
+   qu'une partie, et le bloc continuait de bouger.
+
+   On écrase la DURÉE plutôt que de poser `animation: none`. Ces blocs partent
+   d'un état masqué (opacity: 0 sur le premier keyframe) que seule l'animation
+   révèle : la couper net laisserait le contenu invisible. Avec une durée
+   quasi nulle et animation-fill-mode: both, l'élément atterrit immédiatement
+   sur son image finale — donc visible, sans mouvement perceptible. Même
+   procédé que le bloc prefers-reduced-motion plus haut.
+
+   `animation-timeline: auto` est indispensable : ces animations sont pilotées
+   au scroll (animation-timeline: view()), un mode où animation-duration est
+   ignoré. Il faut donc les ramener sur une base temporelle pour que la durée
+   écrasée s'applique.
+
+   Les transitions ne sont volontairement pas touchées : à l'intérieur d'un
+   bloc, ce sont les retours au survol des liens et boutons, pas des
+   animations d'entrée — les supprimer rendrait l'interface inerte. */
+.bloc-sans-animation,
+.bloc-sans-animation *,
+.bloc-sans-animation *::before,
+.bloc-sans-animation *::after {
+    animation-timeline: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+}
