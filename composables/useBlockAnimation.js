@@ -25,6 +25,8 @@ const triggeredBlocks = ref([])
 const wrapperRefs = ref({})
 
 let lastAnimations = {}
+// Rejeux de bloc en vol, pour qu'un même clic n'en lance pas deux concurrents.
+const replaysEnCours = new Set()
 let observer = null
 let elementObserver = null
 let replayHandler = null
@@ -306,22 +308,73 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
     }
 
     // Legacy: wrapper animations
+    //
+    // Ces animations sont des TRANSITIONS CSS : `.block-anim-X` pose l'état de
+    // départ, `.triggered` amène l'état final. Rejouer suppose donc de repasser
+    // réellement par l'état de départ.
+    //
+    // `.triggered` est piloté par Vue via triggeredBlocks, dont la mise à jour
+    // n'est appliquée au DOM qu'au rendu suivant. On le retire donc AUSSI
+    // directement sur l'élément, sans quoi le reflow ci-dessous s'exécute alors
+    // que le bloc porte encore l'état final : aucune transition ne démarre, puis
+    // le rendu de Vue retire `.triggered` et joue l'animation À L'ENVERS avant
+    // que le timeout ne la relance. Résultat visible : « ça bouge, mais ce
+    // n'est pas l'animation ».
+    // Ces animations sont des TRANSITIONS CSS : `.block-anim-X` pose l'état de
+    // départ, `.triggered` amène l'état final. Rejouer impose donc trois
+    // choses, dans cet ordre — en coopérant avec Vue, qui est seul maître de
+    // la classe `.triggered` via triggeredBlocks :
+    //
+    //  1. retirer l'état final ET ATTENDRE que Vue l'ait appliqué au DOM.
+    //     Sans cette attente, la suite s'exécute alors que le bloc porte
+    //     encore `.triggered` ;
+    //  2. neutraliser la transition le temps d'un reflow, sinon le retour à
+    //     l'état de départ s'ANIME lui aussi (sur 0,8 à 1 s) : en remettant
+    //     l'état final peu après, le bloc n'a reculé que de quelques
+    //     centièmes et « rejoue » un trajet imperceptible ;
+    //  3. rendre l'état final à l'image suivante seulement, pour que le
+    //     navigateur ait peint le point de départ et démarre une vraie
+    //     transition.
+    //
+    // Le symptôme quand l'un des trois manque : le bloc saute d'un coup à son
+    // état final — « ça bouge, mais ce n'est pas l'animation ».
+    // Un même clic peut demander deux rejeux (observateur de prop + événement
+    // explicite d'AutoEditor). Sans garde, les deux séquences s'entremêlent et
+    // s'annulent. Le premier arrivé fait le travail.
+    if (replaysEnCours.has(id)) return
+    replaysEnCours.add(id)
+
     triggeredBlocks.value = triggeredBlocks.value.filter((item) => item !== id)
-    if (el && el.classList) {
-      const animClasses = Array.from(el.classList).filter((c) => c.startsWith('block-anim-'))
-      animClasses.forEach((c) => el.classList.remove(c))
+
+    const rendreEtatFinal = () => {
+      triggeredBlocks.value = [...(triggeredBlocks.value || []), id]
+      replaysEnCours.delete(id)
+    }
+
+    if (!el || !el.classList) {
+      if (isAdmin && isAdmin.value) setTimeout(rendreEtatFinal, 40)
+      return
+    }
+
+    nextTick(() => {
+      const transitionInitiale = el.style.transition
+      el.style.transition = 'none'
+      el.classList.remove('triggered')
       void el.offsetHeight
-      animClasses.forEach((c) => el.classList.add(c))
-    }
-    if (el && observer) {
-      try { observer.unobserve(el) } catch {}
-      try { observer.observe(el) } catch {}
-    }
-    if (isAdmin && isAdmin.value) {
-      setTimeout(() => { triggeredBlocks.value = [...(triggeredBlocks.value || []), id] }, 40)
-    } else {
-      try { el?.scrollIntoView({ behavior: 'smooth', block: 'center' }) } catch {}
-    }
+      el.style.transition = transitionInitiale
+      void el.offsetHeight
+
+      if (observer) {
+        try { observer.unobserve(el) } catch {}
+        try { observer.observe(el) } catch {}
+      }
+
+      if (isAdmin && isAdmin.value) {
+        requestAnimationFrame(() => requestAnimationFrame(rendreEtatFinal))
+      } else {
+        try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }) } catch {}
+      }
+    })
   }
 
   function isInIframe() {
@@ -398,19 +451,13 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
       const prev = oldMap[b.id]
       const now = b.props?.animation
       if (prev !== undefined && prev !== now) {
-        triggeredBlocks.value = triggeredBlocks.value.filter((item) => item !== b.id)
-        const el = wrapperRefs.value[b.id]
-        if (el && el.classList) {
-          el.classList.remove(`block-anim-${prev}`, 'triggered')
-          void el.offsetHeight
-          el.classList.add(`block-anim-${now}`)
-        }
-        if (el && observer) {
-          try { observer.observe(el) } catch (e) { console.error(e) }
-        }
-        if (isAdmin && isAdmin.value) {
-          setTimeout(() => { triggeredBlocks.value = [...(triggeredBlocks.value || []), b.id] }, 40)
-        }
+        // Déléguer plutôt que refaire : cet observateur et l'événement
+        // 'replay-animation' émis par AutoEditor se déclenchent tous deux au
+        // même clic. Quand chacun menait son propre rejeu, ils se marchaient
+        // dessus — l'un retirait l'état final, le délai de l'autre le
+        // reposait avant que la transition n'ait démarré, et le bloc sautait
+        // à l'arrivée sans s'animer.
+        replayBlockAnimation(b.id)
       }
     }
     lastAnimations = newMap

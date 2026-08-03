@@ -37,6 +37,49 @@ test('le choix d\'animation applique la classe et laisse le bloc visible', async
   await expect(bloc).toHaveClass(/triggered/, { timeout: 3000 })
 })
 
+test('l\'animation est réellement JOUÉE en mode édition, pas seulement remplacée', async ({ page }) => {
+  // Ce que les tests par classes ne pouvaient pas voir : les classes sont
+  // correctes même quand le bloc saute à son état final sans s'animer.
+  //
+  // Le signal fiable est la propriété réellement transitionnée. En mode
+  // édition, `.admin-mode .block-wrapper` (spécificité 0,2,0) l'emportait sur
+  // `.block-anim-*` (0,1,0) et remplaçait leur transition par `outline 0.15s`
+  // — opacity et transform n'étaient donc jamais animés.
+  //
+  // Mesurer l'opacité image par image ne marche pas : Chrome exécute les
+  // transitions d'opacité sur le compositeur et getComputedStyle renvoie
+  // déjà la valeur finale côté thread principal.
+  await loginAsAdmin(page)
+
+  const bloc = page.locator('.block-wrapper[data-block-type="bienvenue"]').first()
+  await expect(bloc).toBeVisible({ timeout: 5000 })
+  await bloc.click()
+
+  const sidebar = page.locator('.admin-sidebar')
+  await expect(sidebar).toBeVisible({ timeout: 5000 })
+  await sidebar.locator('.anim-btn', { hasText: 'Apparition' }).first().click()
+  await page.waitForTimeout(250)
+
+  const etat = await page.evaluate(() => {
+    const el = document.querySelector('.block-wrapper[data-block-type="bienvenue"]') as HTMLElement
+    const cs = getComputedStyle(el)
+    return {
+      propriete: cs.transitionProperty,
+      duree: cs.transitionDuration,
+      animations: el.getAnimations().length,
+    }
+  })
+  console.log('transition —', JSON.stringify(etat))
+
+  // C'est bien l'opacité qui est animée, et pas l'outline de l'éditeur
+  expect(etat.propriete).toContain('opacity')
+  expect(etat.propriete).not.toBe('outline')
+  // …sur une durée perceptible
+  expect(parseFloat(etat.duree)).toBeGreaterThan(0.3)
+  // …et une animation tourne effectivement juste après le changement
+  expect(etat.animations).toBeGreaterThan(0)
+})
+
 test('l\'animation choisie survit à la sauvegarde et au rechargement', async ({ page }) => {
   await loginAsAdmin(page)
 

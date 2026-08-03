@@ -694,7 +694,12 @@ watch(
 }
 .admin-mode .block-wrapper {
     cursor: pointer;
-    transition: outline 0.15s;
+    /* Ne JAMAIS déclarer `transition` ici. Ce sélecteur (0,2,0) est plus
+       spécifique que les classes d'animation `.block-anim-*` (0,1,0) : toute
+       transition posée ici REMPLACE la leur, si bien qu'en mode édition
+       opacity et transform cessent d'être animées. Le bloc saute alors
+       directement à son état final — on voit bien « quelque chose », mais
+       jamais l'animation. Le fondu de l'outline au survol ne valait pas ça. */
 }
 .admin-mode .block-wrapper:hover {
     outline: 2px dashed rgba(59, 130, 246, 0.5);
