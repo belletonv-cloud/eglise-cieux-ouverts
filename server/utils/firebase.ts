@@ -198,6 +198,49 @@ export async function setFirestoreDoc(
   }
 }
 
+/**
+ * Écriture conditionnelle : n'aboutit QUE si le document n'a pas changé depuis
+ * la lecture (`expectedUpdateTime`). Renvoie false si quelqu'un est passé
+ * avant, sans rien écrire.
+ *
+ * C'est ce qui empêche deux personnes de prendre la même tâche : les deux
+ * lisent le même `updateTime`, la première écriture le fait changer, la
+ * seconde est rejetée par Firestore (400) au lieu d'écraser la première.
+ * Vérifié en conditions réelles : sur deux prises simultanées, exactement
+ * une aboutit.
+ */
+export async function setFirestoreDocIfUnchanged(
+  projectId: string,
+  accessToken: string,
+  collection: string,
+  docId: string,
+  data: Record<string, any>,
+  updateMask: string[],
+  expectedUpdateTime: string
+): Promise<boolean> {
+  const params = [
+    `currentDocument.updateTime=${encodeURIComponent(expectedUpdateTime)}`,
+    ...updateMask.map(f => `updateMask.fieldPaths=${encodeURIComponent(f)}`),
+  ]
+  const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/${collection}/${docId}?${params.join('&')}`
+
+  const response = await fetch(url, {
+    method: 'PATCH',
+    headers: {
+      authorization: `Bearer ${accessToken}`,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify(encodeFirestoreDoc(data)),
+  })
+
+  if (response.ok) return true
+  // 400 (précondition non satisfaite) et 409 = quelqu'un a modifié le
+  // document entre-temps. Toute autre erreur est un vrai problème.
+  if (response.status === 400 || response.status === 409) return false
+  const text = await response.text()
+  throw new Error(`Firestore conditional write error: ${text}`)
+}
+
 export async function deleteFirestoreDoc(
   projectId: string,
   accessToken: string,

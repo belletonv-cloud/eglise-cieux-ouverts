@@ -6,8 +6,14 @@ export interface FirebaseUserInfo {
   email_verified: boolean
 }
 
-export type AdminRole = 'admin' | 'editor'
-export const ADMIN_ROLES: AdminRole[] = ['admin', 'editor']
+// 'planning' n'est PAS un rôle d'édition du site : il ne donne accès qu'au
+// tableau des tâches. Il ne doit donc jamais passer requireAdmin, qui garde
+// les 19 endpoints d'édition (pages, menu, footer, réglages...).
+export type AdminRole = 'admin' | 'editor' | 'planning'
+export const ADMIN_ROLES: AdminRole[] = ['admin', 'editor', 'planning']
+
+/** Rôles autorisés à modifier le contenu du site. */
+export const SITE_EDITOR_ROLES: AdminRole[] = ['admin', 'editor']
 
 export interface AdminUserEntry {
   email: string
@@ -137,27 +143,49 @@ export async function getUserRole(event: any, email: string | null): Promise<Adm
   return match?.role || null
 }
 
+/** A un rôle quelconque : peut se connecter à l'espace d'administration. */
 export async function isUserAdmin(event: any, email: string | null): Promise<boolean> {
   return (await getUserRole(event, email)) !== null
 }
 
 /**
- * Vérifie l'en-tête Authorization, valide le token Firebase et exige
- * que l'utilisateur ait un rôle (admin ou editor). Lève une erreur HTTP sinon.
+ * Authentifie et renvoie le rôle, ou lève 401. Ne décide d'aucune permission :
+ * c'est à l'appelant de vérifier le rôle obtenu.
  */
-export async function requireAdmin(event: any): Promise<FirebaseUserInfo> {
+async function authenticate(event: any): Promise<{ user: FirebaseUserInfo; role: AdminRole | null }> {
   const authHeader = getHeader(event, 'authorization')
   if (!authHeader?.startsWith('Bearer ')) {
     throw createError({ statusCode: 401, message: 'Non authentifié' })
   }
-  const userInfo = await verifyFirebaseToken(authHeader.slice(7), event)
-  if (!userInfo) {
+  const user = await verifyFirebaseToken(authHeader.slice(7), event)
+  if (!user) {
     throw createError({ statusCode: 401, message: 'Token invalide' })
   }
-  if (!await isUserAdmin(event, userInfo.email)) {
+  return { user, role: await getUserRole(event, user.email) }
+}
+
+/**
+ * Exige un rôle d'édition du site (admin ou editor). Le rôle 'planning' est
+ * volontairement refusé : il ne donne accès qu'au tableau des tâches.
+ */
+export async function requireAdmin(event: any): Promise<FirebaseUserInfo> {
+  const { user, role } = await authenticate(event)
+  if (!role || !SITE_EDITOR_ROLES.includes(role)) {
     throw createError({ statusCode: 403, message: 'Accès refusé' })
   }
-  return userInfo
+  return user
+}
+
+/**
+ * Exige un accès au tableau des tâches : tout rôle connu convient, y compris
+ * 'planning', qui existe précisément pour ça.
+ */
+export async function requireTaskAccess(event: any): Promise<FirebaseUserInfo> {
+  const { user, role } = await authenticate(event)
+  if (!role) {
+    throw createError({ statusCode: 403, message: 'Accès refusé' })
+  }
+  return user
 }
 
 /**
@@ -165,17 +193,9 @@ export async function requireAdmin(event: any): Promise<FirebaseUserInfo> {
  * Réservé aux actions sensibles : gérer les autres comptes admin/rôles.
  */
 export async function requireSuperAdmin(event: any): Promise<FirebaseUserInfo> {
-  const authHeader = getHeader(event, 'authorization')
-  if (!authHeader?.startsWith('Bearer ')) {
-    throw createError({ statusCode: 401, message: 'Non authentifié' })
-  }
-  const userInfo = await verifyFirebaseToken(authHeader.slice(7), event)
-  if (!userInfo) {
-    throw createError({ statusCode: 401, message: 'Token invalide' })
-  }
-  const role = await getUserRole(event, userInfo.email)
+  const { user, role } = await authenticate(event)
   if (role !== 'admin') {
     throw createError({ statusCode: 403, message: 'Seuls les administrateurs (rôle admin) peuvent gérer les comptes' })
   }
-  return userInfo
+  return user
 }

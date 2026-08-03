@@ -13,6 +13,14 @@ test.beforeEach(async ({ request }) => {
   await resetMock(request)
 })
 
+// Ces tests SAUVEGARDENT une animation sur la page 'accueil' du mock, qui est
+// un état partagé par tous les fichiers de spec. Sans remise à zéro après
+// coup, les specs qui s'appuient sur les animations par défaut (comme
+// admin-animations.spec.ts, qui ne réinitialise pas) échouent ensuite.
+test.afterEach(async ({ request }) => {
+  await resetMock(request)
+})
+
 test('le choix d\'animation applique la classe et laisse le bloc visible', async ({ page }) => {
   await loginAsAdmin(page)
 

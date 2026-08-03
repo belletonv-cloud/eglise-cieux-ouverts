@@ -155,6 +155,7 @@ export function resetMock() {
   ADMIN_USERS = [{ email: 'ci-admin@tests.fr', role: 'admin' }]
   MENU = { menuItems: null, menuBgImage: '' }
   FOOTER = null
+  TACHES = {}
 }
 
 export function getPages() {
@@ -233,6 +234,38 @@ export function setContact(id, data) {
 export function deleteContact(id) {
   delete CONTACTS[id]
   return { success: true }
+}
+
+// Mock du tableau des tâches (collection 'taches'). `_rev` simule le
+// updateTime de Firestore : il sert de précondition pour la prise de tâche,
+// afin que le mock reproduise le même refus de double prise qu'en réel.
+let TACHES = {}
+
+export function getTaches() {
+  return Object.values(JSON.parse(JSON.stringify(TACHES)))
+}
+
+export function getTache(id) {
+  return TACHES[id] ? JSON.parse(JSON.stringify(TACHES[id])) : null
+}
+
+export function setTache(id, data) {
+  const rev = (TACHES[id]?._rev ?? 0) + 1
+  TACHES[id] = JSON.parse(JSON.stringify({ ...data, _rev: rev }))
+  return { success: true }
+}
+
+export function deleteTache(id) {
+  delete TACHES[id]
+  return { success: true }
+}
+
+/** Renvoie false si la tâche a changé depuis la lecture (double prise). */
+export function setTacheIfUnchanged(id, data, expectedRev) {
+  const current = TACHES[id]
+  if (!current || current._rev !== expectedRev) return false
+  TACHES[id] = JSON.parse(JSON.stringify({ ...current, ...data, _rev: current._rev + 1 }))
+  return true
 }
 
 // Mock de la config (collection 'settings', document 'config')

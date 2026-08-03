@@ -202,6 +202,13 @@
                             <span class="icon">📅</span><span class="label">Événements</span>
                         </button>
                         <button
+                            class="admin-btn admin-btn-secondary admin-btn-compact"
+                            @click="showTaches = true"
+                            title="Tableau des tâches — qui fait quoi"
+                        >
+                            <span class="icon">📋</span><span class="label">Tâches</span>
+                        </button>
+                        <button
                             class="admin-btn admin-btn-secondary"
                             @click="signOutAndExit"
                             title="Quitter le mode admin"
@@ -643,6 +650,7 @@
                             />
                             <select v-model="newAdminRole" class="admin-mgr-role-select">
                                 <option value="editor">Éditeur</option>
+                                <option value="planning">Planning (tâches seulement)</option>
                                 <option value="admin">Admin</option>
                             </select>
                             <button
@@ -654,7 +662,7 @@
                             </button>
                         </div>
                         <p class="admin-mgr-hint">
-                            Admin : accès complet, y compris la gestion des comptes. Éditeur : peut éditer le contenu du site mais pas gérer les admins.
+                            Admin : accès complet, y compris la gestion des comptes. Éditeur : peut éditer le contenu du site mais pas gérer les admins. Planning : accède uniquement au tableau des tâches, sans pouvoir modifier le site.
                         </p>
                     </div>
                     <div class="admin-mgr-section">
@@ -686,9 +694,10 @@
                                             :disabled="changingRole === u.email"
                                         >
                                             <option value="editor">Éditeur</option>
+                                            <option value="planning">Planning (tâches seulement)</option>
                                             <option value="admin">Admin</option>
                                         </select>
-                                        <span v-else class="admin-mgr-role-badge" :class="`role-${u.role}`">{{ u.role === 'admin' ? 'Admin' : 'Éditeur' }}</span>
+                                        <span v-else class="admin-mgr-role-badge" :class="`role-${u.role}`">{{ u.role === 'admin' ? 'Admin' : u.role === 'planning' ? 'Planning' : 'Éditeur' }}</span>
                                     </td>
                                     <td v-if="currentUserRole === 'admin'">
                                         <button
@@ -929,6 +938,13 @@
     </Teleport>
 
     <AdminEventManager :open="showEventManager" @close="showEventManager = false" />
+
+    <AdminTachesBoard
+        :open="showTaches"
+        :mon-email="user?.email || ''"
+        :mon-role="currentUserRole || ''"
+        @close="showTaches = false"
+    />
 
 </template>
 
@@ -1730,6 +1746,7 @@ const filteredVersions = computed(() => {
 // Admin management
 const showAdminManager = ref(false);
 const showEventManager = ref(false);
+const showTaches = ref(false);
 const adminList = ref([]); // [{ email, role }]
 const newAdminEmail = ref('');
 const newAdminRole = ref('editor');
