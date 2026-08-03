@@ -3,6 +3,23 @@
 // Worker eglise-app, état réinitialisable via POST /api/reset-mock.
 // Sélection de l'utilisateur via la convention 'mock-test-token:email'.
 
+// Dates ancrées sur le MOIS COURANT plutôt que figées dans le calendrier.
+// La vue cartes de /agenda ne montre que les événements du mois affiché : une
+// date en dur finit fatalement par sortir de cette fenêtre, et les tests qui
+// en dépendent se mettent à échouer sans qu'une ligne de code ait changé —
+// c'est ce qui est arrivé aux fixtures du 26/07/2026. Le 15 et le 17 existent
+// dans tous les mois. `tests/playwright/membre-espace.spec.ts` applique la
+// même convention pour que participation et événement public tombent le
+// même jour (participationFor compare occurrence_date au jour de l'événement).
+function jourDuMoisCourant(jour) {
+  const maintenant = new Date()
+  const mois = String(maintenant.getMonth() + 1).padStart(2, '0')
+  return `${maintenant.getFullYear()}-${mois}-${String(jour).padStart(2, '0')}`
+}
+
+export const DATE_EVENEMENT_MOCK = jourDuMoisCourant(15)
+export const DATE_EVENEMENT_MOCK_2 = jourDuMoisCourant(17)
+
 function defaultState() {
   return {
     members: {
@@ -49,7 +66,7 @@ function defaultState() {
         message: 'Peux-tu chanter dimanche ?',
         position_label: 'Chant',
         event_id: 1,
-        event_date: '2026-07-26',
+        event_date: DATE_EVENEMENT_MOCK,
         status: 'pending',
         response_note: null,
         responded_at: null,
@@ -64,11 +81,11 @@ function defaultState() {
         participation_id: 1,
         event_id: 1,
         member_email: 'ci-member@tests.fr',
-        occurrence_date: '2026-07-26',
+        occurrence_date: DATE_EVENEMENT_MOCK,
         attendance_status: 'pending',
         responded_at: null,
         title: 'Culte du dimanche',
-        start_date: '2026-07-26',
+        start_date: DATE_EVENEMENT_MOCK,
         start_time: '10:00',
         location: 'Morlaix',
         repeat_period: 'week',

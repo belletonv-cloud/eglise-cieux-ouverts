@@ -119,11 +119,25 @@ test.describe('Espace membre — /membre', () => {
  * useChurchEvents attend un TABLEAU BRUT en réponse, pas {data: [...]}.
  */
 
+// Même convention que server/utils/member-mock.js : dates ancrées sur le mois
+// courant. La vue cartes de /agenda ne montre que le mois affiché, donc une
+// date en dur finit par sortir de la fenêtre et casse ces tests sans qu'aucune
+// ligne de code applicatif n'ait bougé (c'est arrivé avec le 26/07/2026).
+// Le premier événement doit tomber le même jour que la participation mock,
+// sinon participationFor() ne les relie pas et la surbrillance disparaît.
+function jourDuMoisCourant(jour: number): string {
+  const maintenant = new Date()
+  const mois = String(maintenant.getMonth() + 1).padStart(2, '0')
+  return `${maintenant.getFullYear()}-${mois}-${String(jour).padStart(2, '0')}`
+}
+const DATE_PARTICIPATION = jourDuMoisCourant(15)
+const DATE_AUTRE_EVENT = jourDuMoisCourant(17)
+
 const MOCK_EVENTS = [
   {
     id: 1,
     title: 'Culte du dimanche',
-    start_date: '2026-07-26',
+    start_date: DATE_PARTICIPATION,
     start_time: '10:00',
     location: 'Morlaix',
     repeat_period: null,
@@ -132,7 +146,7 @@ const MOCK_EVENTS = [
   {
     id: 2,
     title: 'Soirée jeunes',
-    start_date: '2026-07-28',
+    start_date: DATE_AUTRE_EVENT,
     start_time: '19:00',
     location: 'Morlaix',
     repeat_period: null,
@@ -153,7 +167,7 @@ test.describe('Agenda personnel du membre', () => {
     await page.evaluate(() => localStorage.setItem('agenda_view', 'cards'))
     await page.reload()
     await expect(page.locator('.event-card', { hasText: 'Culte du dimanche' })).toBeVisible({ timeout: 8000 })
-    // Le culte du 26/07 correspond à la participation mock → surligné
+    // Ce culte tombe le même jour que la participation mock → surligné
     await expect(page.locator('.event-card.event-mine', { hasText: 'Culte du dimanche' })).toBeVisible()
     // La soirée jeunes n'est pas une participation → pas surlignée
     await expect(page.locator('.event-card.event-mine', { hasText: 'Soirée jeunes' })).toHaveCount(0)
