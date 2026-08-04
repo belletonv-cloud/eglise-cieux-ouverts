@@ -32,6 +32,22 @@ export interface Tache {
   fin: string | null
   creePar: string
   creeLe: string
+  /**
+   * Provenance, quand la tâche est née d'un élément existant (demande
+   * développeur, événement). On ne recopie PAS l'élément : on garde son
+   * identifiant pour éviter de l'importer deux fois et pour pouvoir
+   * remonter à la source.
+   */
+  origineType: OrigineType
+  origineId: string
+  origineLibelle: string
+}
+
+export const ORIGINES = ['', 'demande', 'evenement'] as const
+export type OrigineType = (typeof ORIGINES)[number]
+
+export function normaliseOrigine(value: unknown): OrigineType {
+  return ORIGINES.includes(value as OrigineType) ? (value as OrigineType) : ''
 }
 
 const COLLECTION = 'taches'
@@ -82,6 +98,9 @@ function depuisDoc(doc: any): Tache {
     fin: data.fin || null,
     creePar: data.creePar || '',
     creeLe: data.creeLe || '',
+    origineType: normaliseOrigine(data.origineType),
+    origineId: data.origineId || '',
+    origineLibelle: data.origineLibelle || '',
   }
 }
 

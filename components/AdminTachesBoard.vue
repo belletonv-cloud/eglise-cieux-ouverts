@@ -44,6 +44,26 @@
 
         <p v-if="erreur" class="taches-erreur">{{ erreur }}</p>
 
+        <!-- Import : transformer un élément existant en tâche suivie et
+             attribuable, plutôt que de ressaisir son intitulé à la main. -->
+        <div v-if="sources.length" class="taches-sources">
+          <button class="taches-sources-titre" @click="sourcesOuvertes = !sourcesOuvertes">
+            {{ sourcesOuvertes ? '▾' : '▸' }} À transformer en tâche ({{ sources.length }})
+          </button>
+          <div v-if="sourcesOuvertes" class="taches-sources-liste">
+            <div v-for="s in sources" :key="s.type + s.id" class="taches-source-item">
+              <span class="taches-source-badge">{{ s.type === 'demande' ? 'Demande' : 'Événement' }}</span>
+              <span class="taches-source-txt">
+                {{ s.libelle }}
+                <em v-if="s.contexte" class="taches-source-ctx">{{ s.contexte }}</em>
+              </span>
+              <button class="taches-btn" :disabled="occupe === s.id" @click="importer(s)">
+                {{ occupe === s.id ? '…' : 'Créer la tâche' }}
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div v-if="chargement" class="taches-vide">Chargement…</div>
         <p v-else-if="taches.length === 0" class="taches-vide">
           Aucune tâche pour l'instant — ajoute la première ci-dessus.
@@ -66,6 +86,9 @@
             >
               <article v-for="t in listes[col.statut]" :key="t.id" class="taches-carte" :class="{ prise: t.prisPar }">
                 <span class="taches-source" :data-source="t.source">{{ libelleSource(t.source) }}</span>
+                <span v-if="t.origineType" class="taches-origine" :title="t.origineLibelle">
+                  ↳ {{ t.origineType === 'demande' ? 'Demande développeur' : 'Événement' }}
+                </span>
                 <p class="taches-titre">{{ t.titre }}</p>
 
                 <div class="taches-dates">
@@ -202,6 +225,8 @@ const vue = ref('kanban')
 const seulementLesMiennes = ref(false)
 const nouveauTitre = ref('')
 const nouvelleSource = ref('projet')
+const sources = ref([])
+const sourcesOuvertes = ref(true)
 
 // Les colonnes doivent être des tableaux modifiables : vue-draggable-plus
 // réordonne le tableau lié, ce qu'une computed ne permet pas.
@@ -279,6 +304,40 @@ async function charger() {
     erreur.value = `Impossible de charger les tâches : ${e.message}`
   } finally {
     chargement.value = false
+  }
+  // Best effort : les sources enrichissent le tableau, leur absence ne doit
+  // pas empêcher de travailler.
+  try {
+    const { sources: dispo } = await appel('/api/taches/sources')
+    sources.value = dispo || []
+  } catch (e) {
+    console.warn('[taches] sources indisponibles :', e.message)
+    sources.value = []
+  }
+}
+
+/** Transforme un élément existant en tâche, en gardant le lien vers lui. */
+async function importer(source) {
+  occupe.value = source.id
+  erreur.value = ''
+  try {
+    await appel('/api/taches', {
+      method: 'POST',
+      body: JSON.stringify({
+        titre: source.libelle,
+        source: source.type === 'demande' ? 'site' : 'service',
+        origineType: source.type,
+        origineId: source.id,
+        origineLibelle: source.libelle,
+      }),
+    })
+    await charger()
+  } catch (e) {
+    erreur.value = e.message
+    // 409 = déjà importée entre-temps : on recharge pour refléter la réalité
+    if (e.status === 409) await charger()
+  } finally {
+    occupe.value = null
   }
 }
 
@@ -540,6 +599,50 @@ async function deplacer(evenement, nouveauStatut) {
 .taches-btn:disabled { opacity: 0.5; cursor: default; }
 .taches-btn-second { background: #6b7280; }
 .taches-btn-prendre { background: #15803d; }
+.taches-sources {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 8px 10px;
+  margin-bottom: 10px;
+  background: #f9fafb;
+}
+.taches-sources-titre {
+  border: none;
+  background: none;
+  padding: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
+}
+.taches-sources-liste { margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
+.taches-source-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 6px 8px;
+}
+.taches-source-badge {
+  flex: none;
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: #fef3c7;
+  color: #92400e;
+  border-radius: 4px;
+  padding: 1px 6px;
+}
+.taches-source-txt { flex: 1; font-size: 0.8rem; color: #111827; min-width: 0; }
+.taches-source-ctx { display: block; font-size: 0.7rem; color: #6b7280; font-style: normal; }
+.taches-origine {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 0.62rem;
+  color: #6b7280;
+}
 .taches-erreur {
   background: #fef2f2;
   border: 1px solid #fecaca;
