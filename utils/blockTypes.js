@@ -128,6 +128,9 @@ export const BLOCK_TYPES = {
           image: "/images/activites-repas.jpg",
         },
       ],
+      // "none" conserve l'apparence actuelle : ces blocs n'avaient aucune
+      // animation avant l'ajout du sélecteur.
+      animation: "none",
     },
     schema: [
       {
@@ -140,6 +143,7 @@ export const BLOCK_TYPES = {
           { key: "image", label: "URL image", type: "text" },
         ],
       },
+      { key: "animation", label: "Animation", type: "animation" },
     ],
   },
 
@@ -517,6 +521,9 @@ export const BLOCK_TYPES = {
       src: "",
       alt: "Image pleine largeur",
       height: 400,
+      // "none" conserve l'apparence actuelle : ce bloc n'avait aucune
+      // animation avant l'ajout du sélecteur.
+      animation: "none",
     },
     schema: [
       { key: "src", label: "Image", type: "image" },
@@ -528,6 +535,7 @@ export const BLOCK_TYPES = {
         min: 100,
         max: 800,
       },
+      { key: "animation", label: "Animation", type: "animation" },
     ],
   },
 

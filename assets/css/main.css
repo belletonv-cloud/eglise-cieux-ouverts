@@ -438,3 +438,18 @@ a:hover, .nav-admin-link:hover {
 .anim-rejeu {
     animation-timeline: auto !important;
 }
+
+/* ─── Contenus embarqués en mode édition ───
+   Le lecteur YouTube et la carte du bloc Contact occupent tout leur bloc et
+   captaient le clic : elementFromPoint renvoyait l'iframe, la sélection
+   n'atteignait jamais le wrapper, et le bloc devenait impossible à ouvrir —
+   donc à éditer, animer ou supprimer. Dans l'éditeur on veut sélectionner le
+   bloc, pas interagir avec son contenu embarqué.
+
+   Règle globale et non scoped : l'iframe appartient au composant du bloc, un
+   autre scope que PageRenderer, que `:deep()` n'atteignait pas ici.
+   L'iframe de l'aperçu responsive n'est pas concernée, elle vit hors
+   .block-wrapper. */
+.admin-mode .block-wrapper iframe {
+    pointer-events: none;
+}
