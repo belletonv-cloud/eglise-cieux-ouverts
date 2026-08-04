@@ -25,6 +25,17 @@ export const ANIMATIONS = [
   { id: "wave", label: "Vague", css: "anim-wave" },
 ];
 
+// Blocs dotés de leur PROPRE animation, écrite dans le composant (titre qui
+// se déploie lettre par lettre pour Bienvenue, colonnes de Contact, etc.).
+// Elle est neutralisée par défaut, sans quoi elle se cumulerait à l'animation
+// choisie et la masquerait — bien plus spectaculaire, c'est elle qu'on voyait
+// quel que soit le choix. Ces blocs reçoivent donc une option supplémentaire
+// pour la rétablir explicitement.
+export const BLOCS_AVEC_ANIMATION_PROPRE = ["bienvenue", "contact", "vision"];
+
+/** Valeur du choix « garder l'animation d'origine du bloc ». */
+export const ANIMATION_ORIGINE = { id: "origine", label: "D'origine" };
+
 const DEFAULT_MESSAGES_BODY = `<p>Les messages partages a l'eglise ne sont pas faits pour s'arreter au dimanche.</p><p>📺 Replonge dans la parole sur notre chaine YouTube :</p><ul><li>(Re)decouvre les messages qui t'ont touche.</li><li>Laisse Dieu te parler a nouveau, ou d'une maniere nouvelle.</li><li>Partage-les avec tes proches pour semer l'esperance autour de toi.</li></ul><p>Que ce soit pour approfondir, reentendre une parole qui t'a marque(e), ou rester connecte(e) dans la semaine, ces moments sont la pour toi.</p><p><strong>Abonne-toi des maintenant pour ne rien manquer et garde la flamme allumee.</strong></p>`;
 const DEFAULT_MESSAGES_GRADIENT = `radial-gradient(circle at 94.35% 89.61%, #054886 0%, 20%, rgba(5, 72, 134, 0) 40%), radial-gradient(circle at 9.07% 95.57%, rgba(238, 108, 113, 0.99) 0%, 25%, rgba(238, 108, 113, 0) 50%), radial-gradient(circle at 4.04% 13.51%, #054886 0%, 42%, rgba(5, 72, 134, 0) 70%), radial-gradient(circle at 93.32% 10.65%, #EF4B54 0%, 42%, rgba(239, 75, 84, 0) 70%), radial-gradient(circle at 48.90% 49.52%, #FFFFFF 0%, 100%, rgba(255, 255, 255, 0) 100%)`;
 // ─── TYPES DE BLOCS ────────────────────────────────────────────────────────────

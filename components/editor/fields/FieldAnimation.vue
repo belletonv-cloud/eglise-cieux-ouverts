@@ -1,7 +1,7 @@
 <template>
   <div class="field-animations">
     <button
-      v-for="anim in ANIMATIONS"
+      v-for="anim in choix"
       :key="anim.id"
       class="anim-btn"
       :class="{ active: value === anim.id }"
@@ -12,9 +12,21 @@
 </template>
 
 <script setup lang="ts">
-import { ANIMATIONS } from '~/utils/blockTypes.js'
+import { computed, inject, ref } from 'vue'
+import { ANIMATIONS, ANIMATION_ORIGINE, BLOCS_AVEC_ANIMATION_PROPRE } from '~/utils/blockTypes.js'
 defineProps<{ value: any; field: any }>()
 defineEmits<{ change: [value: string] }>()
+
+// Fourni par AutoEditor : seuls certains blocs embarquent une animation
+// propre, et proposer « D'origine » ailleurs ne ferait rien de visible.
+const blockType = inject<any>('blockType', ref(''))
+
+const choix = computed(() => {
+  const type = typeof blockType === 'string' ? blockType : blockType?.value
+  return BLOCS_AVEC_ANIMATION_PROPRE.includes(type)
+    ? [...ANIMATIONS, ANIMATION_ORIGINE]
+    : ANIMATIONS
+})
 </script>
 
 <style scoped>

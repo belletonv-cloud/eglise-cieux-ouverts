@@ -422,3 +422,19 @@ a:hover, .nav-admin-link:hover {
     animation-delay: 0s !important;
     animation-iteration-count: 1 !important;
 }
+
+/* ─── Aperçu d'une animation dans l'éditeur ───
+   Les animations de bloc sont pilotées par le scroll (animation-timeline:
+   view()) : leur progression dépend de la position du bloc dans la fenêtre,
+   pas du temps. Dans l'éditeur le bloc est déjà visible, donc la progression
+   vaut 1 et l'animation est terminée d'emblée — basculer la classe
+   `triggered` n'y change rien, il n'y a aucune lecture temporelle à relancer.
+   Changer d'animation ne produisait donc RIEN de visible.
+
+   Cette classe, posée le temps du rejeu, ramène l'animation sur une base
+   temporelle : la durée déclarée redevient effective et l'animation se joue
+   une fois, du début à la fin. Elle est retirée ensuite pour rendre au bloc
+   son comportement au scroll sur le site public. */
+.anim-rejeu {
+    animation-timeline: auto !important;
+}

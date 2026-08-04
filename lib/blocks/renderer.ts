@@ -41,7 +41,11 @@ export function getAnimClass(block: BlockInstance): string {
  * l'utilisateur et ne doit donc pas être coupée.
  */
 export function getAnimControlClass(block: BlockInstance): string {
-  return getAnimationStrategy(block.type) === "wrapper" ? "bloc-anim-controlee" : "";
+  if (getAnimationStrategy(block.type) !== "wrapper") return "";
+  // « D'origine » : l'utilisateur redemande explicitement l'animation propre
+  // du bloc, on ne la neutralise donc pas.
+  if (block.props?.animation === "origine") return "";
+  return "bloc-anim-controlee";
 }
 
 export function shouldUseTrigger(block: BlockInstance): boolean {

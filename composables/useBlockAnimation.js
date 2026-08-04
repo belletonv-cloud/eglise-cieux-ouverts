@@ -27,6 +27,13 @@ const wrapperRefs = ref({})
 let lastAnimations = {}
 // Rejeux de bloc en vol, pour qu'un même clic n'en lance pas deux concurrents.
 const replaysEnCours = new Set()
+// Minuteurs de fin d'aperçu : la classe .anim-rejeu doit être retirée une fois
+// l'animation jouée, pour rendre au bloc son comportement au scroll.
+const finRejeu = new Map()
+// Blocs dont l'aperçu d'animation est en cours de lecture dans l'éditeur.
+const apercuBlocks = ref([])
+// Plus longue animation du catalogue (1 s pour portal), avec une marge.
+const DUREE_APERCU = 1400
 let observer = null
 let elementObserver = null
 let replayHandler = null
@@ -178,6 +185,11 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
     return triggeredBlocks.value.includes(id)
   }
 
+  /** Aperçu d'animation en cours pour ce bloc (éditeur uniquement). */
+  function isApercu(id) {
+    return apercuBlocks.value.includes(id)
+  }
+
   function setWrapperRef(el, id) {
     if (el) {
       wrapperRefs.value[id] = el
@@ -250,9 +262,46 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
     }
   }
 
+  /**
+   * Aperçu de l'animation du bloc dans l'éditeur.
+   *
+   * Ces animations sont pilotées par le scroll (animation-timeline: view()) :
+   * leur progression suit la position du bloc dans la fenêtre, pas le temps.
+   * Dans l'éditeur le bloc est déjà visible, la progression vaut donc 1 et
+   * rien ne se joue — basculer `triggered` n'y change rien, il n'y a aucune
+   * lecture temporelle à relancer. La classe posée ici les ramène le temps
+   * d'un passage sur une base temporelle, puis est retirée pour rendre au
+   * bloc son comportement au scroll côté public.
+   *
+   * Appelé AVANT l'aiguillage vers les différentes stratégies de rejeu : les
+   * blocs à éléments enregistrés sortaient plus tôt, et leur animation de
+   * wrapper n'était donc jamais rejouée.
+   */
+  function joueApercuWrapper(id, el) {
+    if (!(isAdmin && isAdmin.value)) return
+    // Passe par l'état réactif plutôt que par classList : Vue réécrit
+    // l'attribut class à chaque rendu du wrapper et effaçait aussitôt une
+    // classe posée à la main.
+    apercuBlocks.value = apercuBlocks.value.filter((x) => x !== id)
+    if (el) void el.offsetHeight
+    nextTick(() => {
+      apercuBlocks.value = [...apercuBlocks.value, id]
+      clearTimeout(finRejeu.get(id))
+      finRejeu.set(
+        id,
+        setTimeout(() => {
+          apercuBlocks.value = apercuBlocks.value.filter((x) => x !== id)
+          finRejeu.delete(id)
+        }, DUREE_APERCU),
+      )
+    })
+  }
+
   function replayBlockAnimation(id) {
     const el = wrapperRefs.value[id]
     const block = blocksCache.find((b) => b.id === id)
+
+    joueApercuWrapper(id, el)
 
     // New system: if block has registered elements, replay them all
     const blockElements = []
@@ -635,5 +684,6 @@ export function useBlockAnimation(isAdmin, isServerAdminRef) {
     // Element-level API
     registerElement, unregisterBlock,
     isElementTriggered, triggerElement, replayElement,
+    isApercu,
   }
 }

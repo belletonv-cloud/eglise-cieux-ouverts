@@ -98,12 +98,19 @@ import FieldImages from './fields/FieldImages.vue'
 import EditorFieldError from './EditorFieldError.vue'
 import FieldDesign from './FieldDesign.vue'
 import { AVAILABLE_FONTS as availableFonts, fontStack } from '~/utils/fonts.js'
-import { watch, nextTick, computed, reactive } from 'vue'
+import { watch, nextTick, computed, reactive, provide } from 'vue'
 
 const props = defineProps<{
   schema: FieldSchema[]
   modelValue: BlockInstance | null
 }>()
+
+// Le type de bloc n'est pas transmis aux composants de champ (ils ne
+// reçoivent que `field` et `value`). On le fournit plutôt que d'ajouter un
+// attribut à <component :is>, qui retomberait sur le DOM de tous les autres
+// champs. FieldAnimation s'en sert pour ne proposer « D'origine » qu'aux
+// blocs qui embarquent réellement une animation propre.
+provide('blockType', computed(() => props.modelValue?.type || ''))
 
 // ─── Regroupement des champs en panneaux ───────────────────────────────────
 // Ordre fixe et libellés des panneaux de la sidebar. Un groupe sans champ

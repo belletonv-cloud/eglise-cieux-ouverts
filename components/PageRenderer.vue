@@ -18,6 +18,7 @@
                 getAnimControlClass(block),
                 visibilityClass(block),
                 { triggered: isTriggered(block.id) },
+                { 'anim-rejeu': isApercu(block.id) },
                 { 'admin-selected': isSelected(block) },
                 { 'bee-positioning-active': block.props?.extraElements?.some((e) => e.id === positioningElementId) },
             ]"
@@ -63,6 +64,7 @@
                 getAnimControlClass(block),
                 visibilityClass(block),
                 { triggered: isTriggered(block.id) },
+                { 'anim-rejeu': isApercu(block.id) },
                 { 'admin-selected': isAdmin && isSelected(block) },
             ]"
             :style="wrapperStyle(block)"
@@ -225,6 +227,7 @@ function applyVisibleOrder(newVisibleOrder) {
 const {
     triggeredBlocks,
     isTriggered,
+    isApercu,
     setWrapperRef,
     setup,
     handleBlocksChange,

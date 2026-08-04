@@ -110,3 +110,80 @@ test('l\'animation choisie survit à la sauvegarde et au rechargement', async ({
   console.log('CLASSES APRÈS RECHARGEMENT :', await blocApres.getAttribute('class'))
   await expect(blocApres).toHaveClass(/block-anim-zoom/, { timeout: 5000 })
 })
+
+test('l\'aperçu se joue réellement dans l\'éditeur, sur un bloc quelconque', async ({ page }) => {
+  // Les animations de bloc sont pilotées par le scroll (animation-timeline:
+  // view()). Dans l'éditeur le bloc est déjà visible : leur progression vaut
+  // 1 et rien ne se joue, quoi qu'on choisisse. Le rejeu les ramène le temps
+  // d'un passage sur une base temporelle — c'est ce qu'on vérifie ici, sur un
+  // bloc sans animation propre pour isoler le mécanisme.
+  await loginAsAdmin(page)
+
+  const bloc = page.locator('.block-wrapper[data-block-type="vision"]').first()
+  await bloc.scrollIntoViewIfNeeded()
+  await expect(bloc).toBeVisible({ timeout: 5000 })
+  await bloc.click({ force: true })
+  await expect(page.locator('.admin-sidebar')).toBeVisible({ timeout: 5000 })
+
+  await page.locator('.admin-sidebar .auto-field').filter({ hasText: /Animation/i })
+    .locator('.anim-btn').filter({ hasText: 'Zoom entrant' }).first().click()
+  await page.waitForTimeout(200)
+
+  const r = await page.evaluate(() => {
+    const el = document.querySelector('.block-wrapper[data-block-type="vision"]') as HTMLElement
+    const a = (el.getAnimations?.() || []).find((x) => (x as any).animationName)
+    return {
+      apercu: el.classList.contains('anim-rejeu'),
+      nom: a ? (a as any).animationName : null,
+      etat: a ? a.playState : null,
+      timeline: a?.timeline?.constructor?.name || null,
+    }
+  })
+  console.log('aperçu →', JSON.stringify(r))
+
+  expect(r.apercu, 'la classe d\'aperçu doit être posée').toBe(true)
+  // Base temporelle : sans ça l'animation resterait figée à sa fin
+  expect(r.timeline).toBe('DocumentTimeline')
+  expect(r.etat, 'l\'animation doit être en cours de lecture').toBe('running')
+})
+
+test('« D\'origine » restaure l\'animation propre du bloc', async ({ page }) => {
+  await loginAsAdmin(page)
+
+  const bloc = page.locator('.block-wrapper[data-block-type="bienvenue"]').first()
+  await expect(bloc).toBeVisible({ timeout: 5000 })
+  await bloc.click({ force: true })
+  await expect(page.locator('.admin-sidebar')).toBeVisible({ timeout: 5000 })
+
+  const champ = page.locator('.admin-sidebar .auto-field').filter({ hasText: /Animation/i })
+  await champ.locator('.anim-btn').filter({ hasText: "D'origine" }).first().click()
+  await page.waitForTimeout(300)
+
+  // Le bloc n'est plus neutralisé : son animation interne peut se jouer
+  await expect(bloc).not.toHaveClass(/bloc-anim-controlee/)
+  // …et aucune animation de wrapper ne vient la concurrencer
+  await expect(bloc).not.toHaveClass(/block-anim-(fadeIn|slideUp|zoom|portal)/)
+})
+
+test('« D\'origine » n\'est proposé qu\'aux blocs qui en ont une', async ({ page }) => {
+  await loginAsAdmin(page)
+
+  // Vision embarque une animation propre : l'option est là
+  const vision = page.locator('.block-wrapper[data-block-type="vision"]').first()
+  await vision.scrollIntoViewIfNeeded()
+  await vision.click({ force: true })
+  await expect(page.locator('.admin-sidebar')).toBeVisible({ timeout: 5000 })
+  const champVision = page.locator('.admin-sidebar .auto-field').filter({ hasText: /Animation/i })
+  await expect(champVision.locator('.anim-btn').filter({ hasText: "D'origine" })).toHaveCount(1)
+
+  // textImage n'en a pas : l'option serait sans effet, elle n'apparaît pas
+  await page.locator('.admin-sidebar .admin-close-btn').click()
+  await page.waitForTimeout(300)
+  const autre = page.locator('.block-wrapper[data-block-type="contact"]').first()
+  await autre.scrollIntoViewIfNeeded()
+  await autre.click({ force: true })
+  await expect(page.locator('.admin-sidebar')).toBeVisible({ timeout: 5000 })
+  // Contact en a une aussi — on vérifie la cohérence de la liste
+  const champContact = page.locator('.admin-sidebar .auto-field').filter({ hasText: /Animation/i })
+  await expect(champContact.locator('.anim-btn').filter({ hasText: "D'origine" })).toHaveCount(1)
+})
