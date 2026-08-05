@@ -97,6 +97,30 @@ function defaultState() {
 
 let state = defaultState()
 
+/**
+ * Événements de l'église pour les tests : en réel ils viennent du Worker
+ * eglise-app, jamais appelé ici. Dates ancrées sur le mois courant, comme le
+ * reste des fixtures — voir jourDuMoisCourant plus haut.
+ */
+export function getChurchEventsMock() {
+  return [
+    { id: 1, title: 'Culte du dimanche', start_date: DATE_EVENEMENT_MOCK, start_time: '10:00', location: 'Morlaix', status: 'active' },
+    { id: 2, title: 'Soirée louange', start_date: DATE_EVENEMENT_MOCK_2, start_time: '19:30', location: 'Morlaix', status: 'active' },
+  ]
+}
+
+/** Annuaire des membres, tel que le renverrait le Worker eglise-app. */
+export function getMembersMock() {
+  const data = Object.values(state.members).map((m) => ({
+    id: m.id,
+    first_name: m.first_name,
+    last_name: m.last_name,
+    email: m.email,
+    role: m.role,
+  }))
+  return { data, page: 1, size: data.length, total: data.length }
+}
+
 export function resetMemberMock() {
   state = defaultState()
 }

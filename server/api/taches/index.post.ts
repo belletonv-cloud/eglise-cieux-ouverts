@@ -35,6 +35,7 @@ export default defineEventHandler(async (event) => {
     statut: normaliseStatut(body?.statut),
     prisPar: null,
     prisLe: null,
+    assignePar: '',
     debut: normaliseDate(body?.debut),
     fin: normaliseDate(body?.fin),
     creePar: user.email || '',

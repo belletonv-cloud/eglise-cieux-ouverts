@@ -27,6 +27,13 @@ export interface Tache {
   /** Email de la personne qui a pris la tâche, ou null si elle est libre. */
   prisPar: string | null
   prisLe: string | null
+  /**
+   * Email du responsable qui a ATTRIBUÉ la tâche, quand elle n'a pas été
+   * prise spontanément. Distinguer les deux compte : « je me suis proposé »
+   * et « on me l'a confiée » ne se vivent pas pareil, et l'interface doit
+   * pouvoir le dire.
+   */
+  assignePar: string
   /** Bornes pour la vue Gantt (ISO court, ex. 2026-08-12). */
   debut: string | null
   fin: string | null
@@ -94,6 +101,7 @@ function depuisDoc(doc: any): Tache {
     statut: normaliseStatut(data.statut),
     prisPar: data.prisPar || null,
     prisLe: data.prisLe || null,
+    assignePar: data.assignePar || '',
     debut: data.debut || null,
     fin: data.fin || null,
     creePar: data.creePar || '',

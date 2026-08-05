@@ -12,6 +12,15 @@ export default defineEventHandler(async (event) => {
 
   const token = auth.slice(7)
 
+  // En test, le Worker eglise-app n'est jamais appelé : sans cette branche
+  // l'endpoint restait intestable, et toute fonctionnalité s'appuyant sur la
+  // liste des membres (attribution d'une tâche) avec elle.
+  const isTest = process.env.NODE_ENV === 'test' || process.env.PW_TEST === '1' || process.env.TEST_ENV === '1'
+  if (isTest) {
+    const { getMembersMock } = await import('~/server/utils/member-mock.js')
+    return getMembersMock()
+  }
+
   // Paramètres de pagination et filtrage
   const query = getQuery(event)
   const page = query.page || '1'

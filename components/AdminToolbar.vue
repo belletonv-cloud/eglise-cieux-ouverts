@@ -1367,6 +1367,12 @@ function goToComment(c) {
 // pour que le badge sur "💬 Demandes" soit visible sans ouvrir la modale.
 watch(isAdminUser, (val) => { if (val) loadAllComments() }, { immediate: true })
 
+// Le rôle n'était chargé qu'à l'ouverture de la modale « Admins » : tant
+// qu'on ne l'avait pas ouverte, currentUserRole valait null et tout ce qui en
+// dépend restait masqué — dont le bouton de suppression et le sélecteur
+// d'attribution du tableau des tâches. On le résout dès l'authentification.
+watch(isAdminUser, (val) => { if (val) loadAdminList() }, { immediate: true })
+
 // ─── Messages de contact (lecture seule, pas de réponse depuis l'admin) ───
 const showContactMessages = ref(false)
 const contactMessages = ref([])

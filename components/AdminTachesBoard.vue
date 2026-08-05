@@ -112,8 +112,12 @@
                 </div>
 
                 <p v-if="t.prisPar" class="taches-titulaire">
-                  <template v-if="estMoi(t.prisPar)">✋ Tu as pris cette tâche</template>
-                  <template v-else>🔒 Prise par {{ t.prisPar }}</template>
+                  <template v-if="estMoi(t.prisPar)">
+                    {{ t.assignePar ? `🙌 Confiée par ${t.assignePar}` : '✋ Tu as pris cette tâche' }}
+                  </template>
+                  <template v-else>
+                    {{ t.assignePar ? `👤 Confiée à ${t.prisPar}` : `🔒 Prise par ${t.prisPar}` }}
+                  </template>
                 </p>
                 <p v-else class="taches-libre">Libre</p>
 
@@ -134,6 +138,17 @@
                     title="Supprimer cette tâche"
                     @click="supprimer(t)"
                   >🗑</button>
+                </div>
+
+                <!-- Attribution : un responsable peut confier la tâche plutôt
+                     que d'attendre que quelqu'un se propose. -->
+                <div v-if="peutAssigner" class="taches-assigner" @click.stop>
+                  <select class="taches-assigner-select" :value="t.prisPar || ''" @change="assigner(t, $event.target.value)">
+                    <option value="">Confier à…</option>
+                    <option v-for="m in membres" :key="m.email" :value="m.email">
+                      {{ m.nom }}
+                    </option>
+                  </select>
                 </div>
               </article>
             </VueDraggable>
@@ -233,6 +248,10 @@ const sourcesOuvertes = ref(true)
 const listes = ref({ a_faire: [], en_cours: [], fait: [] })
 
 const peutSupprimer = computed(() => props.monRole === 'admin' || props.monRole === 'editor')
+// Disposer du temps de quelqu'un d'autre n'est pas une action d'édition :
+// réservé aux responsables, comme côté serveur.
+const peutAssigner = computed(() => props.monRole === 'admin')
+const membres = ref([])
 
 function estMoi(email) {
   return !!email && email.toLowerCase() === (props.monEmail || '').toLowerCase()
@@ -266,7 +285,7 @@ function compteParSource(valeur) {
 }
 
 watch([tachesVisibles], reconstruireColonnes, { immediate: true })
-watch(() => props.open, (ouvert) => { if (ouvert) charger() })
+watch(() => props.open, (ouvert) => { if (ouvert) { charger(); chargerMembres() } })
 
 // Le jeton vient de l'utilisateur Firebase courant. `getFirebaseToken` n'est
 // pas un auto-import : c'est une fonction locale d'AdminToolbar, invisible
@@ -316,6 +335,43 @@ async function charger() {
   }
 }
 
+/** Annuaire, pour le sélecteur d'attribution. Best effort : sans lui, on
+ *  garde le tableau utilisable, seule l'attribution est indisponible. */
+async function chargerMembres() {
+  if (!peutAssigner.value) return
+  try {
+    const data = await appel('/api/members?size=100')
+    membres.value = (data?.data || []).map((m) => ({
+      email: m.email,
+      nom: [m.first_name, m.last_name].filter(Boolean).join(' ') || m.email,
+    }))
+  } catch (e) {
+    console.warn('[taches] annuaire indisponible :', e.message)
+    membres.value = []
+  }
+}
+
+async function assigner(tache, email) {
+  if (!email) return
+  if (tache.prisPar && tache.prisPar !== email) {
+    if (!confirm(`Cette tâche est actuellement prise par ${tache.prisPar}.\n\nLa confier à ${email} à la place ?`)) return
+  }
+  occupe.value = tache.id
+  erreur.value = ''
+  try {
+    await appel(`/api/taches/${tache.id}/assigner`, {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    })
+    await charger()
+  } catch (e) {
+    erreur.value = e.message
+    await charger()
+  } finally {
+    occupe.value = null
+  }
+}
+
 /** Transforme un élément existant en tâche, en gardant le lien vers lui. */
 async function importer(source) {
   occupe.value = source.id
@@ -329,6 +385,10 @@ async function importer(source) {
         origineType: source.type,
         origineId: source.id,
         origineLibelle: source.libelle,
+        // Un événement porte déjà sa date : la reprendre évite de la
+        // ressaisir et place la tâche directement sur la frise.
+        debut: source.debut || null,
+        fin: source.fin || null,
       }),
     })
     await charger()
@@ -817,6 +877,16 @@ async function deplacer(evenement, nouveauStatut) {
   align-items: center;
   gap: 6px;
   margin-top: 8px;
+}
+.taches-assigner { margin-top: 6px; }
+.taches-assigner-select {
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 3px 5px;
+  font-size: 0.72rem;
+  color: #4b5563;
+  background: #fff;
 }
 .taches-supprimer {
   margin-left: auto;

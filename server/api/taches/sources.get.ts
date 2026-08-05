@@ -44,6 +44,43 @@ export default defineEventHandler(async (event) => {
     }
   }
 
+  // ── Événements de l'église ──
+  // Ils vivent dans le Worker eglise-app, pas dans Firestore : on relaie le
+  // jeton de l'appelant, déjà validé par requireTaskAccess. Best effort — le
+  // Worker peut être injoignable, ça ne doit pas priver des demandes.
+  let evenements: any[] = []
+  if (isTest) {
+    const { getChurchEventsMock } = await import('../../utils/member-mock.js')
+    evenements = getChurchEventsMock()
+  } else {
+    try {
+      const config = useRuntimeConfig(event)
+      const apiUrl = config.public?.apiUrl || 'https://eglise-app.belletonv.workers.dev'
+      const auth = getRequestHeader(event, 'authorization') || ''
+      const res = await fetch(`${apiUrl}/api/church-events`, {
+        headers: { authorization: auth, 'content-type': 'application/json' },
+      })
+      if (res.ok) evenements = await res.json()
+    } catch (err: any) {
+      console.error('[taches/sources] événements injoignables :', err?.message || err)
+    }
+  }
+
+  const aujourdhui = new Date().toISOString().slice(0, 10)
+  const evenementsAVenir = (Array.isArray(evenements) ? evenements : [])
+    // Un événement passé n'a plus de préparation à confier.
+    .filter((e) => e && e.id && e.start_date && e.start_date >= aujourdhui)
+    .filter((e) => e.status !== 'cancelled')
+    .filter((e) => !dejaImportees.has(`evenement:${e.id}`))
+    .map((e) => ({
+      type: 'evenement' as const,
+      id: String(e.id),
+      libelle: String(e.title || 'Événement sans titre').slice(0, 140),
+      contexte: [e.start_date, e.start_time, e.location].filter(Boolean).join(' — '),
+      debut: e.start_date,
+      fin: e.end_date || e.start_date,
+    }))
+
   const disponibles = demandes
     // Une demande résolue n'a plus de travail à suivre.
     .filter((d) => d && !d.resolved && d.id)
@@ -55,5 +92,5 @@ export default defineEventHandler(async (event) => {
       contexte: [d.pageSlug, d.blockLabel || d.blockType].filter(Boolean).join(' — '),
     }))
 
-  return { sources: disponibles }
+  return { sources: [...disponibles, ...evenementsAVenir] }
 })
