@@ -94,6 +94,33 @@ test.describe('Demandes développeur', () => {
     await page.waitForSelector('.admin-toolbar', { timeout: 4000 })
     await expect(page.locator('.admin-comment-count')).toHaveText('1', { timeout: 3000 })
   })
+
+  test('une note en cours de saisie survit au chargement des demandes', async ({ page }) => {
+    // Régression : le watcher de AdminToolbar observait l'objet `sidebarBlock`,
+    // qui change d'identité à chaque mutation de props du bloc courant. Il
+    // relançait donc GET /api/comments en pleine frappe et écrasait la note
+    // avec la réponse — texte visible à l'écran, mais bouton « Créer la
+    // demande » resté désactivé (`commentDraft` vidé côté Vue).
+    let relacher: (() => void) | null = null
+    const enAttente = new Promise<void>((r) => { relacher = r })
+    await page.route('**/api/comments', async (route) => {
+      if (route.request().method() === 'GET') await enAttente
+      await route.continue()
+    })
+
+    await loginAsAdmin(page)
+    await page.locator('.block-wrapper').first().click()
+
+    const textarea = page.locator('.admin-comment-textarea')
+    await textarea.fill('Note saisie pendant le chargement')
+    // Le GET ne répond qu'APRÈS la frappe : c'est exactement l'ordre qui
+    // faisait disparaître la saisie.
+    relacher!()
+
+    const bouton = page.locator('.admin-comment-actions button', { hasText: 'Créer la demande' })
+    await expect(bouton).toBeEnabled({ timeout: 5000 })
+    await expect(textarea).toHaveValue('Note saisie pendant le chargement')
+  })
 })
 
 test.describe('API /api/comments', () => {

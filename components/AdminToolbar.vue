@@ -1213,10 +1213,22 @@ const activeComment = computed(() =>
     pageComments.value.find(c => c.blockId === sidebarBlock.value?.id) || null
 )
 
-watch(sidebarBlock, async (block) => {
+// On observe l'ID du bloc, PAS l'objet `sidebarBlock` : ce computed change
+// d'identité à CHAQUE mutation de props du bloc courant (une frappe dans
+// n'importe quel champ de la sidebar, un changement de hauteur…). Sur l'objet,
+// le watcher repartait donc à zéro sans arrêt, rechargeait /api/comments à
+// chaque frappe, et surtout écrasait `commentDraft` avec la réponse — la note
+// développeur en cours de saisie disparaissait toute seule dès que le fetch
+// arrivait après le début de la frappe. Symptôme observé : bouton « Créer la
+// demande » resté désactivé alors que le texte était bien visible à l'écran.
+watch(() => sidebarBlock.value?.id ?? null, async (blockId) => {
     commentDraft.value = ''
-    if (!block) return
+    if (!blockId) return
     await loadPageComments()
+    // La réponse peut arriver après un changement de bloc, ou après que
+    // l'utilisateur a commencé à écrire : dans les deux cas, ne rien écraser.
+    if (sidebarBlock.value?.id !== blockId) return
+    if (commentDraft.value) return
     commentDraft.value = activeComment.value?.message || ''
 })
 
