@@ -34,7 +34,8 @@
         "description": "Un moment de partage autour d'un repas, ouvert à tous.\n\nIndiquez ici la fréquence et les modalités de participation.",
         "image": "/images/activites-repas.jpg"
       }
-    ]
+    ],
+    "animation": "none"
   },
   "textImage": {
     "title": "Titre de la section",
@@ -139,7 +140,8 @@
   "fullWidthImage": {
     "src": "",
     "alt": "Image pleine largeur",
-    "height": 400
+    "height": 400,
+    "animation": "none"
   },
   "equipe": {
     "title": "Notre équipe",
