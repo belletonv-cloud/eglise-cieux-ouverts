@@ -5,11 +5,14 @@
 // moyen de savoir laquelle manque était de deviner. Cet endpoint répond en
 // une requête.
 //
-// Ne renvoie que des booléens « présent / absent » — jamais une valeur, jamais
-// un fragment de clé.
+// Endpoint PUBLIC (il doit rester joignable quand tout le reste renvoie 500) :
+// il ne renvoie que des booléens « présent / absent » — jamais une valeur,
+// jamais un fragment de clé. Seule exception, réservée aux admins
+// authentifiés : l'adresse expéditeur Mailjet (voir plus bas).
 
 import { getFirestoreConfig } from '../utils/firebase'
 import { getMailjetConfig } from '../utils/send-email'
+import { callerIsAdmin } from '../utils/firebase-admin'
 
 // Une clé présente mais mal recopiée (retours à la ligne perdus, guillemets
 // conservés) échoue plus loin sur un `atob()` illisible. On vérifie donc la
@@ -29,9 +32,10 @@ function privateKeyLooksValid(key: string): boolean {
   }
 }
 
-export default defineEventHandler((event) => {
+export default defineEventHandler(async (event) => {
   const firestore = getFirestoreConfig(event)
   const mailjet = getMailjetConfig()
+  const isAdmin = await callerIsAdmin(event)
 
   return {
     ok: Boolean(firestore),
@@ -48,9 +52,15 @@ export default defineEventHandler((event) => {
       configured: Boolean(mailjet),
       apiKey: Boolean(process.env.NUXT_MAILJET_API_KEY),
       apiSecret: Boolean(process.env.NUXT_MAILJET_API_SECRET),
-      // L'adresse expéditeur n'est pas un secret et doit être vérifiable :
+      // Savoir si l'adresse expéditeur est renseignée suffit à tout le monde :
       // c'est la cause n°1 de rejet côté Mailjet (adresse non validée).
-      fromEmail: process.env.NUXT_MAILJET_FROM_EMAIL || null,
+      fromEmail: Boolean(process.env.NUXT_MAILJET_FROM_EMAIL),
+      // La valeur elle-même n'est jointe qu'à un admin authentifié. Elle était
+      // renvoyée en clair à n'importe qui : c'est une adresse personnelle,
+      // et exactement celle qu'on venait de retirer de /api/settings — la
+      // laisser ici rendait ce correctif inutile, elle restait à une simple
+      // requête non authentifiée.
+      ...(isAdmin ? { fromEmailValeur: process.env.NUXT_MAILJET_FROM_EMAIL || null } : {}),
     },
   }
 })

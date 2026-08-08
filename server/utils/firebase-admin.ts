@@ -150,6 +150,24 @@ export async function isUserAdmin(event: any, email: string | null): Promise<boo
 }
 
 /**
+ * L'appelant est-il un admin authentifié ? Contrôle NON bloquant : renvoie
+ * false au lieu de lever, pour les endpoints publics qui doivent répondre 200
+ * à tout le monde mais réserver certains champs aux admins (`/api/settings`
+ * pour les emails de destination, `/api/health` pour l'adresse expéditeur).
+ * Pour exiger réellement un admin, utiliser `requireAdmin`.
+ */
+export async function callerIsAdmin(event: any): Promise<boolean> {
+  const header = getHeader(event, 'authorization')
+  if (!header?.startsWith('Bearer ')) return false
+  try {
+    const user = await verifyFirebaseToken(header.slice(7), event)
+    return await isUserAdmin(event, user?.email ?? null)
+  } catch {
+    return false
+  }
+}
+
+/**
  * Authentifie et renvoie le rôle, ou lève 401. Ne décide d'aucune permission :
  * c'est à l'appelant de vérifier le rôle obtenu.
  */

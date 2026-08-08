@@ -1,5 +1,5 @@
 import { getFirestoreConfig, getAccessToken, getFirestoreDoc, parseFirestoreDoc } from '../../utils/firebase'
-import { verifyFirebaseToken, isUserAdmin } from '../../utils/firebase-admin'
+import { callerIsAdmin } from '../../utils/firebase-admin'
 
 // Cet endpoint est PUBLIC : les pages vitrines y lisent socialLinks,
 // memberTabOrder et hideEventsPageIfEmpty sans être authentifiées. Il
@@ -7,20 +7,9 @@ import { verifyFirebaseToken, isUserAdmin } from '../../utils/firebase-admin'
 // du formulaire de contact — l'adresse personnelle du responsable était donc
 // lisible par n'importe qui (moisson de spam). Aucun consommateur public n'en
 // a besoin : seule la modale Configuration de AdminToolbar.vue l'utilise. Le
-// champ n'est donc joint qu'à un appelant authentifié ayant un rôle admin.
-//
-// Contrôle volontairement NON bloquant : un visiteur anonyme doit continuer à
-// recevoir 200 avec le reste des réglages, pas un 401.
-async function callerIsAdmin(event: any): Promise<boolean> {
-  const header = getHeader(event, 'authorization')
-  if (!header?.startsWith('Bearer ')) return false
-  try {
-    const user = await verifyFirebaseToken(header.slice(7), event)
-    return await isUserAdmin(event, user?.email ?? null)
-  } catch {
-    return false
-  }
-}
+// champ n'est donc joint qu'à un appelant authentifié ayant un rôle admin —
+// via `callerIsAdmin`, contrôle non bloquant : un visiteur anonyme doit
+// continuer à recevoir 200 avec le reste des réglages, pas un 401.
 
 // Normalise le champ email : accepte le nouveau format (contactEmails: string[])
 // et l'ancien format legacy (contactEmail: string) pour les documents Firestore
