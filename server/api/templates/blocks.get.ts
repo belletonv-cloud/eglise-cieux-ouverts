@@ -31,10 +31,19 @@ export default defineEventHandler(async (event) => {
       headers: { Authorization: `Bearer ${accessToken}` }
     })
     
+    // 404 = le document `templates/blocks` n'a jamais été créé, ce qui est
+    // l'état NORMAL tant qu'aucun modèle n'a été enregistré (il naît au
+    // premier POST). Le traiter en erreur serveur cassait le sélecteur de
+    // modèles de l'admin tant qu'il était vide — constaté en production, où
+    // GET /api/templates/blocks répondait 500. Une collection vide est une
+    // liste vide, pas une panne.
+    if (response.status === 404) {
+      return []
+    }
     if (!response.ok) {
       throw createError({ statusCode: 500, message: 'Erreur templates' })
     }
-    
+
     const data = await response.json()
     const templates = (data.documents || []).map((doc: any) => ({
       id: doc.name.split('/').pop(),

@@ -22,10 +22,16 @@ export default defineEventHandler(async (event) => {
       headers: { Authorization: `Bearer ${accessToken}` }
     })
     
+    // 404 = document `templates/pages` jamais créé, état normal tant qu'aucun
+    // modèle n'a été enregistré. Même correctif que blocks.get.ts : une
+    // collection vide est une liste vide, pas une erreur serveur.
+    if (response.status === 404) {
+      return []
+    }
     if (!response.ok) {
       throw createError({ statusCode: 500, message: 'Erreur templates pages' })
     }
-    
+
     const data = await response.json()
     const templates = (data.documents || []).map((doc: any) => ({
       id: doc.name.split('/').pop(),
