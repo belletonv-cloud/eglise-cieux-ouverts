@@ -1530,7 +1530,15 @@ watch(showSettings, async (show) => {
 
 async function loadSettings() {
   try {
-    const res = await fetch('/api/settings')
+    // Token obligatoire : /api/settings est public (les vitrines y lisent
+    // socialLinks/memberTabOrder sans authentification) et ne joint
+    // `contactEmails` qu'à un appelant admin. Sans en-tête, la modale
+    // afficherait un champ « Emails de destination » vide et la sauvegarde
+    // repartirait en 400.
+    const token = await getFirebaseToken()
+    const res = await fetch('/api/settings', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     const data = await res.json()
     settingsForm.value = { hideEventsPageIfEmpty: data.hideEventsPageIfEmpty === true }

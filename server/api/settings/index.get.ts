@@ -1,4 +1,26 @@
 import { getFirestoreConfig, getAccessToken, getFirestoreDoc, parseFirestoreDoc } from '../../utils/firebase'
+import { verifyFirebaseToken, isUserAdmin } from '../../utils/firebase-admin'
+
+// Cet endpoint est PUBLIC : les pages vitrines y lisent socialLinks,
+// memberTabOrder et hideEventsPageIfEmpty sans être authentifiées. Il
+// renvoyait aussi `contactEmails`, c'est-à-dire les adresses de destination
+// du formulaire de contact — l'adresse personnelle du responsable était donc
+// lisible par n'importe qui (moisson de spam). Aucun consommateur public n'en
+// a besoin : seule la modale Configuration de AdminToolbar.vue l'utilise. Le
+// champ n'est donc joint qu'à un appelant authentifié ayant un rôle admin.
+//
+// Contrôle volontairement NON bloquant : un visiteur anonyme doit continuer à
+// recevoir 200 avec le reste des réglages, pas un 401.
+async function callerIsAdmin(event: any): Promise<boolean> {
+  const header = getHeader(event, 'authorization')
+  if (!header?.startsWith('Bearer ')) return false
+  try {
+    const user = await verifyFirebaseToken(header.slice(7), event)
+    return await isUserAdmin(event, user?.email ?? null)
+  } catch {
+    return false
+  }
+}
 
 // Normalise le champ email : accepte le nouveau format (contactEmails: string[])
 // et l'ancien format legacy (contactEmail: string) pour les documents Firestore
@@ -42,38 +64,36 @@ function normalizeMemberTabOrder(data: Record<string, any> | null): string[] {
   return MEMBER_TABS
 }
 
+// Réponse publique + `contactEmails` uniquement si l'appelant est admin.
+function buildResponse(data: Record<string, any> | null, isAdmin: boolean) {
+  return {
+    hideEventsPageIfEmpty: data?.hideEventsPageIfEmpty === true,
+    socialLinks: normalizeSocialLinks(data),
+    memberTabOrder: normalizeMemberTabOrder(data),
+    ...(isAdmin ? { contactEmails: normalizeContactEmails(data) } : {}),
+  }
+}
+
 export default defineEventHandler(async (event) => {
   const isTest = process.env.NODE_ENV === 'test' || process.env.PW_TEST === '1' || process.env.TEST_ENV === '1'
+  const isAdmin = await callerIsAdmin(event)
 
   if (isTest) {
     const { getSettings } = await import('../../utils/firestore-mock.js')
-    const data = getSettings()
-    return {
-      contactEmails: normalizeContactEmails(data),
-      hideEventsPageIfEmpty: data?.hideEventsPageIfEmpty === true,
-      socialLinks: normalizeSocialLinks(data),
-      memberTabOrder: normalizeMemberTabOrder(data),
-    }
+    return buildResponse(getSettings(), isAdmin)
   }
 
   const config = getFirestoreConfig(event)
   if (!config) {
-    return { contactEmails: normalizeContactEmails(null), socialLinks: normalizeSocialLinks(null), memberTabOrder: normalizeMemberTabOrder(null) }
+    return buildResponse(null, isAdmin)
   }
 
   try {
     const accessToken = await getAccessToken(config.clientEmail, config.privateKey)
     const doc = await getFirestoreDoc(config.projectId, accessToken, 'settings', 'config')
-    const data = doc ? parseFirestoreDoc(doc) : null
-
-    return {
-      contactEmails: normalizeContactEmails(data),
-      hideEventsPageIfEmpty: data?.hideEventsPageIfEmpty === true,
-      socialLinks: normalizeSocialLinks(data),
-      memberTabOrder: normalizeMemberTabOrder(data),
-    }
+    return buildResponse(doc ? parseFirestoreDoc(doc) : null, isAdmin)
   } catch (err: any) {
     console.error('Settings load error:', err)
-    return { contactEmails: normalizeContactEmails(null), socialLinks: normalizeSocialLinks(null), memberTabOrder: normalizeMemberTabOrder(null) }
+    return buildResponse(null, isAdmin)
   }
 })

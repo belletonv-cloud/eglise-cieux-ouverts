@@ -71,12 +71,16 @@ export default defineEventHandler(async (event) => {
     return { ok: true }
   }
 
+  // Authentification AVANT toute autre vérification : placée après le contrôle
+  // de configuration Firestore, elle renvoyait « Firestore non configuré »
+  // (500) à un appelant anonyme sur une instance mal configurée — une réponse
+  // qui renseigne sur l'état du serveur avant même d'avoir vérifié qui appelle.
+  await requireAdmin(event)
+
   const config = getFirestoreConfig(event)
   if (!config) {
     throw createError({ statusCode: 500, message: 'Firestore non configuré' })
   }
-
-  await requireAdmin(event)
 
   try {
     const accessToken = await getAccessToken(config.clientEmail, config.privateKey)
