@@ -17,10 +17,16 @@ const { isAdminMode, enterAdmin, localBlocks, localBlocksPage } = useAdmin()
 // sauf en mode admin où elle reste accessible pour la gestion du contenu.
 const { data: settingsData } = await useFetch('/api/settings')
 const hideIfEmpty = computed(() => settingsData.value?.hideEventsPageIfEmpty === true)
-const { hasEvenements, loading: eventsLoading } = useChurchEvents()
+const { hasEvenements, loading: eventsLoading, erreur: eventsErreur } = useChurchEvents()
 
-watch([isAdminMode, hideIfEmpty, hasEvenements, eventsLoading], () => {
+watch([isAdminMode, hideIfEmpty, hasEvenements, eventsLoading, eventsErreur], () => {
   if (isAdminMode.value || eventsLoading.value) return
+  // Ne jamais masquer la page sur une ERREUR de chargement : « aucun événement
+  // publié » et « le Worker événements n'a pas répondu » donnent la même liste
+  // vide, mais seul le premier cas justifie de retirer la page du site. Sans
+  // cette distinction, une panne passagère de l'amont faisait disparaître
+  // Événements, sans que rien ne le signale.
+  if (eventsErreur.value) return
   if (hideIfEmpty.value && !hasEvenements.value) {
     // navigateTo (pas router.push) : sur un premier chargement direct de
     // /event-list, useChurchEvents() ne résout (onMounted, client-only)

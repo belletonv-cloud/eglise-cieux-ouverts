@@ -97,7 +97,11 @@
             </div>
             <div class="next-event-arrow">›</div>
           </div>
-          <p v-if="nextEvents.length === 0" class="empty-msg">Aucun événement à venir.</p>
+          <!-- `!erreur` : une liste vide parce que l'API n'a pas répondu n'est
+               pas un agenda vide. Le message d'échec, lui, est affiché une
+               seule fois hors des vues (voir plus bas), sans quoi il faudrait
+               le répéter dans chacune. -->
+          <p v-if="!erreur && nextEvents.length === 0" class="empty-msg">Aucun événement à venir.</p>
         </div>
         <div v-if="currentView === 'cards'" class="events-list">
           <article v-for="evt in filteredEvents" :key="evt.id" class="event-card" :class="{ 'event-mine': isMine(evt) }" @click="openEventModal(evt)" style="cursor:pointer">
@@ -155,12 +159,16 @@
     </div>
   </div>
 </div>
-          <p v-if="filteredEvents.length === 0" class="empty-msg">Aucun événement pour cette période.</p>
+          <p v-if="!erreur && filteredEvents.length === 0" class="empty-msg">Aucun événement pour cette période.</p>
         </div>
       </div>
     </section>
 
     <div v-if="loading" class="loading-msg">Chargement des événements...</div>
+    <!-- Hors des vues (mois/semaine/cartes/…) : le message doit apparaître
+         quelle que soit celle affichée, et la vue par défaut est « mois », où
+         aucune liste — donc aucun message de liste vide — n'est rendue. -->
+    <div v-else-if="erreur" class="loading-msg">Les événements n'ont pas pu être chargés. Réessayez dans un instant.</div>
 
     <EventModal
     v-if="eventModal.open && eventModal.event"
@@ -253,7 +261,7 @@ useSeoMeta({
 // passés (goPrev), donc a besoin de tout l'historique. Le composable filtre
 // par défaut sur le futur (usage SiteHeader/event-list) ; ici c'est
 // nextEvents (vue "Prochain") qui applique son propre filtre >= aujourd'hui.
-const { evenements, loading } = useChurchEvents({ futureOnly: false })
+const { evenements, loading, erreur } = useChurchEvents({ futureOnly: false })
 const currentDate = ref(new Date())
 const currentView = ref('month')
 

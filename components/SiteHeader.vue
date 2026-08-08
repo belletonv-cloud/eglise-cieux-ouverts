@@ -149,10 +149,14 @@ const headerStyle = computed(() => ({
     // keep SSR output stable: only apply admin offset after client mount
     top: isMounted.value && adminMode.value ? "48px" : "0px",
 }));
-const { hasEvenements } = useChurchEvents();
+const { hasEvenements, erreur: evenementsErreur } = useChurchEvents();
 const { socialLinks, loadSiteSettings } = useSiteSettings();
+// `erreur` inclus volontairement : si le Worker événements ne répond pas, la
+// liste est vide sans que cela veuille dire « aucun événement ». Sans ça, une
+// panne de l'amont retirait le lien Événements de la navigation de TOUTES les
+// pages. En cas de doute on garde le lien : la page saura expliquer.
 const showBilletterie = computed(
-    () => adminMode.value || isAdminRoute.value || hasEvenements.value,
+    () => adminMode.value || isAdminRoute.value || hasEvenements.value || evenementsErreur.value,
 );
 
 // Menu editor integration — intercept clicks in admin mode
