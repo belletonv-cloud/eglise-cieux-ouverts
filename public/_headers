@@ -1,4 +1,58 @@
-/*
-  cache-control: no-cache
-  x-fresh: 1
-  x-frame-options: SAMEORIGIN
+# En-têtes des fichiers STATIQUES uniquement.
+#
+# Deux pièges, tous deux constatés dans le _headers réellement produit
+# (`dist/_headers` après un build `cloudflare-pages`) :
+#
+# 1. Quand PLUSIEURS règles matchent la même requête, Cloudflare JOINT les
+#    valeurs d'un même en-tête par une virgule — il ne remplace pas. Nitro
+#    ajoute automatiquement au build une règle
+#    `/_nuxt/*  cache-control: public, max-age=31536000, immutable` ; un
+#    `cache-control: no-cache` posé ici sur `/*` la transformait donc en
+#    « no-cache, public, max-age=31536000, immutable » : les bundles hashés
+#    étaient revalidés à chaque visite, le cache long ne servait à rien.
+#    → ne JAMAIS poser `cache-control` sur `/*` dans ce fichier.
+#
+# 2. Même mécanisme pour les en-têtes de sécurité : `routeRules` (nuxt.config.ts)
+#    les émet déjà dans le `_headers` final sous `/*`. Les redéclarer ici
+#    donnait « x-frame-options: SAMEORIGIN, SAMEORIGIN », valeur invalide que
+#    les navigateurs ignorent purement et simplement — la protection sautait.
+#    → les en-têtes de sécurité vivent dans `routeRules`, source unique.
+#
+# Enfin, ce fichier ne s'applique PAS au HTML : celui-ci est produit par la
+# Pages Function (SSR), et Cloudflare n'applique pas `_headers` aux réponses
+# de Functions. Le `no-cache` du HTML est posé par
+# `server/plugins/html-cache-control.ts`.
+
+# Images de contenu : noms stables, remplacées rarement (et le déploiement
+# invalide de toute façon le cache edge). Un mois côté navigateur.
+/images/*
+  cache-control: public, max-age=2592000
+
+/photos/*
+  cache-control: public, max-age=2592000
+
+/favicon.ico
+  cache-control: public, max-age=2592000
+/favicon-32.png
+  cache-control: public, max-age=2592000
+/favicon-180.png
+  cache-control: public, max-age=2592000
+/favicon-192.png
+  cache-control: public, max-age=2592000
+/logo-nav.png
+  cache-control: public, max-age=2592000
+/logo.png
+  cache-control: public, max-age=2592000
+/foule-croix.png
+  cache-control: public, max-age=2592000
+/hero.jpg
+  cache-control: public, max-age=2592000
+/smartphone.jpg
+  cache-control: public, max-age=2592000
+/calendar.png
+  cache-control: public, max-age=2592000
+
+# Sentinelle de déploiement lue par plugins/deployment-check.client.ts :
+# doit toujours refléter le build en ligne, jamais une copie en cache.
+/version.txt
+  cache-control: no-store

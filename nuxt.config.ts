@@ -16,7 +16,22 @@ export default defineNuxtConfig({
   // @ts-expect-error: routeRules valid at runtime but absent from this Nuxt version's InputConfig type
   routeRules: {
     '/billetterie': { redirect: '/event-list' },
-    '/**': { headers: { 'x-frame-options': 'SAMEORIGIN' } },
+    // Source UNIQUE des en-têtes de sécurité : ces règles s'appliquent aux
+    // réponses SSR et sont en plus recopiées par Nitro dans le `_headers`
+    // final pour les fichiers statiques. Les redéclarer dans `public/_headers`
+    // ferait doublon et Cloudflare joindrait les deux valeurs par une virgule
+    // (« SAMEORIGIN, SAMEORIGIN »), valeur invalide ignorée par les
+    // navigateurs. Ne jamais y ajouter `cache-control` non plus : la règle
+    // s'appliquerait à `/*` et écraserait le cache long de `/_nuxt/*`
+    // (voir public/_headers).
+    '/**': {
+      headers: {
+        'x-frame-options': 'SAMEORIGIN',
+        'x-content-type-options': 'nosniff',
+        'referrer-policy': 'strict-origin-when-cross-origin',
+        'permissions-policy': 'camera=(), microphone=(), geolocation=()',
+      },
+    },
   },
   app: {
     head: {
