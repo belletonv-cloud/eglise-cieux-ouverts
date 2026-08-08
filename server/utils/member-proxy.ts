@@ -1,5 +1,6 @@
 import type { H3Event } from 'h3'
 import { verifyFirebaseToken } from './firebase-admin'
+import { fetchWithTimeout } from './http'
 
 // Helper commun des proxies /api/member/* : en mode test, résout l'email du
 // mock-token et laisse le handler appeler member-mock.js ; sinon forwarde le
@@ -43,7 +44,7 @@ export async function forwardToWorker(
 ) {
   const config = useRuntimeConfig(event)
   const apiUrl = (config.public.apiUrl as string) || 'https://eglise-app.belletonv.workers.dev'
-  const res = await fetch(`${apiUrl}${path}`, {
+  const res = await fetchWithTimeout(`${apiUrl}${path}`, {
     method: options.method || 'GET',
     headers: {
       Authorization: `Bearer ${token}`,

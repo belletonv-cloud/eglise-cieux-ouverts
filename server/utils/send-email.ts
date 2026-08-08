@@ -12,6 +12,8 @@
 // unique se fait en cliquant un lien reçu par email — aucun accès DNS requis,
 // contrairement à la validation d'un domaine entier.
 
+import { fetchWithTimeout, EMAIL_TIMEOUT_MS } from './http'
+
 export interface SendEmailResult {
   ok: boolean
   /** Raison lisible en cas d'échec — destinée aux logs, jamais à l'utilisateur final. */
@@ -49,14 +51,14 @@ export async function sendEmail(params: SendEmailParams): Promise<SendEmailResul
   if (params.replyTo) message.ReplyTo = { Email: params.replyTo }
 
   try {
-    const response = await fetch('https://api.mailjet.com/v3.1/send', {
+    const response = await fetchWithTimeout('https://api.mailjet.com/v3.1/send', {
       method: 'POST',
       headers: {
         authorization: `Basic ${btoa(`${config.apiKey}:${config.apiSecret}`)}`,
         'content-type': 'application/json',
       },
       body: JSON.stringify({ Messages: [message] }),
-    })
+    }, EMAIL_TIMEOUT_MS)
 
     const body = await response.text()
     if (!response.ok) {

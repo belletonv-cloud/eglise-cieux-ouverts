@@ -1,3 +1,5 @@
+import { fetchWithTimeout } from './http'
+
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token'
 
 export interface FirestoreConfig {
@@ -71,7 +73,7 @@ export async function getAccessToken(clientEmail: string, privateKey: string): P
 
   const jwt = `${encodedHeader}.${encodedClaimSet}.${encodedSignature}`
 
-  const response = await fetch(GOOGLE_TOKEN_URL, {
+  const response = await fetchWithTimeout(GOOGLE_TOKEN_URL, {
     method: 'POST',
     headers: { 'content-type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
@@ -97,7 +99,7 @@ export async function getFirestoreDoc(
 ): Promise<any | null> {
   const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/${collection}/${docId}`
 
-  const response = await fetch(url, {
+  const response = await fetchWithTimeout(url, {
     headers: {
       authorization: `Bearer ${accessToken}`,
       'content-type': 'application/json',
@@ -121,7 +123,7 @@ export async function listFirestoreCollection(
 ): Promise<any[]> {
   const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/${collection}`
 
-  const response = await fetch(url, {
+  const response = await fetchWithTimeout(url, {
     headers: {
       authorization: `Bearer ${accessToken}`,
     },
@@ -183,7 +185,7 @@ export async function setFirestoreDoc(
     url += '?' + updateMask.map(f => `updateMask.fieldPaths=${encodeURIComponent(f)}`).join('&')
   }
 
-  const response = await fetch(url, {
+  const response = await fetchWithTimeout(url, {
     method: 'PATCH',
     headers: {
       authorization: `Bearer ${accessToken}`,
@@ -224,7 +226,7 @@ export async function setFirestoreDocIfUnchanged(
   ]
   const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/${collection}/${docId}?${params.join('&')}`
 
-  const response = await fetch(url, {
+  const response = await fetchWithTimeout(url, {
     method: 'PATCH',
     headers: {
       authorization: `Bearer ${accessToken}`,
@@ -249,7 +251,7 @@ export async function deleteFirestoreDoc(
 ): Promise<void> {
   const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/${collection}/${docId}`
 
-  const response = await fetch(url, {
+  const response = await fetchWithTimeout(url, {
     method: 'DELETE',
     headers: { authorization: `Bearer ${accessToken}` },
   })

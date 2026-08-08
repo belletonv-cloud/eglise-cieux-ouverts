@@ -570,11 +570,21 @@ async function getToken() {
   })
 }
 
+// Appel DIRECT au Worker eglise-app depuis le navigateur (ce chemin ne passe
+// pas par un proxy Nitro) : le délai maximal doit donc être posé ici. Sans
+// lui, un Worker qui ne répond plus laisse l'écran de gestion des événements
+// bloqué sur « chargement » sans qu'aucun catch ne se déclenche jamais.
+const API_TIMEOUT_MS = 8000
+
 async function api(path, opts = {}) {
   const token = await getToken()
   const h = { 'Content-Type': 'application/json', ...opts.headers }
   if (token) h['Authorization'] = `Bearer ${token}`
-  const res = await fetch(`${apiUrl}${path}`, { ...opts, headers: h })
+  const res = await fetch(`${apiUrl}${path}`, {
+    ...opts,
+    headers: h,
+    signal: AbortSignal.timeout(API_TIMEOUT_MS),
+  })
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   return res
 }

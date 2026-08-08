@@ -1,5 +1,6 @@
 import { getFirestoreConfig, getAccessToken } from '../../../../utils/firebase'
 import { requireAdmin } from '../../../../utils/firebase-admin'
+import { fetchWithTimeout } from '../../../../utils/http'
 
 export default defineEventHandler(async (event) => {
   const slug = getRouterParam(event, 'slug')
@@ -25,7 +26,7 @@ export default defineEventHandler(async (event) => {
   try {
     const accessToken = await getAccessToken(config.clientEmail, config.privateKey)
     const url = `https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/(default)/documents/pages/${slug}/versions/${versionId}`
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
       method: 'DELETE',
       headers: { authorization: `Bearer ${accessToken}` },
     })

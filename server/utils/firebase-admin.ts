@@ -1,4 +1,5 @@
 import { getFirestoreConfig, getAccessToken, getFirestoreDoc, parseFirestoreDoc } from './firebase'
+import { fetchWithTimeout } from './http'
 
 export interface FirebaseUserInfo {
   uid: string
@@ -70,7 +71,7 @@ export async function verifyFirebaseToken(idToken: string, event?: any): Promise
     : process.env.NUXT_PUBLIC_FIREBASE_API_KEY
   if (apiKey) {
     try {
-      const res = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${apiKey}`, {
+      const res = await fetchWithTimeout(`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${apiKey}`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ idToken }),

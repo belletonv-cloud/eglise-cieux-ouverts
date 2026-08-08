@@ -1,6 +1,7 @@
 import { getFirestoreConfig, getAccessToken, getFirestoreDoc, setFirestoreDoc, parseFirestoreDoc } from '../utils/firebase'
 import { getEmailQuotaLimit } from '../utils/email-quota'
 import { sendEmail } from '../utils/send-email'
+import { fetchWithTimeout } from '../utils/http'
 
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token'
 // Note: in-memory rate limiting is best-effort on serverless (Cloudflare Pages).
@@ -105,7 +106,7 @@ export default defineEventHandler(async (event) => {
 
     const firestoreUrl = `https://firestore.googleapis.com/v1/projects/${firebaseProjectId}/databases/(default)/documents/contacts`
     
-    const response = await fetch(firestoreUrl, {
+    const response = await fetchWithTimeout(firestoreUrl, {
       method: 'POST',
       headers: {
         authorization: `Bearer ${accessToken}`,
@@ -140,7 +141,7 @@ export default defineEventHandler(async (event) => {
     // messages à une adresse que personne ne surveille.
     let contactEmails: string[] = []
     try {
-      const settingsResponse = await fetch(`https://firestore.googleapis.com/v1/projects/${firebaseProjectId}/databases/(default)/documents/settings/config`, {
+      const settingsResponse = await fetchWithTimeout(`https://firestore.googleapis.com/v1/projects/${firebaseProjectId}/databases/(default)/documents/settings/config`, {
         headers: { authorization: `Bearer ${accessToken}` },
       })
       if (settingsResponse.ok) {

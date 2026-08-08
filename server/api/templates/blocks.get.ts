@@ -1,5 +1,6 @@
 import { getFirestoreConfig, getAccessToken } from '../../utils/firebase'
 import { BLOCK_TYPES } from '../../../utils/blockTypes.js'
+import { fetchWithTimeout } from '../../utils/http'
 
 export default defineEventHandler(async (event) => {
   const isTest = process.env.NODE_ENV === 'test' || process.env.PW_TEST === '1' || process.env.TEST_ENV === '1'
@@ -26,7 +27,7 @@ export default defineEventHandler(async (event) => {
     const accessToken = await getAccessToken(config.clientEmail, config.privateKey)
     // Firestore REST API for templates collection
     const url = `https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/(default)/documents/templates/blocks`
-    const response = await fetch(`${url}?pageSize=100`, {
+    const response = await fetchWithTimeout(`${url}?pageSize=100`, {
       headers: { Authorization: `Bearer ${accessToken}` }
     })
     

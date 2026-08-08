@@ -1,5 +1,6 @@
 import { getFirestoreConfig, getAccessToken } from '../../utils/firebase'
 import { requireAdmin } from '../../utils/firebase-admin'
+import { fetchWithTimeout } from '../../utils/http'
 
 export default defineEventHandler(async (event) => {
   // En mode test, servir le mock RAM
@@ -40,7 +41,7 @@ export default defineEventHandler(async (event) => {
       fields[key] = { stringValue: String(value) }
     }
     
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
       method: 'POST',
       headers: { 
         Authorization: `Bearer ${accessToken}`,

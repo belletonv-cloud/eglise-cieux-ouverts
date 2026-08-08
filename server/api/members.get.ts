@@ -1,4 +1,5 @@
 import { getFirebaseToken } from '~/server/utils/firebase-auth'
+import { fetchWithTimeout } from '~/server/utils/http'
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig(event)
@@ -37,7 +38,7 @@ export default defineEventHandler(async (event) => {
       ...(teamId && { teamId: String(teamId) }),
     })
 
-    const response = await fetch(`${apiUrl}/api/members?${params.toString()}`, {
+    const response = await fetchWithTimeout(`${apiUrl}/api/members?${params.toString()}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',

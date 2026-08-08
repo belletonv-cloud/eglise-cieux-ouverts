@@ -1,6 +1,7 @@
 import { getFirestoreConfig, getAccessToken, parseFirestoreDoc } from '../../../utils/firebase'
 import { requireAdmin } from '../../../utils/firebase-admin'
 import { buildVersionsResponse } from '../../../utils/version-diff.js'
+import { fetchWithTimeout } from '../../../utils/http'
 
 export default defineEventHandler(async (event) => {
   const isTest = process.env.NODE_ENV === 'test' || process.env.PW_TEST === '1' || process.env.TEST_ENV === '1'
@@ -30,7 +31,7 @@ export default defineEventHandler(async (event) => {
     const accessToken = await getAccessToken(config.clientEmail, config.privateKey)
 
     const url = `https://firestore.googleapis.com/v1/projects/${config.projectId}/databases/(default)/documents/pages/${slug}/versions`
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
       headers: {
         authorization: `Bearer ${accessToken}`,
         'content-type': 'application/json',

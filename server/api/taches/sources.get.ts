@@ -1,6 +1,7 @@
 import { requireTaskAccess } from '../../utils/firebase-admin'
 import { listerTaches } from '../../utils/taches'
 import { getFirestoreConfig, getAccessToken, listFirestoreCollection, parseFirestoreDoc } from '../../utils/firebase'
+import { fetchWithTimeout } from '../../utils/http'
 
 /**
  * Éléments existants transformables en tâche.
@@ -57,7 +58,7 @@ export default defineEventHandler(async (event) => {
       const config = useRuntimeConfig(event)
       const apiUrl = config.public?.apiUrl || 'https://eglise-app.belletonv.workers.dev'
       const auth = getRequestHeader(event, 'authorization') || ''
-      const res = await fetch(`${apiUrl}/api/church-events`, {
+      const res = await fetchWithTimeout(`${apiUrl}/api/church-events`, {
         headers: { authorization: auth, 'content-type': 'application/json' },
       })
       if (res.ok) evenements = await res.json()
