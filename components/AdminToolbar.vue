@@ -1960,25 +1960,34 @@ onMounted(() => {
         }
     });
 
-    // Keyboard shortcuts for undo/redo
-    const handler = (e) => {
-        if ((e.metaKey || e.ctrlKey) && e.key === "z" && !e.shiftKey) {
-            e.preventDefault();
-            undo();
-        }
-        if ((e.metaKey || e.ctrlKey) && e.key === "z" && e.shiftKey) {
-            e.preventDefault();
-            redo();
-        }
-    };
-    document.addEventListener("keydown", handler);
+    document.addEventListener("keydown", onUndoRedoShortcut);
 
     if (!customPages.value.length) loadCustomPages();
 });
 
+// Raccourcis annuler/rétablir. Déclaré au niveau du composant et non dans
+// onMounted : la version locale n'était joignable par aucun nettoyage, et
+// AdminToolbar est monté sous `v-if` (layouts/default.vue) — il se démonte en
+// quittant le mode admin et à chaque passage en aperçu responsive. Chaque
+// cycle laissait donc un listener de plus sur `document`, tous branchés sur le
+// même singleton useAdmin() : un Ctrl+Z sur le site public annulait des blocs
+// en silence, et en admin il en annulait autant que de montages précédents.
+// (cf. CLAUDE.md : tout listener doit être désabonné.)
+function onUndoRedoShortcut(e) {
+    if ((e.metaKey || e.ctrlKey) && e.key === "z" && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+    }
+    if ((e.metaKey || e.ctrlKey) && e.key === "z" && e.shiftKey) {
+        e.preventDefault();
+        redo();
+    }
+}
+
 onUnmounted(() => {
     if (unsubscribe) unsubscribe();
     clearTimeout(autoSaveTimer);
+    document.removeEventListener("keydown", onUndoRedoShortcut);
 });
 
 const undoTooltip = computed(() => {
