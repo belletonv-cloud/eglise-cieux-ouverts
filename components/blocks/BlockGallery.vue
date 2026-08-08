@@ -11,7 +11,12 @@
           v-for="(img, i) in normalizedImages"
           :key="i"
           class="gallery-item"
+          role="button"
+          tabindex="0"
+          :aria-label="`Agrandir : ${img.alt}`"
           @click="openLightbox(i)"
+          @keydown.enter.prevent="openLightbox(i)"
+          @keydown.space.prevent="openLightbox(i)"
         >
           <img :src="img.src" :alt="img.alt ?? ''" class="gallery-img" loading="lazy" />
           <div v-if="img.caption" class="gallery-caption">{{ img.caption }}</div>
@@ -21,18 +26,29 @@
 
     <!-- Lightbox -->
     <Teleport to="body">
-      <div v-if="lightboxIndex !== null" class="lightbox" @click.self="closeLightbox">
-        <button class="lightbox-close" @click="closeLightbox">✕</button>
-        <button class="lightbox-prev" @click="prevImage">‹</button>
-        <img :src="normalizedImages[lightboxIndex]?.src" class="lightbox-img" />
-        <button class="lightbox-next" @click="nextImage">›</button>
+      <div
+        v-if="lightboxIndex !== null"
+        class="lightbox"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Image en grand"
+        @click.self="closeLightbox"
+      >
+        <button class="lightbox-close" aria-label="Fermer" @click="closeLightbox">✕</button>
+        <button class="lightbox-prev" aria-label="Image précédente" @click="prevImage">‹</button>
+        <img
+          :src="normalizedImages[lightboxIndex]?.src"
+          :alt="normalizedImages[lightboxIndex]?.alt ?? ''"
+          class="lightbox-img"
+        />
+        <button class="lightbox-next" aria-label="Image suivante" @click="nextImage">›</button>
       </div>
     </Teleport>
   </section>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch, onUnmounted } from 'vue'
 import { fieldFontStyle } from '~/utils/fonts.js'
 
 const { visibility = {}, images = [] } = defineProps({
@@ -79,6 +95,26 @@ function nextImage() {
   const len = normalizedImages.value.length
   lightboxIndex.value = (lightboxIndex.value + 1) % len
 }
+
+// Clavier dans la visionneuse : Échap pour fermer, flèches pour naviguer.
+// Le listener n'existe que pendant l'ouverture et est retiré au démontage —
+// un listener global oublié reste actif après navigation et corrompt l'état
+// de Vue (cf. CLAUDE.md, cas déjà rencontré sur onAuthStateChanged).
+function onKeydown(e) {
+  if (e.key === 'Escape') closeLightbox()
+  else if (e.key === 'ArrowLeft') prevImage()
+  else if (e.key === 'ArrowRight') nextImage()
+}
+
+watch(lightboxIndex, (open, wasOpen) => {
+  if (typeof window === 'undefined') return
+  if (open !== null && wasOpen === null) window.addEventListener('keydown', onKeydown)
+  else if (open === null) window.removeEventListener('keydown', onKeydown)
+})
+
+onUnmounted(() => {
+  if (typeof window !== 'undefined') window.removeEventListener('keydown', onKeydown)
+})
 </script>
 
 <style scoped>
