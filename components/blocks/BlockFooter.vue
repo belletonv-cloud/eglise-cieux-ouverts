@@ -22,8 +22,8 @@
       <div class="footer-right">
         <div class="footer-info" :style="infoStyle">
           <a :href="'mailto:' + email" class="footer-email" data-field-key="email" :style="{ ...emailStyle, ...fieldFontStyle(fieldFonts, 'email', fieldFontSizes) }">{{ email }}</a>
-          <p data-field-key="schedule" :style="fieldFontStyle(fieldFonts, 'schedule', fieldFontSizes)" v-html="formattedSchedule"></p>
-          <p data-field-key="address" :style="fieldFontStyle(fieldFonts, 'address', fieldFontSizes)" v-html="formattedAddress"></p>
+          <p data-field-key="schedule" :style="fieldFontStyle(fieldFonts, 'schedule', fieldFontSizes)"><template v-if="scheduleParts">{{ scheduleParts[0] }}| <strong>{{ scheduleParts[1] }}</strong></template><template v-else>{{ schedule }}</template></p>
+          <p data-field-key="address" :style="fieldFontStyle(fieldFonts, 'address', fieldFontSizes)"><template v-if="addressParts">{{ addressParts[0] }}| <strong>{{ addressParts[1] }}</strong></template><template v-else>{{ address }}</template></p>
         </div>
       </div>
     </div>
@@ -69,17 +69,23 @@ const visibilityClasses = computed(() => ({
 
 const titleChars = computed(() => props.title.split(''))
 
-const formattedSchedule = computed(() => {
-  const parts = props.schedule.split('|')
-  if (parts.length < 2) return props.schedule
-  return parts[0] + '| <strong>' + parts[1].trim() + '</strong>'
-})
+// « Texte | mise en gras » : la partie après la barre est affichée en gras.
+//
+// Ces deux champs passaient par `v-html` sur une chaîne construite par
+// concaténation, sans le moindre échappement : tout HTML saisi dans les
+// champs Horaires ou Adresse de la sidebar était injecté tel quel, sur
+// TOUTES les pages du site (le footer est global). On renvoie désormais les
+// deux morceaux et le template les interpole en texte — rendu identique,
+// injection impossible. `null` = pas de séparateur, on affiche la chaîne
+// brute (toujours en texte).
+function splitOnPipe(value) {
+  const parts = String(value ?? '').split('|')
+  if (parts.length < 2) return null
+  return [parts[0], parts[1].trim()]
+}
 
-const formattedAddress = computed(() => {
-  const parts = props.address.split('|')
-  if (parts.length < 2) return props.address
-  return parts[0] + '| <strong>' + parts[1].trim() + '</strong>'
-})
+const scheduleParts = computed(() => splitOnPipe(props.schedule))
+const addressParts = computed(() => splitOnPipe(props.address))
 
 const footerBgStyle = computed(() => ({
   '--bf-bg-start': props.bgColorStart,

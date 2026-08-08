@@ -80,4 +80,25 @@ test.describe('Édition du footer (sidebar admin)', () => {
     await expect(title).toHaveCSS('font-family', /Playfair Display/)
     await expect(title).toHaveCSS('font-size', '32px') // 2em × 16px
   })
+
+  test('les champs Horaires et Adresse n\'injectent pas de HTML', async ({ page }) => {
+    // Régression : ces deux champs étaient rendus par `v-html` sur une chaîne
+    // construite par concaténation, sans le moindre échappement. Tout HTML
+    // saisi dans la sidebar était injecté tel quel sur TOUTES les pages, le
+    // footer étant global. La mise en gras de la partie après « | » doit
+    // rester (rendu inchangé), mais le balisage saisi doit s'afficher en texte.
+    await openFooterSidebar(page)
+
+    const horaire = page.locator('.auto-field', { hasText: 'Horaire' }).locator('.field-input').first()
+    await horaire.fill('<img src=x onerror="window.__xss=1"> | <b>10H</b>')
+
+    const ligne = page.locator('footer.site-footer .footer-info p').first()
+    await expect(ligne).toContainText('<img src=x')
+    await expect(ligne).toContainText('<b>10H</b>')
+    await expect(ligne.locator('img')).toHaveCount(0)
+    await expect(ligne.locator('b')).toHaveCount(0)
+    // La mise en gras structurelle, elle, doit rester.
+    await expect(ligne.locator('strong')).toHaveCount(1)
+    expect(await page.evaluate(() => (window as any).__xss)).toBeUndefined()
+  })
 })
