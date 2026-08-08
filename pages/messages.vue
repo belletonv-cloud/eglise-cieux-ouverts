@@ -12,10 +12,22 @@ useSeoMeta({
 
 const { isAdminMode, enterAdmin, localBlocks, localBlocksPage } = useAdmin()
 
-const { data: pageBlocks } = await useAsyncData('page-messages-blocks', async () => {
-  const data = await $fetch('/api/pages/messages').catch(() => ({ blocks: [] }))
-  return data?.blocks?.length ? normalizePageBlocks('messages', data.blocks) : getDefaultMessagesPage()
+// `echecLecture` : distingue « page réellement vide » (defaults légitimes, on
+// peut sauvegarder) de « lecture impossible » (defaults de secours, sauvegarder
+// écraserait la vraie page). Voir `contenuNonCharge` dans useAdmin.js.
+const { data: pageData } = await useAsyncData('page-messages-blocks', async () => {
+  try {
+    const data = await $fetch('/api/pages/messages')
+    return {
+      blocks: data?.blocks?.length ? normalizePageBlocks('messages', data.blocks) : getDefaultMessagesPage(),
+      echecLecture: false,
+    }
+  } catch {
+    return { blocks: getDefaultMessagesPage(), echecLecture: true }
+  }
 })
+
+const pageBlocks = computed(() => pageData.value?.blocks ?? [])
 
 const blocks = computed(() => {
   if (isAdminMode.value && localBlocks.value.length && localBlocksPage.value === 'messages') {
@@ -26,7 +38,11 @@ const blocks = computed(() => {
 
 function initAdminBlocks() {
   if (!isAdminMode.value) return
-  enterAdmin(pageBlocks.value?.length ? pageBlocks.value : getDefaultMessagesPage(), 'messages')
+  enterAdmin(
+    pageBlocks.value?.length ? pageBlocks.value : getDefaultMessagesPage(),
+    'messages',
+    pageData.value?.echecLecture !== true,
+  )
 }
 
 watch(() => isAdminMode.value, () => {

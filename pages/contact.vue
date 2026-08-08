@@ -12,10 +12,22 @@ useSeoMeta({
 
 const { isAdminMode, enterAdmin, localBlocks, localBlocksPage } = useAdmin()
 
-const { data: pageBlocks } = await useAsyncData('page-contact-blocks', async () => {
-  const data = await $fetch('/api/pages/contact').catch(() => ({ blocks: [] }))
-  return data?.blocks?.length ? normalizePageBlocks('contact', data.blocks) : getDefaultContactPage()
+// `echecLecture` : distingue « page réellement vide » (defaults légitimes, on
+// peut sauvegarder) de « lecture impossible » (defaults de secours, sauvegarder
+// écraserait la vraie page). Voir `contenuNonCharge` dans useAdmin.js.
+const { data: pageData } = await useAsyncData('page-contact-blocks', async () => {
+  try {
+    const data = await $fetch('/api/pages/contact')
+    return {
+      blocks: data?.blocks?.length ? normalizePageBlocks('contact', data.blocks) : getDefaultContactPage(),
+      echecLecture: false,
+    }
+  } catch {
+    return { blocks: getDefaultContactPage(), echecLecture: true }
+  }
 })
+
+const pageBlocks = computed(() => pageData.value?.blocks ?? [])
 
 const blocks = computed(() => {
   if (isAdminMode.value && localBlocks.value.length && localBlocksPage.value === 'contact') {
@@ -26,7 +38,11 @@ const blocks = computed(() => {
 
 function initAdminBlocks() {
   if (!isAdminMode.value) return
-  enterAdmin(pageBlocks.value?.length ? pageBlocks.value : getDefaultContactPage(), 'contact')
+  enterAdmin(
+    pageBlocks.value?.length ? pageBlocks.value : getDefaultContactPage(),
+    'contact',
+    pageData.value?.echecLecture !== true,
+  )
 }
 
 watch(() => isAdminMode.value, () => {

@@ -1003,6 +1003,7 @@ const {
     footerDirty,
     addBlock,
     localBlocksPage,
+    contenuNonCharge,
     selectedElementId,
     positioningElementId,
     startPositioning,
@@ -2034,6 +2035,19 @@ async function saveToServer() {
         console.warn(`[admin] Sauvegarde annulée : localBlocksPage="${localBlocksPage.value}" ne correspond pas à props.pageSlug="${props.pageSlug}"`)
         throw new Error('page-mismatch')
     }
+    // Second garde-fou de la même famille : ne jamais écrire un contenu qu'on
+    // n'a pas réussi à LIRE. Quand GET /api/pages/:slug échoue, la page se
+    // rabat sur ses defaults — bon comportement pour l'affichage public, mais
+    // en admin ces defaults deviennent le contenu de travail et l'auto-save
+    // (3 s après la moindre modification) les écrivait par-dessus la vraie
+    // page. Une lecture ratée suivie d'une écriture réussie suffit à remplacer
+    // le contenu réel par le modèle. Les modifications restent dans
+    // localBlocks et marquées « non sauvegardées » : rien n'est perdu, seule
+    // l'écriture est refusée.
+    if (contenuNonCharge.value) {
+        console.warn('[admin] Sauvegarde refusée : contenu non chargé depuis le serveur, écrire écraserait la vraie page par les valeurs par défaut.')
+        throw new Error('contenu-non-charge')
+    }
     const token = await getFirebaseToken()
     if (!token) throw new Error('Non authentifié')
     try {
@@ -2081,6 +2095,13 @@ async function autoSave() {
         // son propre cycle d'auto-save si besoin. Pas de markSaved() : les changements
         // restent "non sauvegardés" pour l'ancienne page tant qu'on ne l'a pas revisitée.
         if (e.message === 'page-mismatch') return;
+        // Contenu jamais chargé : l'auto-save doit se taire durablement, mais
+        // l'admin doit comprendre pourquoi rien ne se sauvegarde — sinon il
+        // continue d'éditer en croyant que ça part.
+        if (e.message === 'contenu-non-charge') {
+            saveStatus.value = "Non sauvegardé : contenu non chargé";
+            return;
+        }
         saveStatus.value = "Erreur auto-save";
         setTimeout(() => {
             saveStatus.value = "";
@@ -2332,6 +2353,8 @@ async function saveChanges() {
         console.error("Save error:", e);
         if (e.message === 'page-mismatch') {
             showToast("Page changée pendant la sauvegarde — réessaie depuis la page actuelle.", 'toast-error');
+        } else if (e.message === 'contenu-non-charge') {
+            showToast("Sauvegarde refusée : le contenu de cette page n'a pas pu être chargé, l'enregistrer écraserait la vraie page par le modèle par défaut. Recharge la page.", 'toast-error');
         } else {
             showToast("Erreur lors de la sauvegarde : " + (e.message || e), 'toast-error');
         }

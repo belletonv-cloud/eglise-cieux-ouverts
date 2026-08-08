@@ -23,11 +23,20 @@ const { isAdminMode, enterAdmin, localBlocks, localBlocksPage } = useAdmin()
 // route dynamique, donc aucun risque de 404 sur elles ici. Les pages créées
 // depuis l'admin (MenuEditor.createPage) sont POSTées avant la navigation :
 // exists est donc toujours true au moment où [slug].vue les affiche.
+// `echecLecture` : une page CMS dont la lecture échoue s'affiche vide, ce qui
+// est acceptable pour un visiteur — mais en admin cette page vide deviendrait
+// le contenu de travail et l'auto-save la sauvegarderait par-dessus le vrai
+// contenu. Voir `contenuNonCharge` dans useAdmin.js.
 const { data: pageData } = await useAsyncData(`page-${slug.value}-blocks`, async () => {
-  const data = await $fetch(`/api/pages/${slug.value}`).catch(() => ({ blocks: [], exists: true }))
-  return {
-    exists: data?.exists !== false,
-    blocks: data?.blocks?.length ? normalizePageBlocks(slug.value, data.blocks) : [],
+  try {
+    const data = await $fetch(`/api/pages/${slug.value}`)
+    return {
+      exists: data?.exists !== false,
+      blocks: data?.blocks?.length ? normalizePageBlocks(slug.value, data.blocks) : [],
+      echecLecture: false,
+    }
+  } catch {
+    return { exists: true, blocks: [], echecLecture: true }
   }
 })
 
@@ -44,7 +53,11 @@ const blocks = computed(() => {
 
 function initAdminBlocks() {
   if (!isAdminMode.value) return
-  enterAdmin(pageData.value?.blocks?.length ? pageData.value.blocks : [], slug.value)
+  enterAdmin(
+    pageData.value?.blocks?.length ? pageData.value.blocks : [],
+    slug.value,
+    pageData.value?.echecLecture !== true,
+  )
 }
 
 watch(() => isAdminMode.value, () => {

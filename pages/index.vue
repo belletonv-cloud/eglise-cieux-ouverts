@@ -27,15 +27,25 @@ const { isAdminMode, enterAdmin, localBlocks, localBlocksPage } = useAdmin();
 // Fetch blocks from API, fallback to getDefaultHomePage if empty.
 // The handler runs ONCE during SSR (result serialized to payload),
 // so server and client always get the same data → no key mismatch.
-const { data: pageBlocks } = await useAsyncData(
-    "page-accueil-blocks",
-    async () => {
-        const data = await $fetch("/api/pages/accueil").catch(() => ({
-            blocks: [],
-        }));
-        return data?.blocks?.length ? data.blocks : getDefaultHomePage();
-    },
-);
+//
+// `echecLecture` fait partie de la charge utile et non d'un ref à part : le
+// handler s'exécute au SSR et seul ce qu'il RENVOIE est sérialisé vers le
+// client. Distinguer « page réellement vide » (defaults légitimes, on peut
+// sauvegarder) de « lecture impossible » (defaults de secours, sauvegarder
+// écraserait la vraie page) — voir `contenuNonCharge` dans useAdmin.js.
+const { data: pageData } = await useAsyncData("page-accueil-blocks", async () => {
+    try {
+        const data = await $fetch("/api/pages/accueil");
+        return {
+            blocks: data?.blocks?.length ? data.blocks : getDefaultHomePage(),
+            echecLecture: false,
+        };
+    } catch {
+        return { blocks: getDefaultHomePage(), echecLecture: true };
+    }
+});
+
+const pageBlocks = computed(() => pageData.value?.blocks ?? []);
 
 const blocks = computed(() => {
     if (
@@ -50,10 +60,11 @@ const blocks = computed(() => {
 
 function initAdminBlocks() {
     if (!isAdminMode.value) return;
+    const contenuCharge = pageData.value?.echecLecture !== true;
     if (pageBlocks.value?.length) {
-        enterAdmin(pageBlocks.value, "accueil");
+        enterAdmin(pageBlocks.value, "accueil", contenuCharge);
     } else {
-        enterAdmin(getDefaultHomePage(), "accueil");
+        enterAdmin(getDefaultHomePage(), "accueil", contenuCharge);
     }
 }
 

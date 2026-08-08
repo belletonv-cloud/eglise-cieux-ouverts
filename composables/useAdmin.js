@@ -10,6 +10,16 @@ const isAdminMode = ref(false);
 const editingBlockId = ref(null);
 const localBlocks = ref([]);
 const localBlocksPage = ref("");
+// Le contenu chargé dans l'éditeur vient-il des DEFAULTS faute d'avoir pu lire
+// le serveur ? Chaque page tombe sur ses defaults quand GET /api/pages/:slug
+// échoue (500, timeout, coupure passagère) — c'est le bon comportement pour
+// l'affichage public, mais en admin ces defaults deviennent le contenu de
+// travail, et l'auto-save (3 s après la moindre modification) les écrivait
+// par-dessus la vraie page en Firestore. Une lecture ratée suivie d'une
+// écriture réussie suffit : le contenu réel est remplacé par le modèle.
+// Même principe que la règle du footer (cf. CLAUDE.md) : ne jamais sauvegarder
+// ce qu'on n'a pas vraiment chargé.
+const contenuNonCharge = ref(false);
 const previewDevice = ref("desktop");
 const hasUnsavedChanges = ref(false);
 const undoStack = ref([]);
@@ -103,11 +113,17 @@ export function useAdmin() {
     localBlocksPage.value = "";
   }
 
-  function enterAdmin(blocks, pageSlug) {
+  /**
+   * @param {boolean} [contenuCharge=true] — le contenu passé vient-il bien du
+   *   serveur ? Passer `false` quand la page a dû se rabattre sur ses defaults
+   *   parce que la LECTURE a échoué. Voir `contenuNonCharge` ci-dessus.
+   */
+  function enterAdmin(blocks, pageSlug, contenuCharge = true) {
     isAdminMode.value = true;
     if (Array.isArray(blocks)) {
       localBlocks.value = JSON.parse(JSON.stringify(blocks));
       localBlocksPage.value = pageSlug || "";
+      contenuNonCharge.value = contenuCharge === false;
       undoStack.value = [];
       redoStack.value = [];
     }
@@ -123,6 +139,7 @@ export function useAdmin() {
     footerDirty.value = false;
     localBlocks.value = [];
     localBlocksPage.value = "";
+    contenuNonCharge.value = false;
     undoStack.value = [];
     redoStack.value = [];
     if (process.client) {
@@ -618,6 +635,7 @@ export function useAdmin() {
     sidebarSchema,
     localBlocks,
     localBlocksPage,
+    contenuNonCharge,
     previewDevice,
     hasUnsavedChanges,
     selectedElementId,

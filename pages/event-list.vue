@@ -42,7 +42,11 @@ watch([isAdminMode, hideIfEmpty, hasEvenements, eventsLoading, eventsErreur], ()
 // soient sérialisées dans le payload Nuxt et disponibles côté client
 // après hydratation. useLazyFetch ne sérialise pas les données, ce qui
 // empêche les mocks de fonctionner dans les tests Playwright admin.
-const { data: pageData } = await useFetch('/api/pages/event-list')
+// `error` de useFetch sert ici de signal d'échec de LECTURE : sans lui, une
+// lecture ratée donne `pageData = null`, la page se rabat sur ses defaults, et
+// en admin l'auto-save les écrirait par-dessus le vrai contenu. Voir
+// `contenuNonCharge` dans useAdmin.js.
+const { data: pageData, error: pageError } = await useFetch('/api/pages/event-list')
 
 const blocks = computed(() => {
   if (isAdminMode.value && localBlocks.value.length && localBlocksPage.value === 'event-list') {
@@ -56,10 +60,11 @@ const blocks = computed(() => {
 
 function initAdminBlocks() {
   if (!isAdminMode.value) return
+  const contenuCharge = !pageError.value
   if (pageData.value?.blocks?.length) {
-    enterAdmin(pageData.value.blocks, 'event-list')
+    enterAdmin(pageData.value.blocks, 'event-list', contenuCharge)
   } else {
-    enterAdmin(getDefaultBilletteriePage(), 'event-list')
+    enterAdmin(getDefaultBilletteriePage(), 'event-list', contenuCharge)
   }
 }
 
