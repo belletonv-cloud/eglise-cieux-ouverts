@@ -1,17 +1,9 @@
 import { test, expect } from '@playwright/test'
+import { collectErrors } from './helpers/console'
 
 // Viewport haut : la cible du drag doit être DANS le viewport pour que
 // Sortable (elementFromPoint) détecte la position de dépôt
 test.use({ viewport: { width: 1280, height: 1600 } })
-
-function collectErrors(page: import('@playwright/test').Page) {
-  const errors: string[] = []
-  page.on('pageerror', (err) => errors.push('pageerror: ' + err.message))
-  page.on('console', (msg) => {
-    if (msg.type() === 'error' && !msg.text().includes('Hydration')) errors.push('console.error: ' + msg.text())
-  })
-  return errors
-}
 
 async function dragHandleTo(
   page: import('@playwright/test').Page,

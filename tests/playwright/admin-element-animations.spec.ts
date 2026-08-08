@@ -1,13 +1,5 @@
 import { test, expect } from '@playwright/test'
-
-function collectErrors(page: import('@playwright/test').Page) {
-  const errors: string[] = []
-  page.on('pageerror', (err) => errors.push('pageerror: ' + err.message))
-  page.on('console', (msg) => {
-    if (msg.type() === 'error' && !msg.text().includes('Hydration')) errors.push('console.error: ' + msg.text())
-  })
-  return errors
-}
+import { collectErrors } from './helpers/console'
 
 test.describe('Animations par élément (contrôleur provide/inject)', () => {
   test('public : les éléments enregistrés se déclenchent au scroll', async ({ page }) => {

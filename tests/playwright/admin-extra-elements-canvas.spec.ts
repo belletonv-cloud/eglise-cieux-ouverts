@@ -1,18 +1,10 @@
 import { test, expect } from '@playwright/test'
 import { resetMock } from './helpers/reset'
+import { collectErrors } from './helpers/console'
 
 // Viewport large : le canvas doit être entièrement visible pour que les
 // coordonnées de drag/resize (page.mouse) tombent dans le bon élément.
 test.use({ viewport: { width: 1280, height: 1400 } })
-
-function collectErrors(page: import('@playwright/test').Page) {
-  const errors: string[] = []
-  page.on('pageerror', (err) => errors.push('pageerror: ' + err.message))
-  page.on('console', (msg) => {
-    if (msg.type() === 'error' && !msg.text().includes('Hydration')) errors.push('console.error: ' + msg.text())
-  })
-  return errors
-}
 
 async function selectHeroBlock(page: import('@playwright/test').Page) {
   await page.locator('.block-wrapper[data-block-id="bloc-hero"]').click()
