@@ -1,5 +1,13 @@
 import { test, expect } from '@playwright/test'
 import { loginAsAdmin } from './helpers/admin'
+import { resetMock } from './helpers/reset'
+
+// Ce fichier était le seul sans reset : il héritait de l'état laissé par les
+// specs jouées avant lui (le mock Firestore est module-scope et partagé entre
+// fichiers, cf. l'en-tête de playwright.config.ts).
+test.beforeEach(async ({ request }) => {
+  await resetMock(request)
+})
 
 /** Audit : exécute chaque action et rapporte tout, sans s'arrêter au 1er échec. */
 function journal() {
@@ -166,7 +174,9 @@ test('audit — responsive, visibilité et sauvegarde', async ({ page }) => {
 
   await j.verifie('note développeur sur un bloc', async () => {
     await page.locator('.admin-comment-textarea').fill('Note audit')
-    await page.locator('.admin-comment-actions button', { hasText: 'Créer la demande' }).first().click()
+    // Timeout explicite : sans lui, un libellé inattendu consomme les 120 s du
+    // test entier et masque la vraie cause derrière un « Test timeout ».
+    await page.locator('.admin-comment-actions button', { hasText: 'Créer la demande' }).first().click({ timeout: 6000 })
     await expect(page.locator('.toast-success, .admin-comment-resolved-note').first()).toBeVisible({ timeout: 6000 })
   })
 
