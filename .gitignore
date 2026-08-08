@@ -34,7 +34,16 @@ test-results
 
 # Backup / debug artifacts
 package.json.save
-scripts/
+
+# scripts/ est ignoré par défaut (scripts ponctuels de dépannage, souvent liés
+# à un incident précis et chargeant le .env), sauf l'outillage réutilisable
+# ci-dessous. Écrit en `scripts/*` et non `scripts/` : git ne sait pas
+# ré-inclure un fichier dont un répertoire parent est exclu.
+scripts/*
+!scripts/add-block.ts
+!scripts/generate-tests.ts
+!scripts/optimize-images.sh
+!scripts/scan-secrets.sh
 
 # Playwright MCP artifacts
 .playwright-mcp/
