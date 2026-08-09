@@ -49,8 +49,17 @@ test.describe('Pas de hard refresh nécessaire', () => {
     await openBlockEditor(page, firstBlockId!)
     await editBlockTitle(page, 'Titre sans reload')
 
-    // L'auto-save (feedback .auto-saved) ne doit pas provoquer de reload
-    await page.waitForSelector('.auto-saved', { timeout: 6000 })
+    // L'auto-save (feedback .auto-saved) ne doit pas provoquer de reload.
+    //
+    // Budget large et assumé : l'auto-save attend d'abord 3 s de debounce
+    // (AdminToolbar), puis fait un aller-retour réseau. Les 6 s d'origine ne
+    // laissaient donc que ~2 s de marge — suffisant en lançant cette spec
+    // seule (5,3 s de bout en bout, mesuré 5 fois), trop juste dans la suite
+    // complète en série sur une machine chargée, où ce test a échoué deux fois
+    // sur des exécutions par ailleurs vertes. Ce qu'on vérifie ici n'est pas la
+    // rapidité de l'auto-save mais l'absence de rechargement : allonger
+    // l'attente ne relâche aucune assertion.
+    await page.waitForSelector('.auto-saved', { timeout: 20000 })
     await expectNoReload(page)
   })
 
