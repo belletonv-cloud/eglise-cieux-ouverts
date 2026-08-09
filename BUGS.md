@@ -1,5 +1,25 @@
 # Bugs connus et points d'attention
 
+## [2026-08-08] OUVERT — Clé privée Firebase illisible sur la recette
+
+`https://recette.eglise-cieux-ouverts.pages.dev` sert son contenu par défaut :
+`GET /api/menu`, `/api/footer` et `/api/pages/accueil` répondent 500. La cause
+est côté secret, pas côté code — `GET /api/health` y renvoie
+`firestore.privateKeyValide: false` : `NUXT_FIREBASE_PRIVATE_KEY` est présente
+mais son contenu n'est pas décodable, typiquement des retours à la ligne perdus
+ou des guillemets conservés au copier-coller dans le dashboard Cloudflare.
+
+**Remède** : recoller la clé du compte de service du projet Firebase de recette
+dans Cloudflare Pages → Settings → Variables & Secrets, puis revérifier
+`/api/health`. La production, elle, est saine (`privateKeyValide: true`).
+
+Le site reste debout malgré tout : menu, footer et pages retombent sur leurs
+valeurs par défaut. En mode admin en revanche, la sauvegarde est **refusée**
+tant que la lecture échoue — sans quoi ces defaults écraseraient le vrai
+contenu (voir `contenuNonCharge` dans `composables/useAdmin.js`).
+
+---
+
 ## [2026-08-01] RÉSOLU — Emails du formulaire de contact
 
 ### Ce qui bloquait (deux causes cumulées)

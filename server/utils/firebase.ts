@@ -18,12 +18,34 @@ export function getFirestoreConfig(event: any): FirestoreConfig | null {
   return { projectId, clientEmail, privateKey }
 }
 
+/**
+ * Message d'erreur d'une clé privée mal recopiée. Levé ici plutôt que laissé
+ * remonter tel quel : le `atob()` natif échoue sur « atob() called with
+ * invalid base64-encoded string », qui traverse toute la pile et ressort au
+ * visiteur en « Erreur chargement menu: atob() called with invalid
+ * base64-encoded string » — constaté sur l'environnement de recette. Rien
+ * n'indique alors qu'il s'agit d'un secret mal collé, ni lequel, alors que
+ * c'est la panne de configuration la plus courante ici (retours à la ligne
+ * perdus ou guillemets conservés au copier-coller dans le dashboard
+ * Cloudflare). `GET /api/health` répond déjà à la question en une requête,
+ * encore faut-il savoir qu'il faut la poser.
+ */
+export const ERREUR_CLE_PRIVEE =
+  'Clé privée Firebase illisible (NUXT_FIREBASE_PRIVATE_KEY) : contenu non décodable en base64, ' +
+  'typiquement des retours à la ligne perdus ou des guillemets conservés au copier-coller. ' +
+  'Vérifier avec GET /api/health (champ firestore.privateKeyValide).'
+
 async function pemToArrayBuffer(pem: string): Promise<ArrayBuffer> {
   const base64 = pem
     .replace(/-----BEGIN [\w\s]+-----/g, '')
     .replace(/-----END [\w\s]+-----/g, '')
     .replace(/\s/g, '')
-  const binary = atob(base64)
+  let binary: string
+  try {
+    binary = atob(base64)
+  } catch {
+    throw new Error(ERREUR_CLE_PRIVEE)
+  }
   const bytes = new Uint8Array(binary.length)
   for (let i = 0; i < binary.length; i++) {
     bytes[i] = binary.charCodeAt(i)
@@ -33,13 +55,20 @@ async function pemToArrayBuffer(pem: string): Promise<ArrayBuffer> {
 
 async function importPrivateKey(pem: string): Promise<CryptoKey> {
   const keyData = await pemToArrayBuffer(pem)
-  return crypto.subtle.importKey(
-    'pkcs8',
-    keyData,
-    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
-    false,
-    ['sign']
-  )
+  try {
+    return await crypto.subtle.importKey(
+      'pkcs8',
+      keyData,
+      { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+      false,
+      ['sign']
+    )
+  } catch {
+    // Base64 valide mais qui n'est pas une clé PKCS8 : même symptôme côté
+    // utilisateur (message cryptique de WebCrypto remontant jusqu'à la page),
+    // même remède.
+    throw new Error(ERREUR_CLE_PRIVEE)
+  }
 }
 
 export async function getAccessToken(clientEmail: string, privateKey: string): Promise<string> {
