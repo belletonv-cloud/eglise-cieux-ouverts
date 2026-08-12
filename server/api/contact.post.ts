@@ -1,6 +1,6 @@
 import { getFirestoreConfig, getAccessToken, getFirestoreDoc, setFirestoreDoc, parseFirestoreDoc } from '../utils/firebase'
 import { getEmailQuotaLimit } from '../utils/email-quota'
-import { sendEmail } from '../utils/send-email'
+import { sendEmail, escapeHtml, nettoyerSujet } from '../utils/send-email'
 import { fetchWithTimeout } from '../utils/http'
 
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token'
@@ -162,22 +162,27 @@ export default defineEventHandler(async (event) => {
     // Firestore et visible dans l'admin (📬 Messages), donc un échec d'envoi
     // ne doit jamais faire échouer la requête ni perdre le message.
     if (contactEmails.length) {
+      // Tout ce qui vient du formulaire est échappé : il est public, donc ces
+      // champs sont du texte arbitraire choisi par un inconnu. Sans échappement,
+      // il compose lui-même le HTML de l'email reçu par les responsables.
+      // Le `<br>` des sauts de ligne est posé APRÈS l'échappement, sinon il
+      // ressortirait lui aussi en `&lt;br&gt;`.
       const emailHtml = `
         <h2>Nouveau contact reçu</h2>
-        <p><strong>Nom :</strong> ${prenom} ${nom}</p>
-        <p><strong>Email :</strong> <a href="mailto:${email}">${email}</a></p>
-        ${ville ? `<p><strong>Ville :</strong> ${ville}</p>` : ''}
+        <p><strong>Nom :</strong> ${escapeHtml(`${prenom} ${nom}`)}</p>
+        <p><strong>Email :</strong> <a href="mailto:${escapeHtml(email)}">${escapeHtml(email)}</a></p>
+        ${ville ? `<p><strong>Ville :</strong> ${escapeHtml(ville)}</p>` : ''}
         <p><strong>Message :</strong></p>
         <div style="background:#f5f5f5;padding:15px;border-radius:8px;margin:10px 0">
-          ${message.replace(/\n/g, '<br>')}
+          ${escapeHtml(message).replace(/\n/g, '<br>')}
         </div>
         <p><small>Reçu le ${new Date().toLocaleString('fr-FR')}</small></p>
-        <p><a href="https://console.firebase.google.com/project/eglise-cieux-ouverts/firestore/data/~2Fcontacts">Voir dans Firestore</a></p>
+        <p><a href="https://console.firebase.google.com/project/${encodeURIComponent(firebaseProjectId)}/firestore/data/~2Fcontacts">Voir dans Firestore</a></p>
       `
 
       const sent = await sendEmail({
         to: contactEmails,
-        subject: `Nouveau contact : ${prenom} ${nom}`,
+        subject: nettoyerSujet(`Nouveau contact : ${prenom} ${nom}`),
         html: emailHtml,
         replyTo: email,
       })

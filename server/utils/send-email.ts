@@ -28,6 +28,29 @@ export interface SendEmailParams {
   replyTo?: string
 }
 
+/**
+ * Échappe une valeur avant interpolation dans le `html` d'un email.
+ *
+ * À utiliser pour TOUTE donnée venant d'un visiteur : le formulaire de contact
+ * est public, donc nom, ville et message sont du texte arbitraire. Interpolés
+ * bruts, ils laissaient un inconnu composer le corps de l'email reçu par les
+ * responsables — un `<a href="…">Voir le message</a>` inséré dans le message
+ * arrive avec l'apparence d'une notification légitime du site.
+ */
+export function escapeHtml(valeur: string): string {
+  return valeur
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+/** Retire les retours à la ligne d'un sujet : ils n'y ont pas leur place. */
+export function nettoyerSujet(sujet: string): string {
+  return sujet.replace(/[\r\n]+/g, ' ').trim()
+}
+
 export function getMailjetConfig() {
   const apiKey = process.env.NUXT_MAILJET_API_KEY || ''
   const apiSecret = process.env.NUXT_MAILJET_API_SECRET || ''
