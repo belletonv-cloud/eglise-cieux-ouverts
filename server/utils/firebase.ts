@@ -71,7 +71,60 @@ async function importPrivateKey(pem: string): Promise<CryptoKey> {
   }
 }
 
+/** base64url sans remplissage — l'encodage qu'exige un JWT. */
+function base64Url(input: string): string {
+  return btoa(input).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_')
+}
+
+/**
+ * Jeton d'accès en cache, à l'échelle de l'isolat.
+ *
+ * Sans lui, CHAQUE requête Firestore recommençait tout : import de la clé
+ * privée, signature RSA, puis un aller-retour vers `oauth2.googleapis.com`
+ * avant même de parler à Firestore. Le rendu d'une page en déclenche au moins
+ * trois (`/api/menu`, `/api/footer`, `/api/pages/:slug`), chacune payant ce
+ * préambule pour un jeton valable une heure et jeté aussitôt.
+ *
+ * La promesse est mise en cache, pas seulement sa valeur : plusieurs requêtes
+ * arrivant ensemble sur un isolat froid partagent ainsi un seul aller-retour
+ * au lieu d'en lancer autant qu'elles sont. En cas d'échec, l'entrée est
+ * retirée pour que la tentative suivante reparte proprement.
+ *
+ * La clé du cache inclut le compte de service : prod et recette n'ont pas le
+ * même, et un jeton de l'un n'ouvre rien chez l'autre.
+ */
+const CACHE_JETON = new Map<string, { promesse: Promise<{ token: string; expireA: number }>; expireA: number }>()
+
+/** Marge avant expiration : un jeton qui périme en cours de requête ne sert à rien. */
+const MARGE_EXPIRATION_MS = 5 * 60 * 1000
+
 export async function getAccessToken(clientEmail: string, privateKey: string): Promise<string> {
+  const cle = clientEmail
+  const enCache = CACHE_JETON.get(cle)
+  if (enCache && enCache.expireA > Date.now()) {
+    try {
+      return (await enCache.promesse).token
+    } catch {
+      // Promesse rejetée entre-temps : on repart sur une demande neuve.
+      CACHE_JETON.delete(cle)
+    }
+  }
+
+  const promesse = demanderJeton(clientEmail, privateKey)
+  // Fenêtre volontairement courte tant que la vraie durée de vie n'est pas
+  // connue : elle ne sert qu'à mutualiser les requêtes concurrentes.
+  CACHE_JETON.set(cle, { promesse, expireA: Date.now() + 30_000 })
+  try {
+    const { token, expireA } = await promesse
+    CACHE_JETON.set(cle, { promesse, expireA })
+    return token
+  } catch (err) {
+    CACHE_JETON.delete(cle)
+    throw err
+  }
+}
+
+async function demanderJeton(clientEmail: string, privateKey: string): Promise<{ token: string; expireA: number }> {
   const now = Math.floor(Date.now() / 1000)
   const expiry = now + 3600
 
@@ -84,8 +137,12 @@ export async function getAccessToken(clientEmail: string, privateKey: string): P
     iat: now,
   }
 
-  const encodedHeader = btoa(JSON.stringify(header))
-  const encodedClaimSet = btoa(JSON.stringify(claimSet))
+  // base64url, pas base64 : l'en-tête ne contient par chance ni `+`, ni `/`,
+  // ni remplissage, mais le jeu de revendications, lui, en produit — il finit
+  // par un `=` de remplissage, et les URL de `scope` peuvent donner des `/`.
+  // Google l'acceptait jusqu'ici ; rien ne l'y oblige.
+  const encodedHeader = base64Url(JSON.stringify(header))
+  const encodedClaimSet = base64Url(JSON.stringify(claimSet))
   const signatureInput = `${encodedHeader}.${encodedClaimSet}`
 
   const key = privateKey.replace(/\\n/g, '\n')
@@ -95,10 +152,7 @@ export async function getAccessToken(clientEmail: string, privateKey: string): P
     cryptoKey,
     new TextEncoder().encode(signatureInput)
   )
-  const encodedSignature = btoa(String.fromCharCode(...new Uint8Array(signatureBuffer)))
-    .replace(/=/g, '')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
+  const encodedSignature = base64Url(String.fromCharCode(...new Uint8Array(signatureBuffer)))
 
   const jwt = `${encodedHeader}.${encodedClaimSet}.${encodedSignature}`
 
@@ -117,7 +171,11 @@ export async function getAccessToken(clientEmail: string, privateKey: string): P
   }
 
   const data = await response.json()
-  return data.access_token
+  const dureeMs = (Number(data.expires_in) || 3600) * 1000
+  return {
+    token: data.access_token,
+    expireA: Date.now() + Math.max(dureeMs - MARGE_EXPIRATION_MS, 60_000),
+  }
 }
 
 export async function getFirestoreDoc(

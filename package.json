@@ -15,6 +15,8 @@
     "test:e2e:quick": "playwright test",
     "test:admin": "playwright test --config=playwright.admin.config.ts",
     "test:unit": "playwright test --config=playwright.unit.config.ts",
+    "scan:secrets": "bash scripts/scan-secrets.sh",
+    "optimize:images": "bash scripts/optimize-images.sh",
     "preview": "nuxt preview",
     "preview:local": "PW_TEST=1 NITRO_PORT=3001 NITRO_HOST=0.0.0.0 node .output/server/index.mjs",
     "dev:server": "node .output/server/index.mjs",

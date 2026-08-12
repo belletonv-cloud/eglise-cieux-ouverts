@@ -1,5 +1,5 @@
 import { getFirestoreConfig, getAccessToken, setFirestoreDoc } from '../../utils/firebase'
-import { verifyFirebaseToken, getAdminUsers } from '../../utils/firebase-admin'
+import { verifyFirebaseToken, lireAdminUsers } from '../../utils/firebase-admin'
 
 export default defineEventHandler(async (event) => {
   const authHeader = getHeader(event, 'authorization')
@@ -15,7 +15,17 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'Aucun email associé à ce compte' })
   }
 
-  const currentUsers = await getAdminUsers(event)
+  // Une liste vide n'autorise le bootstrap que si elle a réellement été lue :
+  // sur une lecture en échec, la liste est vide elle aussi, et poursuivre
+  // reviendrait à donner le rôle admin complet au premier compte connecté
+  // venu, en écrasant la vraie liste d'administrateurs.
+  const { users: currentUsers, lectureOk } = await lireAdminUsers(event)
+  if (!lectureOk) {
+    throw createError({
+      statusCode: 503,
+      message: "Impossible de vérifier la liste des administrateurs (Firestore injoignable). Création du premier admin refusée — réessayer plus tard, ou vérifier GET /api/health.",
+    })
+  }
   if (currentUsers.length > 0) {
     throw createError({ statusCode: 400, message: 'Des admins existent déjà. Utilisez la gestion des admins.' })
   }
