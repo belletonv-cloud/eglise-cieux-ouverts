@@ -113,23 +113,43 @@ function normalizeAdminUsers(data: Record<string, any> | null): AdminUserEntry[]
   return []
 }
 
-export async function getAdminUsers(event: any): Promise<AdminUserEntry[]> {
+/**
+ * Lit `settings/admins` en distinguant « aucun admin » de « pas pu lire ».
+ *
+ * Les deux cas donnaient la même liste vide. Sans conséquence pour les
+ * contrôles d'accès — une liste vide y refuse tout le monde, c'est le bon
+ * repli — mais dangereux pour `/api/admin/setup`, qui crée le premier
+ * administrateur précisément quand la liste est vide. Une lecture en échec
+ * (Firestore momentanément indisponible, délai dépassé, jeton refusé) rouvrait
+ * donc le bootstrap : le premier compte Google à passer par là devenait
+ * administrateur complet, en écrasant la vraie liste.
+ *
+ * Même famille que la règle « ne jamais sauvegarder ce qu'on n'a pas réussi à
+ * lire » déjà appliquée aux pages et au footer (voir CLAUDE.md).
+ */
+export async function lireAdminUsers(event: any): Promise<{ users: AdminUserEntry[]; lectureOk: boolean }> {
   if (isTestEnv()) {
     const { getAdminUsersMock } = await import('./firestore-mock.js')
-    return getAdminUsersMock()
+    return { users: getAdminUsersMock(), lectureOk: true }
   }
 
   const config = getFirestoreConfig(event)
-  if (!config) return []
+  if (!config) return { users: [], lectureOk: false }
 
   try {
     const accessToken = await getAccessToken(config.clientEmail, config.privateKey)
     const doc = await getFirestoreDoc(config.projectId, accessToken, 'settings', 'admins')
-    if (!doc) return []
-    return normalizeAdminUsers(parseFirestoreDoc(doc))
+    // `getFirestoreDoc` renvoie null sur un 404 : le document n'existe pas
+    // encore. C'est une lecture réussie qui répond « aucun admin ».
+    if (!doc) return { users: [], lectureOk: true }
+    return { users: normalizeAdminUsers(parseFirestoreDoc(doc)), lectureOk: true }
   } catch {
-    return []
+    return { users: [], lectureOk: false }
   }
+}
+
+export async function getAdminUsers(event: any): Promise<AdminUserEntry[]> {
+  return (await lireAdminUsers(event)).users
 }
 
 export async function getAdminEmails(event: any): Promise<string[]> {
