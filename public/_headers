@@ -31,7 +31,15 @@
 /photos/*
   cache-control: public, max-age=2592000
 
+# Images à la racine de public/, énumérées une par une plutôt que par un
+# joker : `/*.png` matcherait aussi `/_nuxt/*.png` et Cloudflare joindrait les
+# deux `cache-control` par une virgule (piège n°1 ci-dessus). Conséquence à
+# retenir : toute image ajoutée à la racine doit être listée ici, sinon elle
+# part sans cache-control. C'était le cas de la moitié d'entre elles, dont les
+# deux plus lourdes du site (logo-c.png et logo-hero.png, 1,9 Mo chacune).
 /favicon.ico
+  cache-control: public, max-age=2592000
+/favicon.jpg
   cache-control: public, max-age=2592000
 /favicon-32.png
   cache-control: public, max-age=2592000
@@ -43,13 +51,31 @@
   cache-control: public, max-age=2592000
 /logo.png
   cache-control: public, max-age=2592000
+/logo-c.png
+  cache-control: public, max-age=2592000
+/logo-c-clean.png
+  cache-control: public, max-age=2592000
+/logo-header.png
+  cache-control: public, max-age=2592000
+/logo-hero.png
+  cache-control: public, max-age=2592000
+/logo-text.png
+  cache-control: public, max-age=2592000
+/logo-texte.png
+  cache-control: public, max-age=2592000
 /foule-croix.png
   cache-control: public, max-age=2592000
 /hero.jpg
   cache-control: public, max-age=2592000
+/hero-foule.png
+  cache-control: public, max-age=2592000
+/salle-reunion.png
+  cache-control: public, max-age=2592000
 /smartphone.jpg
   cache-control: public, max-age=2592000
 /calendar.png
+  cache-control: public, max-age=2592000
+/aspirations-timings.json
   cache-control: public, max-age=2592000
 
 # Sentinelle de déploiement lue par plugins/deployment-check.client.ts :
