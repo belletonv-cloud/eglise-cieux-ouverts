@@ -13,7 +13,9 @@ Corriger tout problème constaté en cours de session — bug, test cassé, éch
 | Production | `main` | `eglise-cieux-ouverts` | https://eglise-cieux-ouverts.pages.dev |
 | Recette | `recette` | `eglise-cieux-ouverts-rec` (Spark gratuit) | https://recette.eglise-cieux-ouverts.pages.dev |
 
-Déploiement auto : push sur `main`/`recette` → Cloudflare Pages build via `bash build.sh` (exporte les secrets Firebase recette si `CF_PAGES_BRANCH === "recette"`, puis `npm ci && npm run build`). `npm run deploy` en local existe mais nécessite `wrangler login` — le CI est plus fiable, ne pas l'utiliser sauf besoin explicite.
+Déploiement auto : push sur **n'importe quelle branche** → Cloudflare Pages build via `bash build.sh` (le projet est configuré `preview_branch_includes: ["*"]` : toute branche autre que `main` construit un déploiement Preview, PR comprises). `main` seule est Production. `npm run deploy` en local existe mais nécessite `wrangler login` — le CI est plus fiable, ne pas l'utiliser sauf besoin explicite.
+
+**L'environnement Preview du dashboard Cloudflare Pages n'a AUCUNE variable configurée** (vérifié via l'API `GET /pages/projects/eglise-cieux-ouverts` — `deployment_configs.preview.env_vars` est vide ; seul `production` a tout). `build.sh` fournit donc un repli — les clés Firebase publiques et l'identité du projet `eglise-cieux-ouverts-rec`, la clé privée restant une valeur factice qui échoue proprement à l'exécution — pour **toute branche différente de `main`**, pas seulement `recette` : une PR qui ne l'obtiendrait pas fait échouer son propre build Preview au démarrage (`nuxt.config.ts` lève si `NUXT_PUBLIC_FIREBASE_API_KEY` manque en CI). Ne jamais revenir à une condition `= "recette"` : la Preview de n'importe quelle branche redeviendrait rouge par construction. Le meta `robots: noindex` (`nuxt.config.ts`) suit la même règle, pour la même raison — une preview de PR a sa propre URL publique et ne doit pas être indexable.
 
 Le site public réel (cieuxouverts.bzh) n'est pas ce déploiement — domaine non attaché à ce projet Cloudflare Pages pour l'instant.
 

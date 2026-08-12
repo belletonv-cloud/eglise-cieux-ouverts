@@ -3,7 +3,16 @@ set -e
 
 echo "Building for branch: $CF_PAGES_BRANCH"
 
-if [ "$CF_PAGES_BRANCH" = "recette" ]; then
+# `main` est la seule branche de production (voir CLAUDE.md). Cloudflare
+# Pages construit TOUTE autre branche en Preview (préférence de projet
+# "preview_branch_includes: *"), y compris chaque branche de PR — et
+# l'environnement Preview du dashboard n'a AUCUNE variable configurée
+# (vérifié via l'API Cloudflare). Sans repli ici, `nuxt.config.ts` fait
+# échouer le build de toute PR au démarrage : "Missing
+# NUXT_PUBLIC_FIREBASE_API_KEY". Le repli visait uniquement `recette`
+# jusqu'ici ; il s'applique maintenant à toute branche non-production, pour
+# qu'ouvrir une PR ne casse plus son propre build Preview.
+if [ "$CF_PAGES_BRANCH" != "main" ]; then
   echo "→ Applying recette (preview) environment"
   export NUXT_PUBLIC_FIREBASE_API_KEY="AIzaSyDMDdQ-Dfg-ScO5xCKytl52iHCnO4Qcu7Y"
   export NUXT_PUBLIC_FIREBASE_AUTH_DOMAIN="eglise-cieux-ouverts-rec.firebaseapp.com"
