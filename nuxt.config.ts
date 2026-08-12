@@ -49,7 +49,14 @@ export default defineNuxtConfig({
       // Retire la classe no-js dès que JS s'exécute : avec JS désactivé elle
       // reste et active les fallbacks CSS (contenu/animations visibles, SEO).
       script: [{ innerHTML: "document.documentElement.classList.remove('no-js')", tagPosition: 'head' }],
-      meta: process.env.CF_PAGES_BRANCH === 'recette'
+      // `main` est la seule branche destinée à être indexée. Cloudflare
+      // Pages construit toute autre branche en Preview — donc chaque PR a
+      // sa propre URL publique (`https://<hash>.eglise-cieux-ouverts.pages.dev`)
+      // — mais cette règle ne visait que `recette` : une preview de PR
+      // restait indexable si un robot la découvrait. `CF_PAGES_BRANCH` est
+      // absent en dev/build local (build:e2e compris), d'où la garde sur sa
+      // présence : ne pas ajouter ce meta hors Cloudflare Pages.
+      meta: process.env.CF_PAGES_BRANCH && process.env.CF_PAGES_BRANCH !== 'main'
         ? [{ name: 'robots', content: 'noindex, nofollow' }]
         : [],
     },
