@@ -27,9 +27,19 @@ export default defineNuxtConfig({
     '/**': {
       headers: {
         'x-frame-options': 'SAMEORIGIN',
+        // Équivalent moderne de x-frame-options, seule directive CSP posée
+        // ici : une CSP complète casserait les styles en ligne du contenu
+        // collé en richText et le SDK Firebase. `frame-ancestors` n'a aucun
+        // effet de bord et couvre les navigateurs qui ignorent l'en-tête
+        // historique.
+        'content-security-policy': "frame-ancestors 'self'",
         'x-content-type-options': 'nosniff',
         'referrer-policy': 'strict-origin-when-cross-origin',
         'permissions-policy': 'camera=(), microphone=(), geolocation=()',
+        // Sans `includeSubDomains` : le domaine cieuxouverts.bzh n'est pas
+        // encore rattaché à ce projet Pages, et rien ne garantit que tous ses
+        // futurs sous-domaines seront en HTTPS.
+        'strict-transport-security': 'max-age=15552000',
       },
     },
   },
