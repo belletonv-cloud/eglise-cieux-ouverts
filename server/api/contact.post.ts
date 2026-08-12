@@ -17,8 +17,19 @@ function getRateLimitKey(event) {
   return getRequestIP(event) || 'unknown'
 }
 
+// Sans purge, une salve depuis beaucoup d'IP différentes fait grossir la Map
+// jusqu'au recyclage de l'isolat. Les entrées périmées ne servent plus à rien :
+// on les retire à chaque passage, ce qui borne la taille au nombre d'IP vues
+// dans la fenêtre courante.
+function purgerEntreesPerimees(now) {
+  for (const [cle, entry] of rateLimitStore) {
+    if (now - entry.resetTime > RATE_LIMIT.windowMs) rateLimitStore.delete(cle)
+  }
+}
+
 function checkRateLimit(key) {
   const now = Date.now()
+  purgerEntreesPerimees(now)
   const entry = rateLimitStore.get(key)
 
   if (!entry || now - entry.resetTime > RATE_LIMIT.windowMs) {
